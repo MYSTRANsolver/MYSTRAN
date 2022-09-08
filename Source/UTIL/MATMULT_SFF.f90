@@ -281,7 +281,7 @@ k_do:       DO K=1,NTERM_AROW                              ! The following 2 loo
 !                                                                 or #2 for terms in row from diag out)
       CHARACTER( 1*BYTE)              :: WHICH                  ! Decides what to print out for this call to this subr
 
-      INTEGER(LONG)                   :: JJ                     ! Local DO loop indices
+      INTEGER(LONG)                   :: II,JJ,KK               ! Local DO loop indices
 
 ! **********************************************************************************************************************************
       IF      (WHICH == '1') THEN
