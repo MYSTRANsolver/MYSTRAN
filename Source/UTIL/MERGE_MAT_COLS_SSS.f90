@@ -185,6 +185,7 @@
       USE PENTIUM_II_KIND, ONLY       :  BYTE
 
       CHARACTER( 1*BYTE), INTENT(IN)  :: WHICH             ! Decides what to print out for this call to this subr
+      INTEGER(LONG)                   :: I,J,K             ! Local loop indices
 
 ! **********************************************************************************************************************************
       IF (WHICH == '0') THEN
