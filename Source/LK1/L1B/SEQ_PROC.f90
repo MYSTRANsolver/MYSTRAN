@@ -615,7 +615,7 @@ i_do2:            DO I=1,NUM_SEQ_FILE_LINES
                            ' WON''T BE EXCEEDED')
 
 
- 8888 FORMAT(' *WARNING    : BANDIT DID NOT RUN SUCCESSFULLY. IT QUIT WITH ERROR = ',I8                                            &
+ 8888 FORMAT(' *WARNING    : BANDIT DID NOT RUN SUCCESSFULLY. THIS IS A NON-CRITICAL OPTIMIZATION. IT QUIT WITH ERROR = ',I8       &
                     ,/,14X,' CHECK FILE BANDIT.OUT IN THE DIRECTORY WHERE MYSTRAN.EXE RESIDES')
 
  9990 FORMAT(' *INFORMATION: FILE ',A                                                                                              &
