@@ -115,6 +115,7 @@
                                                      23 /) ! IDM(12) = 23 means quad elem DOF 12 is MYSTRAN elem DOF 23
 
       INTEGER(LONG)                   :: I,J,K             ! DO loop indices or counters
+      INTEGER(LONG)                   :: II,JJ,KK          ! DO loop indices or counters
       INTEGER(LONG)                   :: IERROR    = 0     ! Local error indicator
 
       INTEGER(LONG), PARAMETER        :: NUM_TRIAS = 4     ! DO NOT CHANGE THIS. Num of triangles that subdivide the QUAD4
@@ -1853,6 +1854,7 @@ trias:DO K=1,NUM_TRIAS
       CHARACTER(LEN=*) , INTENT(IN)   :: OPT_MIN4T(5)      ! 'Y'/'N' flags for whether certain elem matrices were calc'd
 
       INTEGER(LONG)    , INTENT(IN)   :: WHICH             ! Indicator of which debug output to write in the current call
+      INTEGER(LONG)                   :: I,J,K             ! Local loop indices
 
 ! **********************************************************************************************************************************
       IF (WHICH == 0) THEN
