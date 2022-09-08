@@ -1250,8 +1250,13 @@ big_loop:   DO J=1,NCORD                                   ! Find a CORD1 with a
       CHARACTER( 6*BYTE)              :: NAME1
       CHARACTER(24*BYTE)              :: NAME2
 
+      INTEGER(LONG)                   :: I,J,K             ! Local DO loop indices
       INTEGER(LONG)                   :: II,JJ             ! Local DO loop indices
       INTEGER(LONG)                   :: IA,IB,IC          ! Array indices
+      
+      I = 1
+      J = 1
+      K = 1
 
 ! **********************************************************************************************************************************
       IF      (WHICH == '11') THEN
