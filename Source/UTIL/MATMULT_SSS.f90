@@ -294,6 +294,7 @@ l_do:          DO L=B_COL_BEG,B_COL_END
       CHARACTER(LEN=*), INTENT(IN)    :: ALG                    ! Which algorithm is used (#1 for terms above diag when SYM_A='Y'
 !                                                                 or #2 for terms in row from diag out)
       CHARACTER( 1*BYTE)              :: WHICH                  ! Decides what to print out for this call to this subr
+      INTEGER(LONG)                   :: I,J,K                  ! Local loop indices
 
 ! **********************************************************************************************************************************
       IF      (WHICH == '1') THEN
