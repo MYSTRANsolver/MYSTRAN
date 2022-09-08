@@ -277,8 +277,8 @@ a_and_b: IF ((NUM_A_ROW_I /= 0) .AND. (NUM_B_ROW_I /= 0)) THEN       ! This row 
       CHARACTER( 1*BYTE)              :: WHICH             ! Decides what to print out for this call to this subr
 
       INTEGER(LONG)                   :: DELTA_NTERM_C     ! Number of terms in a row of matrix C
-      INTEGER(LONG)                   :: JJ                ! Local DO loop index
-      INTEGER(LONG)                   :: KK                ! Local counter
+      INTEGER(LONG)                   :: II,JJ,KK          ! Local DO loop index
+      INTEGER(LONG)                   :: I,J,K             ! Local DO loop index
 
 ! **********************************************************************************************************************************
       IF      (WHICH == '1') THEN
