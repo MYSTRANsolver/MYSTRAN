@@ -365,6 +365,7 @@ i_do: DO I=1,NROW_A                                        ! Matrix partition lo
       SUBROUTINE PARTITION_SS_DEB ( WHICH )
 
       CHARACTER( 1*BYTE)              :: WHICH                  ! Decides what to print out for this call to this subr
+      INTEGER(LONG)                   :: I,J,K                  ! Local loop indices
 
 ! **********************************************************************************************************************************
       IF      (WHICH == '1') THEN
