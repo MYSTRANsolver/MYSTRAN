@@ -53,7 +53,6 @@ More detailed instructions can be found here.
 
 ### For Windows
 
-* A binary can be downloaded from this link: https://www.mystran.com/forums/showthread.php?tid=39
 * Compilation Instructions can be downloaded from this link: https://www.mystran.com/forums/showthread.php?tid=2
 
 ### For Linux
@@ -183,21 +182,14 @@ Congragulations! You have just installed MYSTRAN.
 
 # Developmental Goals
 
-- Add detailed installation instructions for Windows to the README
-- Add installation instructions for other platforms to the readme (other linux distributions, and/or Apple operating systems)
-- Implement differential stiffness matrices for shell elements
+- Implement the MITC shell elements and shell element buckling capability
 - Implement OP2 output format
-- Creating easier ways to aquire mystran would be nice. This would include, but is not limited to, entry into the Arch Linux User Repository (AUR), the Debian Advanced Package Manager (apt), the snapcraft store (snap), the chocolatey package manager for Windows, an appimage, or flatpak.
-- Creation of a more comprehensive testing suite would be nice. Current method uses VBA and Microsoft excel. New testing methods should ideally include correlation to other solvers, previous versions of mystran, industry standard demonstration problems, and continuum mechanics/direct solutions.
-- The default QUAD element is internally composed of 4 tri elements. These internal tri elements need a coordinate transformation to allow for orthotropic/anisotropic materials. Currently, the default QUAD element is only valid for isotropic materials (though the alternate QUAD element does support anisotropic materials).
-- Migrate documentation to github.
-- As a longer term goal, materialistically nonlinear support is desirable.
+- Creating easier ways to aquire MYSTRAN would be nice. This would include, but is not limited to, entry into the Arch Linux User Repository (AUR), the Debian Advanced Package Manager (apt), the snapcraft store (snap), the chocolatey package manager for Windows, an appimage, or flatpak.
 - As a longer term goal, geometric nonlinear support is desirable.
 
 # Ways You Can Help
 
 - Join the MYSTRAN forum and/or Discord Channel below
-- Contribute your MYSTRAN runs to the list of demonstration problems by posting on the forums, or in our discord channel below
 
 # Community
 - [Join our Forums](https://mystran.com/forums)
