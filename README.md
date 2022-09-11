@@ -36,7 +36,7 @@ For anyone familiar with the popular NASTRAN computer program developed by NASA 
 
 For Windows
 
-* A binary can be downloaded from this link: https://github.com/MYSTRANsolver/MYSTRAN_Releases
+* A binary can be downloaded from [MYSTRAN_Releases] (https://github.com/MYSTRANsolver/MYSTRAN_Releases)
 
 For Linux
 
