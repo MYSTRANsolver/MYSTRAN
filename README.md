@@ -28,16 +28,18 @@ For anyone familiar with the popular NASTRAN computer program developed by NASA 
 - NASTRAN compatibility
 - Modal analysis
 - Linear Static Analysis
-- Linear Elastic Buckling Analysis (All but shell elements as of 13.3)
+- Linear Elastic Buckling Analysis (All but shell elements)
 - Support for True Classical Laminate Plate Theory
-- All of our documentation can be found in MYSTRAN forums
+- Documentation can be found here:
+[MYSTRAN_Documentation](https://github.com/MYSTRANsolver/MYSTRAN_Documentation) 
+
 
 # Installation Instructions
 
 For Windows
 
 * A binary can be downloaded from:
-[MYSTRAN Releases](https://github.com/MYSTRANsolver/MYSTRAN_Releases) 
+[MYSTRAN_Releases](https://github.com/MYSTRANsolver/MYSTRAN_Releases) 
 
 
 For Linux
