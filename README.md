@@ -9,7 +9,7 @@ MYSTRAN is an acronym for “My Structural Analysis” (https://www.mystran.com)
 [Introduction](#Introduction) |
 [Features](#Features) |
 [Installation Instructions](#Installation-Instructions) |
-[Compilation Instructions](#Compilation-Instructions) |
+[Build Instructions](#Compilation-Instructions) |
 [Developmental Goals](#Developmental-Goals) |
 [Ways You Can Help](#ways-you-can-help) |
 [Community](#community)
@@ -53,7 +53,7 @@ Static Linux binaries have been built, but we're still working on releases.
 For now, you'll have better luck building it yourself -- it's really
 straightforward.
 
-# Compilation Instructions
+# Build Instructions
 
 Check out [BUILDING.md](BUILDING.md) for Windows and Linux build
 instructions.
