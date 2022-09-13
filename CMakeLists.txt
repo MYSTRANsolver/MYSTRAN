@@ -10,8 +10,8 @@ project(Mystran)
 # basic compiler and output options
 set(CMAKE_SOURCE_DIR "Source")
 set(PROJECT_BINARY_DIR "Binaries")
-set(CMAKE_FLAGS "-c -g -fbacktrace")
-set(CMAKE_BUILD_TYPE Debug)
+set(CMAKE_FLAGS "-c -fbacktrace")
+# set(CMAKE_BUILD_TYPE Debug)
 
 # set some dirs
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib")

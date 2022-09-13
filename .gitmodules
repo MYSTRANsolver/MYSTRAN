@@ -1,0 +1,4 @@
+[submodule "superlu"]
+	path = superlu
+	url = https://github.com/xiaoyeli/superlu
+	ignore = dirty
