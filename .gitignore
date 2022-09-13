@@ -4,9 +4,6 @@
 # CMake output directories:
 Binaries/*
 
-# downloaded SuperLU sources
-superlu*
-
 # downloaded f2c sources
 f2c
 

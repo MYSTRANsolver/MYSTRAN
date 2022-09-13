@@ -26,34 +26,36 @@ if(NOT DEFINED CMAKE_SUPPRESS_DEVELOPER_WARNINGS)
   set(CMAKE_SUPPRESS_DEVELOPER_WARNINGS 1 CACHE INTERNAL "No dev warnings")
 endif()
 
-# SuperLU stuff
-set(SUPERLU_VERSION "5.2.2")
-set(SUPERLU_DIR "superlu-${SUPERLU_VERSION}")
-SET(SUPERLU_FN "superlu_${SUPERLU_VERSION}.tar.gz")
-set(SUPERLU_URL "https://www.mystran.com/SuperLU/${SUPERLU_FN}")
-include_directories("${SUPERLU_DIR}/SRC")
-
-# download the superlu source if needed
-if(NOT EXISTS ${SUPERLU_FN})
-  message(
-    STATUS
-    "Downloading SuperLU ${SUPERLU_VERSION} source from ${SUPERLU_URL}..."
-  )
-  file(DOWNLOAD ${SUPERLU_URL} ${SUPERLU_FN} TIMEOUT 60 STATUS DOWNLOAD_STATUS)
-  # Check if download was successful.
-  list(GET DOWNLOAD_STATUS 0 STATUS_CODE)
-  list(GET DOWNLOAD_STATUS 1 ERROR_MESSAGE)
-  if(${STATUS_CODE} EQUAL 0)
-    message(STATUS "Done downloading SuperLU.")
-  else()
-    # Exit CMake if the download failed, printing the error message.
-    file(REMOVE ${SUPERLU_FN})
-    message(FATAL_ERROR "Error occurred during download of SuperLU: ${ERROR_MESSAGE}")
+# submodules (i.e. SuperLU)
+find_package(Git QUIET)
+if(GIT_FOUND AND EXISTS "${PROJECT_SOURCE_DIR}/.git")
+  option(GIT_SUBMODULE "Check submodules during build" ON)
+  if(GIT_SUBMODULE)
+    message(STATUS "Updating submodules")
+    execute_process(
+      COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive
+      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+      RESULT_VARIABLE GIT_SUBMOD_RESULT
+    )
+    if(NOT GIT_SUBMOD_RESULT EQUAL "0")
+      message(
+        FATAL_ERROR
+        "git submodule update --init --recursive failed"
+      )
+    endif()
   endif()
 endif()
 
-# extract superlu source
-file(ARCHIVE_EXTRACT INPUT ${SUPERLU_FN})
+# check for SuperLU
+set(SUPERLU_DIR "superlu")
+include_directories("${SUPERLU_DIR}/SRC")
+if(NOT EXISTS "${SUPERLU_DIR}/CMakeLists.txt")
+  message(
+    FATAL_ERROR
+    "The submodules were not downloaded. You have to do it manually!"
+  )
+endif()
+
 
 # f2c stuff
 set(F2C_DIR "f2c")
@@ -74,7 +76,7 @@ if(NOT EXISTS ${F2C_DIR})
   else()
     # Exit CMake if the download failed, printing the error message.
     file(REMOVE_RECURSE ${F2C_DIR})
-    message(FATAL_ERROR "Error occurred during download of libf2c: ${ERROR_MESSAGE}")
+    message(FATAL_ERROR "Error downloading libf2c: ${ERROR_MESSAGE}")
   endif()
 endif()
 
@@ -93,6 +95,11 @@ endforeach()
 # so we gotta compile arithchk and run it
 set(F2C_ARITHCHK_SRC "${F2C_DIR}/arithchk.c")
 set(F2C_ARITHCHK_BIN "${F2C_DIR}/arithchk")
+
+if (WIN32)
+  set(F2C_ARITHCHK_BIN "${F2C_ARITHCHK_BIN}.exe")
+endif()
+
 set(F2C_ARITH_H "${F2C_INCLUDE_DIR}/arith.h")
 set_source_files_properties(
   ${F2C_ARITHCHK_SRC} PROPERTIES COMPILE_FLAGS "-DNO_LONG_LONG -DNO_FPINIT"
