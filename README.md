@@ -9,7 +9,7 @@ MYSTRAN is an acronym for “My Structural Analysis” (https://www.mystran.com)
 [Introduction](#Introduction) |
 [Features](#Features) |
 [Installation Instructions](#Installation-Instructions) |
-[Build Instructions](#Compilation-Instructions) |
+[Build Instructions](#Build-Instructions) |
 [Developmental Goals](#Developmental-Goals) |
 [Ways You Can Help](#ways-you-can-help) |
 [Community](#community)
@@ -55,7 +55,7 @@ straightforward.
 
 # Build Instructions
 
-Check out [BUILDING.md](BUILDING.md) for Windows and Linux build
+Check out [BUILDING.md](BUILDING.md) for Windows and Linux build (compiling)
 instructions.
 
 # Developmental Goals
