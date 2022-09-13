@@ -65,7 +65,7 @@ If your build environment is already set up, building MYSTRAN is quite straightf
 
 While this process is meant to be straightforward, here is a list of some of the more common issues that can arise. Other issues users find might be added here if it's not too specific.
 
-If your issue isn't here, you can always ask for help at the [MYSTRAN forum](https://www.mystran.com/forums/) or [Discord Chat] (https://discord.gg/BAdT6rJyFF)
+If your issue isn't here, you can always ask for help at the [MYSTRAN forum](https://www.mystran.com/forums/) or [Discord Chat](https://discord.gg/BAdT6rJyFF)
 
 ---
 
@@ -117,4 +117,4 @@ Make sure to get the exact required version and name it accordingly. Check out t
 
 ---
 
-If your issue isn't here, you can always ask for help at the [MYSTRAN forum](https://www.mystran.com/forums/) or [Discord Chat] (https://discord.gg/BAdT6rJyFF)
+If your issue isn't here, you can always ask for help at the [MYSTRAN forum](https://www.mystran.com/forums/) or [Discord Chat](https://discord.gg/BAdT6rJyFF)
