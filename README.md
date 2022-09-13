@@ -1,7 +1,7 @@
 MYSTRAN
 =======
 
-MYSTRAN is an acronym for “My Structural Analysis” (https://mystran.com)
+MYSTRAN is an acronym for “My Structural Analysis” (https://www.mystran.com)
 
 
 ---
@@ -22,7 +22,7 @@ MYSTRAN is an acronym for “My Structural Analysis” (https://mystran.com)
 MYSTRAN is a general purpose finite element analysis computer program for
 structures that can be modeled as linear (i.e. displacements, forces and
 stresses proportional to applied load). MYSTRAN is an acronym for
-“My Structural Analysis”, to indicate it’s usefulness in solving a wide variety
+“My Structural Analysis”, to indicate its usefulness in solving a wide variety
 of finite element analysis problems.
 
 For anyone familiar with the popular NASTRAN computer program developed by NASA
@@ -37,14 +37,15 @@ NASTRAN. It is an independent program written in modern Fortran 95.
 - NASTRAN compatibility
 - Modal analysis
 - Linear Static Analysis
-- Linear Elastic Buckling Analysis (All but shell elements as of 13.3)
+- Linear Elastic Buckling Analysis (All But Shell Elements)
 - Support for True Classical Laminate Plate Theory
-- All of our documentation can be found in MYSTRAN forums
+- Documentation can be found in the 
+[Documentation Repository](https://github.com/MYSTRANsolver/MYSTRAN_Documentation).
 
 # Installation Instructions
 
-Windows binaries for can be found in the
-[releases repository](https://github.com/MYSTRANsolver/MYSTRAN_Releases).
+Windows binaries for can be found in the 
+[Releases Repository](https://github.com/MYSTRANsolver/MYSTRAN_Releases).
 
 Static Linux binaries have been built, but we're still working on releases.
 For now, you'll have better luck building it yourself -- it's really
@@ -59,7 +60,7 @@ instructions.
 
 - Implement the MITC shell elements and shell element buckling capability
 - Implement OP2 output format
-- Creating easier ways to aquire MYSTRAN would be nice. This would include, but
+- Creating easier ways to acquire MYSTRAN would be nice. This would include, but
   is not limited to, entry into the Arch Linux User Repository (AUR), the
   Debian Advanced Package Manager (apt), the snapcraft store (snap), the
   chocolatey package manager for Windows, an AppImage, or flatpak.
