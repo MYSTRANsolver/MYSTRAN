@@ -8,7 +8,7 @@ MYSTRAN is an acronym for “My Structural Analysis” (https://www.mystran.com)
 
 [Introduction](#Introduction) |
 [Features](#Features) |
-[Installation Instructions](#Installation-Instructions) |
+[Get EXE or Make Binary](Get-EXE-or-Make-Binary) |
 [Build Instructions](#Build-Instructions) |
 [Developmental Goals](#Developmental-Goals) |
 [Ways You Can Help](#ways-you-can-help) |
@@ -44,7 +44,7 @@ As a main overview, see all four of the [MYSTRAN Repositories](https://github.co
 - Documentation can be found in the 
 [MYSTRAN Documentation Repository](https://github.com/MYSTRANsolver/MYSTRAN_Documentation)
 
-# Installation Instructions
+# Get EXE or Make Binary
 
 Windows binaries for can be found in the 
 [MYSTRAN Releases Repository](https://github.com/MYSTRANsolver/MYSTRAN_Releases)
@@ -55,7 +55,7 @@ straightforward.
 
 # Build Instructions
 
-Check out [BUILDING.md](BUILDING.md) for Windows and Linux build (compiling)
+See [BUILDING.md](BUILDING.md) for Windows and Linux build (compiling)
 instructions.
 
 # Developmental Goals
