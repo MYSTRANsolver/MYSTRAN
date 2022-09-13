@@ -4,7 +4,7 @@
 
 ## Setting up a build environment
 
-In order to build (compile) MYSTRAN using CMake, you first have to set up a proper building environment (i.e. toolchain and required programs/libraries).
+In order to build (compile) MYSTRAN using CMake, you first have to set up a proper build environment (i.e. toolchain and required programs/libraries).
 
 You can skip this part if you've done it already (or if you really know what you're doing).
 
@@ -12,7 +12,7 @@ You can skip this part if you've done it already (or if you really know what you
 
 First, download and install MSYS2 from the [official site](https://www.msys2.org/).
 
-Fire up the MSYS2 terminal and run the following commands:
+Open the MSYS2 terminal and run the following commands:
 
   1. **`pacman -Syu`**
 This updates repository information and installed packages.
@@ -30,7 +30,7 @@ Follow your distribution's steps to install the following programs/libraries:
   - **`cmake`** (version 3.18 or above)
   - **`git`** (optional, you can also download the source .zip from GitHub)
 
-All of those are fairly common, so get in touch if you have trouble installing any of them. Also, note that most distros have a "base" package group for developers (e.g. Arch's `base-devel` or Ubuntu's `build-essential`) that includes necessary tooling such as `gcc` and `make`. If that's the case, install it!
+All of those are fairly common, so get in touch in the MYSTRAN Forums or MYSTRAN Discord if you have trouble installing any of them. Also, note that most distros have a "base" package group for developers (e.g. Arch's `base-devel` or Ubuntu's `build-essential`) that includes necessary tooling such as `gcc` and `make`. If that's the case, install it!
 
 If your distribution doesn't ship CMake 3.18+ yet, check if your distro has a some sort of testing/unstable channel before attempting to [install it manually](https://cmake.org/install/).
 
@@ -42,7 +42,7 @@ If your build environment is already set up, building MYSTRAN is quite straightf
 
 ### Steps for Windows (any)
 
-  1. Fire up the MSYS2 shell.
+  1. Open the MSYS2 shell.
   2. Re-run step #3 of the previous section if needed.
   3. Fetch the source code if you haven't already. If you're using Git, you can clone the repo with **`git clone https://github.com/MYSTRANsolver/MYSTRAN.git`**.
   4. Move the terminal to the MYSTRAN folder. If you've just run `git clone`, just do a **`cd MYSTRAN`**.
@@ -52,7 +52,7 @@ If your build environment is already set up, building MYSTRAN is quite straightf
 
 ### Steps for Linux (any)
 
-  1. Open up a terminal.
+  1. Open a terminal.
   2. Fetch the source code if you haven't already. If you're using Git, you can clone the repo with **`git clone https://github.com/MYSTRANsolver/MYSTRAN.git`**.
   3. Move the terminal to the MYSTRAN folder. If you've just run `git clone`, just do a **`cd MYSTRAN`**.
   4.  Generate the build scripts by running **`cmake .`**.
@@ -63,9 +63,9 @@ If your build environment is already set up, building MYSTRAN is quite straightf
 
 ## Troubleshooting
 
-While this process is meant to be straightforward, I've listed some of the more common issues that can arise. Other issues users find might be added here if it's not too specific.
+While this process is meant to be straightforward, here is a list of some of the more common issues that can arise. Other issues users find might be added here if it's not too specific.
 
-If your issue isn't here, you can always ask for help at the [MYSTRAN forum](https://www.mystran.com/forums/)!
+If your issue isn't here, you can always ask for help at the [MYSTRAN forum](https://www.mystran.com/forums/) or [Discord Chat] (https://discord.gg/BAdT6rJyFF)
 
 ---
 
@@ -117,4 +117,4 @@ Make sure to get the exact required version and name it accordingly. Check out t
 
 ---
 
-If your issue isn't here, you can always ask for help at the [MYSTRAN forum](https://www.mystran.com/forums/)!
+If your issue isn't here, you can always ask for help at the [MYSTRAN forum](https://www.mystran.com/forums/) or [Discord Chat] (https://discord.gg/BAdT6rJyFF)
