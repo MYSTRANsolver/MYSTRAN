@@ -1,10 +1,10 @@
-# Compiling MYSTRAN with CMake
+# Building MYSTRAN with CMake
 
 ###### Last updated 2022-09-12.
 
 ## Setting up a build environment
 
-In order to compile MYSTRAN using CMake, you first have to set up a proper building environment (i.e. toolchain and required programs/libraries).
+In order to build (compile) MYSTRAN using CMake, you first have to set up a proper building environment (i.e. toolchain and required programs/libraries).
 
 You can skip this part if you've done it already (or if you really know what you're doing).
 
@@ -36,9 +36,9 @@ If your distribution doesn't ship CMake 3.18+ yet, check if your distro has a so
 
 ---
 
-## Compiling MYSTRAN
+## Building MYSTRAN
 
-If your build environment is already set up. compiling MYSTRAN is quite straightforward.
+If your build environment is already set up, building MYSTRAN is quite straightforward.
 
 ### Steps for Windows (any)
 
