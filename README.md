@@ -40,12 +40,12 @@ NASTRAN. It is an independent program written in modern Fortran 95.
 - Linear Elastic Buckling Analysis (All But Shell Elements)
 - Support for True Classical Laminate Plate Theory
 - Documentation can be found in the 
-[Documentation Repository](https://github.com/MYSTRANsolver/MYSTRAN_Documentation).
+[MYSTRAN Documentation Repository](https://github.com/MYSTRANsolver/MYSTRAN_Documentation)
 
 # Installation Instructions
 
 Windows binaries for can be found in the 
-[Releases Repository](https://github.com/MYSTRANsolver/MYSTRAN_Releases).
+[MYSTRAN Releases Repository](https://github.com/MYSTRANsolver/MYSTRAN_Releases)
 
 Static Linux binaries have been built, but we're still working on releases.
 For now, you'll have better luck building it yourself -- it's really
