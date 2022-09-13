@@ -46,11 +46,11 @@ As a main overview, see all four of the [MYSTRAN Repositories](https://github.co
 
 # Get EXE or Make Binary
 
-Windows binaries for can be found in the 
+Windows EXE (executable) for can be found in the 
 [MYSTRAN Releases Repository](https://github.com/MYSTRANsolver/MYSTRAN_Releases)
 
-Static Linux binaries have been built, but we're still working on releases.
-For now, you'll have better luck building it yourself -- it's really
+Static Linux binaries have been built, but releases are in work.
+For now, it is better to build it yourself -- it's really
 straightforward.
 
 # Build Instructions
