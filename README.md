@@ -76,4 +76,4 @@ See [BUILD.md](BUILD.md) for both Windows and Linux build (compiling) instructio
 # Community
 
 - [Join our Forums](https://mystran.com/forums)
-- [Join our Discord Channel](https://discord.gg/BAdT6rJyFF)
+- [Join our Discord Channel](https://discord.gg/9k76SkHpHM)
