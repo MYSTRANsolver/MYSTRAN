@@ -192,7 +192,7 @@ elems_2: DO J = 1,NELE
                      ENDIF   
 
 !                    ---------------------------------------------------------------------------------------------------------------
-elas:                IF (ETYPE(J)(1:4) == 'ELAS') THEN     ! Set engr forces based on the node force values
+                     IF (ETYPE(J)(1:4) == 'ELAS') THEN     ! Set engr forces based on the node force values
                         CALL ELEM_STRE_STRN_ARRAYS ( 1 )
                         NDUM = 0
                         CALL CALC_ELEM_STRESSES ( 1, NDUM, 0, 'N', 'N' )
@@ -201,37 +201,31 @@ elas:                IF (ETYPE(J)(1:4) == 'ELAS') THEN     ! Set engr forces bas
                         ELSE
                            OGEL(NUM_OGEL,1) = ZERO
                         ENDIF
-                     ENDIF elas
-
+                     ! end elas
 !                    ---------------------------------------------------------------------------------------------------------------
-bush:                IF (ETYPE(J)(1:4) == 'BUSH') THEN
-
+                     ELSE IF (ETYPE(J)(1:4) == 'BUSH') THEN
                         DO K=1,3                           ! Calculate element forces in GA-GB axes (x along line from GA to GB)
                           DUM21(K) = ZERO
                           DUM22(K) = ZERO
                           DUM31(K) = ZERO
                           DUM32(K) = ZERO
                         ENDDO
-
                         IF (ELEM_LEN_12 > .0001D0) THEN    ! Element has a GA-GB axis so start with PE_GA_GB
-
                            DX = ABS(OFFDIS_GA_GB(2,1))
                            DY =    (OFFDIS_GA_GB(2,2))
                            DZ =    (OFFDIS_GA_GB(2,3))
-
                            DUM21(1) =  PE_GA_GB(7)
                            DUM21(2) =  PE_GA_GB(8)
                            DUM21(3) =  PE_GA_GB(9)
                            DUM31(1) =  PE_GA_GB(8)*DZ - PE_GA_GB(9)*DY + PE_GA_GB(10)
                            DUM31(2) = -PE_GA_GB(7)*DZ - PE_GA_GB(9)*DX + PE_GA_GB(11)
                            DUM31(3) =  PE_GA_GB(7)*DY + PE_GA_GB(8)*DX + PE_GA_GB(12)
-
                            DO K=1,3
                               EEF(K)   = DUM21(K)
                               EEF(K+3) = DUM31(K)
                            ENDDO
                                                            ! There is a local elem coord system (via CID or v-vec)
-   bush_2:                 IF ((BUSH_CID >= 0) .OR. (BUSH_VVEC /= 0)) THEN
+                        IF ((BUSH_CID >= 0) .OR. (BUSH_VVEC /= 0)) THEN
 
                               DO K=1,3                     ! Transform elem forces from GA-GB axes to basic
                                  DO L=1,3
@@ -250,10 +244,9 @@ bush:                IF (ETYPE(J)(1:4) == 'BUSH') THEN
                                  EEF(K)   = DUM22(K)
                                  EEF(K+3) = DUM32(K)
                               ENDDO
-                           
-                           ENDIF bush_2
+                           ENDIF 
                                                            ! Transform elem forces from basic to local
-   bush_3:                 IF ((BUSH_CID > 0) .OR. (BUSH_VVEC /= 0)) THEN
+                           IF ((BUSH_CID > 0) .OR. (BUSH_VVEC /= 0)) THEN
    
                               DO K=1,3
                                  DO L=1,3
@@ -268,7 +261,7 @@ bush:                IF (ETYPE(J)(1:4) == 'BUSH') THEN
                                  EEF(K+3) = DUM31(K)
                               ENDDO
 
-                           ENDIF bush_3
+                           ENDIF 
 
                         ELSE                               ! Element has GA, GB coincident so element loads are in PEL
 
@@ -278,8 +271,6 @@ bush:                IF (ETYPE(J)(1:4) == 'BUSH') THEN
 
                         ENDIF
 
-                     ENDIF bush
-
                      OGEL(NUM_OGEL,1) = EEF(1)             ! Now set OGEL output equal to the correct EEF's
                      OGEL(NUM_OGEL,2) = EEF(2)
                      OGEL(NUM_OGEL,3) = EEF(3)
@@ -287,14 +278,14 @@ bush:                IF (ETYPE(J)(1:4) == 'BUSH') THEN
                      OGEL(NUM_OGEL,5) = EEF(5)
                      OGEL(NUM_OGEL,6) = EEF(6)
 
+                     ! end bush
 !                    ---------------------------------------------------------------------------------------------------------------
-rod:                 IF (ETYPE(J)(1:3) == 'ROD') THEN
+                     ELSE IF (ETYPE(J)(1:3) == 'ROD') THEN
                         OGEL(NUM_OGEL,7) = -PEL(1)         ! Fx  (axial force for ROD)
                         OGEL(NUM_OGEL,8) = -PEL(4)         ! T   (torque for ROD)
-                     ENDIF rod
-
+                     !end rod
 !                    ---------------------------------------------------------------------------------------------------------------
-bar:                 IF (ETYPE(J)(1:3) == 'BAR') THEN
+                     ELSE IF (ETYPE(J)(1:3) == 'BAR') THEN
                         LENGTH = ELEM_LEN_AB
                         OGEL(NUM_OGEL,1) = -PEL(6)                 ! M1a (bending moment, plane 1, end a for BAR)
                         OGEL(NUM_OGEL,2) =  PEL(5)                 ! M2a (bending moment, plane 2, end a for BAR)
@@ -304,7 +295,7 @@ bar:                 IF (ETYPE(J)(1:3) == 'BAR') THEN
                         OGEL(NUM_OGEL,6) = -PEL(3)                 ! V2  (plane 2 shear for BAR)
                         OGEL(NUM_OGEL,7) = -PEL(1)                 ! Fx  (axial force for BAR)
                         OGEL(NUM_OGEL,8) = -PEL(4)                 ! T   (torque for BAR)
-                     ENDIF bar
+                     ENDIF !end bar
 
                      IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
 
