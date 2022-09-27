@@ -6,16 +6,19 @@ MYSTRAN is an acronym for “My Structural Analysis” (https://www.mystran.com)
 
 ---
 
+[Build Instructions](#Build-Instructions) |
 [Introduction](#Introduction) |
 [Features](#Features) |
 [Get EXE or Make Binary](#Get-EXE-or-Make-Binary) |
-[Build Instructions](#Build-Instructions) |
 [Developmental Goals](#Developmental-Goals) |
 [Ways You Can Help](#ways-you-can-help) |
 [Community](#community)
 
 ---
 
+# Build Instructions
+
+See [BUILD.md](BUILD.md) for both Windows and Linux build (compiling) instructions.
 
 # Introduction
 
@@ -52,10 +55,6 @@ Windows EXE (executable) for can be found in the
 Static Linux binaries have been built, but releases are in work.
 For now, it is better to build it yourself -- it's really
 straightforward.
-
-# Build Instructions
-
-See [BUILD.md](BUILD.md) for both Windows and Linux build (compiling) instructions.
 
 # Developmental Goals
 
