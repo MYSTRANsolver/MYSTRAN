@@ -2,9 +2,9 @@ name: CMake
 
 on:
   push:
-    branches: [ "op2_plot" ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ "op2_plot" ]
+    branches: [ "main" ]
 
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
