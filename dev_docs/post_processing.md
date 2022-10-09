@@ -81,15 +81,14 @@ see https://github.com/dr-bill-c/MYSTRAN/pull/24#event-5702809912
 
 | Force Result        |  F06 |  ANS |  OP2 |  PCH |  CSV |  Notes |
 | ------------        |  --- |  --- |  --- |  --- |  --- |  ----- |
-| CELASx              |  ??? |  ??? |  Yes |  ??? |  No  |        |
+| CELASx              |  Yes |  Yes |  Yes |  ??? |  No  |        |
 | CROD                |  Yes |  Yes |  Yes |  ??? |  No  | OP2 code written; commented out due to bug |
-| CBUSH               |  ??? |  ??? |  ??? |  ??? |  No  |        |
-| CBAR                |  Yes |  Yes |  Yes |  ??? |  No  |        |
-| CBEAM               |  ??? |  ??? |  No  |  ??? |  No  | large difference between output structure of Nastran & Mystran |
+| CBUSH               |  Yes |  Yes |  Yes |  ??? |  No  |        |
+| CBAR                |  Yes |  Yes |  Yes |  ??? |  No  | large difference between output structure of Nastran & Mystran  |
 | CSHEAR              |  Yes |  Yes |  No  |  ??? |  No  |        |
-| CTRIA3              |  ??? |  ??? |  Yes |  ??? |  No  |        |
+| CTRIA3              |  Yes |  Yes |  Yes |  ??? |  No  |        |
 | TRIA3K/QUAD4K       |  Yes |  Yes |  No  |  ??? |  No  |        |
-| CQUAD4 Iso-Center   |  ??? |  ??? |  Yes |  ??? |  No  |        |
+| CQUAD4 Iso-Center   |  Yes |  Yes |  Yes |  ??? |  No  |        |
 | CQUAD4 Iso-Corner   |  No  |  No  |  No  |  ??? |  No  |        |
 | CTRIA3 Comp         |  ??? |  ??? |  No  |  ??? |  No  |        |
 | CQUAD4 Comp         |  ??? |  ??? |  No  |  ??? |  No  |        |
@@ -100,8 +99,7 @@ see https://github.com/dr-bill-c/MYSTRAN/pull/24#event-5702809912
 | CELASx              | ???  | ???  | ???  | ???  | No	  |              |
 | CROD                | Yes  | ???  | Yes  | ???  | No   | no axial/torsion margin   |
 | CBUSH               | ???  | ???  | ???  | ???  | No	  |              |
-| CBAR                | ???  | ???  | ???  | ???  | No	  |              |
-| CBEAM               | ???  | ???  | ???  | ???  | No   | large difference between output structure of Nastran & Mystran             |
+| CBAR                | ???  | ???  | ???  | ???  | No	  | large difference between output structure of Nastran & Mystran |
 | CSHEAR              | ???  | ???  | Yes  | ???  | No	  |              |
 | CTRIA3 Iso          | ???  | ???  | ???  | ???  | No   | OP2 plane1/2 results faked; no FIBER/CURV support (FIBER only); no MAXS/MISES support (MISES only)             |
 | CQUAD4 Iso-Center   | ???  | ???  | ???  | ???  | No   | OP2 plane1/2 results faked; no FIBER/CURV support (FIBER only); no MAXS/MISES support (MISES only)             |
@@ -131,7 +129,6 @@ see https://github.com/dr-bill-c/MYSTRAN/pull/24#event-5702809912
 | CROD                 | ???  | ???  | No   | ???  | No   |       |
 | CBUSH                | ???  | ???  | No   | ???  | No   |       |
 | CBAR                 | ???  | ???  | No   | ???  | No   |       |
-| CBEAM                | ???  | ???  | No   | ???  | No   |       |
 | CTRIA3 Iso           | ???  | ???  | No   | ???  | No   |       |
 | CQUAD4 Iso-Center    | ???  | ???  | No   | ???  | No   |       |
 | CQUAD4 Iso-Corner    | ???  | ???  | No   | ???  | No   |       |
