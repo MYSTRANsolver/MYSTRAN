@@ -574,11 +574,8 @@ headr:IF (IHDR == 'Y') THEN
       SUBROUTINE FWRITE_ANS ( WHICH )
 
       USE PENTIUM_II_KIND, ONLY       :  BYTE
-
       IMPLICIT NONE
-
       CHARACTER(LEN=*), INTENT(IN)    :: WHICH             ! Which of the below to write during this call
-
       INTEGER(LONG)                   :: II,JJ             ! DO loop indices or counters
 
 ! **********************************************************************************************************************************
@@ -619,6 +616,10 @@ headr:IF (IHDR == 'Y') THEN
                ENDIF
 
             ENDIF
+  101 FORMAT(' OUTPUT FOR SUBCASE ',I8)
+  102 FORMAT(' OUTPUT FOR EIGENVECTOR ',I8)
+  103 FORMAT(' OUTPUT FOR CRAIG-BAMPTON DOF ',I8,' OF ',I8,' (boundary ',A,' for grid',I8,' component',I2,')')
+  104 FORMAT(' OUTPUT FOR CRAIG-BAMPTON DOF ',I8,' OF ',I8,' (modal acceleration for mode ',I8,')')
 
             WRITE(ANS,*)
 
@@ -630,9 +631,14 @@ headr:IF (IHDR == 'Y') THEN
             ENDIF
                WRITE(ANS,401) FILL(1:16), ONAME
             ENDIF
+  301 FORMAT(39X,A,'E L E M E N T   E N G I N E E R I N G   F O R C E S')
+  302 FORMAT(33X,A,'C B   E L E M E N T   E N G I N E E R I N G   F O R C E   O T M')
+  401 FORMAT(44X,A,'F O R   E L E M E N T   T Y P E   ',A11)
 
             IF      (TYPE(1:4) == 'ELAS') THEN
                WRITE(ANS,1111) FILL(1:16), FILL(1:16)
+ 1111 FORMAT(2X,A,'Element     Force'                                                                                              &
+          ,/,2X,A,'   ID')
 
             ELSE IF (TYPE == 'BAR     ') THEN
                WRITE(ANS,1211) FILL(1:16), FILL(1:16)
@@ -656,6 +662,11 @@ headr:IF (IHDR == 'Y') THEN
       ELSE IF (WHICH == 'ELAS' ) THEN
          WRITE(ANS,1112) FILL(1:16), (EID_OUT_ARRAY(II,1),OGEL(II,1),II=1,NUM)
          WRITE(ANS,1113) (MAX_ANS(JJ),JJ=1,1),(MIN_ANS(JJ),JJ=1,1),(ABS_ANS(JJ),JJ=1,1)
+ 1112 FORMAT(A,5(I8,1ES14.6))
+ 1113 FORMAT(11X,'              -------------',/,                                                                                  &
+             1X,'MAX (for output set):  ',1(ES14.6),/,                                                                             &
+             1X,'MIN (for output set):  ',1(ES14.6),//,                                                                            &
+             1X,'ABS (for output set):  ',1(ES14.6))
 
       ELSE IF (WHICH == 'BAR'  ) THEN
          DO II=1,NUM
@@ -688,32 +699,6 @@ headr:IF (IHDR == 'Y') THEN
       ENDIF
 
       RETURN
-
-! **********************************************************************************************************************************
-  101 FORMAT(' OUTPUT FOR SUBCASE ',I8)
-
-  102 FORMAT(' OUTPUT FOR EIGENVECTOR ',I8)
-
-  103 FORMAT(' OUTPUT FOR CRAIG-BAMPTON DOF ',I8,' OF ',I8,' (boundary ',A,' for grid',I8,' component',I2,')')
-
-  104 FORMAT(' OUTPUT FOR CRAIG-BAMPTON DOF ',I8,' OF ',I8,' (modal acceleration for mode ',I8,')')
-
-  301 FORMAT(39X,A,'E L E M E N T   E N G I N E E R I N G   F O R C E S')
-
-  302 FORMAT(33X,A,'C B   E L E M E N T   E N G I N E E R I N G   F O R C E   O T M')
-
-  401 FORMAT(44X,A,'F O R   E L E M E N T   T Y P E   ',A11)
-
-! ELAS >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
- 1111 FORMAT(2X,A,'Element     Force'                                                                                              &
-          ,/,2X,A,'   ID')
- 
- 1112 FORMAT(A,5(I8,1ES14.6))
-  
- 1113 FORMAT(11X,'              -------------',/,                                                                                  &
-             1X,'MAX (for output set):  ',1(ES14.6),/,                                                                             &
-             1X,'MIN (for output set):  ',1(ES14.6),//,                                                                            &
-             1X,'ABS (for output set):  ',1(ES14.6))
 
 ! BAR >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
  1211 FORMAT(2X,A,'Element       Bend-Moment End A           Bend-Moment End B              - Shear -              Axial'          &
