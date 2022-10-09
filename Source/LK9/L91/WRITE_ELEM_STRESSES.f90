@@ -489,8 +489,8 @@
          ENDIF
 
          DO I=1,NUM
-            WRITE(F06,1303) EID_OUT_ARRAY(I,1),(OGEL(I,J),J=1,NCOLS)  ; IF (DEBUG(200) > 0) WRITE(ANS,1313) EID_OUT_ARRAY(I,1),    &
-                                                                                                            (OGEL(I,J),J=1,NCOLS)
+            WRITE(F06,1303) EID_OUT_ARRAY(I,1),(OGEL(I,J),J=1,NCOLS)
+            IF (WRITE_ANS) WRITE(ANS,1313) EID_OUT_ARRAY(I,1), (OGEL(I,J),J=1,NCOLS)
          ENDDO
 
          CALL GET_MAX_MIN_ABS_STR ( NUM, NCOLS, 'N', MAX_ANS, MIN_ANS, ABS_ANS )
@@ -572,18 +572,20 @@
  4          FORMAT(' *DEBUG:  WRITE_CQUAD4-144:  I=',I4, " K=", I4)
             K = K + 1
             WRITE(ERR,4) I,K
-            WRITE(F06,*)                                              ; IF (DEBUG(200) > 0) WRITE(ANS,*)
-            WRITE(F06,1403) FILL(1: 0), EID_OUT_ARRAY(I,1),(OGEL(K,J),J=1,10)                                                      
-                                                                      ; IF (DEBUG(200) > 0) WRITE(ANS,1413) EID_OUT_ARRAY(I,1),    &
-                                                                                                              (OGEL(K,J),J=1,10)
+            WRITE(F06,*)
+            IF (WRITE_ANS) WRITE(ANS,*)
+            WRITE(F06,1403) FILL(1: 0), EID_OUT_ARRAY(I,1),(OGEL(K,J),J=1,10)
+            IF (WRITE_ANS) WRITE(ANS,1413) EID_OUT_ARRAY(I,1), (OGEL(K,J),J=1,10)
             K = K + 1
-            WRITE(F06,1404) FILL(1: 0), (OGEL(K,J),J=1,8)             ; IF (DEBUG(200) > 0) WRITE(ANS,1414) (OGEL(K,J),J=1,8)
+            WRITE(F06,1404) FILL(1: 0), (OGEL(K,J),J=1,8)
+            IF (WRITE_ANS) WRITE(ANS,1414) (OGEL(K,J),J=1,8)
 
 
             DO L=1,NUM_PTS-1
                K = K + 1
                WRITE(ERR,4) I,K
-               WRITE(F06,*)                                           ; IF (DEBUG(200) > 0) WRITE(ANS,*)
+               WRITE(F06,*)
+               IF (WRITE_ANS) WRITE(ANS,*)
                IF (DABS(POLY_FIT_ERR(I+L)) >= 0.01D0) THEN
                   WRITE(F06,1405) FILL(1: 0), GID_OUT_ARRAY(I,L+1),(OGEL(K,J),J=1,10), POLY_FIT_ERR(I+L), POLY_FIT_ERR_INDEX(I+L)
                   WRT_ERR_INDEX_NOTE(POLY_FIT_ERR_INDEX(I+L)) = 'Y'
@@ -595,7 +597,8 @@
                ENDIF
 
                K = K + 1
-               WRITE(F06,1407) FILL(1: 0), (OGEL(K,J),J=1,8)          ; IF (DEBUG(200) > 0) WRITE(ANS,1417) (OGEL(K,J),J=1,8)
+               WRITE(F06,1407) FILL(1: 0), (OGEL(K,J),J=1,8)
+               IF (WRITE_ANS) WRITE(ANS,1417) (OGEL(K,J),J=1,8)
 
             ENDDO
          ENDDO
@@ -697,14 +700,14 @@
          WRITE(OP2) (EID_OUT_ARRAY(I,1)*10+DEVICE_CODE,(REAL(OGEL(I,J),4),J=1,6), I=1,NUM)
 
          DO I=1,NUM
-            WRITE(F06,1802) EID_OUT_ARRAY(I,1),(OGEL(I,J),J=1,6)      ; IF (DEBUG(200) > 0) WRITE(ANS,1812) EID_OUT_ARRAY(I,1),    &
-                                                                                                              (OGEL(I,J),J=1,6)
+            WRITE(F06,1802) EID_OUT_ARRAY(I,1),(OGEL(I,J),J=1,6)
+            IF (WRITE_ANS) WRITE(ANS,1812) EID_OUT_ARRAY(I,1), (OGEL(I,J),J=1,6)
          ENDDO
 
       ELSE IF (TYPE == 'USERIN  ') THEN
          DO I=1,NUM
-            WRITE(F06,1902) EID_OUT_ARRAY(I,1),(OGEL(I,J),J=1,6)      ; IF (DEBUG(200) > 0) WRITE(ANS,1812) EID_OUT_ARRAY(I,1),    &
-                                                                                                              (OGEL(I,J),J=1,6)
+            WRITE(F06,1902) EID_OUT_ARRAY(I,1), (OGEL(I,J),J=1,6)
+            IF (WRITE_ANS) WRITE(ANS,1812) EID_OUT_ARRAY(I,1), (OGEL(I,J),J=1,6)
          ENDDO
 
       ELSE
@@ -1092,13 +1095,15 @@
 
       DO I=1,NUM
          K = K + 1
-         WRITE(F06,*)                                         ; WRITE(ANS,*)
+         WRITE(F06,*)
+         WRITE(ANS,*)
          ! the J=1,10 loop is the upper layer & 2 transverse shear
-         WRITE(F06,1703) EID_OUT_ARRAY(I,1),(OGEL(K,J),J=1,10); IF (DEBUG(200) > 0) WRITE(ANS,1713) EID_OUT_ARRAY(I,1),    &
-                                                                                                    (OGEL(K,J),J=1,10)
+         WRITE(F06,1703) EID_OUT_ARRAY(I,1),(OGEL(K,J),J=1,10)
+         IF (WRITE_ANS) WRITE(ANS,1713) EID_OUT_ARRAY(I,1), (OGEL(K,J),J=1,10)
          K = K + 1
          ! the J=1,8 loop is the lower layer
-         WRITE(F06,1704) (OGEL(K,J),J=1,8)                    ; IF (DEBUG(200) > 0) WRITE(ANS,1714) (OGEL(K,J),J=1,10)
+         WRITE(F06,1704) (OGEL(K,J),J=1,8)
+         IF (WRITE_ANS) WRITE(ANS,1714) (OGEL(K,J),J=1,10)
       ENDDO
 
       CALL GET_MAX_MIN_ABS_STR ( NUM, 10, 'Y', MAX_ANS, MIN_ANS, ABS_ANS )
