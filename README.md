@@ -40,6 +40,7 @@ As a main overview, see all 4 of the [MYSTRAN Repositories](https://github.com/M
 # Features
 
 - NASTRAN compatibility
+- OP2 Support
 - Modal analysis
 - Linear Static Analysis
 - Linear Elastic Buckling Analysis (All But Shell Elements)
@@ -59,7 +60,7 @@ straightforward.
 # Developmental Goals
 
 - Implement the MITC shell elements and shell element buckling capability
-- Implement OP2 output format
+- Improve OP2 output
 - Creating easier ways to acquire MYSTRAN would be nice. This would include, but
   is not limited to, entry into the Arch Linux User Repository (AUR), the
   Debian Advanced Package Manager (apt), the snapcraft store (snap), the

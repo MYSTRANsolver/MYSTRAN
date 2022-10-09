@@ -26,8 +26,9 @@
  
       SUBROUTINE CHK_CC_CMD_DESCRIBERS ( WHAT, NUM_WORDS )
  
-! Checks Case Control output requests to make sure the descriptors in parens (e.g. SORT1, PRINT, etc) are valid. Write warning
-! messages if a descriptor is not valid for MYSTRAN
+     ! Checks Case Control output requests to make sure the descriptors in parens
+     ! (e.g. SORT1, PRINT, etc) are valid. 
+     ! Write warning messages if a descriptor is not valid for MYSTRAN
 
       USE PENTIUM_II_KIND, ONLY        :  BYTE, LONG
       USE IOUNT1, ONLY                 :  WRT_ERR, WRT_LOG, ERR, F04, F06
@@ -84,8 +85,8 @@
          CALL OUTA_HERE ( 'Y' )
       ENDIF
 
-! Set all of the allowable values that can be in ALLOW_CC_CMD_DESCR. These are all of the values from MSC NASTRAN. Not all are
-! implemented in MYSTRAN
+      ! Set all of the allowable values that can be in ALLOW_CC_CMD_DESCR. 
+      ! These are all of the values from MSC NASTRAN. Not all are implemented in MYSTRAN.
 
 !     =================ACCE=================   =================DISP=================   =================ELFO=================
       ALLOW_CC_CMD_DESCR( 1, 1) = 'SORT1   ' ; ALLOW_CC_CMD_DESCR( 1, 2) = 'SORT1   ' ; ALLOW_CC_CMD_DESCR( 1, 3) = 'SORT1   '
@@ -285,6 +286,8 @@ jdo_1:   DO J=1,NUM_POSS_CCD
 
          DO I=1,NUM_WORDS
 
+            ! TODO: CEN is valid for CENTER (test this)
+            ! TODO: implement CORNER/BILIN
             IF      (CC_CMD_DESCRIBERS(I)(1:6) == 'CENTER') THEN
                STRE_LOC = 'CENTER'
             ELSE IF (CC_CMD_DESCRIBERS(I)(1:6) == 'CORNER') THEN
@@ -293,6 +296,7 @@ jdo_1:   DO J=1,NUM_POSS_CCD
                STRE_LOC = 'CORNER'
             ENDIF
 
+            ! TODO: MISES is valid for VONMISES (test this...)
             IF      (CC_CMD_DESCRIBERS(I)(1:8) == 'VONMISES') THEN
                STRE_OPT = 'VONMISES'
             ELSE IF (CC_CMD_DESCRIBERS(I)(1:4) == 'MAXS'    ) THEN
@@ -308,7 +312,8 @@ jdo_1:   DO J=1,NUM_POSS_CCD
       IF (WHAT == 'STRN' ) THEN
 
          DO I=1,NUM_WORDS
-
+            ! TODO: CEN is valid for CENTER (test this)
+            ! TODO: implement CORNER/BILIN
             IF      (CC_CMD_DESCRIBERS(I)(1:6) == 'CENTER') THEN
                STRN_LOC = 'CENTER'
             ELSE IF (CC_CMD_DESCRIBERS(I)(1:6) == 'CORNER') THEN
@@ -317,6 +322,7 @@ jdo_1:   DO J=1,NUM_POSS_CCD
                STRN_LOC = 'CORNER'
             ENDIF
 
+            ! TODO: MISES is valid for VONMISES (test this...)
             IF      (CC_CMD_DESCRIBERS(I)(1:8) == 'VONMISES') THEN
                STRN_OPT = 'VONMISES'
             ELSE IF (CC_CMD_DESCRIBERS(I)(1:4) == 'MAXS'    ) THEN
