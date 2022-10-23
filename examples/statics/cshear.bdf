@@ -1,0 +1,60 @@
+ID PLATE,STATICS                                                                
+SOL 1
+CEND                                                                            
+TITLE = CSHEAR test
+SPC   = 101
+ECHO = UNSORT
+$
+DISP(    PRINT,PLOT,PUNCH,NEU,CSV) = ALL
+ELFORCE( PRINT,PLOT,PUNCH,NEU,CSV) = ALL
+GPFORCE( PRINT,PLOT,PUNCH,NEU,CSV) = ALL
+MPCFORCE(PRINT,PLOT,PUNCH,NEU,CSV) = ALL
+OLOAD(   PRINT,PLOT,PUNCH,NEU,CSV) = ALL
+SPCFORCE(PRINT,PLOT,PUNCH,NEU,CSV) = ALL
+STRESS(  PRINT,PLOT,PUNCH,NEU,CSV) = ALL
+SET 1 = 11
+ELDATA(0,PRINT) = ALL
+ELDATA(1,PRINT) = ALL
+ELDATA(2,PRINT) = ALL
+ELDATA(3,PRINT) = ALL
+ELDATA(4,PRINT) = ALL
+ELDATA(5,PRINT) = ALL
+SUBCASE 1
+  LABEL = FORCE load
+  LOAD  = 1992
+BEGIN BULK                                                                      
+$
+GRID    1011              0.      0.      0.   
+GRID    1012             50.      0.      0.   
+GRID    1013            100.      0.      0.
+GRID    1014            100.    100.      0.
+$
+CSHEAR  11      91      1011    1012    1013    1014
+CROD, 1, 92, 1011, 1012  
+CROD, 2, 92, 1012, 1013  
+CROD, 3, 92, 1013, 1014  
+CROD, 4, 92, 1014, 1011
+$
+$
+$ PSHEAR, PID, MID, T, NSM
+PSHEAR, 91, 20, 0.1, 0.2$
+PROD    92      20      1.0  
+$
+MAT1    20      10.+6   4.+6    .25     .1                              +MAT1
++MAT1   20000.  20000.  20000.
+$
+FORCE   1992    1011            1000.   1.      1.       0.
+FORCE   1992    1012            1000.   1.      1.       0.
+FORCE   1992    1013            1000.   1.      1.       0.
+$
+SPC1, 101, 456, 1011, 1012, 1013, 1014
+SPC1, 101, 123, 1011, 1012
+$
+PARAM   SOLLIB   IntMKL
+PARAM   GRDPNT   0
+PARAM   POST     -1
+$
+DEBUG   192     2                                                       GPFO summary
+DEBUG   200     1                                                       ANS
+$
+ENDDATA
