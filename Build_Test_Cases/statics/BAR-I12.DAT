@@ -1,0 +1,40 @@
+ID BAR,NONZERO I12
+SOL 1
+CEND
+TITLE = 1 BAR WITH END LOADS AND WITH NONZERO I12
+LOAD  = 1
+DISP          = ALL
+ECHO          = UNSORT
+ELFORCE(BOTH) = ALL
+GPFORCE       = ALL
+MPCFORCE      = ALL
+OLOAD         = ALL
+SPCFORCE      = ALL
+STRESS        = ALL
+ELDATA(4,PRINT) = ALL
+ELDATA(5,PRINT) = ALL
+BEGIN BULK
+$
+GRID    101             0.      0.      0.              123456
+GRID    201             10.     0.      0.              14
+$
+CBAR    11      10      101     201     0.      1.      0.
+$
+PBAR    10      20              5.      4.                              +PBAR1
++PBAR1   .2     -.3      .2      .3     -.2      .3     -.2     -.3     +PBAR2
++PBAR2                   2.
+$
+MAT1    20      1.E+7   4.+6            .1      1.
+$
+LOAD    1        1.0     2.0     11      3.0     12
+FORCE   11       201             1.      0.      3.     -6. 
+MOMENT  12       201             1.      0.      2.      3.  
+$
+PARAM   SOLLIB   IntMKL
+PARAM   GRDPNT   0
+PARAM   POST     -1
+$
+DEBUG   192     2                                                       GPFO summary
+DEBUG   200     1                                                       ANS
+$
+ENDDATA
