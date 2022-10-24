@@ -37,8 +37,6 @@ familiar. Many structural analyses modeled for execution in NASTRAN will
 execute in MYSTRAN with little, or no, modification. MYSTRAN, however, is not
 NASTRAN. It is an independent program written in modern Fortran 95.
 
-As a main overview, see all 4 of the [MYSTRAN Repositories](https://github.com/MYSTRANsolver) (Code, Releases, Documentation, and Benchmarking).
-
 # Features
 
 - NASTRAN compatibility
@@ -50,7 +48,7 @@ As a main overview, see all 4 of the [MYSTRAN Repositories](https://github.com/M
 # Get EXE or Make Binary
 
 Windows EXE (executable) for can be found in the 
-[MYSTRAN Releases Repository](https://github.com/MYSTRANsolver/MYSTRAN_Releases)
+[MYSTRAN Releases](https://github.com/MYSTRANsolver/MYSTRAN_Releases) repository.
 
 Static Linux binaries have been built, but releases are in work.
 For now, it is better to build it yourself -- it's really
