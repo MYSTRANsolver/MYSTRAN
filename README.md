@@ -11,7 +11,7 @@ MYSTRAN is an acronym for “My Structural Analysis” (https://www.mystran.com)
 [Features](#Features) |
 [Get EXE or Make Binary](#Get-EXE-or-Make-Binary) |
 [Documentation](#Documentation) |
-[Four Repositories](#Four Repositories) |
+[Four Repositories](#Four-Repositories) |
 [Developmental Goals](#Developmental-Goals) |
 [Ways You Can Help](#ways-you-can-help) |
 [Community](#community)
@@ -60,16 +60,18 @@ straightforward.
 
 The end user documentation is located in the "User_Documents" folder of this repository.
 
-# Four Repositories
+# Four-Repositories
 
-The MYSTRAN project consits of four repositoires. This is repository contains the source code, build instructions, and end user documentation.
+The MYSTRAN project consits of four repositoires.
 
-The [MYSTRAN_Resources](https://github.com/MYSTRANsolver/MYSTRAN_Resources) repository consists of files for MYSTRAN developers.
+1 - This repository contains the source code, build instructions, and end user documentation.
+
+2 - The [MYSTRAN_Resources](https://github.com/MYSTRANsolver/MYSTRAN_Resources) repository consists of files for MYSTRAN developers.
 It also contains informationa and files realated to pre- and post-processors relavant to MYSTRAN.
 
-The [MYSTRAN_Releases](https://github.com/MYSTRANsolver/MYSTRAN_Releases) repository
+3- The [MYSTRAN_Releases](https://github.com/MYSTRANsolver/MYSTRAN_Releases) repository
 
-The [MYSTRAN_Benchmark](https://github.com/MYSTRANsolver/MYSTRAN_Benchmark) repository contains the test cases and utilities used to verify that a new build produces results consistent with prior builds and models that have been verified.
+4 - The [MYSTRAN_Benchmark](https://github.com/MYSTRANsolver/MYSTRAN_Benchmark) repository contains the test cases and utilities used to verify that a new build produces results consistent with prior builds and models that have been verified.
 
 
 # Developmental Goals
