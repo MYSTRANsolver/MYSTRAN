@@ -40,3 +40,4 @@
 *.docx binary
 *.b8.ugrid binary
 *.exe binary
+*.pdf binary
