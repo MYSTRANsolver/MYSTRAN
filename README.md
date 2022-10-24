@@ -60,7 +60,7 @@ straightforward.
 
 The end user documentation is located in the "User_Documents" folder of this repository.
 
-# Four-Repositories
+# Four Repositories
 
 The MYSTRAN project consits of four repositoires.
 
