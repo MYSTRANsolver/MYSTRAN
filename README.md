@@ -67,7 +67,7 @@ The MYSTRAN project consits of four repositoires.
 2 - The [MYSTRAN_Resources](https://github.com/MYSTRANsolver/MYSTRAN_Resources) repository consists of files for MYSTRAN developers.
 It also contains informationa and files realated to pre- and post-processors relavant to MYSTRAN.
 
-3- The [MYSTRAN_Releases](https://github.com/MYSTRANsolver/MYSTRAN_Releases) repository
+3 - The [MYSTRAN_Releases](https://github.com/MYSTRANsolver/MYSTRAN_Releases) repository contains the most current release as well as prior releases.
 
 4 - The [MYSTRAN_Benchmark](https://github.com/MYSTRANsolver/MYSTRAN_Benchmark) repository contains the test cases and utilities used to verify that a new build produces results consistent with prior builds and models that have been verified.
 
@@ -84,7 +84,7 @@ It also contains informationa and files realated to pre- and post-processors rel
 
 # Ways You Can Help
 
-- Join the MYSTRAN forum and/or Discord Channel
+- Join the MYSTRAN forum and/or Discord Channel (links below)
 - Contribute your MYSTRAN runs to the list of demonstration problems
 - Report bugs and inconsistencies
 
