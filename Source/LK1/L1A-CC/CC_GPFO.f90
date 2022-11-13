@@ -26,11 +26,10 @@
  
       SUBROUTINE CC_GPFO ( CARD )
  
-! Processes Case Control GPFO cards that define grid point force balance output requests
- 
+      ! Processes Case Control GPFO cards that define grid point force balance output requests 
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
       USE IOUNT1, ONLY                :  WRT_LOG, F04
-      USE SCONTR, ONLY                :  BLNK_SUB_NAM, LSUB, NSUB 
+      USE SCONTR, ONLY                :  BLNK_SUB_NAM, CC_CMD_DESCRIBERS, LSUB, NSUB, NCCCD
       USE TIMDAT, ONLY                :  TSEC
       USE SUBR_BEGEND_LEVELS, ONLY    :  CC_GPFO_BEGEND
       USE MODEL_STUF, ONLY            :  SC_GPFO
@@ -54,12 +53,12 @@
       ENDIF
 
 ! **********************************************************************************************************************************
-! CC_OUTPUTS processes all output type Case Control entries (they all have some common code so it is put there)
-
+      ! CC_OUTPUTS processes all output type Case Control entries
+      ! (they all have some common code so it is put there)
       CALL CC_OUTPUTS ( CARD, 'GPFO', SETID )
 
-! Set CASE CONTROL output request variable to SETID
- 
+
+      ! Set CASE CONTROL output request variable to SETID
       IF (NSUB == 0) THEN
          DO I = 1,LSUB
             SC_GPFO(I) = SETID

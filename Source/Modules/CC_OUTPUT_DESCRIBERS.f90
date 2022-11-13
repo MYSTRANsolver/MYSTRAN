@@ -33,9 +33,11 @@
 
       SAVE
 
-! The following are the default values for the Case Control command describers. These are used to check the values in parens ()
-! in Case Control entries to see if they are valid for MYSTRAN. The ones below are ones MYSTRAN honors. If other values are
-! encountered in the users' Case Control, warning messages are written to the MYSTRAN output file.
+      ! The following are the default values for the Case Control command
+      ! describers.  These are used to check the values in parens () in Case
+      ! Control entries to see if they are valid for MYSTRAN.  The ones below
+      ! are ones MYSTRAN honors.  If other values are encountered in the user's
+      !  Case Control, warning messages are written to the MYSTRAN output file.
 
       CHARACTER(LEN(CC_CMD_DESCRIBERS)) :: ACCE_SORT = 'SORT1   '
       CHARACTER(LEN(CC_CMD_DESCRIBERS)) :: ACCE_OUT  = 'PRINT   '
@@ -45,7 +47,8 @@
       CHARACTER(LEN(CC_CMD_DESCRIBERS)) :: DISP_OUT  = 'PRINT   '
       CHARACTER(LEN(CC_CMD_DESCRIBERS)) :: DISP_MAG  = 'MAG     '
 
-      CHARACTER(LEN(CC_CMD_DESCRIBERS)) :: GPFO_OUT  = 'SORT1   '
+      CHARACTER(LEN(CC_CMD_DESCRIBERS)) :: GPFO_SORT = 'SORT1   '
+      CHARACTER(LEN(CC_CMD_DESCRIBERS)) :: GPFO_OUT  = 'PRINT   '
 
       CHARACTER(LEN(CC_CMD_DESCRIBERS)) :: MPCF_SORT = 'SORT1   '
       CHARACTER(LEN(CC_CMD_DESCRIBERS)) :: MPCF_OUT  = 'PRINT   '
@@ -58,6 +61,10 @@
       CHARACTER(LEN(CC_CMD_DESCRIBERS)) :: SPCF_SORT = 'SORT1   '
       CHARACTER(LEN(CC_CMD_DESCRIBERS)) :: SPCF_OUT  = 'PRINT   '
       CHARACTER(LEN(CC_CMD_DESCRIBERS)) :: SPCF_MAG  = 'MAG     '
+
+      CHARACTER(LEN(CC_CMD_DESCRIBERS)) :: FORC_SORT = 'SORT1   '
+      CHARACTER(LEN(CC_CMD_DESCRIBERS)) :: FORC_OUT  = 'PRINT   '
+      CHARACTER(LEN(CC_CMD_DESCRIBERS)) :: FORC_MAG  = 'MAG     '
 
       CHARACTER(LEN(CC_CMD_DESCRIBERS)) :: STRN_SORT = 'SORT1   '
       CHARACTER(LEN(CC_CMD_DESCRIBERS)) :: STRN_OUT  = 'PRINT   '
