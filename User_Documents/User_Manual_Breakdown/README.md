@@ -1,0 +1,1 @@
+As opposed to the complete user manual, this folders contains the indiviual sections of the user manual.

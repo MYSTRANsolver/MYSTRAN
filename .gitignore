@@ -1,5 +1,5 @@
 # previously here:
-*.pdf
+*.pdfx
 
 # CMake output directories:
 Binaries/*
