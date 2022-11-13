@@ -9,8 +9,8 @@ There are a few main ways to export data (to verify):
 | F06/ans  |  DISP(PRINT)=ALL       |              |
 | OP2      |  DISP(PLOT)=ALL        | partial      |
 | PUNCH    |  DISP(PUNCH)=ALL       |              |
-| CSV      |  DISP(CSV)=ALL         | doesn't work |
-| NEU      |  DISP(NEU)=ALL         | doesn't work |
+| CSV      |  DISP(CSV)=ALL         | future |
+| NEU      |  DISP(NEU)=ALL         | future |
 
 The F06 and ANS files are basically the same, so main results support is the same.
 However, the ANS file is incomplete, so until they're the same, we'll document it.
