@@ -26,7 +26,7 @@
  
       SUBROUTINE WRITE_ROD ( ISUBCASE, NUM, FILL_F06, FILL_ANS, ITABLE, &
                              TITLE, SUBTITLE, LABEL,                    &
-                             FIELD5_INT_MODE, FIELD6_EIGENVALUE)
+                             FIELD5_INT_MODE, FIELD6_EIGENVALUE, WRITE_OP2)
  
 ! Routine for writing output to text files F06 and ANS for ROD element stresses. Up to 2 elements written per line of output.
 ! Data is first written to character variables and then that character variable is output the F06 and ANS.
@@ -54,6 +54,7 @@
       CHARACTER(LEN=128), INTENT(IN) :: LABEL              ! the subcase LABEL
       INTEGER(LONG), INTENT(IN) :: FIELD5_INT_MODE
       REAL(DOUBLE),  INTENT(IN) :: FIELD6_EIGENVALUE
+      LOGICAL, INTENT(IN)             :: WRITE_OP2         ! write the op2
 
       CHARACTER(  1*BYTE)             :: MSFLAG            ! If margin is negative, MSFLAG is an *
       CHARACTER(118*BYTE)             :: RLINE_F06         ! Result of concatenating char. variables below to make a line of
@@ -102,7 +103,7 @@
       !ELEM_TYPE = 3  ! CTUBE
       !ELEM_TYPE = 10  ! CONROD
       CALL OUTPUT2_WRITE_OES_ROD(ISUBCASE, ELEM_TYPE, NUM, ITABLE, TITLE, SUBTITLE, LABEL, &
-                                 FIELD5_INT_MODE, FIELD6_EIGENVALUE)
+                                 FIELD5_INT_MODE, FIELD6_EIGENVALUE, WRITE_OP2)
       DO I=1,NUM,2
  
          RLINE_F06(1:)  = ' '
@@ -306,7 +307,7 @@
       END SUBROUTINE WRITE_ROD
 !==================================================================================================
       SUBROUTINE OUTPUT2_WRITE_OES_ROD(ISUBCASE, ELEM_TYPE, NUM, ITABLE, TITLE, SUBTITLE, LABEL, &
-                                       FIELD5_INT_MODE, FIELD6_EIGENVALUE)
+                                       FIELD5_INT_MODE, FIELD6_EIGENVALUE, WRITE_OP2)
 !     writes the CROD/CTUBE/CONROD stress/strain results.
 !     Data is first written to character variables and then that character variable is output the F06 and ANS.
 !     
@@ -326,6 +327,7 @@
       INTEGER(LONG), INTENT(IN) :: ISUBCASE  ! subcase id
       INTEGER(LONG), INTENT(IN) :: NUM       ! the number of elements in OGEL to write
       INTEGER(LONG), INTENT(IN) :: ELEM_TYPE
+      LOGICAL,       INTENT(IN) :: WRITE_OP2               ! is this a PLOT result -> OP2
       CHARACTER(LEN=128), INTENT(IN) :: TITLE              ! the model TITLE
       CHARACTER(LEN=128), INTENT(IN) :: SUBTITLE           ! the subcase SUBTITLE
       CHARACTER(LEN=128), INTENT(IN) :: LABEL              ! the subcase LABEL
@@ -340,7 +342,6 @@
       INTEGER(LONG) :: NTOTAL       ! the number of bytes corresponding to nvalues
       REAL(REAL32)  :: NAN
       LOGICAL       :: IS_PRINT     ! is this a PRINT result -> F06
-      LOGICAL       :: IS_PLOT      ! is this a PLOT result -> OP2
 
       NAN = IEEE_VALUE(NAN, IEEE_QUIET_NAN)
       ! TODO: assuming PLOT
@@ -350,21 +351,20 @@
 !******OP2
       ! we're already setup for subtable -3
 !==================================================================================================
-      
-      ! eid, axisl_stress, axial_margin, torsional stress, torsional_margin
-      NUM_WIDE = 5
-      
-      ! dunno???
-      STRESS_CODE = 1
-      CALL WRITE_OES3_STATIC(ITABLE, ISUBCASE, DEVICE_CODE, ELEM_TYPE, NUM_WIDE, STRESS_CODE, TITLE, SUBTITLE, LABEL, &
-                             FIELD5_INT_MODE, FIELD6_EIGENVALUE)
-      ! ITABLE = -4, -6, ...
-      !NWORDS = NUM * NUM_WIDE
-      !NTOTAL = NBYTES_PER_WORD * NWORDS
 
-      IS_PRINT = .TRUE.
-      IS_PLOT = .TRUE.
-      IF (IS_PLOT) THEN
+      IF (WRITE_OP2) THEN
+        ! eid, axisl_stress, axial_margin, torsional stress, torsional_margin
+        NUM_WIDE = 5
+
+        ! dunno???
+        STRESS_CODE = 1
+        CALL WRITE_OES3_STATIC(ITABLE, ISUBCASE, DEVICE_CODE, ELEM_TYPE, NUM_WIDE, STRESS_CODE, &
+                               TITLE, SUBTITLE, LABEL,                                          &
+                               FIELD5_INT_MODE, FIELD6_EIGENVALUE)
+        ! ITABLE = -4, -6, ...
+        !NWORDS = NUM * NUM_WIDE
+        !NTOTAL = NBYTES_PER_WORD * NWORDS
+
  100    FORMAT("*DEBUG:    ITABLE=",I8, "; NUM=",I8,"; NVALUES=",I8,"; NTOTAL=",I8)
         NVALUES = NUM * NUM_WIDE
         NTOTAL = NVALUES * 4
