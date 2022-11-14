@@ -26,7 +26,7 @@
 
       SUBROUTINE OFP2 ( JVEC, WHAT, SC_OUT_REQ, ZERO_GEN_STIFF, FEMAP_SET_ID, ITG, OT4_GROW, ITABLE, NEW_RESULT )
 
-! Processes SPC and MPC force output requests for 1 subcase.
+      ! Processes SPC and MPC force output requests for 1 subcase.
 
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
       USE IOUNT1, ONLY                :  WRT_ERR, WRT_LOG, ERR, F04, F06, OT4
@@ -60,6 +60,7 @@
 
       IMPLICIT NONE
 
+      LOGICAL                         :: WRITE_F06, WRITE_OP2, WRITE_PCH, WRITE_ANS   ! flag
       CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: SUBR_NAME = 'OFP2'
       CHARACTER(LEN=*) , INTENT(IN)   :: WHAT              ! Indicator of whether to process output requests for SPC or MPC forces
       CHARACTER(LEN=*) , INTENT(IN)   :: ZERO_GEN_STIFF    ! Indicator of whether there are zero gen stiffs (can't calc MEFFMASS)
@@ -136,15 +137,13 @@
          ENDDO 
       ENDDO   
 
-! Initialize WRITE_OGEL
-
+      ! Initialize WRITE_OGEL
       DO I=1,NGRID
          WRITE_OGEL(I) = 'Y'
       ENDDO
 
 ! ---------------------------------------------------------------------------------------------------------------------------------
-! Process SPC force requests
-
+      ! Process SPC force requests
       NEW_RESULT = .TRUE.
       IF (WHAT == 'SPCF') THEN
       WRITE(ERR,9000) "OFP2 - SPC"
@@ -296,16 +295,19 @@
 
                IF ((NUM == NREQ) .AND. (SC_OUT_REQ > 0)) THEN
 
-                  !IF ((SPCF_OUT(1:4) == 'PLOT') .OR. (SPCF_OUT(1:4) == 'BOTH')) THEN
+                  WRITE_F06 = (SPCF_OUT(1:1) == 'Y')
+                  WRITE_OP2 = (SPCF_OUT(2:2) == 'Y')
+                  WRITE_PCH = (SPCF_OUT(3:3) == 'Y')
+                  IF (WRITE_OP2) THEN
                      CALL WRITE_GRD_OP2_OUTPUTS ( JVEC, NUM, WHAT, ITABLE, NEW_RESULT )
                      NEW_RESULT = .FALSE.
-                  !ENDIF
+                  ENDIF
 
-                  IF ((SPCF_OUT(1:5) == 'PUNCH') .OR. (SPCF_OUT(1:4) == 'BOTH')) THEN
+                  IF (WRITE_PCH) THEN
                      CALL WRITE_GRD_PCH_OUTPUTS ( JVEC, NUM, WHAT )
                   ENDIF
 
-                  IF ((SPCF_OUT(1:5) == 'PRINT') .OR. (SPCF_OUT(1:4) == 'BOTH')) THEN
+                  IF (WRITE_F06) THEN
                      CALL CHK_OGEL_ZEROS ( NUM )
                      CALL WRITE_GRD_PRT_OUTPUTS ( JVEC, NUM, WHAT, IHDR, SPCF_ALL_SAME_CID, WRITE_OGEL )
                   ENDIF
@@ -581,16 +583,19 @@
 
                IF ((NUM == NREQ) .AND. (SC_OUT_REQ > 0)) THEN
 
-                  !IF ((MPCF_OUT(1:4) == 'PLOT') .OR. (MPCF_OUT(1:4) == 'BOTH')) THEN
+                  WRITE_F06 = (MPCF_OUT(1:1) == 'Y')
+                  WRITE_OP2 = (MPCF_OUT(2:2) == 'Y')
+                  WRITE_PCH = (MPCF_OUT(3:3) == 'Y')
+                  IF (WRITE_OP2) THEN
                      CALL WRITE_GRD_OP2_OUTPUTS ( JVEC, NUM, WHAT, ITABLE, NEW_RESULT )
                      NEW_RESULT = .FALSE.
-                  !ENDIF
+                  ENDIF
 
-                  IF ((MPCF_OUT(1:5) == 'PUNCH') .OR. (MPCF_OUT(1:4) == 'BOTH')) THEN
+                  IF (WRITE_PCH) THEN
                      CALL WRITE_GRD_PCH_OUTPUTS ( JVEC, NUM, WHAT )
                   ENDIF
 
-                  IF ((MPCF_OUT(1:5) == 'PRINT') .OR. (MPCF_OUT(1:4) == 'BOTH')) THEN
+                  IF (WRITE_F06) THEN
                      CALL CHK_OGEL_ZEROS ( NUM )
                      CALL WRITE_GRD_PRT_OUTPUTS ( JVEC, NUM, WHAT, IHDR, MPCF_ALL_SAME_CID, WRITE_OGEL )
                   ENDIF

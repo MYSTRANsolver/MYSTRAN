@@ -4,8 +4,8 @@
       USE IOUNT1, ONLY                :  OP2
 
       integer, intent(in)  :: POST
-      character(len=28) :: TAPE_CODE
-      character(len=8)  :: NASTRAN_VERSION
+      character(len=28)    :: TAPE_CODE
+      character(len=8)     :: NASTRAN_VERSION
       IF (POST == -1) THEN
         !_write_markers(op2, op2_ascii, [3, 0, 7])
         WRITE(OP2) 3

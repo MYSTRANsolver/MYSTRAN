@@ -26,11 +26,74 @@
  
       SUBROUTINE FILE_OPEN (UNIT, FILNAM, OUNT, STATUS, MESSAG, RW_STIME, FORMAT, ACTION, POSITION, WRITE_L1A, WRITE_VER, WRITE_F04)
 
-! Opens formatted files that have STIME for read or write. If open for read, check STIME. If open for write, write STIME
-! If file needs to be opened for READWRITE, this subr needs to be called twice:
-!     (1) called 1st time for READ (to open file and to read and check STIME)
-!     (2) called 2nd time (after closing by calling subr) to position at end for subsequent writing after returning
- 
+      ! Opens formatted files that have STIME for read or write. If open for read, check STIME. If open for write, write STIME
+      ! If file needs to be opened for READWRITE, this subr needs to be called twice:
+      !     (1) called 1st time for READ (to open file and to read and check STIME)
+      !     (2) called 2nd time (after closing by calling subr) to position at end for subsequent writing after returning
+      !
+      ! Parameters
+      ! ----------
+      ! UNIT : int
+      !    the file number to open
+      ! FILNAM : str
+      !    the filename to open
+      ! OUNT : tuple[int, int]
+      !    I think this is Bill's black magic for handling fortran files...
+      ! STATUS : str8
+      !    not checked....
+      !    'NEW': creates a new file
+      !    'OLD': opens an existing file
+      !    'REPLACE' : If the file doesn't exist, it creates it. If it does exist, then it replaces it.
+      !    'UNKNOWN' : ???
+      ! MESSAG : str
+      !    used for error messages
+      ! RW_STIME : ???
+      !    'READ_STIME'  : read the stime?
+      !    'WRITE_STIME' : write the stime?
+      !    'NEITHER'     : skip this
+      ! FORMAT : str
+      !    'FORMATTED'   : for ASCII files
+      !    'UNFORMATTED' : for binary files that have records
+      !    'BINARY'      : binary files, but you get to handle everything; no ACCESS or RECL
+      !    'SYSTEM'      : ???; no ACCESS or RECL
+      !    Opening a file with FORM='BINARY' has roughly the same effect as FORM='UNFORMATTED', except
+      !    that no record lengths are embedded in the file. Without this data, there is no way to tell
+      !    where one record begins, or ends. Thus, it is impossible to BACKSPACE a FORM='BINARY' file,
+      !    because there is no way of telling where to backspace to. A READ on a 'BINARY' file will read
+      !    as much data as needed to fill the variables on the input list.
+      ! ACTION : str8
+      !    'READ' : open the file for reading
+      !    'WRITE': open the file for writing
+      !    'READWRITE': ???
+      ! POSITION : str8
+      !    'ASIS'   : ???
+      !    'APPEND' : open the file in append mode
+      !    'REWIND' : start from the beginning of the file
+      ! RW_STIME : ???
+      !    ???
+      ! WRITE_L1A : str1
+      !    Y/N : write to L1A???
+      ! WRITE_VER : str1
+      !    Y/N : write to VER???
+      ! WRITE_F04 : str1
+      !    Y/N : write to F04
+      !
+      ! Unused
+      ! -------
+      ! ACCESS : str
+      !    'SEQUENTIAL' : ???; FILE_OPEN always uses this
+      !    'DIRECT'     : ???
+      !    'STREAM'     : ???
+      ! DIRECT="NO"
+      ! RECL : int / None
+      !    this is not modifyable per block; record_length
+      !    int : the size of the record length; if you go over the size, it'll 0-pad
+      !    None: automatic
+      !
+      ! Examples
+      ! --------
+      ! FILE_OPEN ( OP2, OP2FIL, OUNT,'OLD    ', OP2_MSG,'NEITHER','UNFORMATTED','WRITE','REWIND','N','N','Y')
+      !
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
       USE IOUNT1, ONLY                :  ANS, F04, F06, IN1, SC1, WRT_ERR, WRT_LOG
       USE SCONTR, ONLY                :  BLNK_SUB_NAM, FATAL_ERR, PROG_NAME
@@ -52,7 +115,7 @@
       CHARACTER(LEN=*), INTENT(IN)    :: FILNAM            ! File name
       CHARACTER(LEN=*), INTENT(IN)    :: FORMAT            ! File format
       CHARACTER(LEN=*), INTENT(IN)    :: MESSAG            ! File description
-      CHARACTER(LEN=*), INTENT(IN)    :: POSITION          ! File description 
+      CHARACTER(LEN=*), INTENT(IN)    :: POSITION          ! File error message
       CHARACTER(LEN=*), INTENT(IN)    :: STATUS            ! File status indicator (NEW, OLD, REPLACE)
       CHARACTER(LEN=*), INTENT(IN)    :: RW_STIME          ! Indicator of whether to read or write STIME
       CHARACTER(LEN=*), INTENT(IN)    :: WRITE_F04         ! If 'Y' write subr begin/end times to F04 (if WRT_LOG >= SUBR_BEGEND)
@@ -66,7 +129,7 @@
       CHARACTER( 3*BYTE)              :: UNIT_NAME = '???' ! Extension of FILNAM (e.g. F06, etc)
  
       INTEGER(LONG), INTENT(IN)       :: UNIT              ! Unit number file is attached to
-      INTEGER(LONG), INTENT(IN)       :: OUNT(2)           ! File units to write messages to. Input to subr FILE_OPEN  
+      INTEGER(LONG), INTENT(IN)       :: OUNT(2)           ! File units to write messages to. Input to subr FILE_OPEN
       INTEGER(LONG)                   :: DEC_PT            ! Position in FILNAM where '.' exists
       INTEGER(LONG)                   :: I                 ! DO loop index
       INTEGER(LONG)                   :: IERR              ! Error count
@@ -78,13 +141,13 @@
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
          CALL OURTIM
-         INQUIRE(FILE=FILNAM,OPENED=FILE_OPND)
+         INQUIRE(FILE=FILNAM, OPENED=FILE_OPND)
          IF ((UNIT /= F04) .AND. (UNIT /= IN1)) THEN
             DEC_PT = INDEX(FILNAM,'.',.TRUE.)
             IF (DEC_PT > 0) THEN
                UNIT_NAME = FILNAM(DEC_PT+1:DEC_PT+4)
             ENDIF
-            INQUIRE(FILE=FILNAM,EXIST=FILE_EXIST)
+            INQUIRE(FILE=FILNAM, EXIST=FILE_EXIST)
             NAM_STA(1:) = STATUS
             NAM_FOR(1:) = FORMAT
             NAM_ACT(1:) = ACTION
@@ -96,22 +159,23 @@
       ENDIF
 
 ! **********************************************************************************************************************************
-! Check inputs for sensibility (coding errors if wrong)
-
+      ! Check inputs for sensibility (coding errors if wrong)
       IERR = 0
-                                                           ! Check FORM
-      IF ((FORMAT /= 'FORMATTED') .AND. (FORMAT /= 'UNFORMATTED'))THEN
+
+      ! Check FORM
+      IF ((FORMAT /= 'FORMATTED') .AND. (FORMAT /= 'UNFORMATTED') .AND. (FORMAT /= 'BINARY'))THEN
          IERR = IERR + 1
          DO I=1,2
             IF (OUNT(I) > 0) THEN
-               WRITE(OUNT(I),909) SUBR_NAME, 'FORMAT', 'FORMATTED or UNFORMATTED', FORMAT
+               WRITE(OUNT(I),909) SUBR_NAME, 'FORMAT', 'FORMATTED, UNFORMATTED or BINARY', FORMAT
             ELSE
-               WRITE(SC1,909) SUBR_NAME, 'FORMAT', 'FORMATTED or UNFORMATTED', FORMAT
+               WRITE(SC1,909) SUBR_NAME, 'FORMAT', 'FORMATTED, UNFORMATTED or BINARY', FORMAT
             ENDIF
             IF (OUNT(2) == OUNT(1)) EXIT
          ENDDO
       ENDIF
-                                                           ! Ckeck ACTION
+
+      ! Check ACTION
       IF ((ACTION /= 'READ') .AND. (ACTION /= 'WRITE') .AND. (ACTION /= 'READWRITE')) THEN
          IERR = IERR + 1
          DO I=1,2
@@ -123,7 +187,8 @@
             IF (OUNT(2) == OUNT(1)) EXIT
          ENDDO
       ENDIF
-                                                           ! Check POSITION
+
+      ! Check POSITION
       IF ((POSITION /= 'ASIS') .AND. (POSITION /= 'APPEND') .AND. (POSITION /= 'REWIND')) THEN
          IERR = IERR + 1
          DO I=1,2
@@ -135,7 +200,8 @@
             IF (OUNT(2) == OUNT(1)) EXIT
          ENDDO
       ENDIF
-                                                           ! Check STATUS
+
+      ! Check STATUS
 !     IF ((STATUS /= 'NEW') .AND.(STATUS /= 'OLD') .AND.(STATUS /= 'REPLACE')) THEN
 !        IERR = IERR + 1
 !        DO I=1,2
@@ -147,7 +213,8 @@
 !           IF (OUNT(2) == OUNT(1)) EXIT
 !        ENDDO
 !     ENDIF 
-                                                           ! Check WRITE_L1A
+
+      ! Check WRITE_L1A
       IF ((WRITE_L1A /= 'Y') .AND. (WRITE_L1A /= 'N'))THEN
          IERR = IERR + 1
          DO I=1,2
@@ -159,7 +226,8 @@
             IF (OUNT(2) == OUNT(1)) EXIT
          ENDDO
       ENDIF
-                                                           ! Check WRITE_STIME
+
+      ! Check WRITE_STIME
       IF ((RW_STIME /= 'READ_STIME') .AND. (RW_STIME /= 'WRITE_STIME') .AND. (RW_STIME /= 'NEITHER'))THEN
          IERR = IERR + 1
          DO I=1,2
@@ -193,8 +261,7 @@
          ENDIF
       ENDIF
 
-! No problems with inputs, so proceed to open file
-
+      ! No problems with inputs, so proceed to open file
       IERR = 0
       OPEN ( UNIT, FILE=FILNAM, STATUS=STATUS, FORM=FORMAT, ACCESS='SEQUENTIAL', ACTION=ACTION, POSITION=POSITION, IOSTAT=IOCHK )
 
@@ -219,7 +286,7 @@
                   IERR = IERR +1
                ENDIF
             ENDIF
-         ELSE IF (RW_STIME == 'WRITE_STIME') THEN          ! Write STIME  
+         ELSE IF (RW_STIME == 'WRITE_STIME') THEN          ! Write STIME
             IF (FORMAT == 'FORMATTED') THEN
                WRITE(UNIT,'(1X,I11)') STIME
             ELSE

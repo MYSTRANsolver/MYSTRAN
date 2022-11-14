@@ -94,6 +94,7 @@
 
       IMPLICIT NONE
  
+      LOGICAL                         :: WRITE_F06, WRITE_OP2, WRITE_PCH, WRITE_ANS   ! flag
       LOGICAL                         :: LEXIST            ! .TRUE. if a file exists
       LOGICAL                         :: LOPEN             ! .TRUE. if a file is opened
 
@@ -170,60 +171,57 @@
 ! **********************************************************************************************************************************
       LINKNO = 9
 
-! Set time initializing parameters
-
+      ! Set time initializing parameters
       CALL TIME_INIT
 
-! Initialize WRT_BUG
-
+      ! Initialize WRT_BUG
       DO I=0,MBUG-1
          WRT_BUG(I) = 0
       ENDDO
 
-! Get date and time, write to screen
+      ! Get date and time, write to screen
       CALL OURDAT
       CALL OURTIM
       WRITE(SC1,152) LINKNO
 
       EPS1 = EPSIL(1)
 
-! Make units for writing errors the screen until we open output files
-
+      ! Make units for writing errors the screen until we open output files
       OUNT(1) = SC1
       OUNT(2) = SC1
 
-! Make units for writing errors the error file and output file
-
+      ! Make units for writing errors the error file and output file
       OUNT(1) = ERR
       OUNT(2) = F06
 
-      IF (DEBUG(200) > 0) THEN
+      WRITE_F06 = (DISP_OUT(1:1) == 'Y')
+      WRITE_OP2 = (DISP_OUT(2:2) == 'Y')
+      WRITE_PCH = (DISP_OUT(3:3) == 'Y')
+      WRITE_ANS = (DEBUG(200) > 0)
+      IF (WRITE_ANS) THEN
          INQUIRE (FILE=ANSFIL, OPENED=LOPEN)
          IF (.NOT.LOPEN) THEN                          ! Otherwise we assume it is positioned at its end and ready for write
             CALL FILE_OPEN ( ANS, ANSFIL, OUNT, 'OLD', ANS_MSG, 'WRITE_STIME', 'FORMATTED', 'READWRITE', 'REWIND', 'Y', 'Y', 'Y' )
          ENDIF
       ENDIF
-      IF ((DISP_OUT(1:5) == 'PUNCH') .OR. (DISP_OUT(1:4) == 'BOTH')) THEN
+      IF (WRITE_PCH) THEN
          INQUIRE (FILE=PCHFIL, OPENED=LOPEN)
          IF (.NOT.LOPEN) THEN                          ! Otherwise we assume it is positioned at its end and ready for write
             CALL FILE_OPEN ( PCH, PCHFIL, OUNT, 'OLD', PCH_MSG, 'WRITE_STIME', 'FORMATTED', 'READWRITE', 'REWIND', 'Y', 'Y', 'Y' )
          ENDIF
       ENDIF
 
-! Write info to text files
-  
+      ! Write info to text files
       WRITE(ERR,150) LINKNO
       WRITE(F06,150) LINKNO
       IF (WRT_LOG > 0) THEN
          WRITE(F04,150) LINKNO
       ENDIF
 
-! Read LINK1A file
-
+      ! Read LINK1A file
       CALL READ_L1A ( 'KEEP', 'Y' )
 
-! Check COMM for successful completion of prior LINKs
-
+      ! Check COMM for successful completion of prior LINKs
       IF (RESTART == 'Y') THEN
          P_LINKNO = 1
       ELSE
@@ -236,8 +234,7 @@
          CALL OUTA_HERE ( 'Y' )                            ! Prior LINK's didn't complete, so quit
       ENDIF
 
-! Before reading file data in subr LINK9S, deallocate all of those arrays and then allocate them fresh
- 
+      ! Before reading file data in subr LINK9S, deallocate all of those arrays and then allocate them fresh
       CALL OURTIM
       MODNAM = 'DEALLOCATE ARRAYS BEFORE READING LINK9S'
       WRITE(SC1,9092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
@@ -284,15 +281,13 @@
       CALL   ALLOCATE_MODEL_STUF ( 'PPNT, PDATA, PTYPE', SUBR_NAME )
       CALL   ALLOCATE_MODEL_STUF ( 'PLOAD4_3D_DATA', SUBR_NAME )
  
-! Read LINK9S data
- 
+      ! Read LINK9S data
       CALL OURTIM
       MODNAM = 'READ MODEL DATA ARRAYS'
       WRITE(SC1,9092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
       CALL LINK9S
 
-! Determine MAXREQ (max number of output requests) so we can allocate memory to arrays below
- 
+      ! Determine MAXREQ (max number of output requests) so we can allocate memory to arrays below
       CALL MAXREQ_OGEL
       CALL DEALLOCATE_MODEL_STUF ( 'ESORT2' )
 !-----------------------------------------------------------------------------------------------------------------------------------
@@ -339,10 +334,9 @@
 
       ENDIF
 
-! Read files with KSF, MSF, QSYS (used to calc SPC constraint forces, QS), but only if they will be needed.
-! For any SOL_NAME they will be needed if any SPC constraint force output is requested or GP force balance or if POST /=0. 
-! For non CB they will be needed also if MEFFMASS, MPFACTOR are to be calculated (done via SPC force total method)
- 
+      ! Read files with KSF, MSF, QSYS (used to calc SPC constraint forces, QS), but only if they will be needed.
+      ! For any SOL_NAME they will be needed if any SPC constraint force output is requested or GP force balance or if POST /=0. 
+      ! For non CB they will be needed also if MEFFMASS, MPFACTOR are to be calculated (done via SPC force total method)
       READ_SPCARRAYS = 'N'
       IF (SOL_NAME == 'GEN CB MODEL') THEN
          IF ((ANY_SPCF_OUTPUT > 0) .OR. (ANY_GPFO_OUTPUT > 0) .OR. (NDOFSA > 0) .OR. (POST /= 0)) THEN
@@ -450,8 +444,7 @@
 
       ENDIF
       
-! Read MPC constraint matrices
-      
+      ! Read MPC constraint matrices
       IF ((ANY_MPCF_OUTPUT > 0) .OR. (ANY_GPFO_OUTPUT > 0) .OR. (POST /= 0)) THEN
 
          IF (NDOFM > 0) THEN
@@ -496,8 +489,7 @@
 
       ENDIF
 
-! Read MGG mass matrix if this is a dynamics solution and GP force balance is requested
-
+      ! Read MGG mass matrix if this is a dynamics solution and GP force balance is requested
       IF ((SOL_NAME(1:5) == 'MODES') .OR. (SOL_NAME(1:12) == 'GEN CB MODEL')) THEN
          IF (ANY_GPFO_OUTPUT > 0) THEN
             CALL OURTIM
@@ -513,8 +505,7 @@
          ENDIF
       ENDIF
 
-! Read MLL mass matrix if this is a dynamics solution and GP force balance is requested.
- 
+      ! Read MLL mass matrix if this is a dynamics solution and GP force balance is requested.
       IF ((SOL_NAME(1:5) == 'MODES') .OR. (SOL_NAME(1:12) == 'GEN CB MODEL')) THEN
          IF (ANY_GPFO_OUTPUT > 0) THEN
             CALL OURTIM
@@ -536,14 +527,12 @@
 !xx      CALL FILE_OPEN ( F25, F25FIL, OUNT, 'REPLACE', F25_MSG, 'WRITE_STIME', 'UNFORMATTED', 'WRITE', 'REWIND', 'Y', 'N', 'Y' )
 !xx   ENDIF
   
-! Open data files for reading displacements (will be read below in loop over number of subcases/vectors)
- 
+      ! Open data files for reading displacements (will be read below in loop over number of subcases/vectors)
       CALL FILE_OPEN ( L5A, LINK5A, OUNT, 'OLD', L5A_MSG, 'READ_STIME', 'UNFORMATTED', 'READ', 'REWIND', 'Y', 'N', 'Y' )
 
-! If this is an eigenvalue problem, determine if there are modes with zero gen stiffness. If so, cannot calc modal masses
-! or modal participation factors (but only do this if not a CB soln since MPFACTOR and MEFFMASS were calc'd in LINK6 for CB)
-! EIGEN_VAL was not deallocated in LINK4 (see LINK4 comment 01/11/19) so we do not allocate it here anymore
-
+      ! If this is an eigenvalue problem, determine if there are modes with zero gen stiffness. If so, cannot calc modal masses
+      ! or modal participation factors (but only do this if not a CB soln since MPFACTOR and MEFFMASS were calc'd in LINK6 for CB)
+      ! EIGEN_VAL was not deallocated in LINK4 (see LINK4 comment 01/11/19) so we do not allocate it here anymore
       ZERO_GEN_STIFF = 'N'
       IF ((SOL_NAME(1:5) == 'MODES') .OR. (SOL_NAME(1:12) == 'GEN CB MODEL')) THEN
                                                         ! MODE_NUM is not used to det gen stiff but it is read in subr READ_L1M
@@ -610,20 +599,16 @@
       CALL ALLOCATE_COL_VEC ( 'PG_COL', NDOFG, SUBR_NAME )
 
 !-----------------------------------------------------------------------------------------------------------------------------------
-! Allocate arrays particular to LINK9
- 
+      ! Allocate arrays particular to LINK9
       CALL ALLOCATE_LINK9_STUF ( SUBR_NAME )
  
-! Initialize JTSUB which will become the col no in the elem thermal loads matrix corresponding to the subcases below.
- 
+      ! Initialize JTSUB which will become the col no in the elem thermal loads matrix corresponding to the subcases below.
       JTSUB = 0
  
-! Set NUM_SOLNS for use in loop (below) to get outputs for each subcase/solution vector and size. Also, allocate memory for 
-! CB OTM matrices (if CB soln) and open CB OTM output files (OU4(8) for grid related OTM's and OU4(9) for elem related OTM's)
-
+      ! Set NUM_SOLNS for use in loop (below) to get outputs for each subcase/solution vector and size. Also, allocate memory for 
+      ! CB OTM matrices (if CB soln) and open CB OTM output files (OU4(8) for grid related OTM's and OU4(9) for elem related OTM's)
       PROC_PG_OUTPUT = 'Y'
       IF ((SOL_NAME(1:7) == 'STATICS') .OR. (SOL_NAME(1:8) == 'NLSTATIC')) THEN
-
          NUM_SOLNS = NSUB
 
       ELSE IF (SOL_NAME(1:8) == 'BUCKLING') THEN
@@ -632,20 +617,17 @@
             NUM_SOLNS = 1
 
          ELSE
-
             NUM_SOLNS = NVEC
             PROC_PG_OUTPUT = 'N'
 
          ENDIF
 
       ELSE IF  (SOL_NAME(1:5) == 'MODES') THEN
-
          NUM_SOLNS = NVEC
 
       ELSE IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
-
          NUM_SOLNS = NUM_CB_DOFS
-                                                           ! These will be allocated with zero size if no output ie requested
+         ! These will be allocated with zero size if no output ie requested
          CALL ALLOCATE_CB_GRD_OTM ( 'OTM_ACCE' )
          CALL ALLOCATE_CB_GRD_OTM ( 'OTM_DISP' )
          CALL ALLOCATE_CB_GRD_OTM ( 'OTM_MPCF' )
@@ -655,7 +637,8 @@
          CALL ALLOCATE_CB_ELM_OTM ( 'OTM_STRE' )
          CALL ALLOCATE_CB_ELM_OTM ( 'OTM_STRN' )
 
-         IUE = 0                                           ! Get index for file unit nos for elem/grid related OTM unformatted files
+         ! Get index for file unit nos for elem/grid related OTM unformatted files
+         IUE = 0
          IUG = 0
          DO I=1,MOU4
             IF (OU4(I) == OU4_ELM_OTM) IUE = I
@@ -671,7 +654,8 @@
             CALL FILE_OPEN (OU4(IUG),OU4FIL(IUG),OUNT,'REPLACE', OU4_MSG(IUG),'NEITHER','UNFORMATTED','WRITE','REWIND','Y','N', 'Y')
          ENDIF
 
-         ITE = 0                                           ! Get index for file unit nos for elem/grid related OTM text files
+         ! Get index for file unit nos for elem/grid related OTM text files
+         ITE = 0
          ITG = 0
          OT4_EROW = 0
          OT4_GROW = 0
@@ -679,7 +663,8 @@
             IF (OT4(I) == OT4_ELM_OTM) ITE = I
             IF (OT4(I) == OT4_GRD_OTM) ITG = I
          ENDDO
-         IF ((ITE <= 0) .OR. (ITG <= 0)) THEN              ! Open files for OTM text data to describe the unformatted files above
+         IF ((ITE <= 0) .OR. (ITG <= 0)) THEN
+            ! Open files for OTM text data to describe the unformatted files above
             WRITE(ERR,9901) SUBR_NAME, ITE, ITG, MOT4
             WRITE(F06,9901) SUBR_NAME, ITE, ITG, MOT4
             FATAL_ERR = FATAL_ERR + 1
@@ -753,7 +738,8 @@ j_do: DO JVEC=1,NUM_SOLNS
                JTSUB = JTSUB + 1
             ENDIF
          ENDIF
-                                                           ! Det if GP related outputs were requested in Case Control for this S/C
+
+         ! Det if GP related outputs were requested in Case Control for this S/C
          SC_ACCE_OUTPUT = IAND(OGROUT(INT_SC_NUM),IBIT(GROUT_ACCE_BIT))
          SC_DISP_OUTPUT = IAND(OGROUT(INT_SC_NUM),IBIT(GROUT_DISP_BIT))
          SC_OLOA_OUTPUT = IAND(OGROUT(INT_SC_NUM),IBIT(GROUT_OLOA_BIT))
@@ -788,8 +774,7 @@ j_do: DO JVEC=1,NUM_SOLNS
             UG_COL(I) = UGV
          ENDDO   
 
-! If this is a CB soln and JVEC <= NDOFR+NVEC, formulate a col of PHIXG from data in file L5B. Otherwise zero
-
+         ! If this is a CB soln and JVEC <= NDOFR+NVEC, formulate a col of PHIXG from data in file L5B. Otherwise zero
          IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
             CALL ALLOCATE_COL_VEC ( 'PHIXG_COL', NDOFG, SUBR_NAME )
             IF (JVEC <= NDOFR+NVEC) THEN
@@ -809,9 +794,9 @@ j_do: DO JVEC=1,NUM_SOLNS
             ENDIF
          ENDIF
 
-! Process acceleration output requests
-                                                           ! 10/01/14: Need BGRID for Femap displs to transform from global to basic
-         CALL ALLOCATE_MODEL_STUF ( 'SINGLE ELEMENT ARRAYS', SUBR_NAME )
+        ! Process acceleration output requests
+        ! 10/01/14: Need BGRID for Femap displs to transform from global to basic
+        CALL ALLOCATE_MODEL_STUF ( 'SINGLE ELEMENT ARRAYS', SUBR_NAME )
 
         NEW_RESULT = .TRUE.
         ITABLE = -1
@@ -831,8 +816,7 @@ j_do: DO JVEC=1,NUM_SOLNS
             ENDIF
          ENDIF
 
-! Process displacement output requests
-
+         ! Process displacement output requests
          IF ((SC_DISP_OUTPUT > 0) .OR. (POST /= 0)) THEN
             CALL OURTIM
             MODNAM = 'PROCESS DISPL OUTPUT REQUESTS,                    "'
@@ -842,7 +826,7 @@ j_do: DO JVEC=1,NUM_SOLNS
          ENDIF
          !CALL END_OP2_TABLE(ITABLE)
 
-! Process applied load (OPG1) output requests
+         ! Process applied load (OPG1) output requests
          NEW_RESULT = .TRUE.
          ITABLE = -1
          IF (PROC_PG_OUTPUT == 'Y') THEN
@@ -859,9 +843,8 @@ j_do: DO JVEC=1,NUM_SOLNS
          ENDIF
          !CALL END_OP2_TABLE(ITABLE)
 
-! Calc SPC forces and process SPC force output requests, if there are any or if GP force balance, modal effective mass and/or 
-! participation factor output is requested. Calc anyway if there are any DOF's in the SA (AUTOSPC) set
-
+        ! Calc SPC forces and process SPC force output requests, if there are any or if GP force balance, modal effective mass and/or 
+        ! participation factor output is requested. Calc anyway if there are any DOF's in the SA (AUTOSPC) set
         NEW_RESULT = .TRUE.
         ITABLE = -1
          IF (SOL_NAME(1:5) == 'MODES') THEN
@@ -902,8 +885,7 @@ j_do: DO JVEC=1,NUM_SOLNS
 !           NEW_RESULT = .FALSE.
          ENDIF
 
-! Process MPC force output requests, if there are any
-
+         ! Process MPC force output requests, if there are any
          NEW_RESULT = .TRUE.
          IF (NDOFM > 0) THEN
 
@@ -929,8 +911,7 @@ j_do: DO JVEC=1,NUM_SOLNS
          ENDIF
          !CALL END_OP2_TABLE(ITABLE)
 
-! Process grid point force balance requests
-
+         ! Process grid point force balance requests
 !zzzz    CALL ALLOCATE_MODEL_STUF ( 'SINGLE ELEMENT ARRAYS', SUBR_NAME ) ! 10/01/14: Move to above CALL OFP1. Need for Femap disp
          NEW_RESULT = .TRUE.
          IF (SC_GPFO_OUTPUT > 0) THEN
@@ -992,8 +973,7 @@ j_do: DO JVEC=1,NUM_SOLNS
          CALL DEALLOCATE_COL_VEC ( 'QGm_COL' )
          WRITE(SC1,*) CR13
 
-! Process element force/stress output requests
-
+         ! Process element force/stress output requests
          SC_ELFE_OUTPUT = IAND(OELOUT(INT_SC_NUM),IBIT(ELOUT_ELFE_BIT))
          SC_ELFN_OUTPUT = IAND(OELOUT(INT_SC_NUM),IBIT(ELOUT_ELFN_BIT))
          SC_STRE_OUTPUT = IAND(OELOUT(INT_SC_NUM),IBIT(ELOUT_STRE_BIT))
@@ -1027,8 +1007,7 @@ j_do: DO JVEC=1,NUM_SOLNS
          ENDIF
          CALL DEALLOCATE_MODEL_STUF ( 'SINGLE ELEMENT ARRAYS' )
 
-! Rewind files containing G-set & S-set loads and read STIME so we can read loads file again for next subcase
-
+         ! Rewind files containing G-set & S-set loads and read STIME so we can read loads file again for next subcase
          INQUIRE ( FILE=LINK1E, EXIST=LEXIST, OPENED=LOPEN )
          IF (LOPEN) THEN
             REWIND (L1E)
@@ -1069,8 +1048,7 @@ j_do: DO JVEC=1,NUM_SOLNS
       CALL DEALLOCATE_COL_VEC ( 'PG_COL' )
 
 !-----------------------------------------------------------------------------------------------------------------------------------
-! Write ACCE, DISP, MPCF and SPCF OTM's to OUTPUT4 file. Also write text file descriptions of the rows of the OTM's.
-
+      ! Write ACCE, DISP, MPCF and SPCF OTM's to OUTPUT4 file. Also write text file descriptions of the rows of the OTM's.
       IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
 
          WRITE(F06,*)
@@ -1188,8 +1166,7 @@ j_do: DO JVEC=1,NUM_SOLNS
 
       ENDIF
 
-! Close OTM text files (unformatted OU4 files closed in subr CLOSE_LIJFILES)
-
+      ! Close OTM text files (unformatted OU4 files closed in subr CLOSE_LIJFILES)
       IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
          DO I=1,MOT4
             CALL FILE_CLOSE ( OT4(I), OT4FIL(I), OT4STAT(I), 'Y' )
@@ -1213,8 +1190,7 @@ j_do: DO JVEC=1,NUM_SOLNS
          CALL WRITE_MEFFMASS
       ENDIF
 
-! Call OUTPUT4 processor to process output requests for OUTPUT4 matrices generated in this link
-
+      ! Call OUTPUT4 processor to process output requests for OUTPUT4 matrices generated in this link
       IF (NUM_OU4_REQUESTS > 0) THEN
          CALL OURTIM
          MODNAM = 'WRITE OUTPUT4 MATRICES      '
@@ -1223,8 +1199,7 @@ j_do: DO JVEC=1,NUM_SOLNS
          CALL OUTPUT4_PROC ( SUBR_NAME )
       ENDIF
 
-! Deallocate MPFACTOR, MEFFMASS
-
+      ! Deallocate MPFACTOR, MEFFMASS
       CALL DEALLOCATE_EIGEN1_MAT ( 'MPFACTOR_N6' )
       CALL DEALLOCATE_EIGEN1_MAT ( 'MPFACTOR_NR' )
       CALL DEALLOCATE_EIGEN1_MAT ( 'MEFFMASS' )
@@ -1352,8 +1327,7 @@ j_do: DO JVEC=1,NUM_SOLNS
          CALL FILE_CLOSE ( F25, F25FIL, 'DELETE', 'Y' )
       ENDIF
 
-! Check allocation status of allocatable arrays, if requested
-
+      ! Check allocation status of allocatable arrays, if requested
       IF (DEBUG(100) > 0) THEN
          CALL CHK_ARRAY_ALLOC_STAT
          IF (DEBUG(100) > 1) THEN
@@ -1361,24 +1335,21 @@ j_do: DO JVEC=1,NUM_SOLNS
          ENDIF
       ENDIF
 
-! Write LINK9 end to F04, F06
-
+      ! Write LINK9 end to F04, F06
       CALL OURTIM
       IF (WRT_LOG > 0) THEN
          WRITE(F04,151) LINKNO
       ENDIF
       WRITE(F06,151) LINKNO
 
-! Close ANS but leave the closing of BUG, ERR, F04, F06 files until after LINK9 returns to MYSTRAN.for
-
+      ! Close ANS but leave the closing of BUG, ERR, F04, F06 files until after LINK9 returns to MYSTRAN.for
       IF (DEBUG(200) > 0) THEN
          CALL FILE_CLOSE ( ANS, ANSFIL, 'KEEP', 'Y' )
       ELSE
          CALL FILE_CLOSE ( ANS, ANSFIL, 'DELETE', 'Y' )
       ENDIF
 
-! Close some files
-
+      ! Close some files
       IF ((SOL_NAME(1:8) == 'BUCKLING') .OR. (SOL_NAME(1:8) == 'DIFFEREN') .OR. (SOL_NAME(1:8) == 'NLSTATIC')) THEN
          CALL FILE_CLOSE ( L1E, LINK1E, 'KEEP', 'Y' )
       ELSE

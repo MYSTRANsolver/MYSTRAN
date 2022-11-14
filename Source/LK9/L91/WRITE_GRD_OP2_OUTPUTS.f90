@@ -76,6 +76,9 @@
       INTEGER(LONG)                   :: NVALUES           ! the width in "words" of a result
 
 ! **********************************************************************************************************************************
+      ! TODO: assuming PLOT
+      DEVICE_CODE = 1
+! **********************************************************************************************************************************
 !      IF (WRT_LOG >= SUBR_BEGEND) THEN
 !         CALL OURTIM
 !         WRITE(F04,9001) SUBR_NAME,TSEC
@@ -133,7 +136,6 @@
       ITABLE = ITABLE - 1
       ! Write accels, displ's, applied forces or SPC forces (also calc TOTALS for forces if that is being output)
       ! TOTALS(J) is summation of G.P. values of applied forces, SPC forces, or MFC forces, for each of the J=1,6 components.
-      DEVICE_CODE = 1
 
       ! fill the G_OR_S array
       CALL GET_G_OR_S ( NUM, G_OR_S )
@@ -181,7 +183,7 @@
 ! **********************************************************************************************************************************
  
       END SUBROUTINE WRITE_GRD_OP2_OUTPUTS
-
+``
 !==============================================================================
       SUBROUTINE GET_TABLE_NAME_OUG ( WHAT, TABLE_NAME, TABLE_CODE )
       USE PENTIUM_II_KIND, ONLY     :  BYTE, LONG
