@@ -39,6 +39,7 @@
       LOGICAL, INTENT(INOUT)           :: NEW_RESULT
       INTEGER(LONG)                    :: FORMAT_CODE
       INTEGER(LONG)                    :: NUM_WIDE
+      INTEGER(LONG)                    :: NINT = 4
 
       INTEGER(LONG), INTENT(IN)        :: MODE       ! field 5
       REAL(DOUBLE), INTENT(IN)         :: EIGENVALUE ! field 6
@@ -79,6 +80,7 @@
       INTEGER(LONG) :: THERMAL, SORT_CODE, &
         RANDOM_CODE, ACOUSTIC_FLAG, OCODE, &
         APPROACH_CODE, TCODE
+      INTEGER(LONG)                    :: NINT = 4
 
       TITLE2 = TITLE(1:100)
       SUBTITLE2 = SUBTITLE(1:67)
