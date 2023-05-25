@@ -42,11 +42,13 @@
       USE COL_VECS, ONLY              :  UG_COL, UG0_COL, PG_COL, PHIXG_COL, PHIXN_COL
       USE OUTPUT4_MATRICES, ONLY      :  OTM_ACCE, OTM_DISP, TXT_ACCE, TXT_DISP
       USE CC_OUTPUT_DESCRIBERS, ONLY  :  ACCE_OUT, DISP_OUT, OLOA_OUT
+      USE DEBUG_PARAMETERS, ONLY      :  DEBUG
 
       USE OFP1_USE_IFs
 
       IMPLICIT NONE
 
+      LOGICAL                         :: WRITE_F06, WRITE_OP2, WRITE_PCH, WRITE_ANS   ! flag
       CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: SUBR_NAME = 'OFP1'
       CHARACTER(LEN=*) , INTENT(IN)   :: WHAT              ! Indicator whether to process displ or force output requests
       CHARACTER( 1*BYTE)              :: ACCE_ALL_SAME_CID ! Indicator of whether all grids, for the output set, have the same
@@ -84,6 +86,7 @@
       INTRINSIC IAND
       WRITE(ERR,9000) "OFP1 - disp, accel and applied force output"
  9000 FORMAT(' *DEBUG:    RUNNING=', A)
+      WRITE_ANS = (DEBUG(200) > 0)
 
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
@@ -99,8 +102,7 @@
          ENDDO 
       ENDDO   
  
-! Initialize WRITE_OGEL
-
+      ! Initialize WRITE_OGEL
       DO I=1,NGRID
          WRITE_OGEL(I) = 'Y'
       ENDDO
@@ -164,15 +166,18 @@
                ENDDO
                IF ((NUM == NREQ) .AND. (SC_OUT_REQ > 0)) THEN
 
-                  !IF ((ACCE_OUT(1:4) == 'PLOT') .OR. (ACCE_OUT(1:4) == 'BOTH')) THEN
+                  WRITE_F06 = (ACCE_OUT(1:1) == 'Y')
+                  WRITE_OP2 = (ACCE_OUT(2:2) == 'Y')
+                  WRITE_PCH = (ACCE_OUT(3:3) == 'Y')
+                  IF (WRITE_OP2) THEN
                      CALL WRITE_GRD_OP2_OUTPUTS ( JVEC, NUM, WHAT, ITABLE, NEW_RESULT )
-                  !ENDIF
+                  ENDIF
 
-                  IF ((ACCE_OUT(1:5) == 'PUNCH') .OR. (ACCE_OUT(1:4) == 'BOTH')) THEN
+                  IF (WRITE_PCH) THEN
                      CALL WRITE_GRD_PCH_OUTPUTS ( JVEC, NUM, WHAT )
                   ENDIF
 
-                  IF ((ACCE_OUT(1:5) == 'PRINT') .OR. (ACCE_OUT(1:4) == 'BOTH')) THEN
+                  IF (WRITE_F06) THEN
                      CALL CHK_OGEL_ZEROS ( NUM )
                      CALL WRITE_GRD_PRT_OUTPUTS ( JVEC, NUM, WHAT, IHDR, ACCE_ALL_SAME_CID, WRITE_OGEL )
                   ENDIF
@@ -249,15 +254,18 @@
                ENDDO
                IF ((NUM == NREQ) .AND. (SC_OUT_REQ > 0)) THEN
 
-                  !IF ((DISP_OUT(1:4) == 'PLOT') .OR. (DISP_OUT(1:4) == 'BOTH')) THEN
+                  WRITE_F06 = (DISP_OUT(1:1) == 'Y')
+                  WRITE_OP2 = (DISP_OUT(2:2) == 'Y')
+                  WRITE_PCH = (DISP_OUT(3:3) == 'Y')
+                  IF (WRITE_OP2) THEN
                      CALL WRITE_GRD_OP2_OUTPUTS ( JVEC, NUM, WHAT, ITABLE, NEW_RESULT )
-                  !ENDIF
+                  ENDIF
 
-                  IF ((DISP_OUT(1:5) == 'PUNCH') .OR. (DISP_OUT(1:4) == 'BOTH')) THEN
+                  IF (WRITE_PCH) THEN
                      CALL WRITE_GRD_PCH_OUTPUTS ( JVEC, NUM, WHAT )
                   ENDIF
 
-                  IF ((DISP_OUT(1:5) == 'PRINT') .OR. (DISP_OUT(1:4) == 'BOTH')) THEN
+                  IF (WRITE_F06) THEN
                      CALL CHK_OGEL_ZEROS ( NUM )
                      CALL WRITE_GRD_PRT_OUTPUTS ( JVEC, NUM, WHAT, IHDR, DISP_ALL_SAME_CID, WRITE_OGEL )
                   ENDIF
@@ -327,15 +335,18 @@
                ENDDO
 
                IF (NUM == NREQ) THEN
-                  !IF ((OLOA_OUT(1:4) == 'PLOT') .OR. (OLOA_OUT(1:4) == 'BOTH')) THEN
+                  WRITE_F06 = (OLOA_OUT(1:1) == 'Y')
+                  WRITE_OP2 = (OLOA_OUT(2:2) == 'Y')
+                  WRITE_PCH = (OLOA_OUT(3:3) == 'Y')
+                  IF (WRITE_OP2) THEN
                      CALL WRITE_GRD_OP2_OUTPUTS ( JVEC, NUM, WHAT, ITABLE, NEW_RESULT )
-                  !ENDIF
+                  ENDIF
 
-                  IF ((OLOA_OUT(1:5) == 'PUNCH') .OR. (OLOA_OUT(1:4) == 'BOTH')) THEN
+                  IF (WRITE_PCH) THEN
                      CALL WRITE_GRD_PCH_OUTPUTS ( JVEC, NUM, WHAT )
                   ENDIF
 
-                  IF ((OLOA_OUT(1:5) == 'PRINT') .OR. (OLOA_OUT(1:4) == 'BOTH')) THEN
+                  IF (WRITE_F06) THEN
                      CALL CHK_OGEL_ZEROS ( NUM )
                      CALL WRITE_GRD_PRT_OUTPUTS ( JVEC, NUM, WHAT, IHDR, OLOAD_ALL_SAME_CID, WRITE_OGEL )
                   ENDIF
