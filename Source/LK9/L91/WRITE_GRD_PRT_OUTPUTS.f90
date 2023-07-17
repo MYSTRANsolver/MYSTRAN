@@ -39,8 +39,9 @@
       USE NONLINEAR_PARAMS, ONLY      :  LOAD_ISTEP
       USE LINK9_STUFF, ONLY           :  GID_OUT_ARRAY, MAXREQ, OGEL
       USE MODEL_STUF, ONLY            :  LABEL, SCNUM, SUBLOD, STITLE, TITLE
-      USE MACHINE_PARAMS, ONLY        :  MACH_LARGE_NUM  
-  
+      USE MACHINE_PARAMS, ONLY        :  MACH_LARGE_NUM
+      USE DEBUG_PARAMETERS, ONLY      :  DEBUG
+
       USE WRITE_GRD_PRT_OUTPUTS_USE_IFs
 
       IMPLICIT NONE
@@ -75,6 +76,7 @@
 
       CHARACTER(1*BYTE), INTENT(IN)   :: WRITE_OGEL(NUM)   ! 'Y'/'N' as to whether to write OGEL for a grid (used to avoid writing
 !                                                            constr forces in subr this subr for grids that have no constr force
+      LOGICAL                         :: WRITE_ANS
       INTRINSIC                       :: MAX, MIN, DABS
 
 ! **********************************************************************************************************************************
@@ -83,6 +85,7 @@
          WRITE(F04,9001) SUBR_NAME,TSEC
  9001    FORMAT(1X,A,' BEGN ',F10.3)
       ENDIF
+      WRITE_ANS = (DEBUG(200) > 0)
 
 ! **********************************************************************************************************************************
 !  Make sure that WHAT is a valid value
@@ -189,13 +192,10 @@
             ELSE
                WRITE(F06,9351)
             ENDIF
-
          ENDIF
-
          WRITE(F06,9501)
-         
-         IF (DEBUG(200) > 0) THEN
 
+         IF (WRITE_ANS) THEN
             WRITE(ANS,*)
             WRITE(ANS,*)
             IF    ((SOL_NAME(1:7) == 'STATICS') .OR. (SOL_NAME(1:8) == 'NLSTATIC')) THEN
@@ -211,9 +211,7 @@
             ENDIF
 
             WRITE(ANS,*)
- 
             IF (WHAT == 'DISP') THEN
-
                IF    ((SOL_NAME(1:7) == 'STATICS') .OR. (SOL_NAME(1:8) == 'NLSTATIC')) THEN
                   WRITE(ANS,9322)
                ELSE IF ((SOL_NAME(1:8) == 'BUCKLING') .AND. (LOAD_ISTEP == 1)) THEN
@@ -227,30 +225,24 @@
                ENDIF
 
             ELSE IF (WHAT == 'OLOAD') THEN
-
                WRITE(ANS,9331)
                IF (SUBLOD(INT_SC_NUM,2) > 0) THEN
                   WRITE(ANS,9332)
                ENDIF
 
             ELSE IF (WHAT == 'SPCF') THEN
-
                WRITE(ANS,9341)
 
             ELSE IF (WHAT == 'MPCF') THEN
-
                WRITE(ANS,9351)
 
             ENDIF
-
             WRITE(ANS,9501)
-
          ENDIF
 
       ENDIF
  
-! Get MAX, MIN, ABS values
-
+      ! Get MAX, MIN, ABS values
       DO J=1,6
          MAX_ANS(J) = -MACH_LARGE_NUM 
       ENDDO 
@@ -280,7 +272,6 @@
       ENDDO
 
       DO I=1,6
-
          IF (ABS_ANS(I) == 0.0) THEN
             WRITE(ABS_ANS_CHAR(I),'(A)') '  0.0         '
          ELSE
@@ -298,7 +289,6 @@
          ELSE
             WRITE(MIN_ANS_CHAR(I),'(1ES14.6)') MIN_ANS(I)
          ENDIF
-
       ENDDO
 
 ! Write accels, displ's, applied forces or SPC forces (also calc TOTALS for forces if that is being output)
@@ -323,32 +313,25 @@
          ENDIF
 
          IF (WRITE_OGEL(I) == 'Y') THEN
-
             CALL WRT_REAL_TO_CHAR_VAR ( OGEL, MAXREQ, MOGEL, I, OGEL_CHAR )
-
             WRITE(F06,9902) GID_OUT_ARRAY(I,1),GID_OUT_ARRAY(I,2),(OGEL_CHAR(J),J=1,6)
-
             IF (GID_OUT_ARRAY(I,MELGP+1) > 0) THEN
                DO J=1,GID_OUT_ARRAY(I,MELGP+1)
                   WRITE(F06,*)
                ENDDO
             ENDIF
 
-            IF (DEBUG(200) > 0) THEN
+            IF (WRITE_ANS) THEN
                WRITE(ANS,9901) GID_OUT_ARRAY(I,1),GID_OUT_ARRAY(I,2),(OGEL(I,J),J=1,6)
             ENDIF
-
             LINES_WRITTEN = LINES_WRITTEN + 1
-
          ENDIF
 
       ENDDO
  
       IF (LINES_WRITTEN > 2) THEN
          WRITE(F06,9601) (MAX_ANS_CHAR(J),J=1,6), (MIN_ANS_CHAR(J),J=1,6), (ABS_ANS_CHAR(J),J=1,6)
-         IF (DEBUG(200) > 0) THEN
-            WRITE(ANS,9611) (MAX_ANS(J),J=1,6), (MIN_ANS(J),J=1,6), (ABS_ANS(J),J=1,6)
-         ENDIF
+         IF (WRITE_ANS) WRITE(ANS,9611) (MAX_ANS(J),J=1,6), (MIN_ANS(J),J=1,6), (ABS_ANS(J),J=1,6)
       ENDIF
 
       IF (DEBUG(92) == 0) THEN
@@ -361,36 +344,24 @@
          IF (PRINT_TOTALS == 'Y') THEN
             IF (WHAT == 'OLOAD') THEN
                WRITE(F06,9701) (TOTALS_CHAR(J),J=1,6)
-               IF (DEBUG(200) > 0) THEN
-                  WRITE(ANS,9791) (TOTALS(J),J=1,6)
-               ENDIF
+               IF (WRITE_ANS) WRITE(ANS,9791) (TOTALS(J),J=1,6)
             ELSE IF (WHAT == 'SPCF' ) THEN
                WRITE(F06,9702) (TOTALS_CHAR(J),J=1,6)
-               IF (DEBUG(200) > 0) THEN
-                  WRITE(ANS,9792) (TOTALS(J),J=1,6)
-               ENDIF
+               IF (WRITE_ANS) WRITE(ANS,9792) (TOTALS(J),J=1,6)
             ELSE IF (WHAT == 'MPCF' ) THEN
                WRITE(F06,9703) (TOTALS_CHAR(J),J=1,6)
-               IF (DEBUG(200) > 0) THEN
-                  WRITE(ANS,9793) (TOTALS(J),J=1,6)
-               ENDIF
+               IF (WRITE_ANS) WRITE(ANS,9793) (TOTALS(J),J=1,6)
             ENDIF
          ELSE
             IF (WHAT == 'OLOAD') THEN
                WRITE(F06,9711)
-               IF (DEBUG(200) > 0) THEN
-                  WRITE(ANS,9711)
-               ENDIF
+               IF (WRITE_ANS) WRITE(ANS,9711)
             ELSE IF (WHAT == 'SPCF' ) THEN
                WRITE(F06,9712)
-               IF (DEBUG(200) > 0) THEN
-                  WRITE(ANS,9712)
-               ENDIF
+               IF (WRITE_ANS) WRITE(ANS,9712)
             ELSE IF (WHAT == 'MPCF' ) THEN
                WRITE(F06,9713)
-               IF (DEBUG(200) > 0) THEN
-                  WRITE(ANS,9713)
-               ENDIF
+               IF (WRITE_ANS) WRITE(ANS,9713)
             ENDIF
          ENDIF
       ENDIF

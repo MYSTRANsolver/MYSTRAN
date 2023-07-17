@@ -57,7 +57,7 @@
       INTEGER(LONG)                   :: I,J,J1            ! DO loop indices or counters
       INTEGER(LONG)                   :: NUM_TERMS         ! Number of terms to write out for shell elems
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = WRITE_ELEM_ENGR_FORCE_BEGEND
-      LOGICAL                         :: WRITE_F06, WRITE_OP2, WRITE_ANS   ! flag
+      LOGICAL                         :: WRITE_F06, WRITE_OP2, WRITE_PCH, WRITE_ANS   ! flag
 
       REAL(DOUBLE)                    :: ABS_ANS(8)       ! Max ABS for all element output
       REAL(DOUBLE)                    :: MAX_ANS(8)       ! Max for all element output
@@ -109,7 +109,10 @@
 
       WRITE_F06 = (FORC_OUT(1:1) == 'Y')
       WRITE_OP2 = (FORC_OUT(2:2) == 'Y')
+      WRITE_PCH = (FORC_OUT(3:3) == 'Y')
       WRITE_ANS = (DEBUG(200) > 0)
+ 9004 FORMAT(" *DEBUG:      FORC_OUT=",A,"; ETYPE=",A,"; WRITE_F06=",L, "; WRITE_OP2=",L, "; WRITE_PCH=",L)
+      WRITE(ERR,9004) FORC_OUT, TYPE, WRITE_F06, WRITE_OP2, WRITE_PCH
 
 
 headr:IF (IHDR == 'Y') THEN

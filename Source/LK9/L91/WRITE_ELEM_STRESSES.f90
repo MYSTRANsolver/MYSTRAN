@@ -81,7 +81,7 @@
       INTEGER(LONG)                   :: ANALYSIS_CODE          ! static/modal/time/etc. flag
       INTEGER(LONG)                   :: ELEMENT_TYPE           ! the OP2 flag for the element
       LOGICAL                         :: FIELD_5_INT_FLAG       ! flag to trigger FIELD5_INT_MODE vs. FIELD5_FLOAT_TIME_FREQ
-      LOGICAL                         :: WRITE_F06, WRITE_OP2, WRITE_ANS   ! flag
+      LOGICAL                         :: WRITE_F06, WRITE_OP2, WRITE_PCH, WRITE_ANS   ! flag
       INTEGER(LONG)                   :: FIELD5_INT_MODE        ! int value for field 5
       REAL(DOUBLE)                    :: FIELD5_FLOAT_TIME_FREQ ! float value for field 5
       REAL(DOUBLE)                    :: FIELD6_EIGENVALUE      ! float value for field 6
@@ -143,7 +143,10 @@
       FIELD6_EIGENVALUE = 0.0
       WRITE_F06 = (STRE_OUT(1:1) == 'Y')
       WRITE_OP2 = (STRE_OUT(2:2) == 'Y')
+      WRITE_PCH = (STRE_OUT(3:3) == 'Y')
       WRITE_ANS = (DEBUG(200) > 0)
+ 9004 FORMAT(" *DEBUG:      STRE_OUT=",A,"; ETYPE=",A,"; WRITE_F06=",L, "; WRITE_OP2=",L, "; WRITE_PCH=",L)
+      WRITE(ERR,9004) STRE_OUT, TYPE, WRITE_F06, WRITE_OP2, WRITE_PCH
 
       IF (IHDR == 'Y') THEN
          IF (WRITE_F06) WRITE(F06,*)
@@ -400,8 +403,10 @@
 
       ! Write the element stress output
       IF      (TYPE == 'BAR     ') THEN
-         CALL WRITE_BAR(NUM, FILL(1:1), FILL(1:16), ISUBCASE, ITABLE, TITLEI, STITLEI, LABELI, &
-                        FIELD5_INT_MODE, FIELD6_EIGENVALUE)
+         CALL WRITE_BAR(NUM, FILL(1:1), FILL(1:16), ISUBCASE, ITABLE, &
+                        TITLEI, STITLEI, LABELI,                      &
+                        FIELD5_INT_MODE, FIELD6_EIGENVALUE,           &
+                        WRITE_F06, WRITE_OP2, WRITE_ANS)
 
       ELSE IF (TYPE(1:4) == 'ELAS') THEN
          IF (WRITE_OP2) THEN
@@ -421,7 +426,7 @@
              WRITE(OP2) (EID_OUT_ARRAY(I,1)*10+DEVICE_CODE, REAL(OGEL(I,1), 4), I=1,NUM)
          ENDIF   ! end of op2
 
-         WRITE(F06,1103) (FILL(1:1), EID_OUT_ARRAY(I,1), OGEL(I,1),I=1,NUM)
+         IF(WRITE_F06) WRITE(F06,1103) (FILL(1:1), EID_OUT_ARRAY(I,1), OGEL(I,1),I=1,NUM)
          IF(WRITE_ANS) WRITE(ANS,1104) (FILL(1:16), EID_OUT_ARRAY(I,1),OGEL(I,1),I=1,NUM)
 
       ELSE IF((TYPE(1:4) == 'HEXA') .OR. (TYPE(1:5) == 'PENTA') .OR. (TYPE(1:5) == 'TETRA')) THEN
@@ -492,22 +497,18 @@
          ENDIF
 
          DO I=1,NUM
-            WRITE(F06,1303) EID_OUT_ARRAY(I,1),(OGEL(I,J),J=1,NCOLS)
+            IF (WRITE_F06) WRITE(F06,1303) EID_OUT_ARRAY(I,1), (OGEL(I,J),J=1,NCOLS)
             IF (WRITE_ANS) WRITE(ANS,1313) EID_OUT_ARRAY(I,1), (OGEL(I,J),J=1,NCOLS)
          ENDDO
 
          CALL GET_MAX_MIN_ABS_STR ( NUM, NCOLS, 'N', MAX_ANS, MIN_ANS, ABS_ANS )
 
          IF (STRE_OPT == 'VONMISES') THEN
-            WRITE(F06,1304) (MAX_ANS(J),J=1,7), (MIN_ANS(J),J=1,7), (ABS_ANS(J),J=1,7)
-            IF (WRITE_ANS) THEN
-               WRITE(ANS,1314) (MAX_ANS(J),J=1,7), (MIN_ANS(J),J=1,7), (ABS_ANS(J),J=1,7)
-            ENDIF
+            IF (WRITE_F06) WRITE(F06,1304) (MAX_ANS(J),J=1,7), (MIN_ANS(J),J=1,7), (ABS_ANS(J),J=1,7)
+            IF (WRITE_ANS) WRITE(ANS,1314) (MAX_ANS(J),J=1,7), (MIN_ANS(J),J=1,7), (ABS_ANS(J),J=1,7)
          ELSE
-            WRITE(F06,1305) (MAX_ANS(J),J=1,8), (MIN_ANS(J),J=1,8), (ABS_ANS(J),J=1,8)
-            IF (WRITE_ANS) THEN
-               WRITE(ANS,1315) (MAX_ANS(J),J=1,8), (MIN_ANS(J),J=1,8), (ABS_ANS(J),J=1,8)
-            ENDIF
+            IF (WRITE_F06) WRITE(F06,1305) (MAX_ANS(J),J=1,8), (MIN_ANS(J),J=1,8), (ABS_ANS(J),J=1,8)
+            IF (WRITE_ANS) WRITE(ANS,1315) (MAX_ANS(J),J=1,8), (MIN_ANS(J),J=1,8), (ABS_ANS(J),J=1,8)
          ENDIF
 
       ELSE IF (TYPE(1:5) == 'QUAD4') THEN
@@ -577,32 +578,33 @@
  4          FORMAT(' *DEBUG:  WRITE_CQUAD4-144:  I=',I4, " K=", I4)
             K = K + 1
             WRITE(ERR,4) I,K
-            WRITE(F06,*)
+            IF (WRITE_F06) WRITE(F06,*)
             IF (WRITE_ANS) WRITE(ANS,*)
-            WRITE(F06,1403) FILL(1: 0), EID_OUT_ARRAY(I,1),(OGEL(K,J),J=1,10)
+            IF (WRITE_F06) WRITE(F06,1403) FILL(1: 0), EID_OUT_ARRAY(I,1),(OGEL(K,J),J=1,10)
             IF (WRITE_ANS) WRITE(ANS,1413) EID_OUT_ARRAY(I,1), (OGEL(K,J),J=1,10)
             K = K + 1
-            WRITE(F06,1404) FILL(1: 0), (OGEL(K,J),J=1,8)
+            IF (WRITE_F06) WRITE(F06,1404) FILL(1: 0), (OGEL(K,J),J=1,8)
             IF (WRITE_ANS) WRITE(ANS,1414) (OGEL(K,J),J=1,8)
 
 
             DO L=1,NUM_PTS-1
                K = K + 1
                WRITE(ERR,4) I,K
-               WRITE(F06,*)
+               IF (WRITE_F06) WRITE(F06,*)
                IF (WRITE_ANS) WRITE(ANS,*)
                IF (DABS(POLY_FIT_ERR(I+L)) >= 0.01D0) THEN
-                  WRITE(F06,1405) FILL(1: 0), GID_OUT_ARRAY(I,L+1),(OGEL(K,J),J=1,10), POLY_FIT_ERR(I+L), POLY_FIT_ERR_INDEX(I+L)
+                  IF (WRITE_F06) WRITE(F06,1405) FILL(1: 0), &
+                      GID_OUT_ARRAY(I,L+1),(OGEL(K,J),J=1,10), POLY_FIT_ERR(I+L), POLY_FIT_ERR_INDEX(I+L)
                   WRT_ERR_INDEX_NOTE(POLY_FIT_ERR_INDEX(I+L)) = 'Y'
                ELSE
-                  WRITE(F06,1406) FILL(1: 0), GID_OUT_ARRAY(I,L+1),(OGEL(K,J),J=1,10), POLY_FIT_ERR(I+L)
+                  IF (WRITE_F06) WRITE(F06,1406) FILL(1: 0), GID_OUT_ARRAY(I,L+1),(OGEL(K,J),J=1,10), POLY_FIT_ERR(I+L)
                ENDIF
                IF (WRITE_ANS) THEN
                   WRITE(ANS,1415) GID_OUT_ARRAY(I,L+1),(OGEL(K,J),J=1,10), POLY_FIT_ERR(I+L), POLY_FIT_ERR_INDEX(I+L)
                ENDIF
 
                K = K + 1
-               WRITE(F06,1407) FILL(1: 0), (OGEL(K,J),J=1,8)
+               IF (WRITE_F06) WRITE(F06,1407) FILL(1: 0), (OGEL(K,J),J=1,8)
                IF (WRITE_ANS) WRITE(ANS,1417) (OGEL(K,J),J=1,8)
 
             ENDDO
@@ -610,7 +612,7 @@
 
          CALL GET_MAX_MIN_ABS_STR ( NUM, 10, 'Y', MAX_ANS, MIN_ANS, ABS_ANS )
 
-             ! Get max POLY_FIT_ERR
+         ! Get max POLY_FIT_ERR
          MAX_ANS(11) = ZERO
          K = 0
          DO I=1,NUM
@@ -620,10 +622,9 @@
             ENDIF
             K = K + 1
          ENDDO
-
          MIN_ANS(11) = MAX_ANS(11)
 
-             ! Get min POLY_FIT_ERR
+         ! Get min POLY_FIT_ERR
          K = 0
          DO I=1,NUM
             K = K + 1
@@ -632,10 +633,10 @@
             ENDIF
             K = K + 1
          ENDDO
-             ! Get abs POLY_FIT_ERR
+         ! Get abs POLY_FIT_ERR
          ABS_ANS(11) = MAX( DABS(MAX_ANS(11)), DABS(MIN_ANS(11)) )
 
-         IF (STRE_LOC == 'CORNER  ') THEN 
+         IF ((WRITE_F06) .AND. (STRE_LOC == 'CORNER  ')) THEN
             WRITE(F06,1408) FILL(1: 0), FILL(1: 0), MAX_ANS(2),MAX_ANS(3),MAX_ANS(4),MAX_ANS(6),MAX_ANS(7),MAX_ANS(8),MAX_ANS(9),  &
                                                     MAX_ANS(10),MAX_ANS(11),                                                       &
                             FILL(1: 0),             MIN_ANS(2),MIN_ANS(3),MIN_ANS(4),MIN_ANS(6),MIN_ANS(7),MIN_ANS(8),MIN_ANS(9),  &
@@ -651,15 +652,17 @@
                                                     ABS_ANS(10),ABS_ANS(11), FILL(1: 0)
          ENDIF
 
-             IF (WRITE_ANS) THEN
-            IF (STRE_LOC == 'CORNER  ') THEN
-               WRITE(ANS,1418)MAX_ANS(2),MAX_ANS(3),MAX_ANS(4),MAX_ANS(6),MAX_ANS(7),MAX_ANS(8),MAX_ANS(9),MAX_ANS(10),MAX_ANS(11),&
-                              MIN_ANS(2),MIN_ANS(3),MIN_ANS(4),MIN_ANS(6),MIN_ANS(7),MIN_ANS(8),MIN_ANS(9),MIN_ANS(10),MIN_ANS(11),&
-                              ABS_ANS(2),ABS_ANS(3),ABS_ANS(4),ABS_ANS(6),ABS_ANS(7),ABS_ANS(8),ABS_ANS(9),ABS_ANS(10)
-            ELSE
-               WRITE(ANS,1418)MAX_ANS(2),MAX_ANS(3),MAX_ANS(4),MAX_ANS(6),MAX_ANS(7),MAX_ANS(8),MAX_ANS(9),MAX_ANS(10),MAX_ANS(11),&
-                              MIN_ANS(2),MIN_ANS(3),MIN_ANS(4),MIN_ANS(6),MIN_ANS(7),MIN_ANS(8),MIN_ANS(9),MIN_ANS(10),MIN_ANS(11),&
-                              ABS_ANS(2),ABS_ANS(3),ABS_ANS(4),ABS_ANS(6),ABS_ANS(7),ABS_ANS(8),ABS_ANS(9),ABS_ANS(10),ABS_ANS(11)
+            IF (WRITE_ANS) THEN
+             IF (STRE_LOC == 'CORNER  ') THEN
+                WRITE(ANS,1418) & 
+                  MAX_ANS(2),MAX_ANS(3),MAX_ANS(4),MAX_ANS(6),MAX_ANS(7),MAX_ANS(8),MAX_ANS(9),MAX_ANS(10),MAX_ANS(11),&
+                  MIN_ANS(2),MIN_ANS(3),MIN_ANS(4),MIN_ANS(6),MIN_ANS(7),MIN_ANS(8),MIN_ANS(9),MIN_ANS(10),MIN_ANS(11),&
+                  ABS_ANS(2),ABS_ANS(3),ABS_ANS(4),ABS_ANS(6),ABS_ANS(7),ABS_ANS(8),ABS_ANS(9),ABS_ANS(10)
+             ELSE
+                WRITE(ANS,1418) &
+                  MAX_ANS(2),MAX_ANS(3),MAX_ANS(4),MAX_ANS(6),MAX_ANS(7),MAX_ANS(8),MAX_ANS(9),MAX_ANS(10),MAX_ANS(11),&
+                  MIN_ANS(2),MIN_ANS(3),MIN_ANS(4),MIN_ANS(6),MIN_ANS(7),MIN_ANS(8),MIN_ANS(9),MIN_ANS(10),MIN_ANS(11),&
+                  ABS_ANS(2),ABS_ANS(3),ABS_ANS(4),ABS_ANS(6),ABS_ANS(7),ABS_ANS(8),ABS_ANS(9),ABS_ANS(10),ABS_ANS(11)
             ENDIF
          ENDIF
              
@@ -670,7 +673,7 @@
                 ENDIF
              ENDDO
        
-             IF (WRITE_NOTES == 'Y') THEN
+             IF ((WRITE_F06) .AND. (WRITE_NOTES == 'Y')) THEN
                 WRITE(F06,1498)
                 DO I=1,MAX_NUM_STR
                    IF (WRT_ERR_INDEX_NOTE(I) == 'Y') THEN
@@ -707,13 +710,13 @@
          ENDIF
 
          DO I=1,NUM
-            WRITE(F06,1802) EID_OUT_ARRAY(I,1),(OGEL(I,J),J=1,6)
+            IF (WRITE_F06) WRITE(F06,1802) EID_OUT_ARRAY(I,1),(OGEL(I,J),J=1,6)
             IF (WRITE_ANS) WRITE(ANS,1812) EID_OUT_ARRAY(I,1), (OGEL(I,J),J=1,6)
          ENDDO
 
       ELSE IF (TYPE == 'USERIN  ') THEN
          DO I=1,NUM
-            WRITE(F06,1902) EID_OUT_ARRAY(I,1), (OGEL(I,J),J=1,6)
+            IF (WRITE_F06) WRITE(F06,1902) EID_OUT_ARRAY(I,1), (OGEL(I,J),J=1,6)
             IF (WRITE_ANS) WRITE(ANS,1812) EID_OUT_ARRAY(I,1), (OGEL(I,J),J=1,6)
          ENDDO
 

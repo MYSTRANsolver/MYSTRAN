@@ -82,7 +82,7 @@
       INTEGER(LONG)                   :: ANALYSIS_CODE          ! static/modal/time/etc. flag
       INTEGER(LONG)                   :: ELEMENT_TYPE           ! the OP2 flag for the element
       LOGICAL                         :: FIELD_5_INT_FLAG       ! flag to trigger FIELD5_INT_MODE vs. FIELD5_FLOAT_TIME_FREQ
-      LOGICAL                         :: WRITE_F06, WRITE_OP2, WRITE_ANS   ! flag
+      LOGICAL                         :: WRITE_F06, WRITE_OP2, WRITE_PCH, WRITE_ANS   ! flag
       INTEGER(LONG)                   :: FIELD5_INT_MODE        ! int value for field 5
       REAL(DOUBLE)                    :: FIELD5_FLOAT_TIME_FREQ ! float value for field 5
       REAL(DOUBLE)                    :: FIELD6_EIGENVALUE      ! float value for field 6
@@ -141,7 +141,10 @@
       FIELD6_EIGENVALUE = 0.0
       WRITE_F06 = (STRN_OUT(1:1) == 'Y')
       WRITE_OP2 = (STRN_OUT(2:2) == 'Y')
+      WRITE_PCH = (STRN_OUT(3:3) == 'Y')
       WRITE_ANS = (DEBUG(200) > 0)
+ 9004 FORMAT(" *DEBUG:      STRN_OUT=",A,"; ETYPE=",A,"; WRITE_F06=",L, "; WRITE_OP2=",L, "; WRITE_PCH=",L)
+      WRITE(ERR,9004) STRN_OUT, TYPE, WRITE_F06, WRITE_OP2, WRITE_PCH
 
       IF (IHDR == 'Y') THEN
 

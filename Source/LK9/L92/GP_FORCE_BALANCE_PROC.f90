@@ -98,14 +98,15 @@
       real(double)                    :: max_abs_all_grds(6)! The 6 max-abs from GP force balance totals
 
       INTEGER(LONG)                   :: DEVICE_CODE        ! 
-      INTEGER(LONG)                   :: ANALYSIS_CODE      !      
+      INTEGER(LONG)                   :: ANALYSIS_CODE      !
+      LOGICAL                         :: WRITE_ANS
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
          CALL OURTIM
          WRITE(F04,9001) SUBR_NAME,TSEC
  9001    FORMAT(1X,A,' BEGN ',F10.3)
       ENDIF
-
+      WRITE_ANS = (DEBUG(200) > 0)
 ! **********************************************************************************************************************************
 ! Initialize
 
@@ -184,7 +185,7 @@
             WRITE(F06,9200)
          ENDIF
 
-         IF (DEBUG(200) > 0) THEN
+         IF (WRITE_ANS) THEN
             WRITE(ANS,*)
             WRITE(ANS,*)
             IF    (SOL_NAME(1:7) == 'STATICS') THEN
@@ -276,7 +277,7 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
             G_CID = GRID(I,3)
             WRITE(F06,9201) GRID_NUM, G_CID
             WRITE(F06,9202)
-            IF (DEBUG(200) > 0) THEN
+            IF (WRITE_ANS) THEN
                WRITE(ANS,9201) GRID_NUM, G_CID
                WRITE(ANS,9202)
             ENDIF
@@ -355,7 +356,7 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
                WRITE(F06,9208) (QGr1(J),J=1,6)
             ENDIF
 
-            IF (DEBUG(200) > 0) THEN
+            IF (WRITE_ANS) THEN
                WRITE(ANS,9203) ( PG1(J),J=1,6)
                IF (SUBLOD(INT_SC_NUM,2) > 0) THEN
                   WRITE(ANS,9204) (-PTET(J),J=1,6)
@@ -398,7 +399,7 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
                         TOTALS(L) = TOTALS(L) - PEG1(L)
                      ENDDO
                      WRITE(F06,9209) TYPE, EID, ( -PEG1(L),L=1,6)
-                     IF (DEBUG(200) > 0) THEN
+                     IF (WRITE_ANS) THEN
                         WRITE(ANS,9209) TYPE, EID, ( -PEG1(L),L=1,6)
                      ENDIF
                   ENDIF
@@ -424,7 +425,7 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
                   ENDIF
                ENDDO
             ENDIF
-            IF (DEBUG(200) > 0) THEN
+            IF (WRITE_ANS) THEN
                WRITE(ANS,9210)
                IF ((SOL_NAME(1:5) == 'MODES') .OR. (SOL_NAME(1:12) == 'GEN CB MODEL')) THEN
                   IF (NDOFO == 0) THEN
@@ -593,7 +594,7 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
             WRITE(F06,9217) (CHAR_PCT(I),I=1,6)
          ENDIF
          WRITE(F06,9218) (MAX_ABS_GRID(I),I=1,6)
-         IF (DEBUG(200) > 0) THEN
+         IF (WRITE_ANS) THEN
             WRITE(ANS,9214)
             WRITE(ANS,9202)
             WRITE(ANS,9215) (MAX_ABS_ALL_GRDS(I),I=1,6)

@@ -66,13 +66,14 @@
       REAL(DOUBLE)                    :: ABS_ANS(6)        ! Max Abs for all grids output for each of the 6 disp components
       REAL(DOUBLE)                    :: MAX_ANS(6)        ! Max for all grids output for each of the 6 disp components
       REAL(DOUBLE)                    :: MIN_ANS(6)        ! Min for all grids output for each of the 6 disp components
-
+      LOGICAL                         :: WRITE_ANS
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
          CALL OURTIM
          WRITE(F04,9001) SUBR_NAME,TSEC
  9001    FORMAT(1X,A,' BEGN ',F10.3)
       ENDIF
+      WRITE_ANS = (DEBUG(200) > 0)
 
 ! **********************************************************************************************************************************
 ! Get element output name
@@ -80,10 +81,8 @@
       ONAME(1:) = ' '
       CALL GET_ELEM_ONAME ( ONAME )
  
-! Write output headers if this is not the first use of this subr.
-
+      ! Write output headers if this is not the first use of this subr.
       IF (IHDR == 'Y') THEN
-
          WRITE(F06,*)
          WRITE(F06,*)
          IF    ((SOL_NAME(1:7) == 'STATICS') .OR. (SOL_NAME(1:8) == 'NLSTATIC')) THEN
@@ -146,7 +145,7 @@
          WRITE(F06,212) ONAME
          WRITE(F06,213)
 
-         IF (DEBUG(200) > 0) THEN
+         IF (WRITE_ANS) THEN
             WRITE(ANS,*)
             WRITE(ANS,*)
             IF    ((SOL_NAME(1:7) == 'STATICS') .OR. (SOL_NAME(1:8) == 'NLSTATIC')) THEN
@@ -267,12 +266,12 @@
 
             IF (J == 1) THEN
                WRITE(F06,221) EID_OUT_ARRAY(I,1),GID_OUT_ARRAY(I,J),(OGEL_CHAR(K),K=1,6)
-               IF (DEBUG(200) > 0) THEN
+               IF (WRITE_ANS) THEN
                   WRITE(ANS,291) EID_OUT_ARRAY(I,1),GID_OUT_ARRAY(I,J),(OGEL(L,K),K=1,6)
                ENDIF
             ELSE
                WRITE(F06,222) GID_OUT_ARRAY(I,J),(OGEL_CHAR(K),K=1,6)        
-               IF (DEBUG(200) > 0) THEN
+               IF (WRITE_ANS) THEN
                   WRITE(ANS,292) GID_OUT_ARRAY(I,J),(OGEL(L,K),K=1,6)        
                ENDIF
             ENDIF
@@ -280,7 +279,7 @@
          ENDDO
  
          WRITE(F06,*)
-         IF (DEBUG(200) > 0) THEN
+         IF (WRITE_ANS) THEN
             WRITE(ANS,*)
          ENDIF
 
@@ -291,7 +290,7 @@
       ENDDO
 
       WRITE(F06,9111) (MAX_ANS_CHAR(J),J=1,6),(MIN_ANS_CHAR(J),J=1,6),(ABS_ANS_CHAR(J),J=1,6)
-      IF (DEBUG(200) > 0) THEN
+      IF (WRITE_ANS) THEN
          WRITE(ANS,9191) (MAX_ANS(J),J=1,6),(MIN_ANS(J),J=1,6),(ABS_ANS (J),J=1,6)
       ENDIF
 

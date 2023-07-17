@@ -42,6 +42,7 @@
       USE LINK9_STUFF, ONLY           :  GID_OUT_ARRAY, OGEL
       USE MODEL_STUF, ONLY            :  GRID, LABEL, SCNUM, SUBLOD, STITLE, TITLE
       USE EIGEN_MATRICES_1 , ONLY     :  EIGEN_VAL
+      USE DEBUG_PARAMETERS, ONLY      :  DEBUG
 
 !     TODO: not sure how to use this...
 !     USE WRITE_GRD_PCH_OUTPUTS_USE_IFs
@@ -74,10 +75,11 @@
       INTEGER(LONG)                   :: NTOTAL            ! the number of total bytes for all the "words"
       INTEGER(LONG)                   :: NUM_WIDE          ! the width in bytes of a result
       INTEGER(LONG)                   :: NVALUES           ! the width in "words" of a result
-
+      !LOGICAL                         :: WRITE_ANS
 ! **********************************************************************************************************************************
       ! TODO: assuming PLOT
       DEVICE_CODE = 1
+      !WRITE_ANS = (DEBUG(200) > 0)
 ! **********************************************************************************************************************************
 !      IF (WRT_LOG >= SUBR_BEGEND) THEN
 !         CALL OURTIM
@@ -118,6 +120,7 @@
       EIGENVALUE = 0.0
       MODE = 0
       CALL GET_ANALYSIS_CODE_FIELD5_FIELD6(JSUB, ANALYSIS_CODE, MODE, EIGENVALUE)
+      
       ISUBCASE = SCNUM(JSUB)
       
       TITLEI = TITLE(INT_SC_NUM)

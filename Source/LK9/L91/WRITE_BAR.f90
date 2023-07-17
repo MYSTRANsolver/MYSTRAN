@@ -26,8 +26,9 @@
  
       SUBROUTINE WRITE_BAR (NUM, FILL_F06, FILL_ANS, ISUBCASE, ITABLE,  &
                             TITLE, SUBTITLE, LABEL,                     &
-                            FIELD5_INT_MODE, FIELD6_EIGENVALUE )
- 
+                            FIELD5_INT_MODE, FIELD6_EIGENVALUE,         &
+                            WRITE_OP2, WRITE_F06, WRITE_ANS)
+
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
       USE IOUNT1, ONLY                :  WRT_ERR, WRT_LOG, ANS, ERR, F04, F06, OP2
       USE SCONTR, ONLY                :  BARTOR, BLNK_SUB_NAM, MOGEL
@@ -51,6 +52,7 @@
       CHARACTER(LEN=128), INTENT(IN)  :: LABEL             ! the subcase LABEL
       INTEGER(LONG), INTENT(IN)       :: FIELD5_INT_MODE
       REAL(DOUBLE),  INTENT(IN)       :: FIELD6_EIGENVALUE
+      LOGICAL, INTENT(IN)             :: WRITE_F06, WRITE_OP2, WRITE_ANS   ! flag
 
       CHARACTER(133*BYTE)             :: BLINE1A           ! Result of concatenating char. variables BOUT1, BMS1, BMSF1, BTOR to
 !                                                            make the 1st line of stress output for a CBAR with torsional stress 
@@ -105,22 +107,22 @@
       ! Data is first written to character variables and then that character variable is output the F06 and ANS.
       ! op2_headers = ['s1a', 's2a', 's3a', 's4a', 'axial', 'smaxa', 'smina', 'MS_tension',
       !                's1b', 's2b', 's3b', 's4b',          'smaxb', 'sminb', 'MS_compression']
- 
-      NVALUES = NUM_WIDE * NUM
-      
-      !CALL GET_STRESS_CODE(STRESS_CODE, IS_VON_MISES, IS_STRAIN, IS_FIBER_DISTANCE)
-      CALL GET_STRESS_CODE( STRESS_CODE, 1,            0,         0)
-      CALL WRITE_OES3_STATIC(ITABLE, ISUBCASE, DEVICE_CODE, ELEMENT_TYPE, NUM_WIDE, STRESS_CODE, &
-                             TITLE, SUBTITLE, LABEL, FIELD5_INT_MODE, FIELD6_EIGENVALUE)
+      IF(WRITE_OP2) THEN
+        NVALUES = NUM_WIDE * NUM
 
-      WRITE(OP2) NVALUES
-      !K = 2*I+1
-      !
-      ! TODO: this is likely not right, but it should be the right shape...
-      WRITE(OP2) (EID_OUT_ARRAY(I,1)*10+DEVICE_CODE,   &
-                  (REAL(OGEL(2*I-1,J), 4), J=1,8),     & ! s1a-smina; K = 2*I+1
-                  (REAL(OGEL(2*I,  J), 4), J=1,7),     & ! s1b-sminb; K = 2*I
-                  I=1,NUM)
+        !CALL GET_STRESS_CODE(STRESS_CODE, IS_VON_MISES, IS_STRAIN, IS_FIBER_DISTANCE)
+        CALL GET_STRESS_CODE( STRESS_CODE, 1,            0,         0)
+        CALL WRITE_OES3_STATIC(ITABLE, ISUBCASE, DEVICE_CODE, ELEMENT_TYPE, NUM_WIDE, STRESS_CODE, &
+                               TITLE, SUBTITLE, LABEL, FIELD5_INT_MODE, FIELD6_EIGENVALUE)
+        WRITE(OP2) NVALUES
+        !K = 2*I+1
+        !
+        ! TODO: this is likely not right, but it should be the right shape...
+        WRITE(OP2) (EID_OUT_ARRAY(I,1)*10+DEVICE_CODE,   &
+                    (REAL(OGEL(2*I-1,J), 4), J=1,8),     & ! s1a-smina; K = 2*I+1
+                    (REAL(OGEL(2*I,  J), 4), J=1,7),     & ! s1b-sminb; K = 2*I
+                    I=1,NUM)
+      ENDIF
 ! ******************************
       K = 0
       DO I=1,NUM
@@ -131,13 +133,13 @@
 
          BOUT1(1:)   = ' '
          BMS1(1:)    = ' '
-         BMSF1       = ' '   
+         BMSF1       = ' '
  
          BOUT2(1:)   = ' '
          BMS2(1:)    = ' '
          BMSF2       = ' '
 
-         BTOR(1:)    = ' '   
+         BTOR(1:)    = ' '
  
          ! Write first line of output for one element to a temporary internal file
          K = K + 1
@@ -189,38 +191,44 @@
          ENDIF
 
          ! Write the two lines of stress output for one element to F06
-         WRITE(F06,*)
-         WRITE(ANS,*)
+         IF (WRITE_F06) WRITE(F06,*)
+         IF (WRITE_ANS) WRITE(ANS,*)
          IF (BARTOR == 'Y') THEN
             BLINE1A = BOUT1//BMS1//BMSF1//BTOR
             BLINE2A = BOUT2//BMS2//BMSF2//BMS3//BMSF3
-            WRITE(F06,9031) BLINE1A
-            WRITE(F06,9031) BLINE2A
-            IF (DEBUG(200) > 0) THEN
+            IF (WRITE_F06) THEN
+               WRITE(F06,9031) BLINE1A
+               WRITE(F06,9031) BLINE2A
+            ENDIF
+            IF (WRITE_ANS) THEN
                WRITE(ANS,9901) FILL_ANS, EID_OUT_ARRAY(I,1), (OGEL(K-1,J),J=1,9)
                WRITE(ANS,9902) FILL_ANS, (OGEL(K,J),J=1,9)
             ENDIF
          ELSE
             BLINE1B = BOUT1//BMS1//BMSF1
             BLINE2B = BOUT2//BMS2//BMSF2
-            WRITE(F06,9031) BLINE1B
-            WRITE(F06,9031) BLINE2B
-            IF (DEBUG(200) > 0) THEN
+            IF (WRITE_F06) THEN
+               WRITE(F06,9031) BLINE1B
+               WRITE(F06,9031) BLINE2B
+            ENDIF
+            IF (WRITE_ANS) THEN
                WRITE(ANS,9903) FILL_ANS, EID_OUT_ARRAY(I,1), (OGEL(K-1,J),J=1,8)
                WRITE(ANS,9904) FILL_ANS, (OGEL(K,J),J=1,8)
            ENDIF
          ENDIF
 
-         IF (DEBUG(200) > 0) THEN
+         IF (WRITE_ANS) THEN
          ENDIF
 
       ENDDO
 
       CALL GET_MAX_MIN_ABS ( 1, 8 )
-      WRITE(F06,9108) (MAX_ANS_CHAR(J),J=1,7), MAX_ANS(8), (MAX_ANS_CHAR(J),J=9,15), MAX_ANS(16),                                  &
-                      (MIN_ANS_CHAR(J),J=1,7), MIN_ANS(8), (MIN_ANS_CHAR(J),J=9,15), MIN_ANS(16),                                  &
-                      (ABS_ANS_CHAR(J),J=1,7), ABS_ANS(8), (ABS_ANS_CHAR(J),J=9,15), ABS_ANS(16)
-      IF (DEBUG(200) > 0) THEN
+      IF (WRITE_F06) THEN
+         WRITE(F06,9108) (MAX_ANS_CHAR(J),J=1,7), MAX_ANS(8), (MAX_ANS_CHAR(J),J=9,15), MAX_ANS(16),    &
+                         (MIN_ANS_CHAR(J),J=1,7), MIN_ANS(8), (MIN_ANS_CHAR(J),J=9,15), MIN_ANS(16),    &
+                         (ABS_ANS_CHAR(J),J=1,7), ABS_ANS(8), (ABS_ANS_CHAR(J),J=9,15), ABS_ANS(16)
+      ENDIF
+      IF (WRITE_ANS) THEN
          WRITE(ANS,9118) (MAX_ANS(J),J=1,16),(MIN_ANS(J),J=1,16), (ABS_ANS(J),J=1,16)
       ENDIF
 
