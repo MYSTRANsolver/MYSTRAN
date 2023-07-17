@@ -56,6 +56,7 @@
       INTEGER(LONG)                   :: NUM_ROWS           ! Number of rows of stress for an element (plates have 2 ZS vals)
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = SHELL_STRAIN_OUTPUTS_BEGEND
  
+      LOGICAL                         :: WRITE_F06, WRITE_OP2, WRITE_PCH, WRITE_NEU, WRITE_ANS   ! flag
       REAL(DOUBLE)                    :: ANGLE              ! Angle of prin strains in plate elems (calc'd in subr PRINCIPAL_2D)
       REAL(DOUBLE)                    :: FAILURE_INDEX      ! Failure index (scalar value)
       REAL(DOUBLE)                    :: MEAN               ! Mean strains
@@ -79,15 +80,13 @@
       ENDIF
 
 ! **********************************************************************************************************************************
-! Calculates strain output for shell elements (TRIA3, QUAD4, SHEAR) and puts results into array OGEL for later output to F06 file
- 
+      ! Calculates strain output for shell elements (TRIA3, QUAD4, SHEAR) and puts results into array OGEL for later output to F06 file
+      WRITE_NEU = (POST /= 0) .AND. (WRITE_FEMAP == 'Y')
+
       IF ((TYPE(1:5) == 'TRIA3') .OR. (TYPE(1:5) == 'QUAD4') .OR. (TYPE(1:5) == 'SHEAR')) THEN
-
          IF (PCOMP_PROPS == 'Y') THEN
-
             SX  = STRAIN(1)
             SY  = STRAIN(2)
-
             SXY = STRAIN(3)
             SXZ = STRAIN(7)
             SYZ = STRAIN(8)
@@ -99,7 +98,7 @@
                   WRITE(F06,9200) SUBR_NAME,SIZE_ALLOCATED
                   FATAL_ERR = FATAL_ERR + 1
                   CALL OUTA_HERE ( 'Y' )
-               ENDIF   
+               ENDIF
                OGEL(NUM1,1) = SX
                OGEL(NUM1,2) = SY
                OGEL(NUM1,3) = SXY
@@ -117,11 +116,9 @@
 
                FAILURE_INDEX = ZERO
                IF (FAILURE_THEORY == 'NONE') THEN
-
                   FTNAME(NUM1)  = 'None'
 
                ELSE
-
                   STREi(1) = STRESS(1)                      ! STREi stress order for failure theory calc has #1 = x  direct stress
                   STREi(2) = STRESS(2)                      ! STREi stress order for failure theory calc has #2 = y  direct stress
                   STREi(3) = ZERO                           ! STREi stress order for failure theory calc has #3 = z  direct stress
@@ -151,10 +148,9 @@
 
                   OGEL(NUM1,10) = FAILURE_INDEX
                   FTNAME(NUM1)  = FAILURE_THEORY(1:4)
-
                ENDIF
 
-               IF ((POST /= 0) .AND. (WRITE_FEMAP == 'Y')) THEN
+               IF (WRITE_NEU) THEN
                   FEMAP_EL_VECS(NUM_FEMAP_ROWS,1) = SX
                   FEMAP_EL_VECS(NUM_FEMAP_ROWS,2) = SY
                   FEMAP_EL_VECS(NUM_FEMAP_ROWS,3) = SXY
@@ -193,8 +189,8 @@
                      WRITE(F06,9200) SUBR_NAME,SIZE_ALLOCATED
                      FATAL_ERR = FATAL_ERR + 1
                      CALL OUTA_HERE ( 'Y' )
-                  ENDIF   
-                  IF (TYPE(1:5) == 'SHEAR') THEN   
+                  ENDIF
+                  IF (TYPE(1:5) == 'SHEAR') THEN
                      OGEL(NUM1, 1) = SX
                      OGEL(NUM1, 2) = SY
                      OGEL(NUM1, 3) = SXY
@@ -218,7 +214,8 @@
                   OGEL(NUM1, 9) = SXZ
                   OGEL(NUM1,10) = SYZ
                ENDIF
-               IF ((POST /= 0) .AND. (WRITE_FEMAP == 'Y')) THEN
+
+               IF (WRITE_NEU) THEN
 !                 FEMAP_EL_VECS(NUM_FEMAP_ROWS,11*(I-1)+ 1) = SX
 !                 FEMAP_EL_VECS(NUM_FEMAP_ROWS,11*(I-1)+ 2) = SY
 !                 FEMAP_EL_VECS(NUM_FEMAP_ROWS,11*(I-1)+ 3) = SXY
@@ -249,7 +246,7 @@
 !xx                  FEMAP_EL_VECS(NUM_FEMAP_ROWS,9*(I-1)+8) = SXYMAX
 !xx               ENDIF
                ENDIF
-            ENDDO   
+            ENDDO
  
          ENDIF
 
@@ -267,20 +264,18 @@
                OGEL(NUM1,J) = STRAIN(J)
             ENDDO
          ENDIF
-         IF ((POST /= 0) .AND. (WRITE_FEMAP == 'Y')) THEN
+         IF (WRITE_NEU) THEN
             DO J=1,9
                FEMAP_EL_VECS(NUM_FEMAP_ROWS,J) = STRAIN(J)
             ENDDO
          ENDIF
  
       ELSE
-
          FATAL_ERR = FATAL_ERR + 1
          WRITE(ERR,9203) SUBR_NAME, TYPE
          WRITE(F06,9203) SUBR_NAME, TYPE
          CALL OUTA_HERE ( 'Y' )
-
-      ENDIF   
+      ENDIF
  
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
@@ -300,8 +295,6 @@
  
  9205 FORMAT(' *ERROR  9205: PROGRAMMING ERROR IN SUBROUTINE ',A                                                                   &
                     ,/,14X,' INVALID ',A,' FAILURE THEORY = ',A,'. VALID ONES ARE: ',A)
-
-
 
 ! **********************************************************************************************************************************
 

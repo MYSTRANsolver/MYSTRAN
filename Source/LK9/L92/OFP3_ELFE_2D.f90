@@ -79,6 +79,7 @@
       ! OP2 parameters
       INTEGER(LONG)                   :: ITABLE            ! the op2 subtable number
       CHARACTER(8*BYTE)               :: TABLE_NAME        ! the op2 table name
+      LOGICAL                         :: WRITE_F06, WRITE_OP2, WRITE_PCH, WRITE_NEU, WRITE_ANS   ! flag
 
       INTRINSIC IAND
   
@@ -92,6 +93,7 @@
          WRITE(F04,9001) SUBR_NAME,TSEC
  9001    FORMAT(1X,A,' BEGN ',F10.3)
       ENDIF
+      WRITE_NEU = (POST /= 0) .AND. (ANY_ELFE_OUTPUT > 0)
 
 ! **********************************************************************************************************************************
 ! Process element engineering force requests for plate and USERIN elements.
@@ -234,8 +236,7 @@ elems_3: DO J = 1,NELE
         CALL END_OP2_TABLE(ITABLE)
       ENDIF
 
-      IF ((POST /= 0) .AND. (ANY_ELFE_OUTPUT > 0)) THEN
-
+      IF (WRITE_NEU) THEN
          NUM_FROWS= 0
          CALL ALLOCATE_FEMAP_DATA ( 'FEMAP ELEM ARRAYS', NCTRIA3K, 8, SUBR_NAME )
          DO J=1,NELE                                       ! Write out TRIA3K engineering forces
@@ -265,7 +266,7 @@ elems_3: DO J = 1,NELE
                FEMAP_EL_VECS(NUM_FROWS,6) = FCONV(2)*STRESS(6)       ! XY Moment
                FEMAP_EL_VECS(NUM_FROWS,7) = FCONV(3)*STRESS(7)       ! X  Transverse Shear
                FEMAP_EL_VECS(NUM_FROWS,8) = FCONV(3)*STRESS(8)       ! Y  Transverse Shear
-            ENDIF            
+            ENDIF
          ENDDO
          IF (NUM_FROWS > 0) THEN
             CALL WRITE_FEMAP_ELFO_VECS ( 'TRIA3K  ', NUM_FROWS, FEMAP_SET_ID )
@@ -301,7 +302,7 @@ elems_3: DO J = 1,NELE
                FEMAP_EL_VECS(NUM_FROWS,6) = FCONV(2)*STRESS(6)       ! XY Moment
                FEMAP_EL_VECS(NUM_FROWS,7) = FCONV(3)*STRESS(7)       ! X  Transverse Shear
                FEMAP_EL_VECS(NUM_FROWS,8) = FCONV(3)*STRESS(8)       ! Y  Transverse Shear
-            ENDIF            
+            ENDIF
          ENDDO
          IF (NUM_FROWS > 0) THEN
             CALL WRITE_FEMAP_ELFO_VECS ( 'TRIA3   ', NUM_FROWS, FEMAP_SET_ID )
@@ -337,7 +338,7 @@ elems_3: DO J = 1,NELE
                FEMAP_EL_VECS(NUM_FROWS,6) = FCONV(2)*STRESS(6)       ! XY Moment
                FEMAP_EL_VECS(NUM_FROWS,7) = FCONV(3)*STRESS(7)       ! X  Transverse Shear
                FEMAP_EL_VECS(NUM_FROWS,8) = FCONV(3)*STRESS(8)       ! Y  Transverse Shear
-            ENDIF            
+            ENDIF
          ENDDO
          IF (NUM_FROWS > 0) THEN
             CALL WRITE_FEMAP_ELFO_VECS ( 'QUAD4K  ', NUM_FROWS, FEMAP_SET_ID )
@@ -373,7 +374,7 @@ elems_3: DO J = 1,NELE
                FEMAP_EL_VECS(NUM_FROWS,6) = FCONV(2)*STRESS(6)       ! XY Moment
                FEMAP_EL_VECS(NUM_FROWS,7) = FCONV(3)*STRESS(7)       ! X  Transverse Shear
                FEMAP_EL_VECS(NUM_FROWS,8) = FCONV(3)*STRESS(8)       ! Y  Transverse Shear
-            ENDIF            
+            ENDIF
          ENDDO
          IF (NUM_FROWS > 0) THEN
             CALL WRITE_FEMAP_ELFO_VECS ( 'QUAD4   ', NUM_FROWS, FEMAP_SET_ID )
@@ -409,7 +410,7 @@ elems_3: DO J = 1,NELE
                FEMAP_EL_VECS(NUM_FROWS,6) = FCONV(2)*STRESS(6)       ! XY Moment
                FEMAP_EL_VECS(NUM_FROWS,7) = FCONV(3)*STRESS(7)       ! X  Transverse Shear
                FEMAP_EL_VECS(NUM_FROWS,8) = FCONV(3)*STRESS(8)       ! Y  Transverse Shear
-            ENDIF            
+            ENDIF
          ENDDO
          IF (NUM_FROWS > 0) THEN
             CALL WRITE_FEMAP_ELFO_VECS ( 'SHEAR   ', NUM_FROWS, FEMAP_SET_ID )

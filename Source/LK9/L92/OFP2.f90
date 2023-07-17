@@ -122,6 +122,7 @@
       WRITE(ERR,9000) "OFP2 - SPC and MPC force"
  9000 FORMAT(' *DEBUG:    RUNNING=', A)
  9003 FORMAT(' *DEBUG:    ITABLE BAD=', i4)
+ 9004 FORMAT(" *DEBUG:      ",A, "_OUT=",A,"; WRITE\_F06=",L, "; WRITE\_OP2=",L, "; WRITE\_PCH=",L)
 
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
@@ -298,6 +299,7 @@
                   WRITE_F06 = (SPCF_OUT(1:1) == 'Y')
                   WRITE_OP2 = (SPCF_OUT(2:2) == 'Y')
                   WRITE_PCH = (SPCF_OUT(3:3) == 'Y')
+                  WRITE(ERR,9004) WHAT, SPCF_OUT, WRITE_F06, WRITE_OP2, WRITE_PCH
                   IF (WRITE_OP2) THEN
                      CALL WRITE_GRD_OP2_OUTPUTS ( JVEC, NUM, WHAT, ITABLE, NEW_RESULT )
                      NEW_RESULT = .FALSE.
@@ -586,6 +588,7 @@
                   WRITE_F06 = (MPCF_OUT(1:1) == 'Y')
                   WRITE_OP2 = (MPCF_OUT(2:2) == 'Y')
                   WRITE_PCH = (MPCF_OUT(3:3) == 'Y')
+                  WRITE(ERR,9004) WHAT, MPCF_OUT, WRITE_F06, WRITE_OP2, WRITE_PCH
                   IF (WRITE_OP2) THEN
                      CALL WRITE_GRD_OP2_OUTPUTS ( JVEC, NUM, WHAT, ITABLE, NEW_RESULT )
                      NEW_RESULT = .FALSE.

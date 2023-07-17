@@ -88,6 +88,7 @@
       ! OP2 parameters
       INTEGER(LONG)                   :: ITABLE            ! the op2 subtable number
       CHARACTER(8*BYTE)               :: TABLE_NAME        ! the op2 table name
+      LOGICAL                         :: WRITE_F06, WRITE_OP2, WRITE_PCH, WRITE_NEU, WRITE_ANS   ! flag
 
       REAL(DOUBLE)                    :: TET(3,3)          ! Transpose of TE
       REAL(DOUBLE)                    :: TET_GA_GB(3,3)    ! Transpose of TE_GA_GB
@@ -126,7 +127,7 @@
       FORCE_ITEM(7) = 'FX : Axial force    '
       FORCE_ITEM(8) = 'T  : Torque         '
 
-! Find out how many output requests were made for each element type.
+      ! Find out how many output requests were made for each element type.
 
       DO I=1,METYPE                                        ! Initialize the array containing the no. requests/elem.
          NELREQ(I) = 0
@@ -150,10 +151,11 @@
          DO J=1,MOGEL
             OGEL(I,J) = ZERO
          ENDDO 
-      ENDDO   
+      ENDDO
  
 !xx   IROW_MAT = 0
 !xx   IROW_TXT = 0
+      WRITE_NEU =(POST /= 0) .AND. (ANY_ELFE_OUTPUT > 0)
       OT4_DESCRIPTOR = 'Element engineering force, ELFO'
 reqs2:DO I=1,METYPE
          IF (NELREQ(I) == 0) CYCLE reqs2
@@ -224,7 +226,8 @@ elems_2: DO J = 1,NELE
                               EEF(K)   = DUM21(K)
                               EEF(K+3) = DUM31(K)
                            ENDDO
-                                                           ! There is a local elem coord system (via CID or v-vec)
+
+                        ! There is a local elem coord system (via CID or v-vec)
                         IF ((BUSH_CID >= 0) .OR. (BUSH_VVEC /= 0)) THEN
 
                               DO K=1,3                     ! Transform elem forces from GA-GB axes to basic
@@ -245,9 +248,9 @@ elems_2: DO J = 1,NELE
                                  EEF(K+3) = DUM32(K)
                               ENDDO
                            ENDIF 
-                                                           ! Transform elem forces from basic to local
+
+                           ! Transform elem forces from basic to local
                            IF ((BUSH_CID > 0) .OR. (BUSH_VVEC /= 0)) THEN
-   
                               DO K=1,3
                                  DO L=1,3
                                     TET(K,L) = TE(L,K)
@@ -260,15 +263,13 @@ elems_2: DO J = 1,NELE
                                  EEF(K)   = DUM21(K)
                                  EEF(K+3) = DUM31(K)
                               ENDDO
+                           ENDIF
 
-                           ENDIF 
-
-                        ELSE                               ! Element has GA, GB coincident so element loads are in PEL
-
+                        ELSE
+                           ! Element has GA, GB coincident so element loads are in PEL
                            DO K=1,6
                               EEF(K) = PEL(K+6)
                            ENDDO
-
                         ENDIF
 
                      OGEL(NUM_OGEL,1) = EEF(1)             ! Now set OGEL output equal to the correct EEF's
@@ -343,7 +344,6 @@ elems_2: DO J = 1,NELE
                            FATAL_ERR = FATAL_ERR + 1
                            WRITE(ERR,963) SUBR_NAME, ETYPE(J)
                            WRITE(ERR,963) SUBR_NAME, ETYPE(J)
-
                         ENDIF
 
                      ENDIF
@@ -383,7 +383,7 @@ elems_2: DO J = 1,NELE
         CALL END_OP2_TABLE(ITABLE)
       ENDIF
 
-      IF ((POST /= 0) .AND. (ANY_ELFE_OUTPUT > 0)) THEN
+      IF (WRITE_NEU) THEN
 
 ! bar    ---------------------------------------------------------------------------------------------------------------------------
          NUM_FROWS= 0
@@ -452,7 +452,6 @@ elems_2: DO J = 1,NELE
                   ENDDO
 
                   IF (ELEM_LEN_12 > .0001D0) THEN    ! Element has a GA-GB axis so start with PE_GA_GB
-
                      DX = ABS(OFFDIS_GA_GB(2,1))
                      DY =    (OFFDIS_GA_GB(2,2))
                      DZ =    (OFFDIS_GA_GB(2,3))
@@ -468,10 +467,11 @@ elems_2: DO J = 1,NELE
                         EEF(K)   = DUM21(K)
                         EEF(K+3) = DUM31(K)
                      ENDDO
-                                                     ! There is a local elem coord system (via CID or v-vec)
-                     IF ((BUSH_CID >= 0) .OR. (BUSH_VVEC /= 0)) THEN
 
-                        DO K=1,3                     ! Transform elem forces from GA-GB axes to basic
+                     ! There is a local elem coord system (via CID or v-vec)
+                     IF ((BUSH_CID >= 0) .OR. (BUSH_VVEC /= 0)) THEN
+                        ! Transform elem forces from GA-GB axes to basic
+                        DO K=1,3
                            DO L=1,3
                               TET_GA_GB(K,L) = TE_GA_GB(L,K)
                            ENDDO
@@ -490,9 +490,9 @@ elems_2: DO J = 1,NELE
                         ENDDO
 
                      ENDIF
-                                                     ! Transform elem forces from basic to local
-                     IF ((BUSH_CID > 0) .OR. (BUSH_VVEC /= 0)) THEN
 
+                     ! Transform elem forces from basic to local
+                     IF ((BUSH_CID > 0) .OR. (BUSH_VVEC /= 0)) THEN
                         DO K=1,3
                            DO L=1,3
                               TET(K,L) = TE(L,K)
@@ -505,26 +505,22 @@ elems_2: DO J = 1,NELE
                            EEF(K)   = DUM21(K)
                            EEF(K+3) = DUM31(K)
                         ENDDO
-
                      ENDIF
 
-                  ELSE                               ! Element has GA, GB coincident so element loads are in PEL
-
+                  ELSE
+                     ! Element has GA, GB coincident so element loads are in PEL
                      DO K=1,6
                         EEF(K) = PEL(K+6)
                      ENDDO
-
                   ENDIF
 
                ENDIF
-
                FEMAP_EL_VECS(NUM_FROWS,1) = EEF(1)
                FEMAP_EL_VECS(NUM_FROWS,2) = EEF(2)
                FEMAP_EL_VECS(NUM_FROWS,3) = EEF(3)
                FEMAP_EL_VECS(NUM_FROWS,4) = EEF(4)
                FEMAP_EL_VECS(NUM_FROWS,5) = EEF(5)
                FEMAP_EL_VECS(NUM_FROWS,6) = EEF(6)
-
             ENDIF
          ENDDO
          IF (NUM_FROWS > 0) THEN
@@ -599,7 +595,7 @@ elems_2: DO J = 1,NELE
 
 ! elas2  ---------------------------------------------------------------------------------------------------------------------------
          NDUM = 0
-         NUM_FROWS= 0
+         NUM_FROWS = 0
          CALL ALLOCATE_FEMAP_DATA ( 'FEMAP ELEM ARRAYS', NCELAS2, 2, SUBR_NAME )
          DO J=1,NELE                                       ! Write out ELAS2 engineering forces
             EID   = EDAT(EPNT(J))
@@ -633,7 +629,7 @@ elems_2: DO J = 1,NELE
 
 ! elas3  ---------------------------------------------------------------------------------------------------------------------------
          NDUM = 0
-         NUM_FROWS= 0
+         NUM_FROWS = 0
          CALL ALLOCATE_FEMAP_DATA ( 'FEMAP ELEM ARRAYS', NCELAS3, 2, SUBR_NAME )
          DO J=1,NELE                                       ! Write out ELAS3 engineering forces
             EID   = EDAT(EPNT(J))

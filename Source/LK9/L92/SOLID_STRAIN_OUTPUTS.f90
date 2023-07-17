@@ -54,6 +54,7 @@
       INTEGER(LONG)                   :: J                  ! DO loop indices
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = SOLID_STRAIN_OUTPUTS_BEGEND
  
+      LOGICAL                         :: WRITE_F06, WRITE_OP2, WRITE_PCH, WRITE_NEU, WRITE_ANS   ! flag
       REAL(DOUBLE)                    :: MEAN               ! Mean strains
       REAL(DOUBLE)                    :: PRINCIPAL_STRAIN(3)! Principal strains
       REAL(DOUBLE)                    :: SIG_OCT            ! Octrahedral normal strain
@@ -70,8 +71,8 @@
       ENDIF
 
 ! **********************************************************************************************************************************
-! Calc engineering strains from array STRAIN and put into array OGEL
- 
+      ! Calc engineering strains from array STRAIN and put into array OGEL
+      WRITE_NEU = (POST /= 0) .AND. (WRITE_FEMAP == 'Y')
       IF ((TYPE(1:4) == 'HEXA') .OR. (TYPE(1:5) == 'PENTA') .OR. (TYPE(1:5) == 'TETRA')) THEN
          CALL PRINCIPAL_3D ( STRAIN, PRINCIPAL_STRAIN, MEAN, VONMISES, SIG_OCT, TAU_OCT )
          IF (WRITE_OGEL == 'Y') THEN
@@ -81,7 +82,7 @@
                WRITE(F06,9200) SUBR_NAME,SIZE_ALLOCATED
                FATAL_ERR = FATAL_ERR + 1
                CALL OUTA_HERE ( 'Y' )                      ! Coding error (dim of array OGEL too small), so quit
-            ENDIF   
+            ENDIF
             DO J=1,6
                OGEL(NUM1,J) = STRAIN(J)
             ENDDO
@@ -97,7 +98,8 @@
             OGEL(NUM1,11) = PRINCIPAL_STRAIN(3)
             OGEL(NUM1,12) = MEAN
          ENDIF
-         IF ((POST /= 0) .AND. (WRITE_FEMAP == 'Y')) THEN
+
+         IF (WRITE_NEU) THEN
             DO J=1,6
                FEMAP_EL_VECS(NUM_FEMAP_ROWS,J) = STRAIN(J)
             ENDDO
@@ -115,12 +117,10 @@
          ENDIF
 
       ELSE
-
          FATAL_ERR = FATAL_ERR + 1
          WRITE(ERR,9203) SUBR_NAME, TYPE
          WRITE(F06,9203) SUBR_NAME, TYPE
          CALL OUTA_HERE ( 'Y' )
-
       ENDIF   
  
 ! **********************************************************************************************************************************

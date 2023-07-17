@@ -112,6 +112,7 @@
 
 !      TODO: where is the velocity output?
  9002 FORMAT(" *DEBUG:      WHAT=",A,"; NGRID",I8, "; NREQ=",I8, "; SC_OUT_REQ=",I8)
+ 9004 FORMAT(" *DEBUG:      ",A, "_OUT=",A,"; WRITE_F06=",L, "; WRITE_OP2=",L, "; WRITE_PCH=",L)
       IF (WHAT == 'ACCE') THEN
 
          IROW_FILE = 0
@@ -165,10 +166,10 @@
                   ENDIF
                ENDDO
                IF ((NUM == NREQ) .AND. (SC_OUT_REQ > 0)) THEN
-
                   WRITE_F06 = (ACCE_OUT(1:1) == 'Y')
                   WRITE_OP2 = (ACCE_OUT(2:2) == 'Y')
                   WRITE_PCH = (ACCE_OUT(3:3) == 'Y')
+                  WRITE(ERR,9004) WHAT, DISP_OUT, WRITE_F06, WRITE_OP2, WRITE_PCH
                   IF (WRITE_OP2) THEN
                      CALL WRITE_GRD_OP2_OUTPUTS ( JVEC, NUM, WHAT, ITABLE, NEW_RESULT )
                   ENDIF
@@ -252,11 +253,12 @@
                      ENDIF
                   ENDIF
                ENDDO
-               IF ((NUM == NREQ) .AND. (SC_OUT_REQ > 0)) THEN
 
+               IF ((NUM == NREQ) .AND. (SC_OUT_REQ > 0)) THEN
                   WRITE_F06 = (DISP_OUT(1:1) == 'Y')
                   WRITE_OP2 = (DISP_OUT(2:2) == 'Y')
                   WRITE_PCH = (DISP_OUT(3:3) == 'Y')
+                  WRITE(ERR,9004) WHAT, DISP_OUT, WRITE_F06, WRITE_OP2, WRITE_PCH
                   IF (WRITE_OP2) THEN
                      CALL WRITE_GRD_OP2_OUTPUTS ( JVEC, NUM, WHAT, ITABLE, NEW_RESULT )
                   ENDIF
@@ -338,6 +340,7 @@
                   WRITE_F06 = (OLOA_OUT(1:1) == 'Y')
                   WRITE_OP2 = (OLOA_OUT(2:2) == 'Y')
                   WRITE_PCH = (OLOA_OUT(3:3) == 'Y')
+                  WRITE(ERR,9004) WHAT, OLOA_OUT, WRITE_F06, WRITE_OP2, WRITE_PCH
                   IF (WRITE_OP2) THEN
                      CALL WRITE_GRD_OP2_OUTPUTS ( JVEC, NUM, WHAT, ITABLE, NEW_RESULT )
                   ENDIF

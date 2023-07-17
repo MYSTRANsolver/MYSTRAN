@@ -55,7 +55,8 @@
       INTEGER(LONG), INTENT(INOUT)    :: NUM1               ! Cum rows written to OGEL prior to running this subr
       INTEGER(LONG)                   :: ICOL               ! An input to subr MARGIN, called by this subr
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = ONE_D_STRESS_OUTPUTS_BEGEND
- 
+      LOGICAL                         :: WRITE_F06, WRITE_OP2, WRITE_PCH, WRITE_NEU, WRITE_ANS   ! flag
+
       REAL(DOUBLE)                    :: C1,C2              ! Coords of point "C" on cross-section of a CBAR where stress is calc'd
       REAL(DOUBLE)                    :: D1,D2              ! Coords of point "D" on cross-section of a CBAR where stress is calc'd
       REAL(DOUBLE)                    :: E1,E2              ! Coords of point "E" on cross-section of a CBAR where stress is calc'd
@@ -77,7 +78,8 @@
       ENDIF
 
 ! **********************************************************************************************************************************
-! Calc engineering stresses from array STRESS and put into array OGEL
+      ! Calc engineering stresses from array STRESS and put into array OGEL
+      WRITE_NEU = (POST /= 0) .AND. (WRITE_FEMAP == 'Y')
  
       IF      (TYPE == 'BAR     ') THEN                    ! BAR1 elements
          C1 = ZS(1)
@@ -111,7 +113,7 @@
                WRITE(F06,9200) SUBR_NAME,SIZE_ALLOCATED
                FATAL_ERR = FATAL_ERR + 1
                CALL OUTA_HERE ( 'Y' )
-            ENDIF   
+            ENDIF
             OGEL(NUM1,1) = SA1
             OGEL(NUM1,2) = SA2
             OGEL(NUM1,3) = SA3
@@ -128,7 +130,7 @@
                WRITE(F06,9200) SUBR_NAME,SIZE_ALLOCATED
                FATAL_ERR = FATAL_ERR + 1
                CALL OUTA_HERE ( 'Y' )
-            ENDIF   
+            ENDIF
             OGEL(NUM1,1) = SB1
             OGEL(NUM1,2) = SB2
             OGEL(NUM1,3) = SB3
@@ -141,7 +143,8 @@
             MSPRNT(NUM1,2) = MSP2
             MSPRNT(NUM1,3) = MSP3
          ENDIF
-         IF ((POST /= 0) .AND. (WRITE_FEMAP == 'Y')) THEN
+
+         IF (WRITE_NEU) THEN
             FEMAP_EL_VECS(NUM_FEMAP_ROWS, 1) = SA + SA1
             FEMAP_EL_VECS(NUM_FEMAP_ROWS, 2) = SA + SB1
             FEMAP_EL_VECS(NUM_FEMAP_ROWS, 3) = SA + SA2
@@ -157,13 +160,13 @@
          ENDIF
 
       ELSE IF (TYPE(1:4) == 'BUSH') THEN                        ! BUSH elements
-         NUM1 = NUM1 + 1         
+         NUM1 = NUM1 + 1
          IF (NUM1 > SIZE_ALLOCATED) THEN
             WRITE(ERR,9200) SUBR_NAME,SIZE_ALLOCATED
             WRITE(F06,9200) SUBR_NAME,SIZE_ALLOCATED
             FATAL_ERR = FATAL_ERR + 1
             CALL OUTA_HERE ( 'Y' )
-         ENDIF   
+         ENDIF
          OGEL(NUM1,1) = STRESS(1)
          OGEL(NUM1,2) = STRESS(2)
          OGEL(NUM1,3) = STRESS(3)
@@ -171,7 +174,7 @@
          OGEL(NUM1,5) = STRESS(5)
          OGEL(NUM1,6) = STRESS(6)
 
-         IF ((POST /= 0) .AND. (WRITE_FEMAP == 'Y')) THEN
+         IF (WRITE_NEU) THEN
             FEMAP_EL_VECS(NUM_FEMAP_ROWS, 1) = STRESS(1)
             FEMAP_EL_VECS(NUM_FEMAP_ROWS, 2) = STRESS(2)
             FEMAP_EL_VECS(NUM_FEMAP_ROWS, 3) = STRESS(3)
@@ -181,7 +184,7 @@
          ENDIF
       ELSE IF (TYPE(1:4) == 'ELAS') THEN                   ! Stresses for ELAS elements
          IF (WRITE_OGEL == 'Y') THEN
-            NUM1 = NUM1 + 1    
+            NUM1 = NUM1 + 1
             IF (NUM1 > SIZE_ALLOCATED) THEN
                WRITE(ERR,9200) SUBR_NAME,SIZE_ALLOCATED
                WRITE(F06,9200) SUBR_NAME,SIZE_ALLOCATED
@@ -190,7 +193,7 @@
             ENDIF   
             OGEL(NUM1,1) = STRESS(1)
          ENDIF
-         IF ((POST /= 0) .AND. (WRITE_FEMAP == 'Y')) THEN
+         IF (WRITE_NEU) THEN
             FEMAP_EL_VECS(NUM_FEMAP_ROWS,1) = STRESS(1)
             FEMAP_EL_VECS(NUM_FEMAP_ROWS,2) = STRESS(1)
          ENDIF
@@ -215,7 +218,7 @@
             MSPRNT(NUM1,1) = MSP1
             MSPRNT(NUM1,2) = MSP2
          ENDIF
-         IF ((POST /= 0) .AND. (WRITE_FEMAP == 'Y')) THEN
+         IF (WRITE_NEU) THEN
             FEMAP_EL_VECS(NUM_FEMAP_ROWS,1) = SA
             FEMAP_EL_VECS(NUM_FEMAP_ROWS,2) = SA
             FEMAP_EL_VECS(NUM_FEMAP_ROWS,3) = ST
@@ -223,13 +226,11 @@
          ENDIF
  
       ELSE
-
          FATAL_ERR = FATAL_ERR + 1
          WRITE(ERR,9203) SUBR_NAME, TYPE
          WRITE(F06,9203) SUBR_NAME, TYPE
          CALL OUTA_HERE ( 'Y' )
-
-      ENDIF   
+      ENDIF
  
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN

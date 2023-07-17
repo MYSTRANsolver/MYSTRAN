@@ -55,7 +55,8 @@
       INTEGER(LONG)                   :: I,J                ! DO loop indices
       INTEGER(LONG)                   :: NUM_ROWS           ! Number of rows of stress for an element (plates have 2 ZS vals)
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = SHELL_STRESS_OUTPUTS_BEGEND
- 
+      LOGICAL                         :: WRITE_F06, WRITE_OP2, WRITE_PCH, WRITE_NEU, WRITE_ANS   ! flag
+
       REAL(DOUBLE)                    :: ANGLE              ! Angle of prin stresses in plate elems (calc'd in subr PRINCIPAL_2D)
       REAL(DOUBLE)                    :: FAILURE_INDEX      ! Failure index (scalar value)
       REAL(DOUBLE)                    :: MEAN               ! Mean stresses
@@ -79,14 +80,12 @@
       ENDIF
 
 ! **********************************************************************************************************************************
-! Calc engineering stresses from array STRESS and put into array OGEL
- 
+      ! Calc engineering stresses from array STRESS and put into array OGEL
+      WRITE_NEU = (POST /= 0) .AND. (WRITE_FEMAP == 'Y')
       IF ((TYPE(1:5) == 'TRIA3') .OR. (TYPE(1:5) == 'QUAD4') .OR. (TYPE(1:5) == 'SHEAR')) THEN
          IF (PCOMP_PROPS == 'Y') THEN
-
             SX  = STRESS(1)
             SY  = STRESS(2)
-
             SXY = STRESS(3)
             SXZ = STRESS(7)
             SYZ = STRESS(8)
@@ -98,7 +97,7 @@
                   WRITE(F06,9200) SUBR_NAME,SIZE_ALLOCATED
                   FATAL_ERR = FATAL_ERR + 1
                   CALL OUTA_HERE ( 'Y' )
-               ENDIF   
+               ENDIF
                OGEL(NUM1,1) = SX
                OGEL(NUM1,2) = SY
                OGEL(NUM1,3) = SXY
@@ -116,11 +115,9 @@
 
                FAILURE_INDEX = ZERO
                IF (FAILURE_THEORY == 'NONE') THEN
-
                   FTNAME(NUM1)  = 'None'
 
                ELSE
-
                   STREi(1) = STRESS(1)                      ! STREi stress order for failure theory calc has #1 = x  direct stress
                   STREi(2) = STRESS(2)                      ! STREi stress order for failure theory calc has #2 = y  direct stress
                   STREi(3) = ZERO                           ! STREi stress order for failure theory calc has #3 = z  direct stress
@@ -136,7 +133,6 @@
                   STRNi(6) = STRAIN(3)                      ! STRNi strain order for failure theory calc has #6 = xy shear  strain
 
                   ANY_FAILURE_THEORY = 'Y'
-
                   IF ((FAILURE_THEORY == 'HILL') .OR. (FAILURE_THEORY == 'HOFF') .OR. (FAILURE_THEORY == 'TSAI')) THEN
                      CALL POLY_FAILURE_INDEX  ( STREi, STRE_ALLOWABLES, FAILURE_INDEX )
                   ELSE IF ((FAILURE_THEORY == 'STRE') .OR. (FAILURE_THEORY == 'STRN')) THEN
@@ -150,10 +146,9 @@
 
                   OGEL(NUM1,10) = FAILURE_INDEX
                   FTNAME(NUM1)  = FAILURE_THEORY(1:4)
-
                ENDIF
 
-               IF ((POST /= 0) .AND. (WRITE_FEMAP == 'Y')) THEN
+               IF (WRITE_NEU) THEN
                   FEMAP_EL_VECS(NUM_FEMAP_ROWS,1) = SX
                   FEMAP_EL_VECS(NUM_FEMAP_ROWS,2) = SY
                   FEMAP_EL_VECS(NUM_FEMAP_ROWS,3) = SXY
@@ -171,12 +166,12 @@
 
            ENDIF
 
-         ELSE                                              ! Not PCOMP
-            
+         ELSE
+            ! Not PCOMP
             NUM_ROWS = 2
             IF (TYPE(1:5) == 'SHEAR') THEN
                NUM_ROWS = 1
-            ENDIF            
+            ENDIF
 
             DO I=1,NUM_ROWS
                SX  = STRESS(1) + ZS(I)*STRESS(4)
@@ -193,7 +188,7 @@
                      FATAL_ERR = FATAL_ERR + 1
                      CALL OUTA_HERE ( 'Y' )
                   ENDIF
-                  IF (TYPE(1:5) == 'SHEAR') THEN   
+                  IF (TYPE(1:5) == 'SHEAR') THEN
                      OGEL(NUM1, 1) = SX
                      OGEL(NUM1, 2) = SY
                      OGEL(NUM1, 3) = SXY
@@ -222,7 +217,7 @@
                   OGEL(NUM1,10) = SYZ
                ENDIF
 
-               IF ((POST /= 0) .AND. (WRITE_FEMAP == 'Y')) THEN
+               IF (WRITE_NEU) THEN
                   FEMAP_EL_VECS(NUM_FEMAP_ROWS,11*(I-1)+ 1) = SX
                   FEMAP_EL_VECS(NUM_FEMAP_ROWS,11*(I-1)+ 2) = SY
                   FEMAP_EL_VECS(NUM_FEMAP_ROWS,11*(I-1)+ 3) = SXY
@@ -235,12 +230,11 @@
                   FEMAP_EL_VECS(NUM_FEMAP_ROWS,11*(I-1)+10) = SXZ
                   FEMAP_EL_VECS(NUM_FEMAP_ROWS,11*(I-1)+11) = SYZ
                ENDIF
-            ENDDO   
-
+            ENDDO
          ENDIF
 
-      ELSE IF (TYPE(1:6) == 'USERIN') THEN                 ! Stresses for USERIN elements
-
+      ELSE IF (TYPE(1:6) == 'USERIN') THEN
+         ! Stresses for USERIN elements
          IF (WRITE_OGEL == 'Y') THEN
             NUM1 = NUM1 + 1
             IF (NUM1 > SIZE_ALLOCATED) THEN
@@ -248,25 +242,24 @@
                WRITE(F06,9200) SUBR_NAME,SIZE_ALLOCATED
                FATAL_ERR = FATAL_ERR + 1
                CALL OUTA_HERE ( 'Y' )
-            ENDIF   
+            ENDIF
             DO J=1,9
                OGEL(NUM1,J) = STRESS(J)
             ENDDO
          ENDIF
-         IF ((POST /= 0) .AND. (WRITE_FEMAP == 'Y')) THEN
+
+         IF (WRITE_NEU) THEN
             DO J=1,9
                FEMAP_EL_VECS(NUM_FEMAP_ROWS,J) = STRESS(J)
             ENDDO
          ENDIF
 
       ELSE
-
          FATAL_ERR = FATAL_ERR + 1
          WRITE(ERR,9203) SUBR_NAME, TYPE
          WRITE(F06,9203) SUBR_NAME, TYPE
          CALL OUTA_HERE ( 'Y' )
-
-      ENDIF   
+      ENDIF
  
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
