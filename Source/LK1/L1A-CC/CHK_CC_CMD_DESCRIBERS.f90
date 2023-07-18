@@ -69,15 +69,15 @@
       ENDIF
 
 ! **********************************************************************************************************************************
-      IF      (WHAT == 'ACCE') THEN   ;   OUTPUT_TYPE( 1) = 'ACCE'   ;   JCOL =  1  ;
-      ELSE IF (WHAT == 'DISP') THEN   ;   OUTPUT_TYPE( 2) = 'DISP'   ;   JCOL =  2  ;
-      ELSE IF (WHAT == 'ELFO') THEN   ;   OUTPUT_TYPE( 3) = 'ELFO'   ;   JCOL =  3  ;
-      ELSE IF (WHAT == 'GPFO') THEN   ;   OUTPUT_TYPE( 4) = 'GPFO'   ;   JCOL =  4  ;
-      ELSE IF (WHAT == 'MPCF') THEN   ;   OUTPUT_TYPE( 5) = 'MPCF'   ;   JCOL =  5  ;
-      ELSE IF (WHAT == 'OLOA') THEN   ;   OUTPUT_TYPE( 6) = 'OLOA'   ;   JCOL =  6  ;
-      ELSE IF (WHAT == 'SPCF') THEN   ;   OUTPUT_TYPE( 7) = 'SPCF'   ;   JCOL =  7  ;
-      ELSE IF (WHAT == 'STRE') THEN   ;   OUTPUT_TYPE( 8) = 'STRE'   ;   JCOL =  8  ;
-      ELSE IF (WHAT == 'STRN') THEN   ;   OUTPUT_TYPE( 9) = 'STRN'   ;   JCOL =  9  ;
+      IF      (WHAT == 'ACCE') THEN   ;   OUTPUT_TYPE( 1) = 'ACCE';   JCOL =  1;
+      ELSE IF (WHAT == 'DISP') THEN   ;   OUTPUT_TYPE( 2) = 'DISP';   JCOL =  2;
+      ELSE IF (WHAT == 'ELFO') THEN   ;   OUTPUT_TYPE( 3) = 'ELFO';   JCOL =  3;
+      ELSE IF (WHAT == 'GPFO') THEN   ;   OUTPUT_TYPE( 4) = 'GPFO';   JCOL =  4;
+      ELSE IF (WHAT == 'MPCF') THEN   ;   OUTPUT_TYPE( 5) = 'MPCF';   JCOL =  5;
+      ELSE IF (WHAT == 'OLOA') THEN   ;   OUTPUT_TYPE( 6) = 'OLOA';   JCOL =  6;
+      ELSE IF (WHAT == 'SPCF') THEN   ;   OUTPUT_TYPE( 7) = 'SPCF';   JCOL =  7;
+      ELSE IF (WHAT == 'STRE') THEN   ;   OUTPUT_TYPE( 8) = 'STRE';   JCOL =  8;
+      ELSE IF (WHAT == 'STRN') THEN   ;   OUTPUT_TYPE( 9) = 'STRN';   JCOL =  9;
       ELSE
          FATAL_ERR = FATAL_ERR + 1
          WRITE(ERR,1204) SUBR_NAME, WHAT
@@ -207,9 +207,8 @@ jdo_1:   DO J=1,NUM_POSS_CCD
             ENDIF
          ENDIF
       ENDDO ido_1
-         
-      DO I=1,NUM_WORDS
 
+      DO I=1,NUM_WORDS
          IF (CC_CMD_DESCRIBERS(I)(1:5) == 'SORT2') THEN
             WARN_ERR = WARN_ERR + 1
             WRITE(ERR,201)
@@ -220,32 +219,30 @@ jdo_1:   DO J=1,NUM_POSS_CCD
             ENDIF
          ENDIF
 
-         IF (CC_CMD_DESCRIBERS(I)(1:5) == 'PUNCH') THEN
-            WARN_ERR = WARN_ERR + 1
-            WRITE(ERR,202)
-            IF (SUPWARN == 'N') THEN
-               IF (ECHO == 'NONE  ') THEN
-                  WRITE(F06,202)
-               ENDIF
-            ENDIF
-         ENDIF
+         !IF (CC_CMD_DESCRIBERS(I)(1:5) == 'PUNCH') THEN
+         !   WARN_ERR = WARN_ERR + 1
+         !   WRITE(ERR,202)
+         !   IF (SUPWARN == 'N') THEN
+         !      IF (ECHO == 'NONE  ') THEN
+         !         WRITE(F06,202)
+         !      ENDIF
+         !   ENDIF
+         !ENDIF
 
-         IF (CC_CMD_DESCRIBERS(I)(1:4) == 'PLOT') THEN
-            WARN_ERR = WARN_ERR + 1
-            WRITE(ERR,203)
-            IF (SUPWARN == 'N') THEN
-               IF (ECHO == 'NONE  ') THEN
-                  WRITE(F06,203)
-               ENDIF
-            ENDIF
-         ENDIF
+         !IF (CC_CMD_DESCRIBERS(I)(1:4) == 'PLOT') THEN
+         !   WARN_ERR = WARN_ERR + 1
+         !   WRITE(ERR,203)
+         !   IF (SUPWARN == 'N') THEN
+         !      IF (ECHO == 'NONE  ') THEN
+         !         WRITE(F06,203)
+         !      ENDIF
+         !   ENDIF
+         !ENDIF
 
       ENDDO
 
       IF ((WHAT == 'STRE') .OR. (WHAT == 'STRN')) THEN
-
          DO I=1,NUM_WORDS
-
             IF (CC_CMD_DESCRIBERS(I)(1:5) == 'STRCUR') THEN
                WARN_ERR = WARN_ERR + 1
                WRITE(ERR,301)
@@ -283,9 +280,7 @@ jdo_1:   DO J=1,NUM_POSS_CCD
 ! Set values for variables in module CC_OUTPUT_DESCRIBERS
 
       IF (WHAT == 'STRE' ) THEN
-
          DO I=1,NUM_WORDS
-
             ! TODO: CEN is valid for CENTER (test this)
             ! TODO: implement CORNER/BILIN
             IF      (CC_CMD_DESCRIBERS(I)(1:6) == 'CENTER') THEN
@@ -310,7 +305,6 @@ jdo_1:   DO J=1,NUM_POSS_CCD
       ENDIF
 
       IF (WHAT == 'STRN' ) THEN
-
          DO I=1,NUM_WORDS
             ! TODO: CEN is valid for CENTER (test this)
             ! TODO: implement CORNER/BILIN
@@ -351,7 +345,7 @@ jdo_1:   DO J=1,NUM_POSS_CCD
 
   202 FORMAT(' *WARNING    : "PUNCH"    IS NOT AN OPTION IN MYSTRAN. "PRINT" WILL BE USED')
 
-  203 FORMAT(' *WARNING    : "PLOT"     IS NOT AN OPTION IN MYSTRAN. "PLOT"   IGNORED')
+!  203 FORMAT(' *WARNING    : "PLOT"     IS NOT AN OPTION IN MYSTRAN. "PLOT"   IGNORED')
 
   301 FORMAT(' *WARNING    : "STRCUR"   IS NOT AN OPTION IN MYSTRAN. "STRCUR" IGNORED')
 

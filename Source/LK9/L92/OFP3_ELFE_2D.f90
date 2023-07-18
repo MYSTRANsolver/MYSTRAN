@@ -184,7 +184,7 @@ elems_3: DO J = 1,NELE
                            WRT_BUG(K) = 0
                         ENDDO
                         PLY_NUM = 0                        ! 'N' in call to EMG means do not write to BUG file
-                        CALL EMG ( J   , OPT, 'N', SUBR_NAME, 'N' ) 
+                        CALL EMG ( J   , OPT, 'N', SUBR_NAME, 'N' )
                         IF (NUM_EMG_FATAL_ERRS > 0) THEN
                            IERROR = IERROR + 1
                            CYCLE elems_3

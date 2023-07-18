@@ -419,7 +419,6 @@
       CHARACTER(  1*BYTE)      :: OGEOM          =    'N'    ! write op2 geometry (Y/N)
 ! ----------------------------------------------------------------------------------------------------------------------------------
       CHARACTER(  1*BYTE)      :: DUMPALL        =    'N'    ! write all output files (F06, OP2, NEU, ANS); (Y/N)
-
 ! ----------------------------------------------------------------------------------------------------------------------------------
       REAL(DOUBLE)             :: SHRFXFAC       =  ONEPP6   ! Factor used to adjust transverse shear stiffness when user has
 !                                                              indicated zero shear flexibility for shell elements. The shear

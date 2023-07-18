@@ -41,7 +41,7 @@
       USE DOF_TABLES, ONLY            :  TDOF, TDOF_ROW_START, TDOFI
       USE EIGEN_MATRICES_1, ONLY      :  EIGEN_VAL, GEN_MASS, MEFFMASS, MPFACTOR_N6
       USE MODEL_STUF, ONLY            :  ANY_SPCF_OUTPUT, ANY_MPCF_OUTPUT, GRID, GRID_ID, GROUT, MEFFMASS_CALC, MPFACTOR_CALC
-      USE PARAMS, ONLY                :  AUTOSPC_SPCF, EPSIL, MEFMCORD, OTMSKIP, POST
+      USE PARAMS, ONLY                :  AUTOSPC_SPCF, EPSIL, MEFMCORD, OTMSKIP, POST, DUMPALL
 
       USE NONLINEAR_PARAMS, ONLY      :  LOAD_ISTEP
       USE SPARSE_MATRICES, ONLY       :  I_GMN  , J_GMN  , GMN    , I_GMNt  , J_GMNt , GMNt   , I_HMN, J_HMN, HMN,                 &
@@ -60,7 +60,7 @@
 
       IMPLICIT NONE
 
-      LOGICAL                         :: WRITE_F06, WRITE_OP2, WRITE_PCH, WRITE_ANS   ! flag
+      LOGICAL                         :: WRITE_F06, WRITE_OP2, WRITE_PCH, WRITE_ANS, WRITE_NEU   ! flag
       CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: SUBR_NAME = 'OFP2'
       CHARACTER(LEN=*) , INTENT(IN)   :: WHAT              ! Indicator of whether to process output requests for SPC or MPC forces
       CHARACTER(LEN=*) , INTENT(IN)   :: ZERO_GEN_STIFF    ! Indicator of whether there are zero gen stiffs (can't calc MEFFMASS)
@@ -427,7 +427,8 @@
 
          ENDIF
 
-         IF ((POST /= 0) .AND. (ANY_SPCF_OUTPUT > 0)) THEN
+         WRITE_NEU = (((POST /= 0) .AND. (ANY_SPCF_OUTPUT > 0)) .OR. (DUMPALL=='Y'))
+         IF (WRITE_NEU) THEN
             CALL WRITE_FEMAP_GRID_VECS ( QGs_COL, FEMAP_SET_ID, 'SPCF' )
          ENDIF
 
@@ -618,7 +619,8 @@
 
          ENDDO
 
-         IF ((POST /= 0) .AND. (ANY_MPCF_OUTPUT > 0)) THEN
+         WRITE_NEU = (((POST /= 0) .AND. (ANY_MPCF_OUTPUT > 0)) .OR. (DUMPALL=='Y'))
+         IF (WRITE_NEU) THEN
             CALL WRITE_FEMAP_GRID_VECS ( QGm_COL, FEMAP_SET_ID, 'MPCF' )
          ENDIF
 

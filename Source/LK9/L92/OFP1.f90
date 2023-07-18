@@ -48,7 +48,7 @@
 
       IMPLICIT NONE
 
-      LOGICAL                         :: WRITE_F06, WRITE_OP2, WRITE_PCH, WRITE_ANS   ! flag
+      LOGICAL                         :: WRITE_F06, WRITE_OP2, WRITE_PCH, WRITE_ANS, WRITE_NEU   ! flag
       CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: SUBR_NAME = 'OFP1'
       CHARACTER(LEN=*) , INTENT(IN)   :: WHAT              ! Indicator whether to process displ or force output requests
       CHARACTER( 1*BYTE)              :: ACCE_ALL_SAME_CID ! Indicator of whether all grids, for the output set, have the same
@@ -166,9 +166,9 @@
                   ENDIF
                ENDDO
                IF ((NUM == NREQ) .AND. (SC_OUT_REQ > 0)) THEN
-                  WRITE_F06 = ((ACCE_OUT(1:1) == 'Y') .OR. (DUMPALL(1:1) == 'Y'))
-                  WRITE_OP2 = ((ACCE_OUT(2:2) == 'Y') .OR. (DUMPALL(1:1) == 'Y'))
-                  WRITE_PCH = ((ACCE_OUT(3:3) == 'Y') .OR. (DUMPALL(1:1) == 'Y'))
+                  WRITE_F06 = ((ACCE_OUT(1:1) == 'Y') .OR. (DUMPALL=='Y'))
+                  WRITE_OP2 = ((ACCE_OUT(2:2) == 'Y') .OR. (DUMPALL=='Y'))
+                  WRITE_PCH = ((ACCE_OUT(3:3) == 'Y') .OR. (DUMPALL=='Y'))
                   WRITE(ERR,9004) WHAT, DISP_OUT, WRITE_F06, WRITE_OP2, WRITE_PCH
                   IF (WRITE_OP2) THEN
                      CALL WRITE_GRD_OP2_OUTPUTS ( JVEC, NUM, WHAT, ITABLE, NEW_RESULT )
@@ -255,9 +255,9 @@
                ENDDO
 
                IF ((NUM == NREQ) .AND. (SC_OUT_REQ > 0)) THEN
-                  WRITE_F06 = ((DISP_OUT(1:1) == 'Y') .OR. (DUMPALL(1:1) == 'Y'))
-                  WRITE_OP2 = ((DISP_OUT(2:2) == 'Y') .OR. (DUMPALL(1:1) == 'Y'))
-                  WRITE_PCH = ((DISP_OUT(3:3) == 'Y') .OR. (DUMPALL(1:1) == 'Y'))
+                  WRITE_F06 = ((DISP_OUT(1:1) == 'Y') .OR. (DUMPALL=='Y'))
+                  WRITE_OP2 = ((DISP_OUT(2:2) == 'Y') .OR. (DUMPALL=='Y'))
+                  WRITE_PCH = ((DISP_OUT(3:3) == 'Y') .OR. (DUMPALL=='Y'))
                   WRITE(ERR,9004) WHAT, DISP_OUT, WRITE_F06, WRITE_OP2, WRITE_PCH
                   IF (WRITE_OP2) THEN
                      CALL WRITE_GRD_OP2_OUTPUTS ( JVEC, NUM, WHAT, ITABLE, NEW_RESULT )
@@ -284,7 +284,8 @@
             ENDIF
          ENDDO
 
-         IF ((POST /= 0) .AND. (ANY_DISP_OUTPUT > 0)) THEN
+         WRITE_NEU = (((POST /= 0) .AND. (ANY_DISP_OUTPUT > 0)) .OR. (DUMPALL == 'Y'))
+         IF (WRITE_NEU) THEN
             CALL WRITE_FEMAP_GRID_VECS ( UG_COL, FEMAP_SET_ID, 'DISP' )
          ENDIF
 
@@ -337,9 +338,9 @@
                ENDDO
 
                IF (NUM == NREQ) THEN
-                  WRITE_F06 = ((OLOA_OUT(1:1) == 'Y') .OR. (DUMPALL(1:1) == 'Y'))
-                  WRITE_OP2 = ((OLOA_OUT(2:2) == 'Y') .OR. (DUMPALL(1:1) == 'Y'))
-                  WRITE_PCH = ((OLOA_OUT(3:3) == 'Y') .OR. (DUMPALL(1:1) == 'Y'))
+                  WRITE_F06 = ((OLOA_OUT(1:1) == 'Y') .OR. (DUMPALL=='Y'))
+                  WRITE_OP2 = ((OLOA_OUT(2:2) == 'Y') .OR. (DUMPALL=='Y'))
+                  WRITE_PCH = ((OLOA_OUT(3:3) == 'Y') .OR. (DUMPALL=='Y'))
                   WRITE(ERR,9004) WHAT, OLOA_OUT, WRITE_F06, WRITE_OP2, WRITE_PCH
                   IF (WRITE_OP2) THEN
                      CALL WRITE_GRD_OP2_OUTPUTS ( JVEC, NUM, WHAT, ITABLE, NEW_RESULT )
@@ -360,7 +361,8 @@
             ENDIF
          ENDDO
 
-         IF ((POST /= 0) .AND. (ANY_OLOA_OUTPUT > 0)) THEN  ! No need to transform PG_COL to basic for FEMAP (handles it as-is)
+         WRITE_NEU = (((POST /= 0) .AND. (ANY_OLOA_OUTPUT > 0)) .OR. (DUMPALL == 'Y'))
+         IF (WRITE_NEU) THEN  ! No need to transform PG_COL to basic for FEMAP (handles it as-is)
             CALL WRITE_FEMAP_GRID_VECS ( PG_COL, FEMAP_SET_ID, 'OLOA' )
          ENDIF
 

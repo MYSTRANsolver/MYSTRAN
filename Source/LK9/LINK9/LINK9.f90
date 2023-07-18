@@ -64,7 +64,7 @@
       USE TIMDAT, ONLY                :  YEAR, MONTH, DAY, HOUR, MINUTE, SEC, SFRAC, STIME, TSEC
       USE SUBR_BEGEND_LEVELS, ONLY    :  LINK9_BEGEND
       USE CONSTANTS_1, ONLY           :  ZERO, ONE
-      USE PARAMS, ONLY                :  EPSIL, MPFOUT, POST, SUPINFO, SUPWARN, WTMASS
+      USE PARAMS, ONLY                :  EPSIL, MPFOUT, POST, SUPINFO, SUPWARN, WTMASS, DUMPALL
       USE NONLINEAR_PARAMS, ONLY      :  LOAD_ISTEP
       USE COL_VECS, ONLY              :  FG_COL, UG_COL, PG_COL, PM_COL, PS_COL, QSYS_COL, QGm_COL, QGr_COL, QGs_COL, QR_COL,      &
                                          PHIXG_COL, PHIXN_COL
@@ -97,6 +97,7 @@
       LOGICAL                         :: WRITE_F06, WRITE_OP2, WRITE_PCH, WRITE_ANS   ! flag
       LOGICAL                         :: LEXIST            ! .TRUE. if a file exists
       LOGICAL                         :: LOPEN             ! .TRUE. if a file is opened
+      LOGICAL                         :: WRITE_LOAD, WRITE_NEU
 
       CHARACTER, PARAMETER            :: CR13 = CHAR(13)   ! This causes a carriage return simulating the "+" action in a FORMAT
       CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: SUBR_NAME = 'LINK9'
@@ -299,7 +300,10 @@
       
       IF ((SOL_NAME(1:7)=='STATICS') .OR. (SOL_NAME(1:8)=='NLSTATIC') .OR. ((SOL_NAME(1:8)=='BUCKLING') .AND. (LOAD_ISTEP==1))) THEN
 
-         IF ((ANY_OLOA_OUTPUT > 0) .OR. (ANY_MPCF_OUTPUT > 0) .OR. (ANY_GPFO_OUTPUT > 0) .OR. (POST /= 0)) THEN
+         WRITE_NEU = (POST /= 0)
+         WRITE_LOAD = ((ANY_OLOA_OUTPUT > 0) .OR. (ANY_MPCF_OUTPUT > 0) .OR. (ANY_GPFO_OUTPUT > 0) .OR. &
+                       WRITE_NEU .OR. (DUMPALL=='Y'))
+         IF (WRITE_LOAD) THEN
 
             IF (NTERM_PG > 0) THEN
 
@@ -335,7 +339,7 @@
       ENDIF
 
       ! Read files with KSF, MSF, QSYS (used to calc SPC constraint forces, QS), but only if they will be needed.
-      ! For any SOL_NAME they will be needed if any SPC constraint force output is requested or GP force balance or if POST /=0. 
+      ! For any SOL_NAME they will be needed if any SPC constraint force output is requested or GP force balance or if POST /=0.
       ! For non CB they will be needed also if MEFFMASS, MPFACTOR are to be calculated (done via SPC force total method)
       READ_SPCARRAYS = 'N'
       IF (SOL_NAME == 'GEN CB MODEL') THEN
@@ -361,7 +365,6 @@
          IF ((SOL_NAME(1:8) == 'BUCKLING') .AND. (LOAD_ISTEP == 2)) THEN
 
             IF (NTERM_KFSD > 0) THEN
-
                CALL OURTIM
                MODNAM = 'ALLOCATE ARRAYS FOR, AND READ, KSFD'
                WRITE(SC1,9092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
@@ -371,13 +374,11 @@
                CLOSE_IT   = 'Y'
                CLOSE_STAT = 'KEEP'
                CALL READ_MATRIX_1 (LINK2B,L2B,'N',CLOSE_IT,CLOSE_STAT,L2B_MSG,'KSFD',NTERM_KFSD,'Y',NDOFS,I_KSFD,J_KSFD,KSFD)
-
             ENDIF
 
          ELSE
 
             IF (NTERM_KFS  > 0) THEN
-
                CALL OURTIM
                MODNAM = 'ALLOCATE ARRAYS FOR, AND READ, KSF'
                WRITE(SC1,9092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
@@ -393,7 +394,6 @@
             IF (NTERM_MFS > 0) THEN
 
                IF ((SOL_NAME(1:5) == 'MODES') .OR. (SOL_NAME(1:12) == 'GEN CB MODEL')) THEN
-
                   CALL OURTIM                                 ! Allocate and read MSF
                   MODNAM = 'ALLOCATE ARRAYS FOR, AND READ, MSF'
                   WRITE(SC1,9092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
@@ -408,7 +408,6 @@
             ENDIF
 
             IF (NTERM_QSYS > 0) THEN                          ! Note this will be 0 unless this is STATICS
-
                CALL OURTIM
                MODNAM = 'ALLOCATE ARRAYS FOR, AND READ, QSYS'
                WRITE(SC1,9092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
@@ -428,7 +427,6 @@
             ENDIF
 
             IF (NTERM_PS > 0) THEN
-
                CALL OURTIM
                MODNAM = 'ALLOCATE SPARSE ARRAYS FOR PS LOADS'
                WRITE(SC1,9092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
@@ -450,7 +448,6 @@
          IF (NDOFM > 0) THEN
 
             IF (NTERM_GMN > 0) THEN
-
                CALL OURTIM                                 ! Allocate and read GMN and create GMNt
                MODNAM = 'READ GMN MATRIX'
                WRITE(SC1,9092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
@@ -460,11 +457,9 @@
                                   , I_GMN, J_GMN, GMN )
                CALL ALLOCATE_SPARSE_MAT ( 'GMNt', NDOFN, NTERM_GMN, SUBR_NAME )
                CALL MATTRNSP_SS ( NDOFM, NDOFN, NTERM_GMN, 'GMN', I_GMN, J_GMN, GMN, 'GMNt', I_GMNt, J_GMNt, GMNt )
-
             ENDIF
 
             IF (NTERM_HMN > 0) THEN                     ! Allocate and read HMN if there are any terms in it.
-
                CALL OURTIM
                MODNAM = 'READ HMN MATRIX'
                WRITE(SC1,9092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
@@ -475,7 +470,6 @@
             ENDIF
 
             IF (NTERM_LMN > 0) THEN                     ! Allocate and read LMN if there are any terms in it.
-
                CALL OURTIM
                MODNAM = 'READ LMN MATRIX'
                WRITE(SC1,9092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
@@ -889,8 +883,8 @@ j_do: DO JVEC=1,NUM_SOLNS
          NEW_RESULT = .TRUE.
          IF (NDOFM > 0) THEN
 
-            IF ((SC_MPCF_OUTPUT > 0) .OR. (SC_GPFO_OUTPUT > 0) .OR. (POST /= 0)) THEN
-
+            WRITE_LOAD = ((SC_MPCF_OUTPUT > 0) .OR. (SC_GPFO_OUTPUT > 0) .OR. (POST /= 0) .OR. (DUMPALL=='Y'))
+            IF (WRITE_LOAD) THEN
                CALL ALLOCATE_COL_VEC ( 'PM_COL', NDOFM, SUBR_NAME )
                DO K=1,NDOFM
                   PM_COL(K) = ZERO
@@ -1034,13 +1028,13 @@ j_do: DO JVEC=1,NUM_SOLNS
                                                            ! For BUCKLING we want to keep UG_COL from the linear statics portion of
          CALL DEALLOCATE_COL_VEC ( 'PHIXG_COL' )
 
-         IF (POST /= 0) THEN
+         IF (WRITE_NEU) THEN
             WRITE(NEU,9001)                                ! End of FEMAP block 451 indicator
          ENDIF
 
       ENDDO j_do
 
-      IF (POST /= 0) THEN
+      IF (WRITE_NEU) THEN
          WRITE(NEU,9001)                                   ! End of FEMAP block 451 indicator
          CALL FILE_CLOSE ( NEU, NEUFIL, 'KEEP', 'Y' )
       ENDIF
