@@ -39,6 +39,9 @@
       USE MACHINE_PARAMS, ONLY        :  MACH_PREC
       USE DOF_TABLES, ONLY            :  TSET_CHR_LEN
 
+      USE CC_OUTPUT_DESCRIBERS, ONLY  :  DISP_OUT, ACCE_OUT, SPCF_OUT, MPCF_OUT, OLOA_OUT,   &
+                                         GPFO_OUT, FORC_OUT, STRN_OUT, STRE_OUT
+
       USE PARAMS, ONLY                :  ARP_TOL         , ART_KED         , ART_ROT_KED     , ART_TRAN_KED    ,                   &
                                          ART_MASS        , ART_ROT_MASS    , ART_TRAN_MASS   , AUTOSPC         , AUTOSPC_NSET    , &
                                          AUTOSPC_RAT     , AUTOSPC_INFO    , AUTOSPC_SPCF    , BAILOUT         , CRS_CCS         , &
@@ -69,8 +72,8 @@
                                          SUPINFO         , SUPWARN                                                               , &
                                          THRESHK         , THRESHK_LAP     , TINY            ,                                     &
                                          TSTM_DEF        , USR_JCT         , USR_LTERM_KGG   , USR_LTERM_MGG   , WINAMEM         , &
-                                         WTMASS
- 
+                                         WTMASS          , DUMPALL         , OGEOM
+
       USE BD_PARAM_USE_IFs
 
       IMPLICIT NONE
@@ -137,7 +140,6 @@
 ! (to make sure there are no zero's on diag of element KED matrices)
 
       ELSE IF (JCARD(2)(1:8) == 'ART_KED ') THEN
-
          PARNAM = 'ART_KED'
          ART_KED = ' '
          CALL CHAR_FLD ( JCARD(3), JF(3), CHRPARM )
@@ -161,7 +163,6 @@
          ENDIF
 
          IF (ART_KED == 'Y') THEN
-
             IF (JCARD(4)(1:) /= ' ') THEN
                PARNAM = 'ART_TRAN_KED'
                CALL R8FLD ( JCARD(4), JF(4), R8PARM )
@@ -689,8 +690,7 @@
          CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,4,5,6,7,8,9 )! Issue warning if fields 4-9 not blank
          CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
   
-! EPSERR tells whether to calculate the NASTRAN like epsilon error estimate
-
+      ! EPSERR tells whether to calculate the NASTRAN like epsilon error estimate
       ELSE IF (JCARD(2)(1:8) == 'EPSERR  ') THEN
          PARNAM = 'EPSERR  '
          CALL CHAR_FLD ( JCARD(3), JF(3), CHRPARM )
@@ -717,8 +717,7 @@
          CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,4,5,6,7,8,9 )! Issue warning if fields 4-9 not blank
          CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
   
-! EPSIL are roundoff numbers used in comparing computed values to zero
-
+      ! EPSIL are roundoff numbers used in comparing computed values to zero
       ELSE IF (JCARD(2)(1:8) == 'EPSIL   ') THEN
          PARNAM = 'EPSIL   '
          CALL I4FLD ( JCARD(3), JF(3), II )
@@ -749,8 +748,7 @@
          CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,0,5,6,7,8,9 )! Issue warning if fields 5-9 not blank
          CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
  
-! EQCHECK requests that an equilibrium check be made of the stiffness matrices
-
+      ! EQCHECK requests that an equilibrium check be made of the stiffness matrices
       ELSE IF (JCARD(2)(1:8) == 'EQCHECK ') THEN
          EQCHK_REF_GRID = 0                                ! Reset default value to zero from what it was set in module PARAMS so we
 !                                                            can set DEFAULT grid to basic origin if user asks for equil check 
@@ -1024,8 +1022,7 @@
          CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,4,5,6,7,8,9 )! Issue warning if fields 4-9 not blank
          CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
 
-! IORQ1S defines the Gaussian integration order for in-plane shear stresses for isoparametric quad plate elems in subr QMEM1
-
+      ! IORQ1S defines the Gaussian integration order for in-plane shear stresses for isoparametric quad plate elems in subr QMEM1
       ELSE IF (JCARD(2)(1:8) == 'IORQ1S  ') THEN
          PARNAM = 'IORQ1S  '
          CALL I4FLD ( JCARD(3), JF(3), I4PARM )
@@ -1042,9 +1039,8 @@
          CALL BD_IMBEDDED_BLANK   ( JCARD,0,3,0,0,0,0,0,0 )! Make sure that there are no imbedded blanks in field 3
          CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,4,5,6,7,8,9 )! Issue warning if fields 4-9 not blank
          CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
- 
-! IORQ1B defines the Gaussian integration order for bending stresses for Kirchoff (thin) isoparam quad plate elems in subr QPLT1
 
+      ! IORQ1B defines the Gaussian integration order for bending stresses for Kirchoff (thin) isoparam quad plate elems in subr QPLT1
       ELSE IF (JCARD(2)(1:8) == 'IORQ1B  ') THEN
          PARNAM = 'IORQ1B  '
          CALL I4FLD ( JCARD(3), JF(3), I4PARM )
@@ -1062,8 +1058,7 @@
          CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,4,5,6,7,8,9 )! Issue warning if fields 4-9 not blank
          CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
  
-! IORQ2B defines the Gaussian integration order for bending stresses for Mindlin (thick) isoparam quad plate elems in subr QPLT2
-
+      ! IORQ2B defines the Gaussian integration order for bending stresses for Mindlin (thick) isoparam quad plate elems in subr QPLT2
       ELSE IF (JCARD(2)(1:8) == 'IORQ2B  ') THEN
          PARNAM = 'IORQ2B  '
          CALL I4FLD ( JCARD(3), JF(3), I4PARM )
@@ -1081,8 +1076,7 @@
          CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,4,5,6,7,8,9 )! Issue warning if fields 4-9 not blank
          CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
  
-! IORQ2T defines the Gaussian integ order for transv shear stresses for Mindlin (thick) isoparam quad plate elems in subr QPLT2
-
+      ! IORQ2T defines the Gaussian integ order for transv shear stresses for Mindlin (thick) isoparam quad plate elems in subr QPLT2
       ELSE IF (JCARD(2)(1:8) == 'IORQ2T  ') THEN
          PARNAM = 'IORQ2T  '
          CALL I4FLD ( JCARD(3), JF(3), I4PARM )
@@ -1100,8 +1094,7 @@
          CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,4,5,6,7,8,9 )! Issue warning if fields 4-9 not blank
          CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
  
-! ITMAX is max iterations used in refining the soln when LAPACK is used in LINK8
-
+      ! ITMAX is max iterations used in refining the soln when LAPACK is used in LINK8
       ELSE IF (JCARD(2)(1:8) == 'ITMAX   ') THEN
          PARNAM = 'ITMAX   '
          CALL I4FLD ( JCARD(3), JF(3), I4PARM )
@@ -1125,8 +1118,7 @@
          CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,4,5,6,7,8,9 )! Issue warning if fields 4-9 not blank
          CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
   
-! KLLRAT tells whether to calculate max ratio of matrix diagonal to factor diagonal
-
+      ! KLLRAT tells whether to calculate max ratio of matrix diagonal to factor diagonal
       ELSE IF (JCARD(2)(1:8) == 'KLLRAT  ') THEN
          PARNAM = 'KLLRAT  '
          CALL CHAR_FLD ( JCARD(3), JF(3), CHRPARM )
@@ -1153,8 +1145,7 @@
          CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,4,5,6,7,8,9 )! Issue warning if fields 4-9 not blank
          CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
   
-! KOORAT tells whether to calculate max ratio of matrix diagonal to factor diagonal
-
+      ! KOORAT tells whether to calculate max ratio of matrix diagonal to factor diagonal
       ELSE IF (JCARD(2)(1:8) == 'KOORAT  ') THEN
          PARNAM = 'KOORAT  '
          CALL CHAR_FLD ( JCARD(3), JF(3), CHRPARM )
@@ -1273,9 +1264,8 @@
          CALL BD_IMBEDDED_BLANK   ( JCARD,0,3,0,0,0,0,0,0 )! Make sure that there are no imbedded blanks in field 3
          CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,4,5,6,7,8,9 )! Issue warning if fields 4-9 not blank
          CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
- 
-! MEFMCORD is the coordinate system for output of modal effective masses
 
+      ! MEFMCORD is the coordinate system for output of modal effective masses
       ELSE IF (JCARD(2)(1:8) == 'MEFMCORD') THEN
          PARNAM = 'MEFMCORD'
          CALL I4FLD ( JCARD(3), JF(3), I4PARM )
@@ -1301,8 +1291,7 @@
          CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,4,5,6,7,8,9 )! Issue warning if fields 4-9 not blank
          CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
 
-! MEFMLOC tells what ref loaction to use for reducing modal effective mass to a 6 DOF location.
-
+      ! MEFMLOC tells what ref loaction to use for reducing modal effective mass to a 6 DOF location.
       ELSE IF (JCARD(2)(1:8) == 'MEFMLOC ') THEN
          PARNAM = 'MEFMLOC '
          CALL CHAR_FLD ( JCARD(3), JF(3), CHRPARM )
@@ -1465,8 +1454,7 @@
          CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,4,5,6,7,8,9 )! Issue warning if fields 4-9 not blank
          CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
 
-! MXITERL is the max number of iterations in the Lanczos eigenvalue algorithm
-
+      ! MXITERL is the max number of iterations in the Lanczos eigenvalue algorithm
       ELSE IF (JCARD(2)(1:8) == 'MXITERL ') THEN
          PARNAM = 'MXITERL '
          CALL I4FLD ( JCARD(3), JF(3), I4PARM )
@@ -1485,13 +1473,77 @@
                ENDIF
             ENDIF
          ENDIF
-
          CALL BD_IMBEDDED_BLANK   ( JCARD,0,3,0,0,0,0,0,0 )! Make sure that there are no imbedded blanks in field 3
          CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,4,5,6,7,8,9 )! Issue warning if fields 4-9 not blank
          CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
 
-! OTMSKIP defines whether tp quit if a singularity is found in matrix decomp
+      ! OGEOM YES/NO determines if the OP2 should contain geometry the NASTRAN like epsilon error estimate
+      ELSE IF (JCARD(2)(1:8) == 'DUMPALL ') THEN
+         PARNAM = 'DUMPALL '
+         CALL CHAR_FLD ( JCARD(3), JF(3), CHRPARM )
+         IF (IERRFL(3) == 'N') THEN
+            CALL LEFT_ADJ_BDFLD ( CHRPARM )
+            IF      (CHRPARM(1:1) == 'Y') THEN
+               DUMPALL = 'Y'
+               ! print, plot, punch, neu, csv
+               !ACCE_OUT  = 'YYYYY   '
+               !DISP_OUT  = 'YYYYY   '
+               !GPFO_OUT  = 'YYYYY   '
+               !MPCF_OUT  = 'YYYYY   '
+               !OLOA_OUT  = 'YYYYY   '
+               !SPCF_OUT  = 'YYYYY   '
+               !FORC_OUT  = 'YYYYY   '
+               !STRN_OUT  = 'YYYYY   '
+               !STRE_OUT  = 'YYYYY   '
+            ELSE IF (CHRPARM(1:1) == 'N') THEN
+               DUMPALL = 'N'
+            ELSE
+               WARN_ERR = WARN_ERR + 1
+               WRITE(ERR,101) CARD
+               WRITE(ERR,1189) PARNAM,'Y OR N',CHRPARM,DUMPALL
+               IF (SUPWARN == 'N') THEN
+                  IF (ECHO == 'NONE  ') THEN
+                     WRITE(F06,101) CARD
+                  ENDIF
+                  WRITE(F06,1189) PARNAM,'Y OR N',CHRPARM,DUMPALL
+               ENDIF
+            ENDIF
+         ENDIF
+         !WRITE(ERR,310) PARNAM,DUMPALL  ! int
+         !WRITE(ERR,320) PARNAM,DUMPALL  ! float
+         WRITE(ERR,330) PARNAM,DUMPALL
+         CALL BD_IMBEDDED_BLANK   ( JCARD,0,3,0,0,0,0,0,0 )! Make sure that there are no embedded blanks in field 3
+         CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,4,5,6,7,8,9 )! Issue warning if fields 4-9 not blank
+         CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
 
+      ! OGEOM YES/NO determines if the OP2 should contain geometry the NASTRAN like epsilon error estimate
+      ELSE IF (JCARD(2)(1:8) == 'OGEOM   ') THEN
+         PARNAM = 'OGEOM   '
+         CALL CHAR_FLD ( JCARD(3), JF(3), CHRPARM )
+         IF (IERRFL(3) == 'N') THEN
+            CALL LEFT_ADJ_BDFLD ( CHRPARM )
+            IF      (CHRPARM(1:1) == 'Y') THEN
+               OGEOM = 'Y'
+            ELSE IF (CHRPARM(1:1) == 'N') THEN
+               OGEOM = 'N'
+            ELSE
+               WARN_ERR = WARN_ERR + 1
+               WRITE(ERR,101) CARD
+               WRITE(ERR,1189) PARNAM,'Y OR N',CHRPARM,OGEOM
+               IF (SUPWARN == 'N') THEN
+                  IF (ECHO == 'NONE  ') THEN
+                     WRITE(F06,101) CARD
+                  ENDIF
+                  WRITE(F06,1189) PARNAM,'Y OR N',CHRPARM,OGEOM
+               ENDIF
+            ENDIF
+         ENDIF
+         WRITE(ERR,330) PARNAM,DUMPALL
+         CALL BD_IMBEDDED_BLANK   ( JCARD,0,3,0,0,0,0,0,0 )! Make sure that there are no embedded blanks in field 3
+         CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,4,5,6,7,8,9 )! Issue warning if fields 4-9 not blank
+         CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
+
+      ! OTMSKIP defines whether tp quit if a singularity is found in matrix decomp
       ELSE IF (JCARD(2)(1:8) == 'OTMSKIP ') THEN
          PARNAM = 'OTMSKIP '
          CALL I4FLD ( JCARD(3), JF(3), I4PARM )
@@ -1504,7 +1556,6 @@
                OTMSKIP = I4PARM
             ENDIF
          ENDIF
-
          CALL BD_IMBEDDED_BLANK   ( JCARD,0,3,0,0,0,0,0,0 )! Make sure that there are no imbedded blanks in field 3
          CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,4,5,6,7,8,9 )! Issue warning if fields 4-9 not blank
          CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
@@ -1584,13 +1635,11 @@
                ENDIF
             ENDIF
          ENDIF
-
          CALL BD_IMBEDDED_BLANK   ( JCARD,0,3,0,0,0,0,0,0 )! Make sure that there are no imbedded blanks in field 3
          CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,4,5,6,7,8,9 )! Issue warning if fields 4-9 not blank
          CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
 
-! PCMPTSTM is used for specifying PCOMP ratio shear thickness to total plate thickness
-
+      ! PCMPTSTM is used for specifying PCOMP ratio shear thickness to total plate thickness
       ELSE IF (JCARD(2)(1:8) == 'PCMPTSTM') THEN
          PARNAM = 'PCMPTSTM'
          CALL R8FLD ( JCARD(3), JF(3), R8PARM )
@@ -1608,9 +1657,8 @@
          CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,4,5,6,7,8,9 )! Issue warning if fields 4-9 not blank
          CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
  
-! PCHSPC1 decides whether to write text file of SPC1's based on the G.P. singularity processor results.
-! SPC1SID is the set ID (if not entered, then default value in module PARAMS will be used).
-
+      ! PCHSPC1 decides whether to write text file of SPC1's based on the G.P. singularity processor results.
+      ! SPC1SID is the set ID (if not entered, then default value in module PARAMS will be used).
       ELSE IF (JCARD(2)(1:8) == 'PCHSPC1 ') THEN
          PARNAM = 'PCHSPC1 '
          CALL CHAR_FLD ( JCARD(3), JF(3), CHRPARM )
@@ -1668,8 +1716,7 @@
          CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,0,0,6,7,8,9 )! Issue warning if fields 6-9 not blank
          CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
 
-! POST writes FEMAP data to file NEU 
-
+      ! POST writes FEMAP data to file NEU
       ELSE IF (JCARD(2)(1:8) == 'POST    ') THEN
          PARNAM = 'POST    '
          CALL I4FLD ( JCARD(3), JF(3), I4PARM )
@@ -1693,8 +1740,7 @@
          CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,4,5,6,7,8,9 )! Issue warning if fields 4-9 not blank
          CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
 
-! PRTBASIC prints the grid coordinates in the basic coord system
-
+      ! PRTBASIC prints the grid coordinates in the basic coord system
       ELSE IF (JCARD(2)(1:8) == 'PRTBASIC') THEN
          PARNAM = 'PRTBASIC'
          CALL I4FLD ( JCARD(3), JF(3), I4PARM )
@@ -1740,13 +1786,11 @@
                ENDIF
             ENDIF
          ENDIF
-
          CALL BD_IMBEDDED_BLANK   ( JCARD,0,3,0,0,0,0,0,0 )! Make sure that there are no imbedded blanks in field 3
          CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,4,5,6,7,8,9 )! Issue warning if fields 4-9 not blank
          CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
 
-! PRTCGLTM prints the CB matrix 
-
+      ! PRTCGLTM prints the CB matrix
       ELSE IF (JCARD(2)(1:8) == 'PRTCGLTM') THEN
          PARNAM = 'PRTCGLTM'
          CALL I4FLD ( JCARD(3), JF(3), I4PARM )
@@ -3158,6 +3202,10 @@ do_i:    DO I=1,JCARD_LEN
                            ' AS IF MSC NASTRAN ',A8,' = ',A)
 
   104 FORMAT(' *WARNING    : USE OF ":" SEPERATOR FOR THE PARAM USETSTR BULK DATA ENTRY NOT ALLOWED. ENTRY HAD "',A,'" IN FIELD 3')
+
+  310 FORMAT(' *INFO       : PARAM_NAME="',A,'" INT_VALUE=',I8)
+  320 FORMAT(' *INFO       : PARAM_NAME="',A,'" FLOAT_VALUE=',1ES14.6)
+  330 FORMAT(' *INFO       : PARAM_NAME="',A,'" STR_VALUE=',A)
 
  1110 FORMAT(' *ERROR  1110: PARAMETER NAMED ',A,' MUST BE >= ',I2,' AND <= ',I2,' BUT INPUT VALUE IS: ',A)
 

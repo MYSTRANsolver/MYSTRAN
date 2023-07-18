@@ -35,7 +35,7 @@
       USE TIMDAT, ONLY                :  TSEC
       USE SUBR_BEGEND_LEVELS, ONLY    :  OFP1_BEGEND
       USE CONSTANTS_1, ONLY           :  ZERO
-      USE PARAMS, ONLY                :  OTMSKIP, POST
+      USE PARAMS, ONLY                :  OTMSKIP, POST, DUMPALL
       USE DOF_TABLES, ONLY            :  TDOF, TDOF_ROW_START
       USE MODEL_STUF, ONLY            :  ANY_ACCE_OUTPUT, ANY_DISP_OUTPUT, ANY_OLOA_OUTPUT, GROUT, GRID, GRID_ID
       USE LINK9_STUFF, ONLY           :  GID_OUT_ARRAY, MAXREQ, OGEL
@@ -166,9 +166,9 @@
                   ENDIF
                ENDDO
                IF ((NUM == NREQ) .AND. (SC_OUT_REQ > 0)) THEN
-                  WRITE_F06 = (ACCE_OUT(1:1) == 'Y')
-                  WRITE_OP2 = (ACCE_OUT(2:2) == 'Y')
-                  WRITE_PCH = (ACCE_OUT(3:3) == 'Y')
+                  WRITE_F06 = ((ACCE_OUT(1:1) == 'Y') .OR. (DUMPALL(1:1) == 'Y'))
+                  WRITE_OP2 = ((ACCE_OUT(2:2) == 'Y') .OR. (DUMPALL(1:1) == 'Y'))
+                  WRITE_PCH = ((ACCE_OUT(3:3) == 'Y') .OR. (DUMPALL(1:1) == 'Y'))
                   WRITE(ERR,9004) WHAT, DISP_OUT, WRITE_F06, WRITE_OP2, WRITE_PCH
                   IF (WRITE_OP2) THEN
                      CALL WRITE_GRD_OP2_OUTPUTS ( JVEC, NUM, WHAT, ITABLE, NEW_RESULT )
@@ -255,9 +255,9 @@
                ENDDO
 
                IF ((NUM == NREQ) .AND. (SC_OUT_REQ > 0)) THEN
-                  WRITE_F06 = (DISP_OUT(1:1) == 'Y')
-                  WRITE_OP2 = (DISP_OUT(2:2) == 'Y')
-                  WRITE_PCH = (DISP_OUT(3:3) == 'Y')
+                  WRITE_F06 = ((DISP_OUT(1:1) == 'Y') .OR. (DUMPALL(1:1) == 'Y'))
+                  WRITE_OP2 = ((DISP_OUT(2:2) == 'Y') .OR. (DUMPALL(1:1) == 'Y'))
+                  WRITE_PCH = ((DISP_OUT(3:3) == 'Y') .OR. (DUMPALL(1:1) == 'Y'))
                   WRITE(ERR,9004) WHAT, DISP_OUT, WRITE_F06, WRITE_OP2, WRITE_PCH
                   IF (WRITE_OP2) THEN
                      CALL WRITE_GRD_OP2_OUTPUTS ( JVEC, NUM, WHAT, ITABLE, NEW_RESULT )
@@ -337,9 +337,9 @@
                ENDDO
 
                IF (NUM == NREQ) THEN
-                  WRITE_F06 = (OLOA_OUT(1:1) == 'Y')
-                  WRITE_OP2 = (OLOA_OUT(2:2) == 'Y')
-                  WRITE_PCH = (OLOA_OUT(3:3) == 'Y')
+                  WRITE_F06 = ((OLOA_OUT(1:1) == 'Y') .OR. (DUMPALL(1:1) == 'Y'))
+                  WRITE_OP2 = ((OLOA_OUT(2:2) == 'Y') .OR. (DUMPALL(1:1) == 'Y'))
+                  WRITE_PCH = ((OLOA_OUT(3:3) == 'Y') .OR. (DUMPALL(1:1) == 'Y'))
                   WRITE(ERR,9004) WHAT, OLOA_OUT, WRITE_F06, WRITE_OP2, WRITE_PCH
                   IF (WRITE_OP2) THEN
                      CALL WRITE_GRD_OP2_OUTPUTS ( JVEC, NUM, WHAT, ITABLE, NEW_RESULT )
