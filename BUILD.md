@@ -47,7 +47,7 @@ If your build environment is already set up, building MYSTRAN is quite straightf
   3. Fetch the source code if you haven't already. If you're using Git, you can clone the repo with **`git clone https://github.com/MYSTRANsolver/MYSTRAN.git`**.
   4. Move the terminal to the MYSTRAN folder. If you've just run `git clone`, just do a **`cd MYSTRAN`**.
   5. Generate the build scripts by running **`cmake -G "MinGW Makefiles" .`**.
-  6. Compile with **`mingw32-make`**. If you have an N-core processor, running **`mingw32-make -jN`** will probably me much faster. A good choice of N is printed in the previous step, right before the end.
+  6. Compile with **`mingw32-make`**. If you have an N-core processor, running **`mingw32-make -jN`** will probably be much faster. A good choice of N is printed in the previous step, right before the end.
   7. The executable will reside at **`Binaries/mystran.exe`**.
 
 ### Steps for Linux (any)
