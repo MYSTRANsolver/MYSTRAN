@@ -390,20 +390,23 @@
       !IF      (TYPE == 'BAR     ') THEN
          !CALL WRITE_BAR ( NUM, FILL(1:1), FILL(1:16) )
       IF (TYPE(1:4) == 'ELAS') THEN
-         CALL GET_SPRING_OP2_ELEMENT_TYPE(ELEMENT_TYPE)
 
-         NUM_WIDE = 2 ! eid, spring_strain
-         NVALUES = NUM_WIDE * NUM
-         
-         DEVICE_CODE = 1   ! PLOT
-      
-         !CALL GET_STRESS_CODE(STRESS_CODE, IS_VON_MISES, IS_STRAIN, IS_FIBER_DISTANCE)
-         CALL GET_STRESS_CODE( STRESS_CODE, 1,            1,         0)
-         CALL WRITE_OES3_STATIC(ITABLE, ISUBCASE, DEVICE_CODE, ELEMENT_TYPE, NUM_WIDE, STRESS_CODE, &
-                                TITLEI, STITLEI, LABELI, FIELD5_INT_MODE, FIELD6_EIGENVALUE)
+         IF (WRITE_OP2) THEN
+             CALL GET_SPRING_OP2_ELEMENT_TYPE(ELEMENT_TYPE)
 
-         WRITE(OP2) NVALUES
-         WRITE(OP2) (EID_OUT_ARRAY(I,1)*10+DEVICE_CODE, REAL(OGEL(I,1), 4), I=1,NUM)
+             NUM_WIDE = 2 ! eid, spring_strain
+             NVALUES = NUM_WIDE * NUM
+             
+             DEVICE_CODE = 1   ! PLOT
+
+             !CALL GET_STRESS_CODE(STRESS_CODE, IS_VON_MISES, IS_STRAIN, IS_FIBER_DISTANCE)
+             CALL GET_STRESS_CODE( STRESS_CODE, 1,            1,         0)
+             CALL WRITE_OES3_STATIC(ITABLE, ISUBCASE, DEVICE_CODE, ELEMENT_TYPE, NUM_WIDE, STRESS_CODE, &
+                                    TITLEI, STITLEI, LABELI, FIELD5_INT_MODE, FIELD6_EIGENVALUE)
+
+             WRITE(OP2) NVALUES
+             WRITE(OP2) (EID_OUT_ARRAY(I,1)*10+DEVICE_CODE, REAL(OGEL(I,1), 4), I=1,NUM)
+         ENDIF
 
          WRITE(F06,1103) (FILL(1:1), EID_OUT_ARRAY(I,1), OGEL(I,1),I=1,NUM)
 
@@ -428,7 +431,7 @@
              NNODES = 7
          ENDIF
 
-         !IF (WRITE_OP2) THEN
+         IF (WRITE_OP2) THEN
            NUM_WIDE = 4 + 21 * NNODES
            NVALUES = NUM_WIDE * NUM
 
@@ -472,6 +475,7 @@
                       ! szz             txz                s3                  c1  c2  c3
                      REAL(OGEL(I,3),4), REAL(OGEL(I,6),4), REAL(OGEL(I,11),4), 0., 0., 0.,  &
                      J=1,NNODES), I=1,NUM)
+         ENDIF
 
          IF (STRN_OPT == 'VONMISES') THEN
             NCOLS = 7
@@ -499,12 +503,12 @@
          ENDIF
 
       ELSE IF (TYPE(1:5) == 'QUAD4') THEN
-         !CALL WRITE_OST_CQUAD4 ( NUM, FILL, ISUBCASE, ITABLE, TITLEI, STITLEI, LABELI )
 
-         !CALL GET_STRESS_CODE(STRESS_CODE, IS_VON_MISES, IS_STRAIN, IS_FIBER_DISTANCE)
-         CALL GET_STRESS_CODE( STRESS_CODE, 1,            1,         1)
+         IF (WRITE_OP2) THEN
+           !CALL WRITE_OST_CQUAD4 ( NUM, FILL, ISUBCASE, ITABLE, TITLEI, STITLEI, LABELI )
 
-         IF (.TRUE.) THEN
+           !CALL GET_STRESS_CODE(STRESS_CODE, IS_VON_MISES, IS_STRAIN, IS_FIBER_DISTANCE)
+           CALL GET_STRESS_CODE( STRESS_CODE, 1,            1,         1)
             IF (STRN_LOC == 'CENTER  ') THEN
                ! CQUAD4-33
                !(eid_device, 
@@ -676,7 +680,7 @@
 
       ELSE IF (TYPE == 'ROD     ') THEN
          CALL WRITE_ROD (ISUBCASE, NUM, FILL(1:1), FILL(1:16), ITABLE, TITLEI, STITLEI, LABELI, &
-                         FIELD5_INT_MODE, FIELD6_EIGENVALUE )
+                         FIELD5_INT_MODE, FIELD6_EIGENVALUE, WRITE_OP2 )
 
       ELSE IF (TYPE(1:5) == 'SHEAR') THEN
          CALL WRITE_OST_CSHEAR (NUM, FILL, ISUBCASE, ITABLE, TITLEI, STITLEI, LABELI, &
@@ -689,18 +693,20 @@
                                 WRITE_F06, WRITE_OP2, WRITE_ANS)
 
       ELSE IF (TYPE == 'BUSH    ') THEN
-         ELEMENT_TYPE = 102 ! CBUSH
-         NUM_WIDE = 7       ! eid, tx, ty, tz, rx, ry, rz
-         STRESS_CODE = 1    ! dunno
-         !CALL GET_STRESS_CODE(STRESS_CODE, IS_VON_MISES, IS_STRAIN, IS_FIBER_DISTANCE)
-         CALL GET_STRESS_CODE( STRESS_CODE, 0,            1,         0)
-         NVALUES = NUM * NUM_WIDE
-         
-         CALL WRITE_OES3_STATIC(ITABLE, ISUBCASE, DEVICE_CODE, ELEMENT_TYPE, NUM_WIDE, STRESS_CODE, &
-                                TITLEI, STITLEI, LABELI, FIELD5_INT_MODE, FIELD6_EIGENVALUE)
+         IF (WRITE_OP2) THEN
+             ELEMENT_TYPE = 102 ! CBUSH
+             NUM_WIDE = 7       ! eid, tx, ty, tz, rx, ry, rz
+             STRESS_CODE = 1    ! dunno
+             !CALL GET_STRESS_CODE(STRESS_CODE, IS_VON_MISES, IS_STRAIN, IS_FIBER_DISTANCE)
+             CALL GET_STRESS_CODE( STRESS_CODE, 0,            1,         0)
+             NVALUES = NUM * NUM_WIDE
+             
+             CALL WRITE_OES3_STATIC(ITABLE, ISUBCASE, DEVICE_CODE, ELEMENT_TYPE, NUM_WIDE, STRESS_CODE, &
+                                    TITLEI, STITLEI, LABELI, FIELD5_INT_MODE, FIELD6_EIGENVALUE)
 
-         WRITE(OP2) NVALUES
-         WRITE(OP2) (EID_OUT_ARRAY(I,1)*10+DEVICE_CODE,(REAL(OGEL(I,J),4), J=1,6), I=1,NUM)
+             WRITE(OP2) NVALUES
+             WRITE(OP2) (EID_OUT_ARRAY(I,1)*10+DEVICE_CODE,(REAL(OGEL(I,J),4), J=1,6), I=1,NUM)
+         ENDIF
 
          DO I=1,NUM
             WRITE(F06,1802) EID_OUT_ARRAY(I,1),(OGEL(I,J),J=1,6)
@@ -959,6 +965,7 @@
       REAL(REAL32)  :: NAN
       NAN = IEEE_VALUE(NAN, IEEE_QUIET_NAN)
 
+      IF (WRITE_OP2) THEN
           DEVICE_CODE = 1   ! PLOT
           NVALUES = NUM * NUM_WIDE
           NTOTAL = NVALUES * 4
@@ -996,6 +1003,7 @@
           !Normal-X      Normal-Y      Shear-XY -> max_shear, avg_shear, margin
           WRITE(OP2) (EID_OUT_ARRAY(I,1)*10+DEVICE_CODE, REAL(OGEL(I,3), 4), REAL(OGEL(I,3), 4), &
                                                         NAN, I=1,NUM)
+      ENDIF  ! write op2
       DO I=1,NUM,2
          IF (I+1 <= NUM) THEN
             WRITE(F06,1603) FILL(1: 0), EID_OUT_ARRAY(I,1),(OGEL(I,J),J=1,3), EID_OUT_ARRAY(I+1,1),(OGEL(I+1,J),J=1,3)
@@ -1062,21 +1070,23 @@
       DEVICE_CODE = 1 ! plot
       K = 0
 
- 100  FORMAT("*DEBUG: WRITE_CTRIA3    ITABLE=",I8, "; NUM=",I8,"; NVALUES=",I8,"; NTOTAL=",I8)
-!101  FORMAT("*DEBUG: WRITE_CTRIA3    ITABLE=",I8," (should be -5, -7,...)")
-      NVALUES = NUM * NUM_WIDE
-      NTOTAL = NVALUES * 4
-      WRITE(ERR,100) ITABLE,NUM,NVALUES,NTOTAL
+      IF (WRITE_OP2) THEN
+ 100      FORMAT("*DEBUG: WRITE_CTRIA3    ITABLE=",I8, "; NUM=",I8,"; NVALUES=",I8,"; NTOTAL=",I8)
+!101      FORMAT("*DEBUG: WRITE_CTRIA3    ITABLE=",I8," (should be -5, -7,...)")
+          NVALUES = NUM * NUM_WIDE
+          NTOTAL = NVALUES * 4
+          WRITE(ERR,100) ITABLE,NUM,NVALUES,NTOTAL
 
-      !CALL GET_STRESS_CODE(STRESS_CODE, IS_VON_MISES, IS_STRAIN, IS_FIBER_DISTANCE)
-      CALL GET_STRESS_CODE( STRESS_CODE, 1,            1,         1)
-      CALL WRITE_OES3_STATIC(ITABLE, ISUBCASE, DEVICE_CODE, ELEMENT_TYPE, NUM_WIDE, STRESS_CODE, &
-                             TITLE, SUBTITLE, LABEL, FIELD5_INT_MODE, FIELD6_EIGENVALUE)
-      WRITE(OP2) NVALUES
+          !CALL GET_STRESS_CODE(STRESS_CODE, IS_VON_MISES, IS_STRAIN, IS_FIBER_DISTANCE)
+          CALL GET_STRESS_CODE( STRESS_CODE, 1,            1,         1)
+          CALL WRITE_OES3_STATIC(ITABLE, ISUBCASE, DEVICE_CODE, ELEMENT_TYPE, NUM_WIDE, STRESS_CODE, &
+                                 TITLE, SUBTITLE, LABEL, FIELD5_INT_MODE, FIELD6_EIGENVALUE)
+          WRITE(OP2) NVALUES
 
-      ! op2 version of the upper & lower layers all in one call, but without the transverse shear
-      WRITE(OP2) (EID_OUT_ARRAY(I,1)*10+DEVICE_CODE, (REAL(OGEL(2*I-1,J),4), J=1,8), (REAL(OGEL(2*I,J),4), J=1,8), I=1,NUM)
-
+          ! op2 version of the upper & lower layers all in one call, but without the transverse shear
+          WRITE(OP2) (EID_OUT_ARRAY(I,1)*10+DEVICE_CODE, (REAL(OGEL(2*I-1,J),4), J=1,8), &
+                     (REAL(OGEL(2*I,J),4), J=1,8), I=1,NUM)
+      ENDIF
  1703 FORMAT(1X,I8,4X,'Anywhere',2X,4(1ES13.5),0PF9.3,5(1ES13.5))
 
  1704 FORMAT(13X,'in elem',3X,4(1ES13.5),0PF9.3,5(1ES13.5))

@@ -2,7 +2,7 @@
 ! Begin MIT license text.
 ! _______________________________________________________________________________________________________
 
-! Copyright 2022 Dr William R Case, Jr (mystransolver@gmail.com)
+! Copyright 2023 Dr William R Case, Jr (mystransolver@gmail.com)
 
 ! Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 ! associated documentation files (the "Software"), to deal in the Software without restriction, including
@@ -35,10 +35,10 @@
       SAVE
 
       CHARACTER(256*BYTE)            :: MYSTRAN_COMMENT  = '*** Please report any problems to mystransolver@gmail.com ***'
-      CHARACTER(  8*BYTE), PARAMETER :: MYSTRAN_VER_NUM  = '14.01'
-      CHARACTER(  3*BYTE), PARAMETER :: MYSTRAN_VER_MONTH= 'Sep'
-      CHARACTER(  2*BYTE), PARAMETER :: MYSTRAN_VER_DAY  = '19'
-      CHARACTER(  4*BYTE), PARAMETER :: MYSTRAN_VER_YEAR = '2022'
+      CHARACTER(  8*BYTE), PARAMETER :: MYSTRAN_VER_NUM  = '14.02'
+      CHARACTER(  3*BYTE), PARAMETER :: MYSTRAN_VER_MONTH= 'July'
+      CHARACTER(  2*BYTE), PARAMETER :: MYSTRAN_VER_DAY  = '17'
+      CHARACTER(  4*BYTE), PARAMETER :: MYSTRAN_VER_YEAR = '2023'
       CHARACTER( 33*BYTE), PARAMETER :: MYSTRAN_AUTHOR   = 'MYSTRAN developed by Dr Bill Case'
 
       END MODULE MYSTRAN_Version
