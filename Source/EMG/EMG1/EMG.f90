@@ -100,8 +100,7 @@
       CALL EMG_INIT
 
 ! **********************************************************************************************************************************
-! Call ELMDAT1 subr to get some of the data needed for this elem. 
- 
+      ! Call ELMDAT1 subr to get some of the data needed for this elem.
       IF ((TYPE == 'ELAS1   ') .OR. (TYPE == 'ELAS2   ') .OR. (TYPE == 'ELAS3   ') .OR. (TYPE == 'ELAS4   ') .OR.                  &
           (TYPE == 'ROD     ') .OR. (TYPE == 'BAR     ') .OR. (TYPE == 'BEAM    ') .OR. (TYPE == 'BUSH    ') .OR.                  &
           (TYPE == 'HEXA8   ') .OR. (TYPE == 'HEXA20  ') .OR.                                                                      &
@@ -120,11 +119,13 @@
       IF (NUM_EMG_FATAL_ERRS > 0)   CALL EMG_QUIT
 
 ! **********************************************************************************************************************************
-! For all elements but ELASi, USERIN, get routine to check element geometry, get element grid point coords in local elem
-! coord system, and generate the coord transformation matrix to be used in transforming the stiffness matrices in
-! elem system to basic sys. If elem is 'ELAS' the calcd stiff matrix IS in global coord's, so TE matrix is not needed.
-
-!xx   IF      ((TYPE      == 'ROD     ') .OR. (TYPE == 'BAR     ') .OR. (TYPE == 'BEAM    ') .OR. (TYPE == 'BUSH    ') .OR.        &
+      ! For all elements but ELASi, USERIN:
+      ! - get routine to check element geometry
+      ! - get element grid point coords in local elem coord system
+      ! - generate the coord transformation matrix to be used in transforming the
+      !   stiffness matrices in elem system to basic sys. If elem is 'ELAS' the calculated 
+      !   stiffness matrix IS in global coord's, so TE matrix is not needed.
+      !
       IF      ((TYPE      == 'ROD     ') .OR. (TYPE == 'BAR     ') .OR. (TYPE == 'BEAM    ') .OR.                                  &
                (TYPE(1:5) == 'TRIA3'   ) .OR.                                                                                      &
                (TYPE      == 'PENTA6  ') .OR. (TYPE == 'PENTA15 ') .OR.                                                            &
@@ -158,7 +159,7 @@
          CALL ELMGM3 ( WRITE_WARN )
          FIX_EDAT = 'N'
 
-         IF      (TYPE(1:4) == 'HEXA') THEN                ! See if we need to reorder grids to get local z in proper direction
+         IF (TYPE(1:4) == 'HEXA') THEN                ! See if we need to reorder grids to get local z in proper direction
             IF (XEL(5,3) < ZERO) THEN
                FIX_EDAT = 'Y'
             ENDIF
@@ -170,20 +171,19 @@
             CALL ELMGM3 ( WRITE_WARN )
          ENDIF
 
-      ELSE IF  (TYPE(1:4) == 'ELAS') THEN
+      ELSE IF (TYPE(1:4) == 'ELAS') THEN
          TE_IDENT = 'Y'
 
       ELSE IF ((TYPE == 'USER1   ') .OR. (TYPE == 'USERIN  ')) THEN
          CONTINUE
- 
       ENDIF
  
       IF (NUM_EMG_FATAL_ERRS > 0)   CALL EMG_QUIT
 
 ! **********************************************************************************************************************************
-! Generate element material matrices. Material matrices for shell elements with PCOMP props are generated elsewhere.
-! Matrices of material props are not generated for 1-D elements
-! --------
+      ! Generate element material matrices. Material matrices for shell elements with 
+      ! PCOMP props are generated elsewhere.
+      ! Matrices of material props are not generated for 1-D elements
 
       IF ((TYPE(1:5) == 'TRIA3') .OR. (TYPE(1:5) == 'QUAD4') .OR. (TYPE == 'SHEAR   ')) THEN
 
@@ -191,7 +191,7 @@
 
             THETAM = ZERO
 
-            IF      (TYPE(1:5) == 'QUAD4') THEN
+            IF (TYPE(1:5) == 'QUAD4') THEN
                INT41 = EDAT(EPNTK+DEDAT_Q4_MATANG_KEY)     ! Key to say whether matl angle is an actual angle or a coord ID
                INT42 = EDAT(EPNTK+DEDAT_Q4_MATANG_KEY+1)   ! Key to say (if INT41 is neg) whether coord ID is basic or otherwise
                IF      (INT41 >  0) THEN                   ! Angle is defined in array MATANGLE at row INT41
@@ -230,8 +230,9 @@
                ENDIF
 
             ENDIF
-                                                           ! Use WRITE_WARN even though the following is not a warning message
-!                                                            this will allow THETAM to be printed out in only 1 call to EMG
+
+            ! Use WRITE_WARN even though the following is not a warning message
+            ! this will allow THETAM to be printed out in only 1 call to EMG
             IF ((DEBUG(112) > 0) .AND. (WRITE_WARN == 'Y')) THEN
                IF (INT41 > 0) THEN
                   WRITE(F06,1001) TYPE, EID, CONV_RAD_DEG*THETAM, LOC, INT41, INT42
@@ -277,8 +278,7 @@
          CALL ROT_AXES_MATL_TO_LOC ( WRITE_WARN )
       ENDIF
 
-! Call ELMOUT to output element data for item 0, 1
-
+      ! Call ELMOUT to output element data for item 0, 1
       IF (WRT_BUG(0) > 0) THEN
          CASE_NUM = 0
          DO I=0,MBUG-1
@@ -301,8 +301,8 @@
          CALL ELMOUT ( INT_ELEM_ID, DUM_BUG, CASE_NUM, OPT )
       ENDIF
 
-! Quick return if all OPT are 'N' (if we only need ELMDAT, ELMGMi called, and not all the other subr's which generate elem matrices
-
+     ! Quick return if all OPT are 'N' (if we only need ELMDAT, ELMGMi called,
+     ! and not all the other subr's which generate elem matrices
       IF ((OPT(1) == 'N') .AND. (OPT(2) == 'N') .AND. (OPT(3) == 'N') .AND. (OPT(4) == 'N') .AND. (OPT(5) == 'N') .AND.            &
           (OPT(6) == 'N')) THEN
          CALL OURTIM
@@ -311,8 +311,8 @@
       ENDIF 
 
 ! **********************************************************************************************************************************
-! For all but USERIN elem, call ELMDAT2 subr to get the rest of the data needed to calculate the matrices for this element. 
- 
+      ! For all but USERIN elem, call ELMDAT2 subr to get the rest of the data
+      ! needed to calculate the matrices for this element.
       IF ((TYPE(1:4) == 'ELAS'    ) .OR. (TYPE      == 'ROD     ') .OR. (TYPE == 'BAR     ') .OR. (TYPE == 'BEAM    ') .OR.        &
           (TYPE(1:5) == 'TRIA3'   ) .OR. (TYPE(1:5) == 'QUAD4'   ) .OR. (TYPE == 'SHEAR   ') .OR. (TYPE == 'USER1   ') .OR.        &
           (TYPE      == 'HEXA8   ') .OR. (TYPE      == 'HEXA20  ') .OR.                                                            &
@@ -324,16 +324,15 @@
       IF (NUM_EMG_FATAL_ERRS > 0)   CALL EMG_QUIT
 
 ! **********************************************************************************************************************************
-! Now get the individual elem routines to calc the required elem matrices: ME and/or PTE and/or (SE1, SE2, STE1,STE2)
-! and/or KE).
- 
+     ! Now get the individual elem routines to calc the required elem matrices: ME and/or PTE and/or (SE1, SE2, STE1,STE2)
+     ! and/or KE).
       IF (TYPE(1:4) == 'ELAS') THEN
          CALL ELAS1 ( OPT, WRITE_WARN )
-      
+
       ELSE IF ((TYPE == 'ROD     ') .OR. (TYPE == 'BAR     ') .OR. (TYPE == 'BEAM    ')) THEN
          CALL BREL1 ( OPT, WRITE_WARN )
          IF (NUM_EMG_FATAL_ERRS > 0)   CALL EMG_QUIT
- 	
+
       ELSE IF (TYPE(1:4) == 'BUSH') THEN
          CALL BUSH ( INT_ELEM_ID, OPT, WRITE_WARN )
          IF (NUM_EMG_FATAL_ERRS > 0)   CALL EMG_QUIT
@@ -350,7 +349,8 @@
                (TYPE == 'PENTA6  ') .OR. (TYPE == 'PENTA15 ') .OR.                                                                 &
                (TYPE == 'TETRA4  ') .OR. (TYPE == 'TETRA10 ')) THEN
 
-         IF (ISOLID(6) == 0) THEN                          ! Integration scheme
+         ! Integration scheme
+         IF (ISOLID(6) == 0) THEN
             RED_INT_SHEAR = 'Y'
          ELSE
             RED_INT_SHEAR = 'N'
@@ -388,15 +388,13 @@
  
 
 ! **********************************************************************************************************************************
-! For plate elements, process offsets (since they are specified in local element coordinates)
-
+      ! For plate elements, process offsets (since they are specified in local element coordinates)
       IF ((TYPE(1:5) == 'TRIA3') .OR. (TYPE(1:5) == 'QUAD4')) THEN
          CALL ELMOFF ( OPT, WRITE_WARN )
       ENDIF
 
 ! **********************************************************************************************************************************
-! Call ELMOUT to output for data items 2-5
-
+      ! Call ELMOUT to output for data items 2-5
       IF (WRT_BUG_THIS_TIME == 'Y') THEN
 
          IF ((WRT_BUG(2) > 0) .OR. (WRT_BUG(3) > 0) .OR. (WRT_BUG(4) > 0) .OR. (WRT_BUG(5) > 0)) THEN
@@ -716,8 +714,7 @@
          DUM_AGRID(I) = EDAT(EPNTK+I)
       ENDDO
 
-      IF      (TYPE == 'HEXA8   ') THEN
-
+      IF (TYPE == 'HEXA8   ') THEN
          DUM_AGRID(1)  = EDAT(EPNTK+2)
          DUM_AGRID(2)  = EDAT(EPNTK+3)
          DUM_AGRID(3)  = EDAT(EPNTK+4)
@@ -740,7 +737,6 @@
          ENDIF
 
       ELSE IF (TYPE == 'PENTA6  ') THEN
-
          DUM_AGRID(1)  = EDAT(EPNTK+2)
          DUM_AGRID(2)  = EDAT(EPNTK+3)
          DUM_AGRID(3)  = EDAT(EPNTK+4)
@@ -755,7 +751,6 @@
          EDAT(EPNTK+7) = DUM_AGRID(3)
 
       ELSE IF (TYPE == 'TETRA4  ') THEN
-
          DUM_AGRID(1)  = EDAT(EPNTK+2)
          DUM_AGRID(2)  = EDAT(EPNTK+3)
          DUM_AGRID(3)  = EDAT(EPNTK+4)

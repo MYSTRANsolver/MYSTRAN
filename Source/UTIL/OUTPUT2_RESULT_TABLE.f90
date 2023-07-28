@@ -5,8 +5,6 @@
       USE TIMDAT, ONLY           : YEAR, MONTH, DAY
       CHARACTER(LEN=8*BYTE), INTENT(IN) :: TABLE_NAME ! The table name
       !INTEGER(LONG) :: ITABLE ! the subtable id
-      INTEGER(LONG), DIMENSION(3) :: DATE_
-      !DATE_ = (/ 3, 24, 2013 /)
       WRITE(ERR,9110) TABLE_NAME
 
 !      table0 = [
@@ -37,18 +35,16 @@
       WRITE(OP2) -2
       WRITE(OP2) 1
       WRITE(OP2) 0
-!      DYEAR = DATE_(3) - 2000
 
 !      table2 = [
 !        4, 7, 4,
 !        28,  # 4i -> 13i
-!        # todays date 3/6/2014, 0, 1  ( year=year-2000)
+!        # todays date 3/6/2014, 0, 1  ( dyear=year-2000)
 !        month, day, dyear, 0, 1,
 !        28,
 !      ]
       CALL OURDAT
       WRITE(OP2) 7
-      !WRITE(OP2) 0, 1, DATE_(1), DATE_(2), DATE_(3) - 2000, 0, 1
       WRITE(OP2) 0, 1, MONTH, DAY, YEAR-2000, 0, 1
       
       !ITABLE = -3
@@ -62,12 +58,11 @@
       USE IOUNT1, ONLY           :  ERR, OP2
       IMPLICIT NONE
       INTEGER(LONG), INTENT(IN) :: ITABLE   ! The subtable id
-!      INTEGER(LONG), INTENT(IN) :: NTOTAL   ! the width of the block
 
       WRITE(OP2) ITABLE
       WRITE(OP2) 1
       WRITE(OP2) 0
-!     WRITE(ERR,*) " *INFORMATION: "
+!      WRITE(ERR,*) " *INFORMATION: "
 !      WRITE(ERR,9114) " *DEBUG:       WRITE ITABLE; ITABLE=", ITABLE
       WRITE(ERR,9114) ITABLE
 

@@ -375,26 +375,31 @@ ply_do:  DO K=1,NUM_PLIES_TO_PROC
             EMAT(MRMATLC+1,3) = SB                         ! SB is the allowable interlaminar shear stress (on PCOMP B.D. entry)
             EMAT(MRMATLC+2,3) = SB
             CALL MATERIAL_PROPS_2D ( WRITE_WARN )
-                                                           ! Reset INTL_MID(3) if either transverse shear modulii are zero
+            ! Reset INTL_MID(3) if either transverse shear modulii are zero
             IF ((DABS(ET(1,1)) < EPS1) .OR. (DABS(ET(2,2)) < EPS1)) THEN
                INTL_MID(3) = 0
             ENDIF
 
 
             IF (WRT_BUG(1) > 0) THEN
-               CALL BUG_SHELL_ABD_MATRICES ( K, 21 )
+               CALL BUG_SHELL_ABD_MATRICES (K, 21)
             ENDIF
 
-            CALL ROT_COMP_ELEM_AXES ( K, THETA_PLY, '1-2' )
+            CALL ROT_COMP_ELEM_AXES(K, THETA_PLY, '1-2')
 
-            ZTK = ZBK + TPLY    ;    ZTK2 = ZTK*ZTK    ;    ZTK3 = ZTK2*ZTK    ;    ZBK2 = ZBK*ZBK    ;    ZBK3 = ZBK2*ZBK
+            ZTK = ZBK + TPLY
+            ZTK2 = ZTK*ZTK
+            ZTK3 = ZTK2*ZTK
+            ZBK2 = ZBK*ZBK
+            ZBK3 = ZBK2*ZBK
 
             PCOMP_TM = PCOMP_TM +       (ZTK  - ZBK )
             PCOMP_IB = PCOMP_IB + THIRD*(ZTK3 - ZBK3)
-                                                           ! PCMPTSTM is a factor (< 1) for shear to total plate thickness for PCOMP
+            ! PCMPTSTM is a factor (< 1) for shear to total plate thickness for PCOMP
             PCOMP_TS = PCOMP_TS +       (ZTK  - ZBK )*PCMPTSTM
  
-            IF (TYPE == 'SHEAR   ') THEN                   ! For SHEAR elem there is only SHELL_A and only its 3,3 term is nonzreo
+            IF (TYPE == 'SHEAR   ') THEN
+               ! For SHEAR elem there is only SHELL_A and only its 3,3 term is nonzreo
                DO I=1,3
                   DO J=1,3
                      SHELL_A(I,J) = ZERO
@@ -406,11 +411,13 @@ ply_do:  DO K=1,NUM_PLIES_TO_PROC
             ELSE
                DO I=1,3
                   DO J=1,3
-                     IF (PLY_NUM == 0) THEN                ! Use the following when all plies are to be integrated
+                     IF (PLY_NUM == 0) THEN
+                        ! Use the following when all plies are to be integrated
                         PLY_A(I,J)   =       (ZTK  - ZBK )*EM(I,J)
                         PLY_B(I,J)   =  HALF*(ZTK2 - ZBK2)*EM(I,J)
                         PLY_D(I,J)   = THIRD*(ZTK3 - ZBK3)*EM(I,J)
-                     ELSE                                  ! Use the following when only individual plies are evaluated separately
+                     ELSE
+                        ! Use the following when only individual plies are evaluated separately
                         PLY_A(I,J)   = TPLY*EM(I,J)
                         PLY_B(I,J)   = ZERO
                         PLY_D(I,J)   = (TPLY*TPLY*TPLY)*EM(I,J)/TWELVE
@@ -453,15 +460,14 @@ ply_do:  DO K=1,NUM_PLIES_TO_PROC
             ENDDO
 
             IF (WRT_BUG(1) > 0) THEN
-               CALL BUG_SHELL_ABD_MATRICES ( K, 22 )
+               CALL BUG_SHELL_ABD_MATRICES (K, 22)
             ENDIF
 
             ZBK = ZTK
-
          ENDDO ply_do
 
-! Now put PCOMP_TM, PCOMP_IB and PCOMP_TS into array EPROP, but put them in similar to the EPROP for PSHELL properties
-
+         ! Now put PCOMP_TM, PCOMP_IB and PCOMP_TS into array EPROP, 
+         ! but put them in similar to the EPROP for PSHELL properties
          EPROP(1) = PCOMP_TM                               ! PCOMP_TM should be > 0 based on checks in subr BD_PCOMP
          EPROP(2) = TWELVE*PCOMP_IB/(PCOMP_TM*PCOMP_TM*PCOMP_TM)
          EPROP(3) = PCOMP_TS/PCOMP_TM
@@ -471,9 +477,10 @@ ply_do:  DO K=1,NUM_PLIES_TO_PROC
          ENDIF
 
          FCONV(1)  =  PCOMP_TM
-         FCONV(2)  = -PCOMP_IB                             ! Note neq sign on FCONV(2): due to sign convention on positive bending
+         FCONV(2)  = -PCOMP_IB          ! Note neq sign on FCONV(2): due to sign convention on positive bending
          FCONV_SHEAR_THICK = PCOMP_TS
-                                                           ! Write equiv PSHELL, MAT2, if not already written for this PCOMP
+
+         ! Write equiv PSHELL, MAT2, if not already written for this PCOMP
          IF ((PCOMPEQ > 0) .AND. (PCOMP(INTL_PID,6) == 0)) THEN
             IF ((PCOMP_TM > EPS1) .AND. (PCOMP_IB > EPS1) .AND. (PCOMP_TS > EPS1)) THEN
                CALL WRITE_PCOMP_EQUIV ( PCOMP_TM, PCOMP_IB, PCOMP_TS )
@@ -485,8 +492,7 @@ ply_do:  DO K=1,NUM_PLIES_TO_PROC
 
       ENDIF pcom0
 
-! Reset SHELL_T if singular so that we can calc finite KS shear stiffness in subrs QPLT2, TPLT2.
-
+      ! Reset SHELL_T if singular so that we can calc finite KS shear stiffness in subrs QPLT2, TPLT2.
       DET_SHELL_T = SHELL_T(1,1)*SHELL_T(2,2) - SHELL_T(1,2)*SHELL_T(2,1)
       IF (DABS(DET_SHELL_T) < EPS1) THEN
          SHELL_T(1,1) = HALF*SHRFXFAC*( SHELL_A(1,1) + SHELL_A(2,2) )
