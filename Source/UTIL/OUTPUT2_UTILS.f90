@@ -1,6 +1,7 @@
 !===================================================================================================================================
       SUBROUTINE WRITE_OP2_HEADER(POST)
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
+      USE TIMEDAT, ONLY               : YEAR, MONTH, DAY
       USE IOUNT1, ONLY                :  OP2
 
       integer, intent(in)  :: POST
@@ -8,8 +9,9 @@
       character(len=8)     :: NASTRAN_VERSION
       IF (POST == -1) THEN
         !_write_markers(op2, op2_ascii, [3, 0, 7])
+        CALL OURDAT
         WRITE(OP2) 3
-        WRITE(OP2) 3, 24, 2021-2000  ! date
+        WRITE(OP2) MONTH, DAY, YEAR-2000  ! date
         !WRITE(OP2) 0
         WRITE(OP2) 7
         TAPE_CODE = 'NASTRAN FORT TAPE ID CODE - '

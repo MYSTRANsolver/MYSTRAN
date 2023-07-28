@@ -2,10 +2,11 @@
       SUBROUTINE WRITE_TABLE_HEADER(TABLE_NAME)
       USE PENTIUM_II_KIND, ONLY  :  BYTE, LONG
       USE IOUNT1, ONLY           :  ERR, OP2
+      USE TIMEDAT, ONLY          : YEAR, MONTH, DAY
       CHARACTER(LEN=8*BYTE), INTENT(IN) :: TABLE_NAME ! The table name
       !INTEGER(LONG) :: ITABLE ! the subtable id
       INTEGER(LONG), DIMENSION(3) :: DATE_
-      DATE_ = (/ 3, 24, 2013 /)
+      !DATE_ = (/ 3, 24, 2013 /)
       WRITE(ERR,9110) TABLE_NAME
 
 !      table0 = [
@@ -45,8 +46,10 @@
 !        month, day, dyear, 0, 1,
 !        28,
 !      ]
+      CALL OURDAT
       WRITE(OP2) 7
-      WRITE(OP2) 0, 1, DATE_(1), DATE_(2), DATE_(3) - 2000, 0, 1
+      !WRITE(OP2) 0, 1, DATE_(1), DATE_(2), DATE_(3) - 2000, 0, 1
+      WRITE(OP2) 0, 1, MONTH, DAY, YEAR-2000, 0, 1
       
       !ITABLE = -3
       !CALL WRITE_ITABLE(ITABLE)
