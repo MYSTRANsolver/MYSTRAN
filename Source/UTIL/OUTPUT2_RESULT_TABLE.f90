@@ -2,7 +2,7 @@
       SUBROUTINE WRITE_TABLE_HEADER(TABLE_NAME)
       USE PENTIUM_II_KIND, ONLY  :  BYTE, LONG
       USE IOUNT1, ONLY           :  ERR, OP2
-      USE TIMEDAT, ONLY          : YEAR, MONTH, DAY
+      USE TIMDAT, ONLY           : YEAR, MONTH, DAY
       CHARACTER(LEN=8*BYTE), INTENT(IN) :: TABLE_NAME ! The table name
       !INTEGER(LONG) :: ITABLE ! the subtable id
       INTEGER(LONG), DIMENSION(3) :: DATE_

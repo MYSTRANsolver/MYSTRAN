@@ -1,7 +1,7 @@
 !===================================================================================================================================
       SUBROUTINE WRITE_OP2_HEADER(POST)
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
-      USE TIMEDAT, ONLY               : YEAR, MONTH, DAY
+      USE TIMDAT, ONLY                : YEAR, MONTH, DAY
       USE IOUNT1, ONLY                :  OP2
 
       integer, intent(in)  :: POST
