@@ -1,4 +1,3 @@
-! ###############################################################################################################################
 ! Begin MIT license text.                                                                                    
 ! _______________________________________________________________________________________________________
                                                                                                          
@@ -24,36 +23,17 @@
                                                                                                         
 ! End MIT license text.                                                                                      
 
-   MODULE PRESSURE_DATA_PROC_Interface
+      MODULE BD_PLOAD1_USE_IFs
 
-   INTERFACE
+! USE Interface statements for all subroutines called by SUBROUTINE BD_PLOAD1
 
-      SUBROUTINE PRESSURE_DATA_PROC
+      USE OURTIM_Interface
+      USE MKJCARD_Interface
+      USE I4FLD_Interface
+      USE R8FLD_Interface
+      USE TOKCHK_Interface
+      USE BD_IMBEDDED_BLANK_Interface
+      USE CARD_FLDS_NOT_BLANK_Interface
+      USE CRDERR_Interface
 
- 
-      USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
-      USE IOUNT1, ONLY                :  WRT_ERR, WRT_LOG, ERR,     F04,     F06,     L1Q
-      USE IOUNT1, ONLY                :  WRT_ERR, WRT_LOG,                            LINK1Q
-      USE IOUNT1, ONLY                :  WRT_ERR, WRT_LOG,                            L1Q_MSG
-      USE SCONTR, ONLY                :  BD_ENTRY_LEN, BLNK_SUB_NAM, DATA_NAM_LEN, FATAL_ERR, JCARD_LEN, LPDAT, LLOADC,            &
-                                         MPDAT_PLOAD2, MPDAT_PLOAD4, MPLOAD4_3D_DATA, NELE, NLOAD, NPCARD,                         &
-                                         NPLOAD4_3D, NPDAT, NSUB, WARN_ERR
-      USE TIMDAT, ONLY                :  TSEC
-      USE PARAMS, ONLY                :  SUPWARN
-      USE SUBR_BEGEND_LEVELS, ONLY    :  PRESSURE_DATA_PROC_BEGEND
-      USE CONSTANTS_1, ONLY           :  ZERO, ONE
-      USE MODEL_STUF, ONLY            :  LOAD_SIDS, LOAD_FACS, SUBLOD, PDATA, PPNT, PLOAD4_3D_DATA, PTYPE, PLOAD1_INT, PLOAD1_REAL
- 
-      IMPLICIT NONE
- 
-      CHARACTER( 8*BYTE)              :: TOKTYP            ! Variable to test whether "THRU" option was used on B.D. PLOAD2 card
-      CHARACTER( 8*BYTE)              :: THRU              ! ='Y' if THRU option used on TEMPRB, TEMPP1 continuation card
- 
-      INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = PRESSURE_DATA_PROC_BEGEND
- 
-      END SUBROUTINE PRESSURE_DATA_PROC
-
-   END INTERFACE
-
-   END MODULE PRESSURE_DATA_PROC_Interface
-
+      END MODULE BD_PLOAD1_USE_IFs

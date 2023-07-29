@@ -58,7 +58,7 @@
                                          IBIT, KMAT_BW, KMAT_DEN, LGRID, LINKNO, MBUG, MELDTS, NAOCARD, NCUSERIN,                  &
                                          NDOFG, NDOFR, NDOFSE, NELE, NFORCE, NGRAV, NGRID, NMPC, NPCARD,                           &
                                          NPUSERIN, NRFORCE, NRIGEL, NSLOAD, NSPC, NSPC1, NTCARD, NTERM_KGG, NUM_PARTVEC_RECORDS,   &
-                                         NUM_SUPT_CARDS, NUM_USET_RECORDS, PROG_NAME, RESTART, SOL_NAME, WARN_ERR 
+                                         NUM_SUPT_CARDS, NUM_USET_RECORDS, PROG_NAME, RESTART, SOL_NAME, WARN_ERR
 
       USE SCONTR, ONLY                :  ELDT_BUG_DAT1_BIT, ELDT_BUG_DAT2_BIT, ELDT_BUG_ME_BIT  , ELDT_BUG_P_T_BIT ,               &
                                          ELDT_BUG_SE_BIT  , ELDT_BUG_KE_BIT  , ELDT_BUG_SHPJ_BIT, ELDT_BUG_BMAT_BIT,               &
@@ -124,44 +124,37 @@
       LINKNO = 0
       POST = -1
 
-! Initialize WRT_BUG
-
+      ! Initialize WRT_BUG
       DO I=0,MBUG-1
          WRT_BUG(I) = 0
       ENDDO
 
       RBG_GSET_ALLOCATED = 'N'
 
-! Set default values for SETLKT from values in module PARAMS
-
+      ! Set default values for SETLKT from values in module PARAMS
       SETLKTK_DEF = SETLKTK
       SETLKTM_DEF = SETLKTM
 
-! Set time initializing parameters
-
+      ! Set time initializing parameters
       CALL TIME_INIT
 
-! Get date and time, write to screen
-
+      ! Get date and time, write to screen
       CALL OURDAT
       CALL OURTIM
       WRITE(SC1,152) LINKNO
 
-! Write logo, date and copyright info to text files
-  
+      ! Write logo, date and copyright info to text files
       WRITE(F06,150) LINKNO
       IF (WRT_LOG > 0) THEN
          WRITE(F04,150) LINKNO
       ENDIF
       WRITE(ERR,150) LINKNO
 
-! Reset units for error output (were set to SC1 in MAIN1)
-
+      ! Reset units for error output (were set to SC1 in MAIN1)
       OUNT(1) = ERR
       OUNT(2) = F06
 
-! Read input data to count sizes of arrays (no. GRID's, elems, etc.)
-  
+      ! Read input data to count sizes of arrays (no. GRID's, elems, etc.)
       CALL OURTIM
       MODNAM = 'DETERMINE ARRAY SIZES - CASE CONTROL        '
       WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
@@ -176,12 +169,10 @@ res11:IF (RESTART == 'N') THEN
          CALL LOADB0
       ENDIF res11
 
-! Start back at beginnng of input file to read Exec, Case Control and Bulk Data decks 
-
+      ! Start back at beginnng of input file to read Exec, Case Control and Bulk Data decks 
       REWIND (IN1)
   
-! Processes the EXEC CONTROL DECK
-
+      ! Processes the EXEC CONTROL DECK
       CALL OURTIM
       MODNAM = 'READ EXEC CONTROL DECK                      '
       WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
@@ -257,6 +248,7 @@ res12:IF (RESTART == 'Y') THEN
          CALL ALLOCATE_MODEL_STUF ( 'VVEC, OFFSETS, PLATE stuff', SUBR_NAME )
          CALL ALLOCATE_MODEL_STUF ( 'SINGLE ELEMENT ARRAYS', SUBR_NAME )
          CALL ALLOCATE_MODEL_STUF ( 'PPNT, PDATA, PTYPE', SUBR_NAME )
+         CALL ALLOCATE_MODEL_STUF ( 'PLOAD1_REAL, PLOAD1_INT', SUBR_NAME )
          CALL ALLOCATE_MODEL_STUF ( 'PLOAD4_3D_DATA', SUBR_NAME )
 
          CALL LINK1_RESTART_DATA
@@ -746,6 +738,7 @@ res15:IF (RESTART == 'Y') THEN
          CALL DEALLOCATE_MODEL_STUF ( 'GTEMP' )
          CALL DEALLOCATE_MODEL_STUF ( 'TPNT, TDATA' )
          CALL DEALLOCATE_MODEL_STUF ( 'PPNT, PDATA, PTYPE' )
+         CALL DEALLOCATE_MODEL_STUF ( 'PLOAD1_REAL, PLOAD1_INT' )
          CALL DEALLOCATE_MODEL_STUF ( 'PLOAD4_3D_DATA' )
 
       ENDIF res15

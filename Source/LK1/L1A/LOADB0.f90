@@ -38,8 +38,10 @@
                                          LRIGEL, LSEQ, LSLOAD, LSPC, LSPC1, LSPCADDC, LSPCADDR, LSUSERIN, LTDAT,                   &
                                          MEDAT_CBAR, MEDAT_CBEAM, MEDAT_CBUSH,                                                     &
                                          MEDAT_CELAS1, MEDAT_CELAS2, MEDAT_CELAS3, MEDAT_CELAS4,                                   &
-                                         MEDAT_CQUAD, MEDAT_CROD, MEDAT_CSHEAR, MEDAT_CTRIA, MEDAT_CUSER1, MEDAT0_CUSERIN, MMPC,   &
-                                         MPDAT_PLOAD2, MPDAT_PLOAD4, MEDAT_PLOTEL, MRBE3, MRSPLINE, MTDAT_TEMPRB, MTDAT_TEMPP1,    &
+                                         MEDAT_CQUAD, MEDAT_CSHEAR, MEDAT_CTRIA, MEDAT_CUSER1, MEDAT0_CUSERIN, MMPC,               &
+                                         MEDAT_CROD,                                                                               &
+                                         MPDAT_PLOAD1, MPDAT_PLOAD2, MPDAT_PLOAD4,                                                 &
+                                         MEDAT_PLOTEL, MRBE3, MRSPLINE, MTDAT_TEMPRB, MTDAT_TEMPP1,                                &
                                          NPBARL, NSPOINT, PROG_NAME
       USE TIMDAT, ONLY                :  TSEC
       USE SUBR_BEGEND_LEVELS, ONLY    :  LOADB0_BEGEND
@@ -49,7 +51,7 @@
       USE LOADB0_USE_IFs
 
       IMPLICIT NONE
- 
+
       CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: SUBR_NAME   = 'LOADB0'
       CHARACTER( 7*BYTE), PARAMETER   :: END_CARD    = 'ENDDATA'
 
@@ -106,18 +108,16 @@
          ICNT = ICNT + 1
          READ(IN1,101,IOSTAT=IOCHK) CARD1
          CARD(1:)  = CARD1(1:)
- 
-! Quit if EOF/EOR occurs.
- 
+
+         ! Quit if EOF/EOR occurs.
          IF (IOCHK < 0) THEN
             WRITE(ERR,1011) END_CARD
             WRITE(F06,1011) END_CARD
             FATAL_ERR = FATAL_ERR + 1
             CALL OUTA_HERE ( 'Y' )
          ENDIF
- 
-! Check if error occurs.
- 
+
+         ! Check if error occurs.
          IF (IOCHK > 0) THEN
             WRITE(ERR,1010) DECK_NAME
             WRITE(F06,1010) DECK_NAME
@@ -126,8 +126,7 @@
             CYCLE
          ENDIF
  
-! Remove any comments within the CARD1 by deleting everything from $ on (after col 1)
-
+         ! Remove any comments within the CARD1 by deleting everything from $ on (after col 1)
          COMMENT_COL = 1
          DO I=2,BD_ENTRY_LEN
             IF (CARD1(I:I) == '$') THEN
@@ -140,8 +139,7 @@
             CARD1(COMMENT_COL:) = ' '
          ENDIF
 
-! Determine if the card is large or small format
-
+         ! Determine if the card is large or small format
          LARGE_FLD_INP = 'N'
          DO I=1,8
             IF (CARD1(I:I) == '*') THEN
@@ -149,8 +147,7 @@
             ENDIF
          ENDDO
 
-! FFIELD converts free-field card to fixed field and left justifies data in fields 2-9 and outputs a 10 field, 16 col/field CARD1
- 
+         ! FFIELD converts free-field card to fixed field and left justifies data in fields 2-9 and outputs a 10 field, 16 col/field CARD1
          IF ((CARD1(1:1) /= '$')  .AND. (CARD1(1:) /= ' ')) THEN
 
             IF (LARGE_FLD_INP == 'N') THEN
@@ -217,9 +214,9 @@
 
          ENDIF
  
-! No errors, so process Bulk Data card. No need to check for imbedded blanks found when FFIELD was run - this will be
-! checked when LOADB reads the bulk data
-
+          ! No errors, so process Bulk Data card. No need to check for imbedded
+          ! blanks found when FFIELD was run - this will be checked when LOADB
+          ! reads the bulk data
           IF      (CARD(1:5) == 'BAROR'   )  THEN
             CALL BD_BAROR0 ( CARD )
 
@@ -265,14 +262,11 @@
 
          ELSE IF (CARD(1:6) == 'CMASS1'  )  THEN
             LCMASS = LCMASS + 1
-  
          ELSE IF (CARD(1:6) == 'CMASS2'  )  THEN
             LCMASS = LCMASS + 1
             LPMASS = LPMASS + 1
-  
          ELSE IF (CARD(1:6) == 'CMASS3'  )  THEN
             LCMASS = LCMASS + 1
-  
          ELSE IF (CARD(1:6) == 'CMASS4'  )  THEN
             LCMASS = LCMASS + 1
             LPMASS = LPMASS + 1
@@ -305,6 +299,9 @@
          ELSE IF (CARD(1:4) == 'CROD'    )  THEN
             LELE  = LELE + 1
             LEDAT = LEDAT + MEDAT_CROD
+         !ELSE IF (CARD(1:5) == 'CTUBE'  )  THEN
+         !   LELE  = LELE + 1
+         !   LEDAT = LEDAT + MEDAT_CTUBE
   
          ELSE IF (CARD(1:6) == 'CSHEAR'  )  THEN
             LELE  = LELE + 1
@@ -333,7 +330,7 @@
             IF (NS_USERIN > LSUSERIN) THEN
                LSUSERIN = NS_USERIN
             ENDIF
-                                                           ! LEDAT has "+ 1" term since last record is NUM_BDY_DOF not in MEDAT0
+            ! LEDAT has "+ 1" term since last record is NUM_BDY_DOF not in MEDAT0
             LEDAT = LEDAT + MEDAT0_CUSERIN + 2*NG_USERIN + NS_USERIN +  1
 
          ELSE IF (CARD(1:5) == 'DEBUG'   )  THEN
@@ -341,6 +338,10 @@
  
          ELSE IF((CARD(1:5) == 'FORCE'   ) .OR. (CARD(1:6) == 'MOMENT'  )) THEN
             LFORCE = LFORCE +1
+         !ELSE IF((CARD(1:6) == 'FORCE1'   ) .OR. (CARD(1:6) == 'MOMENT1'  )) THEN
+         !   LFORCE = LFORCE +1
+         !ELSE IF((CARD(1:6) == 'FORCE2'   ) .OR. (CARD(1:6) == 'MOMENT2'  )) THEN
+         !   LFORCE = LFORCE +1
  
          ELSE IF (CARD(1:4) == 'GRAV'    )  THEN
             LGRAV = LGRAV + 1
@@ -382,13 +383,15 @@
  
          ELSE IF((CARD(1:5) == 'PBAR '   ) .OR. (CARD(1:5) == 'PBAR*'   ))  THEN
             LPBAR = LPBAR + 1
- 
          ELSE IF (CARD(1:5) == 'PBARL'   )  THEN
             LPBAR  = LPBAR  + 1
             NPBARL = NPBARL + 1
  
          ELSE IF (CARD(1:5) == 'PBEAM'   )  THEN
             LPBEAM = LPBEAM + 1
+         !ELSE IF (CARD(1:5) == 'PBEAML'   )  THEN
+         !   LPBEAM = LPBEAM + 1
+         !   LPBEAML = LPBEAML + 1
  
          ELSE IF (CARD(1:5) == 'PBUSH'   )  THEN
             LPBUSH = LPBUSH + 1
@@ -409,11 +412,13 @@
 
          ELSE IF (CARD(1:5) == 'PELAS'   )  THEN
             LPELAS = LPELAS + 1
- 
+
+         ELSE IF (CARD(1:6) == 'PLOAD1'  )  THEN
+            LPDAT  = LPDAT  + MPDAT_PLOAD1
+            LPLOAD = LPLOAD + 1
          ELSE IF (CARD(1:6) == 'PLOAD2'  )  THEN
             LPDAT  = LPDAT  + MPDAT_PLOAD2
             LPLOAD = LPLOAD + 1
- 
          ELSE IF (CARD(1:6) == 'PLOAD4'  )  THEN
             LPDAT  = LPDAT  + MPDAT_PLOAD4
             LPLOAD = LPLOAD + 1
@@ -427,6 +432,8 @@
 
          ELSE IF (CARD(1:4) == 'PROD'    )  THEN
             LPROD = LPROD + 1
+         !ELSE IF (CARD(1:5) == 'PTUBE'   )  THEN
+         !   LPTUBE = LPTUBE + 1
 
          ELSE IF (CARD(1:6) == 'PSHEAR'  )  THEN
             LPSHEAR = LPSHEAR + 1
