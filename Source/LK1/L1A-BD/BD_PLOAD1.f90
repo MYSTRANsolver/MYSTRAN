@@ -26,11 +26,11 @@
 
       SUBROUTINE BD_PLOAD1 ( CARD, CC_LOAD_FND )
 
-! Processes PLOAD1 Bulk Data Cards. Reads and checks data and then writes CARD to file LINK1Q for later processing
-
+      ! Processes PLOAD1 Bulk Data Cards. Reads and checks data and then writes CARD to file LINK1Q for later processing
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
       USE IOUNT1, ONLY                :  WRT_ERR, WRT_LOG, ERR, F04, F06, L1Q
-      USE SCONTR, ONLY                :  BLNK_SUB_NAM, FATAL_ERR, IERRFL, JCARD_LEN, JF, LPLOAD1, LSUB, NPCARD, NPLOAD, NPLOAD1, NSUB
+      USE SCONTR, ONLY                :  BLNK_SUB_NAM, FATAL_ERR, IERRFL, JCARD_LEN, JF, LSUB, NPCARD, NSUB
+      USE SCONTR, ONLY                :  LPLOAD, LPLOAD1, NPLOAD, NPLOAD1
       USE TIMDAT, ONLY                :  TSEC
       USE SUBR_BEGEND_LEVELS, ONLY    :  BD_PLOAD1_BEGEND
       USE MODEL_STUF, ONLY            :  PRESS_SIDS, SUBLOD
@@ -48,11 +48,12 @@
  
       CHARACTER(8*BYTE)               :: TYPE               ! The type flag
       CHARACTER(8*BYTE)               :: SCALE              ! The scale flag
+      INTEGER(LONG)                   :: SETID              ! Load set ID on PLOADi card
+      INTEGER(LONG)                   :: EID                ! Element ID
       REAL(DOUBLE)                    :: X1, X2             ! x locations
       REAL(DOUBLE)                    :: P1, P2             ! pressures/loads
       INTEGER(LONG)                   :: J                  ! DO loop index
       INTEGER(LONG)                   :: JERR               ! Error count
-      INTEGER(LONG)                   :: SETID              ! Load set ID on PLOADi card
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = BD_PLOAD1_BEGEND
  
 ! **********************************************************************************************************************************
@@ -90,8 +91,9 @@
       JERR = 0
       CALL MKJCARD ( SUBR_NAME, CARD, JCARD )
  
-      ! Check for overflow and increment NPLOAD
-      NPLOAD = NPLOAD+1
+      ! Check for overflow and increment NPLOAD1
+      NPLOAD1 = NPLOAD1+1
+      NPLOAD  = NPLOAD+1
 
       ! Check if load set ID on pressure card matches a Case Control request
       CALL I4FLD ( JCARD(2), JF(2), SETID )
@@ -116,17 +118,17 @@
       ENDIF
 
       ! Read X1, P1, X2, P2 values
-      CALL R8FLD ( JCARD(6), JF(6), X1)
-      CALL R8FLD ( JCARD(7), JF(7), P1)
-      CALL R8FLD ( JCARD(8), JF(8), X2)
-      CALL R8FLD ( JCARD(9), JF(9), P2)
+      CALL R8FLD(JCARD(6), JF(6), X1)
+      CALL R8FLD(JCARD(7), JF(7), P1)
+      CALL R8FLD(JCARD(8), JF(8), X2)
+      CALL R8FLD(JCARD(9), JF(9), P2)
 
       IF ((JCARD(1)(1:7) == 'PLOAD1 ') .OR. (JCARD(1)(1:7) == 'PLOAD1*')) THEN
          ! 4: TYPE (FX, FY, FZ, FXE, FYE, FZE,
          !          MX, MY, MZ, MXE, MYE, MZE)
          TYPE = ''
          TOKEN = JCARD(4)(1:8)                             ! Only send the 1st 8 chars of this JCARD. It has been left justified
-         CALL TOKCHK (TOKEN, TOKTYP)
+         CALL TOKCHK(TOKEN, TOKTYP)
          IF ((TOKTYP=='FX      ') .OR. (TOKTYP=='FY      ') .OR. (TOKTYP=='FZ      ') .OR.   &
              (TOKTYP=='FXE     ') .OR. (TOKTYP=='FYE     ') .OR. (TOKTYP=='FZE     ') .OR.   &
              (TOKTYP=='MX      ') .OR. (TOKTYP=='MY      ') .OR. (TOKTYP=='MZ      ') .OR.   &
@@ -152,9 +154,8 @@
              WRITE(F06,1129) JCARD(1), JCARD(2)  ! TODO: not sure on JCARD(1), JCARD(2)
          ENDIF
 
-         CALL BD_IMBEDDED_BLANK ( JCARD,2,3,4,5,6,7,8,9 )     ! Make sure that there are no imbedded blanks in fields 2-9
-         CALL CRDERR ( CARD )                                 ! CRDERR prints errors found when reading fields
-
+         CALL BD_IMBEDDED_BLANK(JCARD,2,3,4,5,6,7,8,9)     ! Make sure that there are no imbedded blanks in fields 2-9
+         CALL CRDERR(CARD)                                 ! CRDERR prints errors found when reading fields
       ENDIF
  
       ! Write data to file L1Q
@@ -175,6 +176,8 @@
 
 ! **********************************************************************************************************************************
  
+ 1129 FORMAT(' *ERROR  1129: INVALID PLOAD1 ',A, A)
+
  1152 FORMAT(' *ERROR  1152: ON ',A,A,' ELEM IDs MUST BE > 0')
 
  1163 FORMAT(' *ERROR  1163: PROGRAMMING ERROR IN SUBROUTINE ',A                                                                   &

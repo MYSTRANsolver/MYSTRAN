@@ -46,12 +46,11 @@
       USE MODEL_STUF, ONLY            :  FORMOM_SIDS, GRAV_SIDS, IOR3D_MAX, LOAD_SIDS,                                             &
                                          MPCSET, MPC_SIDS, MPCSIDS, MPCADD_SIDS, PBAR, RPCOMP, PRESS_SIDS, RFORCE_SIDS,            &
                                          RPBAR, SLOAD_SIDS, SPC_SIDS, SPC1_SIDS, SPCADD_SIDS, SPCSET, CC_EIGR_SID, SCNUM, SUBLOD
- 
 
       USE LOADB_USE_IFs
 
       IMPLICIT NONE
- 
+
       CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: SUBR_NAME   = 'LOADB'
       CHARACTER(LEN=BD_ENTRY_LEN)     :: CARD1              ! BD card (a small field card or the 1st half of a large field card)
       CHARACTER(LEN=BD_ENTRY_LEN)     :: CARD2              ! 2nd half of a large field card
@@ -77,7 +76,7 @@
       CHARACTER( 1*BYTE)              :: SID_ON_SPCADD_FND  ! 'Y' if B.D. SPC/SPC1 card w/ set ID on SPCADD card found
       CHARACTER( 1*BYTE)              :: SID_ON_LOAD_FND    ! 'Y' if B.D. FORCE/MOMENT/GRAV/PLOAD card w/ set ID on SPCADD card fnd
       CHARACTER( 7*BYTE), PARAMETER   :: END_CARD    = 'ENDDATA'
- 
+
       INTEGER(LONG)                   :: COMMENT_COL        ! Col on CARD where a comment begins (if one exists)
       INTEGER(LONG)                   :: I,J,K,L            ! DO loop indices
       INTEGER(LONG)                   :: IERR               ! Error indicator from subr FFIELD
@@ -90,7 +89,7 @@
       INTEGER(LONG)                   :: NS                 ! Actual num SPOINT'ss on CUSERIN
       INTEGER(LONG)                   :: NUM_QUADS          ! Number of quadrilateral elements
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = LOADB_BEGEND
- 
+
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
          CALL OURTIM
@@ -503,43 +502,46 @@ bdf:  DO
             CALL BD_PBARL    ( CARD, LARGE_FLD_INP, SEC_TYPE )
             IPBARL = IPBARL + 1
             PBARL_SEC_TYPES(IPBARL) = SEC_TYPE
- 
+
          ELSE IF (CARD(1:5) == 'PBEAM'   )  THEN
             CALL BD_PBEAM   ( CARD, LARGE_FLD_INP )
- 
+
          ELSE IF (CARD(1:5) == 'PBUSH'   )  THEN
             CALL BD_PBUSH   ( CARD, LARGE_FLD_INP )
 
          ELSE IF (CARD(1:5) == 'PCOMP'   )  THEN
             CALL BD_PCOMP   ( CARD, LARGE_FLD_INP )
- 
+
          ELSE IF (CARD(1:6) == 'PCOMP1'  )  THEN
             CALL BD_PCOMP1  ( CARD, LARGE_FLD_INP )
- 
+
          ELSE IF (CARD(1:5) == 'PELAS'   )  THEN
             CALL BD_PELAS   ( CARD )
- 
+
          ELSE IF (CARD(1:6) == 'PLOAD4'  )  THEN
             CALL BD_PLOAD4  ( CARD, CC_LOAD_FND )
- 
+
          ELSE IF (CARD(1:6) == 'PLOAD2'  )  THEN
             CALL BD_PLOAD2  ( CARD, CC_LOAD_FND )
- 
+
+         ELSE IF (CARD(1:6) == 'PLOAD1'  )  THEN
+            CALL BD_PLOAD1  ( CARD, CC_LOAD_FND )
+
          ELSE IF (CARD(1:6) == 'PLOTEL'  )  THEN
             CALL BD_PLOTEL  ( CARD )
- 
+
          ELSE IF (CARD(1:5) == 'PMASS'   )  THEN
             CALL BD_PMASS   ( CARD )
- 
+
          ELSE IF (CARD(1:4) == 'PROD'    )  THEN
             CALL BD_PROD    ( CARD )
-  
+
          ELSE IF (CARD(1:6) == 'PSHEAR'  )  THEN
             CALL BD_PSHEAR  ( CARD )
-  
+
          ELSE IF (CARD(1:6) == 'PSHELL'  )  THEN
             CALL BD_PSHEL   ( CARD, LARGE_FLD_INP )
-  
+
          ELSE IF (CARD(1:6) == 'PSOLID'  )  THEN
             CALL BD_PSOLID  ( CARD, IOR3D )
             IF (IOR3D > IOR3D_MAX) THEN
