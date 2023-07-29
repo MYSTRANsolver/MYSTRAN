@@ -73,8 +73,7 @@
       ENDIF
 
 ! **********************************************************************************************************************************
-! Determine element thermal loads. 
- 
+      ! Determine element thermal loads.
       IF (OPT(2) == 'Y') THEN
          DO J=1,NTSUB
             TBAR = (DT(1,J) + DT(2,J))/TWO
@@ -85,8 +84,7 @@
       ENDIF
   
 ! **********************************************************************************************************************************
-! Calculate SE matrix (2 x 12) for stress data recovery.
- 
+      ! Calculate SE matrix (2 x 12) for stress data recovery.
       IF ((OPT(3) == 'Y') .OR. (OPT(6) == 'Y')) THEN
          SE1(1, 1,1) = -E/L
          SE1(1, 7,1) =  E/L
@@ -99,8 +97,7 @@
       ENDIF
   
 ! **********************************************************************************************************************************
-! Calculate element stiffness matrix KE(12,12).
- 
+      ! Calculate element stiffness matrix KE(12,12).
       IF ((OPT(4) == 'Y') .OR. (OPT(6) == 'Y')) THEN
          C01 = AREA*E/L
          C02 = JTOR*G/L
@@ -115,8 +112,7 @@
       ENDIF
   
 ! **********************************************************************************************************************************
-! Calculate element differential stiffness matrix KED(12,12).
- 
+      ! Calculate element differential stiffness matrix KED(12,12).
       IF (OPT(6) == 'Y') THEN
 
          CALL ELMDIS

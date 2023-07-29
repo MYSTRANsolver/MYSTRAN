@@ -315,8 +315,7 @@
       ENDIF
  
 ! **********************************************************************************************************************************
-! For BUSH, get coord systems
-
+      ! For BUSH, get coord systems
       IF (TYPE == 'BUSH    ') THEN
          BUSH_CID  = EDAT(EPNTK+6)
          BUSH_OCID = EDAT(EPNTK+7)
@@ -374,20 +373,20 @@
          ENDDO 
 
       ELSE IF ((TYPE(1:5) == 'TRIA3') .OR. (TYPE(1:5) == 'QUAD4')) THEN
-                                                           ! For elems that not composites do EPROP in subr SHELL_ABD_MATRICES)
+                                                           ! For elems that aren't composites, do EPROP in subr SHELL_ABD_MATRICES
          IF (PCOMP_PROPS == 'N') THEN                      ! Shell properties are in array PSHELL (except maybe membrane thickness)
 
-            EPROP( 2) = RPSHEL(INTL_PID, 2)                ! 12*IB/(TM^3)
+            EPROP(2) = RPSHEL(INTL_PID, 2)                 ! 12*IB/(TM^3)
 
-            IF (PSHEL(INTL_PID,6) == 0) THEN               ! Use TS/TM from PSHEL card for EPROP( 3)
-               EPROP( 3) = RPSHEL(INTL_PID, 3)
+            IF (PSHEL(INTL_PID,6) == 0) THEN               ! Use TS/TM from PSHEL card for EPROP(3)
+               EPROP(3) = RPSHEL(INTL_PID, 3)
             ELSE                                           ! Use default TS/TM (=5/6 unless PARAM TSTM card reset this)
-               EPROP( 3) = TSTM_DEF
+               EPROP(3) = TSTM_DEF
             ENDIF
 
-            EPROP( 4) = RPSHEL(INTL_PID, 4)                ! NSM
-            EPROP( 5) = RPSHEL(INTL_PID, 5)                ! ZS(1)
-            EPROP( 6) = RPSHEL(INTL_PID, 6)                ! ZS(2)
+            EPROP(4) = RPSHEL(INTL_PID, 4)                 ! NSM
+            EPROP(5) = RPSHEL(INTL_PID, 5)                 ! ZS(1)
+            EPROP(6) = RPSHEL(INTL_PID, 6)                 ! ZS(2)
 
             THICK_AVG = ZERO                               ! DELTA locates where thickness key is in EDAT (rel to EID) for plates
             IF (TYPE(1:5) == 'QUAD4') THEN
@@ -406,18 +405,21 @@
                   EPROP(6+I) = PLATETHICK(IPNTR+I-1)
                   THICK_AVG  = THICK_AVG + PLATETHICK(IPNTR+I-1)/ELGP
                ENDDO
-               IF (DABS(EPROP(5)) == ZERO) THEN            ! Since thick was defined on conn entry, reset Z1,2 if they were zero
+               IF (DABS(EPROP(5)) == ZERO) THEN
+                  ! Since thick was defined on conn entry, reset Z1,2 if they were zero
                   EPROP(5) = -THICK_AVG/TWO
                ENDIF
                IF (DABS(EPROP(6)) == ZERO) THEN
                   EPROP(6) =  THICK_AVG/TWO
                ENDIF
-            ELSE                                           ! Membrane thickness was defined on PSHELL
+            ELSE
+               ! Membrane thickness was defined on PSHELL
                THICK_AVG = RPSHEL(INTL_PID,1)
             ENDIF
 
             EPROP(1) = THICK_AVG
-            IF (DABS(THICK_AVG) < DABS(EPS1)) THEN         ! Membrane thickness cannot be zero
+            IF (DABS(THICK_AVG) < DABS(EPS1)) THEN
+               ! Membrane thickness cannot be zero
                WRITE(ERR,1949) TYPE, EID, THICK_AVG
                WRITE(F06,1949) TYPE, EID, THICK_AVG
                NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
@@ -432,19 +434,17 @@
          DO I=1,MRPUSER1
             EPROP(I) = RPUSER1(INTL_PID,I)
          ENDDO 
-
       ENDIF
 
-! Generate ISOLID array of solid element integer data (matl coord system, integration order, stress location, scheme)
-
+      ! Generate ISOLID array of solid element integer data
+      ! (matl coord system, integration order, stress location, scheme)
       IF ((TYPE(1:4) == 'HEXA') .OR. (TYPE(1:5) == 'PENTA') .OR. (TYPE(1:5) == 'TETRA')) THEN
          DO I=1,MPSOLID
             ISOLID(I) = PSOLID(INTL_PID,I)
          ENDDO
       ENDIF
 
-! Check solid element integration order for validity for this element type
-
+      ! Check solid element integration order for validity for this element type
       IF (TYPE == 'HEXA8'  ) THEN
          IF (ISOLID(4) == 0) THEN
             ISOLID(4) = 2
@@ -482,9 +482,10 @@
       ENDIF
 
 ! **********************************************************************************************************************************
-! Generate EMAT matl props for this elem.  Shell elems with PCOMP_PROPS are handled in subr SHELL_ABD_MATRICES.
-! The internal matl ID is in the PROD, PBAR, PBEAM, PSHEL, etc, data sets. There are no matl props for BUSH
-
+     ! Generate EMAT matl props for this elem.  Shell elems with PCOMP_PROPS
+     ! are handled in subr SHELL_ABD_MATRICES.
+     ! The internal matl ID is in the PROD, PBAR, PBEAM, PSHEL, etc, data sets. 
+     ! There are no matl props for BUSH
       DO I=1,MEMATR
          DO J=1,MEMATC
             EMAT(I,J) = ZERO
@@ -520,7 +521,6 @@
          NUMMAT = 1
 
       ELSE IF ((TYPE(1:4) == 'HEXA') .OR. (TYPE(1:5) == 'PENTA') .OR. (TYPE(1:5) == 'TETRA')) THEN
-
          INTL_MID(1) = PSOLID(INTL_PID,2)
          MTRL_TYPE(1) = MATL(INTL_MID(1),2)                ! Must be MAT1 or MAT9 for solids
          IF ((MTRL_TYPE(1) /= 1) .AND. (MTRL_TYPE(1) /= 9)) THEN
@@ -532,7 +532,6 @@
          NUMMAT = 1
 
       ELSE IF (TYPE == 'ROD     ') THEN
-
          INTL_MID(1) = PROD(INTL_PID,2)
          MTRL_TYPE(1) = MATL(INTL_MID(1),2)
          IF (MTRL_TYPE(1) /= 1) THEN                       ! Must be MAT1 for ROD
@@ -544,7 +543,6 @@
          NUMMAT = 1
 
       ELSE IF (TYPE == 'SHEAR   ') THEN
-
          INTL_MID(1)  = PSHEAR(INTL_PID,2)
          MTRL_TYPE(1) = MATL(INTL_MID(1),2)
          IF (MTRL_TYPE(1) /= 1) THEN                       ! Must be MAT1 for SHEAR
@@ -556,7 +554,7 @@
          NUMMAT = 1
 
       ELSE IF ((TYPE(1:5) == 'TRIA3') .OR. (TYPE(1:5) == 'QUAD4')) THEN
-                                                           ! For elems that are not composites do EMAT in subr SHELL_ABD_MATRICES)
+         ! For elems that are not composites do EMAT in subr SHELL_ABD_MATRICES)
          IF (PCOMP_PROPS == 'N') THEN
 
             INTL_MID(1) = PSHEL(INTL_PID,2)
@@ -580,7 +578,6 @@
             ENDIF
 
             NUMMAT = 4
-
             DO I=1,NUMMAT                                  ! Must be MAT1 or MAT8 for plate elems
                IF (MTRL_TYPE(I) /= 0) THEN                 ! as long as a material was defined
                   IF ((MTRL_TYPE(I) /= 1) .AND. (MTRL_TYPE(I) /= 2) .AND. (MTRL_TYPE(I) /= 8)) THEN
@@ -595,18 +592,16 @@
          ENDIF
 
       ELSE IF (TYPE == 'USER1   ') THEN
+         INTL_MID(1)  = PUSER1(INTL_PID, 2)
+         MTRL_TYPE(1) = MATL(INTL_MID(1), 2)
 
-         INTL_MID(1)  = PUSER1(INTL_PID,2)
-         MTRL_TYPE(1) = MATL(INTL_MID(1),2)
+         INTL_MID(2)  = PUSER1(INTL_PID, 3)
+         MTRL_TYPE(2) = MATL(INTL_MID(2), 2)
 
-         INTL_MID(2)  = PUSER1(INTL_PID,3)
-         MTRL_TYPE(2) = MATL(INTL_MID(2),2)
-
-         INTL_MID(3)  = PUSER1(INTL_PID,4)
-         MTRL_TYPE(3) = MATL(INTL_MID(3),2)
+         INTL_MID(3)  = PUSER1(INTL_PID, 4)
+         MTRL_TYPE(3) = MATL(INTL_MID(3), 2)
 
          NUMMAT = 3
-
          DO I=1,NUMMAT                                     ! Must be MAT1 or MAT8 for USER1 elements
             IF ((MTRL_TYPE(I) /= 1) .AND. (MTRL_TYPE(I) /= 8)) THEN
                WRITE(ERR,1920) TYPE, EID
@@ -629,9 +624,8 @@
          ENDDO
       ENDIF
 
-! Set transverse shear alloawbles to same as in-plane shear allowables for non PCOMP shells. The transverse shear allowables go
-! in rows 19 and 20 of EMAT
-
+      ! Set transverse shear alloawbles to same as in-plane shear allowables for non PCOMP shells.
+      ! The transverse shear allowables go in rows 19 and 20 of EMAT
       IF ((TYPE(1:5) == 'TRIA3') .OR. (TYPE(1:5) == 'QUAD4')) THEN
          if (PCOMP_PROPS == 'N') THEN
             DO I=1,NUMMAT
@@ -650,22 +644,20 @@
       ENDIF
 
 ! **********************************************************************************************************************************
-! Process pin flag data and create array of elem DOF numbers for the DOF's that are pinned. The input pin flag data
-! is integer for each G.P. and is stored in EDAT. Call this IPIN(I) for each G.P. and convert this to a list of (up
-! to 6 times the no.of elem G.P.'s) DOF numbers for the pinned DOF's. Call this list, DOFPIN.
+      ! Process pin flag data and create array of elem DOF numbers for the DOF's that are pinned.
+      ! The input pin flag data is integer for each G.P. and is stored in EDAT.
+      ! Call this IPIN(I) for each G.P. and convert this to a list of (up to 6 times the
+      ! number of elem G.P.'s) DOF numbers for the pinned DOF's. Call this list, DOFPIN.
 
       DO I=1,ELDOF
          DOFPIN(I) = 0
       ENDDO 
 
-! Process pin flag data in EDAT
-
+      ! Process pin flag data in EDAT
       IF ((TYPE == 'BAR     ') .OR. (TYPE == 'BEAM    ')) THEN
 
          NFLAG = 0
-
-         IF (ELGP > 2) THEN                                ! IPIN is only dimensioned to 2 so set error
-
+         IF (ELGP > 2) THEN   ! IPIN is only dimensioned to 2 so set error
             WRITE(ERR,1953) SUBR_NAME, ELGP,TYPE
             WRITE(F06,1953) SUBR_NAME, ELGP,TYPE
             NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
@@ -700,11 +692,12 @@
       ENDIF
 
 ! **********************************************************************************************************************************
-! Get offset data for this elem. This data is in the BAROFF array for BAR, BEAM elems and in BUSHOFF for BUSH elements
-! and in RPSHEL array for shell elems. For BUSH, we need ELEM_LEN_12 since the offsets are fractions of this length
+      ! Get offset data for this elem. This data is in the BAROFF array for
+      ! BAR, BEAM elems and in BUSHOFF for BUSH elements and in RPSHEL array
+      ! for shell elems. For BUSH, we need ELEM_LEN_12 since the offsets are
+      ! fractions of this length
 
-! Distance between grids 1 and 2 is:
-
+      ! Distance between grids 1 and 2 is:
       ELEM_LEN_12 = DSQRT( (XEB(2,1) - XEB(1,1))*(XEB(2,1) - XEB(1,1))                                                             &
                          + (XEB(2,2) - XEB(1,2))*(XEB(2,2) - XEB(1,2))                                                             &
                          + (XEB(2,3) - XEB(1,3))*(XEB(2,3) - XEB(1,3)) )
@@ -716,8 +709,7 @@
             ENDDO 
          ENDDO 
 
-         IF      ((TYPE == 'BAR     ') .OR. (TYPE == 'BEAM    ')) THEN
-
+         IF ((TYPE == 'BAR     ') .OR. (TYPE == 'BEAM    ')) THEN
             IROW = EDAT(EPNTK + 7)
             IF (IROW > 0) THEN
                EOFF(INT_ELEM_ID) = 'Y'
@@ -736,8 +728,8 @@
             IF (IROW > 0) THEN
                EOFF(INT_ELEM_ID) = 'Y'
 
-                  IF(BUSH_OCID == -1) THEN                 ! Offsets are along line GA-GB and use only S
-
+                  IF(BUSH_OCID == -1) THEN
+                     ! Offsets are along line GA-GB and use only S
                      OFFDIS(1,1) = ELEM_LEN_12*BUSHOFF(IROW,1)
                      OFFDIS(1,2) = ELEM_LEN_12*BUSHOFF(IROW,2)
                      OFFDIS(1,3) = ELEM_LEN_12*BUSHOFF(IROW,3)
@@ -746,8 +738,8 @@
                      OFFDIS(2,2) = ELEM_LEN_12*BUSHOFF(IROW,2)
                      OFFDIS(2,3) = ELEM_LEN_12*BUSHOFF(IROW,3)
 
-                  ELSE                                     ! Offsets are 3 dimensional and we can't get OFFDIS for grid GB yet
-
+                  ELSE
+                     ! Offsets are 3 dimensional and we can't get OFFDIS for grid GB yet
                      OFFDIS(1,1) = BUSHOFF(IROW,1)
                      OFFDIS(1,2) = BUSHOFF(IROW,2)
                      OFFDIS(1,3) = BUSHOFF(IROW,3)
@@ -755,7 +747,6 @@
                      OFFDIS(2,1) = OFFDIS(1,1)             ! So just load grid GA values into OFFDIS for grid GB temporarily
                      OFFDIS(2,2) = OFFDIS(1,2)
                      OFFDIS(2,3) = OFFDIS(1,3)
-
                   ENDIF
 
 
@@ -818,8 +809,7 @@
 
          ENDIF
 
-! Determine which grids have finite offsets for this element
-
+         ! Determine which grids have finite offsets for this element
          DO I=1,ELGP
             OFFSET(I) = 'N'
          ENDDO 
@@ -836,10 +826,9 @@
       ENDIF
 
 ! **********************************************************************************************************************************
-! For ELAS elems form the list of G.P. DOF no's that the elem connects to. This is data from the CELAS card and is stored in EDAT
-
+      ! For ELAS elems form the list of G.P. DOF no's that the elem connects to.
+      ! This is data from the CELAS card and is stored in EDAT
       IF ((TYPE == 'ELAS1   ') .OR. (TYPE == 'ELAS2   ')) THEN
-
          DO I=1,2
             ELAS_COMP(I) = 0
          ENDDO 
@@ -865,17 +854,14 @@
          ENDIF
 
       ELSE IF ((TYPE == 'ELAS3   ') .OR. (TYPE == 'ELAS4   ')) THEN
-
          ELAS_COMP(1) = 1                                  ! These are the components at the SPOINT, not the cols of the KE matrix
          ELAS_COMP(2) = 1                                  ! (for cols of the KE matrix, see subr ELAS1, they depend on ELAS_COMP)
 
       ENDIF
 
 ! **********************************************************************************************************************************
-! Generate USERIN specific data
-
+      ! Generate USERIN specific data
       IF (TYPE == 'USERIN') THEN
-
          USERIN_NUM_ACT_GRDS  = EDAT(EPNTK+2)
          USERIN_NUM_SPOINTS   = EDAT(EPNTK+3)
          USERIN_CID0          = EDAT(EPNTK+4)
@@ -890,7 +876,8 @@
          USERIN_MASS_MAT_NAME = USERIN_MAT_NAMES(INTL_PID,2)
          USERIN_LOAD_MAT_NAME = USERIN_MAT_NAMES(INTL_PID,3)
          USERIN_RBM0_MAT_NAME = USERIN_MAT_NAMES(INTL_PID,4)
-                                                           ! Calc array of grid num, comp num for the DOF's that elem connects to   
+
+         ! Calc array of grid num, comp num for the DOF's that elem connects to   
          CALL DEALLOCATE_MODEL_STUF ( 'USERIN_ACT_GRDS, USERIN_ACT_COMPS' )
          CALL ALLOCATE_MODEL_STUF   ( 'USERIN_ACT_GRDS, USERIN_ACT_COMPS', SUBR_NAME )
          DO I=1,USERIN_NUM_ACT_GRDS
@@ -946,14 +933,6 @@
 
  1960 FORMAT(' *ERROR  1960: ',A,I8,' MUST HAVE A CID COORD SYSTEM (FIELD 9 OF CBUSH BULK DATA ENTRY) DEFINED WHEN THE 2 GRIDS ARE'&
                                    ,' COINCIDENT. HOWEVER, CID = ',I8)
-
-
-
-
-
-
-
-
 
 
 99978 format(' Element grid thicknesses for ',a,i8,' (pointer, avg thickness, grid thicknesses)',/,i8,20(1es14.6))

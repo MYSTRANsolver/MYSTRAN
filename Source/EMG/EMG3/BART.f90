@@ -159,8 +159,7 @@
 
       IF (DEBUG(203) > 0) CALL DEBUG_BART ( 1 )
 
-! Generate KE 
-
+      ! Generate KE
       KE( 1, 1) = C1
       KE( 1, 7) =-C1
 
@@ -198,16 +197,17 @@
       KE(11,11) = C4
 
       KE(12,12) = C8
- 
-      DO I=2,12                                            ! Set lower triangular partition of KE using symmetry
+
+      ! Set lower triangular partition of KE using symmetry
+      DO I=2,12
          DO J=1,I-1
             KE(I,J) = KE(J,I)
          ENDDO
       ENDDO
 
-! Process Pin Flags. NUM_PFLAG_DOFS is a count of the total number of DOF pin flagged. DOFPIN(i) generated in ELMDAT is an
-! integer array of the DOF numbers of the pin flagged DOF.
-  
+      ! Process Pin Flags. NUM_PFLAG_DOFS is a count of the total number of
+      ! DOF pin flagged. DOFPIN(i) generated in ELMDAT is an integer array
+      ! of the DOF numbers of the pin flagged DOF.
       NUM_PFLAG_DOFS = 0
       DO I=1,12
          IF (DOFPIN(I) > 0) THEN
@@ -217,30 +217,31 @@
       IF (NUM_PFLAG_DOFS /= 0) THEN
          CALL PINFLG ( NUM_PFLAG_DOFS )
       ENDIF
- 
-      DO I=1,6                                             ! Upper left partition of KE is KAA. Need this for calc'ing PTE, SEi
+
+      ! Upper left partition of KE is KAA. Need this for calc'ing PTE, SEi
+      DO I=1,6
          DO J=1,6
             KAA(I,J) = KE(I,J)
          ENDDO 
       ENDDO 
 
-      DO I=1,6                                             ! Upper right partition of KE is KAB. Need this for calculating SEi
+      ! ! Upper right partition of KE is KAB. Need this for calculating SEi
+      DO I=1,6
          DO J=7,12
             KAB(I,J-6) = KE(I,J)
          ENDDO 
       ENDDO 
 
-      DO I=7,12                                            ! Lower left partition of KE is KBA. Need this for calculating PTE
+      ! Lower left partition of KE is KBA. Need this for calculating PTE
+      DO I=7,12
          DO J=1,6
             KBA(I-6,J) = KE(I,J)
          ENDDO 
       ENDDO 
 
-! The following matrices are needed if either OPT(2) or OPT(3) or OPT(6) is called for
-
+      ! The following matrices are needed if either OPT(2) or OPT(3) or OPT(6) is called for
       IF ((OPT(2) == 'Y') .OR. (OPT(3) == 'Y') .OR. (OPT(6) == 'Y')) THEN
-         IF (NTSUB > 0) THEN                          
-
+         IF (NTSUB > 0) THEN
             DO J=1,NTSUB
                TBAR        = (DT(1,J) + DT(2,J))/TWO
                TPRIME(1,J) = TBAR - TREF
@@ -249,14 +250,13 @@
                TPRIME(4,J) = DT(5,J)
                TPRIME(5,J) = DT(6,J)
             ENDDO
-
          ENDIF
 
       ENDIF
 
 ! **********************************************************************************************************************************
-! Determine element thermal loads. 
- 
+! Determine element thermal loads.
+
 !     IF ((OPT(2) == 'Y') .OR. (OPT(6) == 'Y')) THEN
 
          IF (NTSUB > 0) THEN
@@ -385,8 +385,7 @@
 !     ENDIF
 
 ! **********************************************************************************************************************************
-! Calculate linear differential stiffness matrix
-
+      ! Calculate linear differential stiffness matrix
       IF ((OPT(6) == 'Y') .AND. (LOAD_ISTEP > 1)) THEN
 
          CALL ELMDIS
@@ -475,8 +474,7 @@
 
       ENDIF
 
-! If this is DIFFEREN or NLSTATIC, add linear and differential stiffness matrices
-
+      ! If this is DIFFEREN or NLSTATIC, add linear and differential stiffness matrices
       IF ((SOL_NAME(1:8) == 'DIFFEREN') .OR. (SOL_NAME(1:8) == 'NLSTATIC')) THEN
 
          DO I=1,ELDOF

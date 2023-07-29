@@ -25,10 +25,11 @@
 ! End MIT license text.                                                                                      
  
       SUBROUTINE ELMGM1 ( INT_ELEM_ID, WRITE_WARN )
- 
-! Calculates and checks some elem geometry for ROD, BAR, BEAM, triangles and provides a transformation matrix (TE) to transform the
-! element stiffness matrix in the element system to the basic coordinate system. Calculates grid point coords in local coord system.
-  
+
+      ! Calculates and checks some elem geometry for ROD, BAR, BEAM, triangles and provides a
+      ! transformation matrix (TE) to transform the element stiffness matrix in the element
+      ! system to the basic coordinate system. Calculates grid point coords in local coord system.
+
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
       USE IOUNT1, ONLY                :  WRT_ERR, WRT_LOG, ERR, F04, F06
       USE SCONTR, ONLY                :  BLNK_SUB_NAM, MELGP, MOFFSET, NCORD, FATAL_ERR
@@ -39,11 +40,11 @@
       USE PARAMS, ONLY                :  EPSIL
       USE MODEL_STUF, ONLY            :  BGRID, CAN_ELEM_TYPE_OFFSET, CORD, EID, ELEM_LEN_12, ELEM_LEN_AB, ELGP,NUM_EMG_FATAL_ERRS,&
                                          EOFF, GRID, OFFDIS, OFFDIS_O, OFFDIS_B, OFFDIS_G, RCORD, TE, TE_IDENT, TYPE, XEB, XEL
- 
+
       USE ELMGM1_USE_IFs
 
       IMPLICIT NONE
- 
+
       CHARACTER( 1*BYTE)              :: ID(3)              ! Used in deciding whether TE_IDENT = 'Y' or 'N'
       CHARACTER( 5*BYTE)              :: SORT_ORDER         ! Order in which the VX(i) have been sorted in subr CALC_VEC_SORT_ORDER
       CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: SUBR_NAME = 'ELMGM1'
@@ -88,27 +89,25 @@
 ! **********************************************************************************************************************************
       EPS1 = EPSIL(1)
  
-! Initialize
-  
+      ! Initialize
       DO I=1,MELGP
         DO J=1,3
            XEL(I,J) = ZERO
-        ENDDO 
+        ENDDO
       ENDDO 
- 
+
       DO I=1,3
         DO J=1,3
            TE(I,J) = ZERO
-        ENDDO 
-      ENDDO 
- 
+        ENDDO
+      ENDDO
+
       DO I=1,3
          VX(I) = ZERO
       ENDDO
 
 ! ----------------------------------------------------------------------------------------------------------------------------------
-! Make sure the number of elem grids is not larger than OFFDIS is dimensioned for
-
+      ! Make sure the number of elem grids is not larger than OFFDIS is dimensioned for
       IF ((CAN_ELEM_TYPE_OFFSET == 'Y') .AND. (ELGP > MOFFSET)) THEN
          WRITE(ERR,1954) SUBR_NAME, MOFFSET, ELGP, TYPE
          WRITE(F06,1954) SUBR_NAME, MOFFSET, ELGP, TYPE
@@ -116,8 +115,7 @@
          FATAL_ERR = FATAL_ERR + 1
       ENDIF
 
-! Init OFFDIS_B. Some elements will not require the offsets transformed to basic
-
+      ! Init OFFDIS_B. Some elements will not require the offsets transformed to basic
       IF ((TYPE == 'BAR     ') .OR. (TYPE == 'BEAM    ') .OR. (TYPE == 'ROD     ')) THEN
          DO I=1,ELGP
             DO J=1,3
@@ -127,11 +125,10 @@
       ENDIF
 
 ! ----------------------------------------------------------------------------------------------------------------------------------
-! If there are offsets that are specified in global coords, calculate the value of the offsets in basic
-! coords so that they can be used below to find the element axes in basic coords
-
+      ! If there are offsets that are specified in global coords,
+      ! calculate the value of the offsets in basic coords so that
+      ! they can be used below to find the element axes in basic coords
       IF ((TYPE == 'BAR     ') .OR. (TYPE == 'BEAM    ') .OR. (TYPE == 'ROD     ')) THEN
-
          IF (EOFF(INT_ELEM_ID) == 'Y') THEN
             DO I=1,ELGP
                ACID_G = GRID(BGRID(I),3)                   ! Get global coord sys for this grid
@@ -144,17 +141,20 @@
                      ENDIF
                   ENDDO   
 
-                  CALL GEN_T0L ( BGRID(I), ICID, THETAD, PHID, T0G )
+                  CALL GEN_T0L(BGRID(I), ICID, THETAD, PHID, T0G)
                   DO J=1,3
                      OFFDIS_B(I,J) = T0G(J,1)*OFFDIS(I,1) + T0G(J,2)*OFFDIS(I,2) + T0G(J,3)*OFFDIS(I,3) 
                   ENDDO   
-               ELSE                                        ! Offset was in basic coords
+               ELSE
+                  ! Offset was in basic coords
                   DO J=1,3
                      OFFDIS_B(I,J) = OFFDIS(I,J)
                   ENDDO   
                ENDIF
             ENDDO
-         ELSE                                              ! There are no offsets so set OFFDIS_B to zero
+         ELSE
+            ! There are no offsets so set OFFDIS_B to zero
+            ! TODO: why do we need to do this?  We already initialized OFFDIS_B to 0, right?
             DO I=1,ELGP
                DO J=1,3
                   OFFDIS_B(I,J) = ZERO
@@ -165,8 +165,7 @@
       ENDIF
 
 ! ----------------------------------------------------------------------------------------------------------------------------------
-! Calculate a vector between ends of the element in basic coords (not between grids if there are offsets). 
-
+      ! Calculate a vector between ends of the element in basic coords (not between grids if there are offsets).
       IF ((TYPE == 'BAR     ') .OR. (TYPE == 'BEAM    ') .OR. (TYPE == 'ROD     ')) THEN
          VX(1) = ( XEB(2,1) + OFFDIS_B(2,1) ) - ( XEB(1,1) + OFFDIS_B(1,1) )
          VX(2) = ( XEB(2,2) + OFFDIS_B(2,2) ) - ( XEB(1,2) + OFFDIS_B(1,2) )
@@ -180,12 +179,10 @@
       LX(2) = VX(2)
       LX(3) = VX(3)
 
-! Length of element between ends is:
-
+      ! Length of element between ends is:
       ELEM_LEN_AB = DSQRT( LX(1)*LX(1) + LX(2)*LX(2) + LX(3)*LX(3) )
 
-! If ELEM_LEN_AB is equal to zero write error and return.
-
+      ! If ELEM_LEN_AB is equal to zero write error and return.
       IF (ELEM_LEN_AB <= EPS1) THEN
          WRITE(ERR,1904) TYPE, EID, ELEM_LEN_AB
          WRITE(F06,1904) TYPE, EID, ELEM_LEN_AB
@@ -195,15 +192,15 @@
       ENDIF
 
 ! ----------------------------------------------------------------------------------------------------------------------------------
-! Unit vector in element X direction
-
+      ! Unit vector in element X direction
       DO I=1,3
-         TE(1,I) = VX(I)/ELEM_LEN_AB
+         TE(1,I) = VX(I) / ELEM_LEN_AB
       ENDDO
 
 ! ----------------------------------------------------------------------------------------------------------------------------------
-! Calculate y and z axes for ROD (since it has no v-vector to help). The y-elem and z-elem axes will be calculated based on the
-! procedure referenced below from the internet ("Some Basic Vector Operations In IDL")
+      ! Calculate y and z axes for ROD (since it has no v-vector to help).
+      ! The y-elem and z-elem axes will be calculated based on the procedure
+      ! referenced below from the internet ("Some Basic Vector Operations In IDL")
 
       IF (TYPE == 'ROD     ') THEN                         ! NB *** new 09/13/21
 
@@ -224,9 +221,8 @@
          VY(I3_OUT(1)) =  ZERO                             !  (a) Component of VY in direction of min VX is set to zero
          VY(I3_OUT(2)) =  VX(I3_OUT(3))                    !  (b) Other 2 VY(i) are corresponding VX(i) switched with one x(-1)
          VY(I3_OUT(3)) = -VX(I3_OUT(2))
-         MAGY  = DSQRT(VY(1)*VY(1) + VY(2)*VY(2) + VY(3)*VY(3))
 
-
+         MAGY = DSQRT(VY(1)*VY(1) + VY(2)*VY(2) + VY(3)*VY(3))
          IF (DABS(MAGY) < EPS1) THEN
             FATAL_ERR = FATAL_ERR + 1
             NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
@@ -239,10 +235,9 @@
             TE(2,I) = VY(I)/MAGY
          ENDDO
 
-         CALL CROSS ( VX, VY, VZ )
+         CALL CROSS(VX, VY, VZ)
 
-         MAGZ  = DSQRT(VZ(1)*VZ(1) + VZ(2)*VZ(2) + VZ(3)*VZ(3))
-
+         MAGZ = DSQRT(VZ(1)*VZ(1) + VZ(2)*VZ(2) + VZ(3)*VZ(3))
          IF (DABS(MAGZ) < EPS1) THEN
             FATAL_ERR = FATAL_ERR + 1
             NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
@@ -255,8 +250,7 @@
             TE(3,I) = VZ(I)/MAGZ
          ENDDO
 
-! Check if TE is the identity matrix and set a flag
-
+         ! Check if TE is the identity matrix and set a flag
          TE_IDENT = 'N'
          DO I=1,3
             ID(I) = 'N'
@@ -278,22 +272,27 @@
 ! Calculate remainder of TE for elements other than ROD
  
 ! Calculate V13, vector from G.P.-1 to G.P.-3. For BAR, BEAM, BUDH, USER1 the V13 vector is the v vector = XEB(ELGP+1,i)
+
+! V13 = XEB(ROWNUM) - XEB
+! VZ = CROSS(VX, V13)
+! VY = CROSS(VZ, VX)
  
 begn: IF (TYPE /= 'ROD     ') THEN
     
          IF ((TYPE == 'BAR     ') .OR. (TYPE == 'BEAM    ') .OR. (TYPE == 'USER1   ')) THEN
             ROWNUM = ELGP + 1
-         ELSE      
+         ELSE
             ROWNUM = 3
          ENDIF
-         DO I=1,3  
+         DO I=1,3
             V13(I) = XEB(ROWNUM,I) - XEB(1,I)
          ENDDO 
- 
-! Calculate VX x V13 and unit vector in elem z dir. (Col. 3 of TE). If MAGZ is equal to zero, then vector from G.P. 1
-! to G.P. 3 is parallel to vector from G.P.-1 to G.P.-2 so write error and quit.
- 
-         CALL CROSS ( VX, V13, VZ )
+
+        ! Calculate VX x V13 and unit vector in elem z dir. (Col. 3 of TE).
+        ! If MAGZ is equal to zero, then vector from G.P. 1
+        ! to G.P. 3 is parallel to vector from G.P.-1 to G.P.-2 so write error and quit.
+         CALL CROSS(VX, V13, VZ)
+
          MAGZ = DSQRT(VZ(1)*VZ(1) + VZ(2)*VZ(2) + VZ(3)*VZ(3))
          IF (MAGZ <=  EPS1) THEN
             IF ((TYPE == 'BAR     ')  .OR. (TYPE == 'BEAM    ')) THEN
@@ -311,10 +310,12 @@ begn: IF (TYPE /= 'ROD     ') THEN
             ENDIF
          ENDIF
          DO I=1,3
-            TE(3,I) = VZ(I)/MAGZ
+            TE(3,I) = VZ(I) / MAGZ
          ENDDO
 
-         CALL CROSS ( VZ, VX, VY )                      ! Calc unit vector in Ye dir. (from VZ (cross) VX): If MAGY = 0 quit
+         ! Calc unit vector in Ye dir. (from VZ (cross) VX): If MAGY = 0 quit
+         CALL CROSS(VZ, VX, VY)
+
          MAGY = DSQRT(VY(1)*VY(1) + VY(2)*VY(2) + VY(3)*VY(3))
          IF(MAGY <= EPS1) THEN
             WRITE(ERR,1912) EID,TYPE
@@ -324,9 +325,10 @@ begn: IF (TYPE /= 'ROD     ') THEN
             RETURN
          ENDIF
          DO I=1,3
-            TE(2,I) = VY(I)/MAGY
-         ENDDO 
-                                                       ! Now set TE_IDENT to be 'Y' if TE is an identity matrix. 
+            TE(2,I) = VY(I) / MAGY
+         ENDDO
+
+         ! Now set TE_IDENT to be 'Y' if TE is an identity matrix. 
          TE_IDENT = 'N'
          DO I=1,3
             ID(I) = 'N'
@@ -346,8 +348,7 @@ begn: IF (TYPE /= 'ROD     ') THEN
 
 
 ! ----------------------------------------------------------------------------------------------------------------------------------
-! Use TE to get array of elem coords in local system.
- 
+      ! Use TE to get array of elem coords in local system.
       XEL(1,1) = ZERO
       XEL(1,2) = ZERO
       XEL(1,3) = ZERO
@@ -393,13 +394,6 @@ begn: IF (TYPE /= 'ROD     ') THEN
 
  1959 FORMAT(' *ERROR  1959: PROGRAMMING ERROR IN SUBROUTINE ',A                                                                   &
                     ,/,15X,A,I8,' HAS LENGTH (INCL EFFECTS OF OFFSETS) = ',1ES9.2,'. SHOULD BE ZERO')
-
-
-
-
-
-
-
 
 
 

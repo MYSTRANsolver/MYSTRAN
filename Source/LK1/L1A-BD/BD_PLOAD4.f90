@@ -100,8 +100,7 @@
  
       NPLOAD = NPLOAD+1
 
-! Check if load set ID on pressure card matches a Case Control request
- 
+      ! Check if load set ID on pressure card matches a Case Control request
       CALL I4FLD ( JCARD(2), JF(2), SETID )
       IF (IERRFL(2) == 'N') THEN
          DO J=1,NSUB
@@ -112,11 +111,11 @@
          PRESS_SIDS(NPLOAD) = SETID
       ELSE
          JERR = JERR + 1
-      ENDIF   
- 
- 
-! Read data in fields 3-7 (same for either format). Only need to make sure data is correct format. We don't need values here
+      ENDIF
 
+
+      ! Read data in fields 3-7 (same for either format).
+      ! Only need to make sure data is correct format. We don't need values here
       ELID1 = 0                                             ! Element ID
       CALL I4FLD ( JCARD(3), JF(3), I4INP )
       IF (IERRFL(3) == 'N') THEN
@@ -166,7 +165,6 @@
 ! Format 1:
 ! --------                                                 ! If flds 8,9 are not blank and fld 8 /= THRU this must be for a 3D elem
       ELSE IF ((JCARD(8)(1:) /= ' ') .AND. (JCARD(9)(1:) /= ' ')) THEN
-
          jerr = jerr + 1
          fatal_err = fatal_err + 1
          Write(err,99)
@@ -179,8 +177,7 @@
 
       ENDIF
 
-! Check for card error and fields blank
-
+      ! Check for card error and fields blank
       IF (JCARD(8)(1:4) == 'THRU') THEN
          CALL BD_IMBEDDED_BLANK ( JCARD,2,3,4,5,6,7,0,0 )  ! Make sure that there are no imbedded blanks in fields 2-7
          CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,0,0,0,0,8,9 )! Issue warning if fieldS 8, 9 not blank
@@ -189,8 +186,7 @@
       ENDIF
       CALL CRDERR ( CARD )                                 ! CRDERR prints errors found when reading fields
 
-! Write data to file L1Q
- 
+      ! Write data to file L1Q
       IF (JERR == 0) THEN
          WRITE(L1Q) CARD
       ENDIF
