@@ -34,7 +34,10 @@
       USE SCONTR, ONLY                :  BLNK_SUB_NAM, FATAL_ERR, TOT_MB_MEM_ALLOC 
       USE SCONTR, ONLY                :  LBAROFF, LBUSHOFF, LCMASS, LCONM2, LCORD, LEDAT, LELE, LFORCE, LGRAV, LGRID,              &
                                          LIND_GRDS_MPCS, LLOADC, LLOADR, LMATANGLE, LMATL, LMPC, LMPCADDC, LMPCADDR, LPBAR, LPBEAM,&
-                                         LPBUSH, LPCOMP, LPCOMP_PLIES, LPDAT, LPELAS, LPLATEOFF, LPLATETHICK, LPLOAD, LPMASS,      &
+                                         LPBUSH, LPCOMP, LPCOMP_PLIES, LPDAT, LPELAS, LPLATEOFF, LPLATETHICK,                      &
+                                         LPLOAD,                                                                                   &
+                                         LPLOAD1, NPLOAD1, MINT_PLOAD1, MREAL_PLOAD1,                                              &
+                                         LPMASS,                                                                                   &
                                          LPROD, LPSHEAR, LPSHEL, LPSOLID, LPUSER1, LPUSERIN, LRFORCE, LRIGEL, LSEQ, LSETLN, LSETS, &
                                          LSLOAD, LSPC, LSPC1, LSPCADDC, LSPCADDR, LSUB, LTDAT, LVVEC
       USE SCONTR, ONLY                :  MAX_ELEM_DEGREE, MAX_GAUSS_POINTS, MAX_STRESS_POINTS, MCMASS, MCONM2, MCORD, MDT, MELDOF, &
@@ -57,7 +60,7 @@
       USE MODEL_STUF, ONLY            :  SEQ1, SEQ2
       USE MODEL_STUF, ONLY            :  BAROFF, BUSHOFF, EDAT, EOFF, EPNT, ESORT1, ESORT2, ETYPE, PLATEOFF, PLATETHICK, VVEC
       USE MODEL_STUF, ONLY            :  PRESS_SIDS, PDATA, PPNT, PTYPE
-      USE MODEL_STUF, ONLY            :  PLOAD4_3D_DATA
+      USE MODEL_STUF, ONLY            :  PLOAD1_INT, PLOAD1_REAL, PLOAD4_3D_DATA
       USE MODEL_STUF, ONLY            :  FORMOM_SIDS
       USE MODEL_STUF, ONLY            :  GRAV_SIDS, RFORCE_SIDS, SLOAD_SIDS
       USE MODEL_STUF, ONLY            :  GRID, RGRID
@@ -80,7 +83,7 @@
       USE ALLOCATE_MODEL_STUF_USE_IFs
 
       IMPLICIT NONE
- 
+
       CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: SUBR_NAME = 'ALLOCATE_MODEL_STUF'
       CHARACTER(LEN=*), INTENT(IN)    :: NAME_IN           ! Name of group of arrays to allocate
       CHARACTER(LEN=*), INTENT(IN)    :: CALLING_SUBR      ! Array name of the matrix to be allocated in sparse format
@@ -683,7 +686,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'FORMOM_SIDS') THEN                 ! Allocate arrays for force/moment set ID's
-
          NAME = 'FORMOM_SIDS'
          IF (ALLOCATED(FORMOM_SIDS)) THEN
             WRITE(ERR,990) SUBR_NAME, NAME
@@ -710,7 +712,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'PRESS_SIDS') THEN                  ! Allocate arrays for pressure load set ID's
-
          NAME = 'PRESS_SIDS'
          IF (ALLOCATED(PRESS_SIDS)) THEN
             WRITE(ERR,990) SUBR_NAME, NAME
@@ -737,7 +738,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'GRAV_SIDS') THEN                   ! Allocate arrays for grav load set ID's
-
          NAME = 'GRAV_SIDS'
          IF (ALLOCATED(GRAV_SIDS)) THEN
             WRITE(ERR,990) SUBR_NAME, NAME
@@ -764,7 +764,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'LOAD_SIDS, LOAD_FACS') THEN        ! Allocate arrays for load set ID's and factors
-
          NAME = 'LOAD_SIDS'
          IF (ALLOCATED(LOAD_SIDS)) THEN
             WRITE(ERR,990) SUBR_NAME, NAME
@@ -820,7 +819,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'MPC_SIDS') THEN                    ! Allocate arrays for MPC set ID's
-
          NAME = 'MPC_SIDS'
          IF (ALLOCATED(MPC_SIDS)) THEN
             WRITE(ERR,990) SUBR_NAME, NAME
@@ -847,7 +845,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'MPCSIDS') THEN                     ! Allocate arrays for MPC set ID's used in 1 execution
-
          NAME = 'MPCSIDS'
          IF (ALLOCATED(MPCSIDS)) THEN
             WRITE(ERR,990) SUBR_NAME, NAME
@@ -874,7 +871,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'MPCADD_SIDS') THEN                 ! Allocate arrays for MPCADD set ID's
-
          NAME = 'MPCADD_SIDS'
          IF (ALLOCATED(MPCADD_SIDS)) THEN
             WRITE(ERR,990) SUBR_NAME, NAME
@@ -892,7 +888,7 @@
                DO I=1,LMPCADDR
                   DO J=1,LMPCADDC
                      MPCADD_SIDS(I,J) = 0
-                  ENDDO   
+                  ENDDO
                ENDDO
             ELSE
                WRITE(ERR,991) MB_ALLOCATED, NAME,SUBR_NAME, IERR
@@ -903,7 +899,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'RFORCE_SIDS') THEN                 ! Allocate arrays for grav load set ID's
-
          NAME = 'RFORCE_SIDS'
          IF (ALLOCATED(RFORCE_SIDS)) THEN
             WRITE(ERR,990) SUBR_NAME, NAME
@@ -930,7 +925,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'SLOAD_SIDS') THEN                  ! Allocate arrays for grav load set ID's
-
          NAME = 'SLOAD_SIDS'
          IF (ALLOCATED(SLOAD_SIDS)) THEN
             WRITE(ERR,990) SUBR_NAME, NAME
@@ -957,7 +951,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'SPC_SIDS, SPC1_SIDS') THEN         ! Allocate arrays for SPC, SPC1 set ID's
-
          NAME = 'SPC_SIDS'
          IF (ALLOCATED(SPC_SIDS)) THEN
             WRITE(ERR,990) SUBR_NAME, NAME
@@ -1009,7 +1002,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'SPCSIDS') THEN                     ! Allocate arrays for SPC set ID's used in 1 execution
-
          NAME = 'SPCSIDS'
          IF (ALLOCATED(SPCSIDS)) THEN
             WRITE(ERR,990) SUBR_NAME, NAME
@@ -1036,7 +1028,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'SPCADD_SIDS') THEN                 ! Allocate arrays for SPCADD set ID's
-
          NAME = 'SPCADD_SIDS'
          IF (ALLOCATED(SPCADD_SIDS)) THEN
             WRITE(ERR,990) SUBR_NAME, NAME
@@ -1054,7 +1045,7 @@
                DO I=1,LSPCADDR
                   DO J=1,LSPCADDC
                      SPCADD_SIDS(I,J) = 0
-                  ENDDO   
+                  ENDDO
                ENDDO
             ELSE
                WRITE(ERR,991) MB_ALLOCATED, NAME,SUBR_NAME, IERR
@@ -1065,7 +1056,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'ETYPE, EDAT, EPNT') THEN           ! Allocate arrays for ETYPE, EDAT, EPNT
-
          NAME = 'ETYPE'
          IF (ALLOCATED(ETYPE)) THEN
             WRITE(ERR,990) SUBR_NAME, NAME
@@ -1142,7 +1132,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'EOFF') THEN                        ! Allocate array for EOFF
-
          NAME = 'EOFF'
          IF (ALLOCATED(EOFF)) THEN
             WRITE(ERR,990) SUBR_NAME, NAME
@@ -1169,7 +1158,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'ELEM PROPERTIES AND MATERIALS') THEN
-
          NAME = 'MATL'
          IF (ALLOCATED(MATL)) THEN
             WRITE(ERR,990) SUBR_NAME, NAME
@@ -1792,7 +1780,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'USERIN_ACT_GRDS, USERIN_ACT_COMPS') THEN
-
          NAME = 'USERIN_ACT_GRIDS'
          IF (ALLOCATED(USERIN_ACT_GRIDS)) THEN
             WRITE(ERR,990) SUBR_NAME, NAME
@@ -1844,7 +1831,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'VVEC, OFFSETS, PLATE stuff') THEN   ! Allocate arrays for bar v vectors and bar and plate elem offsets
-
          NAME = 'VVEC'
          IF (ALLOCATED(VVEC)) THEN
             WRITE(ERR,990) SUBR_NAME, NAME
@@ -2002,7 +1988,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'GRID, RGRID') THEN                 ! Allocate arrays for GRID, RGRID
-
          NAME = 'GRID'
          IF (ALLOCATED(GRID)) THEN
             WRITE(ERR,990) SUBR_NAME, NAME
@@ -2114,7 +2099,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'CMASS, PMASS, RPMASS') THEN        ! Allocate arrays for CMASS, PMASS, RPMASS
-
          NAME = 'CMASS'
          IF (ALLOCATED(CMASS)) THEN
             WRITE(ERR,990) SUBR_NAME, NAME
@@ -2197,7 +2181,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'CONM2, RCONM2') THEN                 ! Allocate arrays for CONM2, RCONM2
-
          NAME = 'CONM2'
          IF (ALLOCATED(CONM2)) THEN
             WRITE(ERR,990) SUBR_NAME, NAME
@@ -2280,7 +2263,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'ESORT2') THEN                      ! Allocate arrays for ESORT1
-
          NAME = 'ESORT2'
          IF (ALLOCATED(ESORT2)) THEN
             WRITE(ERR,990) SUBR_NAME, NAME
@@ -2307,7 +2289,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'GRID_ID') THEN                     ! Allocate arrays for GRID_ID
-
          NAME = 'GRID_ID'
          IF (ALLOCATED(GRID_ID)) THEN
             WRITE(ERR,990) SUBR_NAME, NAME
@@ -2334,7 +2315,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'GRID_SEQ, INV_GRID_SEQ') THEN      ! Allocate arrays for grid sequence
-
          NAME = 'GRID_SEQ'
          IF (ALLOCATED(GRID_SEQ)) THEN
             WRITE(ERR,990) SUBR_NAME, NAME
@@ -2386,7 +2366,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'TN') THEN                          ! Allocate array TN
-
          NAME = 'TN'
          IF (ALLOCATED(TN)) THEN
             WRITE(ERR,990) SUBR_NAME, NAME
@@ -2417,7 +2396,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'GROUT, ELOUT') THEN                ! Allocate arrays for OGROUT, OELOUT, etc
-
          NAME = 'OGROUT'
          IF (ALLOCATED(OGROUT)) THEN
             WRITE(ERR,990) SUBR_NAME, NAME
@@ -2550,7 +2528,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'SYS_LOAD') THEN                    ! Allocate array SYS_LOAD
-
          NAME = 'SYS_LOAD'
          IF (ALLOCATED(SYS_LOAD)) THEN
             WRITE(ERR,990) SUBR_NAME, NAME
@@ -2579,7 +2556,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'GTEMP') THEN                       ! Allocate arrays for GTEMP
-
          NAME = 'GTEMP'
          IF (ALLOCATED(GTEMP)) THEN
             WRITE(ERR,990) SUBR_NAME, NAME
@@ -2597,7 +2573,7 @@
                DO I=1,LGRID
                   DO J=1,NTSUB
                      GTEMP(I,J) = GTEMP_INIT
-                  ENDDO 
+                  ENDDO
                ENDDO
             ELSE
                WRITE(ERR,991) MB_ALLOCATED, NAME,SUBR_NAME, IERR
@@ -2626,7 +2602,7 @@
                DO I=1,LGRID
                   DO J=1,NTSUB
                      CGTEMP(I,J) = CGTEMP_ERR
-                  ENDDO 
+                  ENDDO
                ENDDO
             ELSE
                WRITE(ERR,991) MB_ALLOCATED, NAME,SUBR_NAME, IERR
@@ -2637,7 +2613,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'ETEMP') THEN                       ! Allocate arrays for ETEMP
-
          NAME = 'ETEMP'
          IF (ALLOCATED(ETEMP)) THEN
             WRITE(ERR,990) SUBR_NAME, NAME
@@ -2655,7 +2630,7 @@
                DO I=1,LELE
                   DO J=1,NTSUB
                      ETEMP(I,J) = ETEMP_INIT
-                  ENDDO 
+                  ENDDO
                ENDDO
             ELSE
                WRITE(ERR,991) MB_ALLOCATED, NAME,SUBR_NAME, IERR
@@ -2684,7 +2659,7 @@
                DO I=1,LELE
                   DO J=1,NTSUB
                      CETEMP(I,J) = CETEMP_ERR
-                  ENDDO 
+                  ENDDO
                ENDDO
             ELSE
                WRITE(ERR,991) MB_ALLOCATED, NAME,SUBR_NAME, IERR
@@ -2695,7 +2670,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'TPNT, TDATA') THEN                 ! Allocate arrays for TPNT, TDATA
-
          NAME = 'TPNT'
          IF (ALLOCATED(TPNT)) THEN
             WRITE(ERR,990) SUBR_NAME, NAME
@@ -2713,8 +2687,8 @@
                DO I=1,LELE
                   DO J=1,NTSUB
                      TPNT(I,J) = 0
-                  ENDDO 
-               ENDDO 
+                  ENDDO
+               ENDDO
             ELSE
                WRITE(ERR,991) MB_ALLOCATED, NAME,SUBR_NAME, IERR
                WRITE(F06,991) MB_ALLOCATED, NAME,SUBR_NAME, IERR
@@ -2767,8 +2741,8 @@
                DO I=1,LELE
                   DO J=1,LSUB
                      PPNT(I,J) = 0
-                  ENDDO 
-               ENDDO 
+                  ENDDO
+               ENDDO
             ELSE
                WRITE(ERR,991) MB_ALLOCATED, NAME,SUBR_NAME, IERR
                WRITE(F06,991) MB_ALLOCATED, NAME,SUBR_NAME, IERR
@@ -2828,7 +2802,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'PLOAD4_3D_DATA') THEN  ! Allocate arrays for PLOAD4_3D_DATA 
-
          NAME = 'PLOAD4_3D_DATA'
          IF (ALLOCATED(PLOAD4_3D_DATA)) THEN
             WRITE(ERR,990) SUBR_NAME, NAME
@@ -2856,8 +2829,62 @@
             ENDIF
          ENDIF
 
-      ELSE IF (NAME_IN == 'SINGLE ELEMENT ARRAYS') THEN    ! Allocate arrays for elem thermal and pressure loads
+      ELSE IF (NAME_IN == 'PLOAD1_REAL, PLOAD1_INT') THEN   ! Allocate arrays for PLOAD1s
+         NAME = 'PLOAD1_REAL'
+         IF (ALLOCATED(PLOAD1_REAL)) THEN
+            WRITE(ERR,990) SUBR_NAME, NAME
+            WRITE(F06,990) SUBR_NAME, NAME
+            FATAL_ERR = FATAL_ERR + 1
+            JERR = JERR + 1
+         ELSE
+            ALLOCATE (PLOAD1_REAL(LPLOAD1, MREAL_PLOAD1),STAT=IERR)
+            NROWS = LPLOAD1
+            NCOLS = MREAL_PLOAD1
+            MB_ALLOCATED = RLONG*REAL(LPLOAD1)*REAL(MREAL_PLOAD1)/ONEPP6
+            IF (IERR == 0) THEN
+               CALL ALLOCATED_MEMORY ( NAME, MB_ALLOCATED, 'ALLOC', 'Y', CUR_MB_ALLOCATED, SUBR_NAME )
+               CALL WRITE_MEM_SUM_TO_F04 ( NAME, 'ALLOC', MB_ALLOCATED, LPLOAD, 1, SUBR_BEGEND )
+               DO I=1,NPLOAD1
+                  DO J=1,MREAL_PLOAD1
+                    PLOAD1_REAL(I,J) = 0.0
+                  ENDDO
+               ENDDO
+            ELSE
+               WRITE(ERR,991) MB_ALLOCATED, NAME,SUBR_NAME, IERR
+               WRITE(F06,991) MB_ALLOCATED, NAME,SUBR_NAME, IERR
+               FATAL_ERR = FATAL_ERR + 1
+               JERR = JERR + 1
+            ENDIF
+         ENDIF
 
+         NAME = 'PLOAD1_INT'
+         IF (ALLOCATED(PLOAD1_INT)) THEN
+            WRITE(ERR,990) SUBR_NAME, NAME
+            WRITE(F06,990) SUBR_NAME, NAME
+            FATAL_ERR = FATAL_ERR + 1
+            JERR = JERR + 1
+         ELSE
+            ALLOCATE (PLOAD1_INT(NPLOAD1, MREAL_PLOAD1),STAT=IERR)
+            NROWS = NPLOAD1
+            NCOLS = MINT_PLOAD1
+            MB_ALLOCATED = RLONG*REAL(NPLOAD1)*REAL(MINT_PLOAD1)/ONEPP6
+            IF (IERR == 0) THEN
+               CALL ALLOCATED_MEMORY ( NAME, MB_ALLOCATED, 'ALLOC', 'Y', CUR_MB_ALLOCATED, SUBR_NAME )
+               CALL WRITE_MEM_SUM_TO_F04 ( NAME, 'ALLOC', MB_ALLOCATED, LPLOAD, 1, SUBR_BEGEND )
+               DO I=1,NPLOAD1
+                  DO J=1,MINT_PLOAD1
+                    PLOAD1_INT(I,J) = 0
+                  ENDDO
+               ENDDO
+            ELSE
+               WRITE(ERR,991) MB_ALLOCATED, NAME,SUBR_NAME, IERR
+               WRITE(F06,991) MB_ALLOCATED, NAME,SUBR_NAME, IERR
+               FATAL_ERR = FATAL_ERR + 1
+               JERR = JERR + 1
+            ENDIF
+         ENDIF
+
+      ELSE IF (NAME_IN == 'SINGLE ELEMENT ARRAYS') THEN    ! Allocate arrays for elem thermal and pressure loads
          NAME = 'AGRID'
          IF (ALLOCATED(AGRID)) THEN
             WRITE(ERR,990) SUBR_NAME, NAME
@@ -2902,7 +2929,7 @@
                      DO K=1,MAX_STRESS_POINTS+1
                         BE1(I,J,K) = ZERO
                      ENDDO
-                  ENDDO 
+                  ENDDO
                ENDDO
             ELSE
                WRITE(ERR,991) MB_ALLOCATED, NAME,SUBR_NAME, IERR
@@ -2931,7 +2958,7 @@
                      DO K=1,MAX_STRESS_POINTS+1
                         BE2(I,J,K) = ZERO
                      ENDDO
-                  ENDDO 
+                  ENDDO
                ENDDO
             ELSE
                WRITE(ERR,991) MB_ALLOCATED, NAME,SUBR_NAME, IERR
@@ -2960,7 +2987,7 @@
                      DO K=1,MAX_STRESS_POINTS+1
                         BE3(I,J,K) = ZERO
                      ENDDO
-                  ENDDO 
+                  ENDDO
                ENDDO
             ELSE
                WRITE(ERR,991) MB_ALLOCATED, NAME,SUBR_NAME, IERR
@@ -3038,7 +3065,7 @@
                   DO J=1,LSUB
                      DT(I,J) = ZERO
                   ENDDO
-               ENDDO 
+               ENDDO
             ELSE
                WRITE(ERR,991) MB_ALLOCATED, NAME,SUBR_NAME, IERR
                WRITE(F06,991) MB_ALLOCATED, NAME,SUBR_NAME, IERR
@@ -3065,7 +3092,7 @@
                   DO J=1,MELDOF
                      KE(I,J) = ZERO
                   ENDDO
-               ENDDO 
+               ENDDO
             ELSE
                WRITE(ERR,991) MB_ALLOCATED, NAME,SUBR_NAME, IERR
                WRITE(F06,991) MB_ALLOCATED, NAME,SUBR_NAME, IERR
@@ -3092,7 +3119,7 @@
                   DO J=1,MELDOF
                      KEG(I,J) = ZERO
                   ENDDO
-               ENDDO 
+               ENDDO
             ELSE
                WRITE(ERR,991) MB_ALLOCATED, NAME,SUBR_NAME, IERR
                WRITE(F06,991) MB_ALLOCATED, NAME,SUBR_NAME, IERR
@@ -3119,7 +3146,7 @@
                   DO J=1,MELDOF
                      KED(I,J) = ZERO
                   ENDDO
-               ENDDO 
+               ENDDO
             ELSE
                WRITE(ERR,991) MB_ALLOCATED, NAME,SUBR_NAME, IERR
                WRITE(F06,991) MB_ALLOCATED, NAME,SUBR_NAME, IERR
@@ -3146,7 +3173,7 @@
                   DO J=1,MELDOF
                      KEM(I,J) = ZERO
                   ENDDO
-               ENDDO 
+               ENDDO
             ELSE
                WRITE(ERR,991) MB_ALLOCATED, NAME,SUBR_NAME, IERR
                WRITE(F06,991) MB_ALLOCATED, NAME,SUBR_NAME, IERR
@@ -3173,7 +3200,7 @@
                   DO J=1,MELDOF
                      ME(I,J) = ZERO
                   ENDDO
-               ENDDO 
+               ENDDO
             ELSE
                WRITE(ERR,991) MB_ALLOCATED, NAME,SUBR_NAME, IERR
                WRITE(F06,991) MB_ALLOCATED, NAME,SUBR_NAME, IERR
@@ -3200,7 +3227,7 @@
                   DO J=1,3
                      OFFDIS(I,J) = ZERO
                   ENDDO
-               ENDDO 
+               ENDDO
             ELSE
                WRITE(ERR,991) MB_ALLOCATED, NAME,SUBR_NAME, IERR
                WRITE(F06,991) MB_ALLOCATED, NAME,SUBR_NAME, IERR
@@ -3227,7 +3254,7 @@
                   DO J=1,3
                      OFFDIS_O(I,J) = ZERO
                   ENDDO
-               ENDDO 
+               ENDDO
             ELSE
                WRITE(ERR,991) MB_ALLOCATED, NAME,SUBR_NAME, IERR
                WRITE(F06,991) MB_ALLOCATED, NAME,SUBR_NAME, IERR
@@ -3254,7 +3281,7 @@
                   DO J=1,3
                      OFFDIS_B(I,J) = ZERO
                   ENDDO
-               ENDDO 
+               ENDDO
             ELSE
                WRITE(ERR,991) MB_ALLOCATED, NAME,SUBR_NAME, IERR
                WRITE(F06,991) MB_ALLOCATED, NAME,SUBR_NAME, IERR
@@ -3281,7 +3308,7 @@
                   DO J=1,3
                      OFFDIS_G(I,J) = ZERO
                   ENDDO
-               ENDDO 
+               ENDDO
             ELSE
                WRITE(ERR,991) MB_ALLOCATED, NAME,SUBR_NAME, IERR
                WRITE(F06,991) MB_ALLOCATED, NAME,SUBR_NAME, IERR
@@ -3306,7 +3333,7 @@
                CALL WRITE_MEM_SUM_TO_F04 ( NAME, 'ALLOC', MB_ALLOCATED, MOFFSET, 1, SUBR_BEGEND )
                DO I=1,MOFFSET
                   OFFSET(I)(1:) = 'N'
-               ENDDO 
+               ENDDO
             ELSE
                WRITE(ERR,991) MB_ALLOCATED, NAME,SUBR_NAME, IERR
                WRITE(F06,991) MB_ALLOCATED, NAME,SUBR_NAME, IERR
@@ -3408,7 +3435,7 @@
                   DO J=1,LSUB
                      PPE(I,J) = ZERO
                   ENDDO
-               ENDDO 
+               ENDDO
             ELSE
                WRITE(ERR,991) MB_ALLOCATED, NAME,SUBR_NAME, IERR
                WRITE(F06,991) MB_ALLOCATED, NAME,SUBR_NAME, IERR
@@ -3435,7 +3462,7 @@
                   DO J=1,LSUB
                      PRESS(I,J) = ZERO
                   ENDDO
-               ENDDO 
+               ENDDO
             ELSE
                WRITE(ERR,991) MB_ALLOCATED, NAME,SUBR_NAME, IERR
                WRITE(F06,991) MB_ALLOCATED, NAME,SUBR_NAME, IERR
@@ -3462,7 +3489,7 @@
                   DO J=1,LSUB
                      PTE(I,J) = ZERO
                   ENDDO
-               ENDDO 
+               ENDDO
             ELSE
                WRITE(ERR,991) MB_ALLOCATED, NAME,SUBR_NAME, IERR
                WRITE(F06,991) MB_ALLOCATED, NAME,SUBR_NAME, IERR
@@ -3490,7 +3517,7 @@
                      DO K=1,MAX_STRESS_POINTS+1
                         SE1(I,J,K) = ZERO
                      ENDDO
-                  ENDDO 
+                  ENDDO
                ENDDO
             ELSE
                WRITE(ERR,991) MB_ALLOCATED, NAME,SUBR_NAME, IERR
@@ -3519,7 +3546,7 @@
                      DO K=1,MAX_STRESS_POINTS+1
                         SE2(I,J,K) = ZERO
                      ENDDO
-                  ENDDO 
+                  ENDDO
                ENDDO
             ELSE
                WRITE(ERR,991) MB_ALLOCATED, NAME,SUBR_NAME, IERR
@@ -3548,7 +3575,7 @@
                      DO K=1,MAX_STRESS_POINTS+1
                         SE3(I,J,K) = ZERO
                      ENDDO
-                  ENDDO 
+                  ENDDO
                ENDDO
             ELSE
                WRITE(ERR,991) MB_ALLOCATED, NAME,SUBR_NAME, IERR
@@ -3577,7 +3604,7 @@
                      DO K=1,MAX_STRESS_POINTS+1
                         STE1(I,J,K)   = ZERO
                      ENDDO
-                  ENDDO 
+                  ENDDO
                ENDDO
             ELSE
                WRITE(ERR,991) MB_ALLOCATED, NAME,SUBR_NAME, IERR
@@ -3606,7 +3633,7 @@
                      DO K=1,MAX_STRESS_POINTS+1
                         STE2(I,J,K)   = ZERO
                      ENDDO
-                  ENDDO 
+                  ENDDO
                ENDDO
             ELSE
                WRITE(ERR,991) MB_ALLOCATED, NAME,SUBR_NAME, IERR
@@ -3635,7 +3662,7 @@
                      DO K=1,MAX_STRESS_POINTS+1
                         STE3(I,J,K)   = ZERO
                      ENDDO
-                  ENDDO 
+                  ENDDO
                ENDDO
             ELSE
                WRITE(ERR,991) MB_ALLOCATED, NAME,SUBR_NAME, IERR
@@ -3763,7 +3790,7 @@
                   DO J=1,3
                      XEB(I,J) = ZERO
                   ENDDO
-               ENDDO 
+               ENDDO
             ELSE
                WRITE(ERR,991) MB_ALLOCATED, NAME,SUBR_NAME, IERR
                WRITE(F06,991) MB_ALLOCATED, NAME,SUBR_NAME, IERR
@@ -3790,7 +3817,7 @@
                   DO J=1,3
                      XEL(I,J) = ZERO
                   ENDDO
-               ENDDO 
+               ENDDO
             ELSE
                WRITE(ERR,991) MB_ALLOCATED, NAME,SUBR_NAME, IERR
                WRITE(F06,991) MB_ALLOCATED, NAME,SUBR_NAME, IERR
@@ -3817,7 +3844,7 @@
                   DO J=1,2
                      XGL(I,J) = ZERO
                   ENDDO
-               ENDDO 
+               ENDDO
             ELSE
                WRITE(ERR,991) MB_ALLOCATED, NAME,SUBR_NAME, IERR
                WRITE(F06,991) MB_ALLOCATED, NAME,SUBR_NAME, IERR
@@ -3854,7 +3881,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'MPC_IND_GRIDS') THEN               ! Allocate array for MPC_IND_GRIDS
-
          NAME = 'MPC_IND_GRIDS'
          IF (ALLOCATED(MPC_IND_GRIDS)) THEN
             WRITE(ERR,990) SUBR_NAME, NAME
@@ -3881,7 +3907,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'GRID_ELEM_CONN_ARRAY') THEN        ! Allocate array for GRID_ELEM_CONN_ARRAY
-
          NAME = 'GRID_ELEM_CONN_ARRAY'
          IF (ALLOCATED(GRID_ELEM_CONN_ARRAY)) THEN
             WRITE(ERR,990) SUBR_NAME, NAME

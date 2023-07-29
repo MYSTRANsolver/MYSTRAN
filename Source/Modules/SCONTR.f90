@@ -90,7 +90,7 @@
       INTEGER(LONG)            :: KMSM_SDIA           =   0      ! Number of super-diagonals in matrix KMSM
       INTEGER(LONG)            :: KOO_SDIA            =   0      ! Number of super-diagonals in matrix KOO
       INTEGER(LONG)            :: KRRcb_SDIA          =   0      ! Number of super-diagonals in matrix KRRcb
- 
+
       INTEGER(LONG)            :: KMAT_BW             =   0      ! 6 times grid BW returned from subr BANDIT called in subr LINK1
 
       INTEGER(LONG)            :: LINKNO              =   0      ! LINK num being run 
@@ -98,7 +98,7 @@
       INTEGER(LONG)            :: LINKNO_START        =   0      ! LINK num to start MYSTRAN with. Normally this is LINK 1
 !                                                                  however, if the program was terminated abnormally right as
 !                                                                  a new LINK is beginning, this allows a "restart"
- 
+
       INTEGER(LONG)            :: LBAROFF             =   0      ! Max allow num of CBAR, CBEAM offset vectors      (see note (1))
       INTEGER(LONG)            :: LBUSHOFF            =   0      ! Max allow num of CBUSH       offset vectors      (see note (1))
       INTEGER(LONG)            :: LCMASS              =   0      ! Max allow num of CMASSi Bulk Data cards   (see note (1)) 
@@ -128,14 +128,17 @@
       INTEGER(LONG)            :: LPBUSH              =   0      ! Max allow num of PBUSH   Bulk Data cards   (see note (1))
       INTEGER(LONG)            :: LPCOMP              =   0      ! Max allow num of PCOMP   Bulk Data cards   (see note (1))
       INTEGER(LONG)            :: LPCOMP_PLIES        =   0      ! Max allow num of plies for any PCOMP entry
-      INTEGER(LONG)            :: LPDAT               =   0      ! Max allow num of rows for array PDATA 
+      INTEGER(LONG)            :: LPDAT               =   0      ! Max allow num of rows for array PDATA
       INTEGER(LONG)            :: LPELAS              =   0      ! Max allow num of PELAS   Bulk Data cards   (see note (1))
       INTEGER(LONG)            :: LPLATEOFF           =   0      ! Max allow num of plate elem offsets        (see note (1))
       INTEGER(LONG)            :: LPLATETHICK         =   0      ! Max allow num of plate elem thicknesses    (see note (1))
       INTEGER(LONG)            :: LPLOAD              =   0      ! Max allow num of PLOADi  Bulk Data cards   (see note (1))
+      INTEGER(LONG)            :: LPLOAD1             =   0      ! Max allow num of PLOAD1  Bulk Data cards   (see note (1))
+     !INTEGER(LONG)            :: NPLOAD1             =   0      ! Max allow num of PLOAD1  Bulk Data cards   (see note (1))
       INTEGER(LONG)            :: LPLOTEL             =   0      ! Max allow num of PLOTEL  Bulk Data cards   (see note (1))
       INTEGER(LONG)            :: LPMASS              =   0      ! Max allow num of PMASS   Bulk Data cards   (see note (1))
       INTEGER(LONG)            :: LPROD               =   0      ! Max allow num of PROD    Bulk Data cards   (see note (1))
+      INTEGER(LONG)            :: LPTUBE              =   0      ! Max allow num of PTUBE   Bulk Data cards   (see note (1))
       INTEGER(LONG)            :: LPSHEAR             =   0      ! Max allow num of PSHEAR  Bulk Data cards   (see note (1))
       INTEGER(LONG)            :: LPSHEL              =   0      ! Max allow num of PSHELL  Bulk Data cards   (see note (1))
       INTEGER(LONG)            :: LPSOLID             =   0      ! Max allow num of PSOLID  Bulk Data cards   (see note (1))
@@ -203,6 +206,7 @@
       INTEGER(LONG)            :: NCQUAD4             =   0      ! Count of no. of CQUAD3  elems
       INTEGER(LONG)            :: NCQUAD4K            =   0      ! Count of no. of CQUAD3K elems
       INTEGER(LONG)            :: NCROD               =   0      ! Count of no. of CROD    elems
+      INTEGER(LONG)            :: NCTUBE              =   0      ! Count of no. of CTUBE   elems
       INTEGER(LONG)            :: NCSHEAR             =   0      ! Count of no. of CSHEAR  elems
       INTEGER(LONG)            :: NCTETRA4            =   0      ! Count of no. of CTETRA  elems with  4 nodes
       INTEGER(LONG)            :: NCTETRA10           =   0      ! Count of no. of CTETRA  elems with 10 nodes
@@ -244,21 +248,23 @@
       INTEGER(LONG)            :: NPBEAM              =   0      ! Count of no. of PBEAM   Bulk Data cards 
       INTEGER(LONG)            :: NPBUSH              =   0      ! Count of no. of PBUSH   Bulk Data cards 
       INTEGER(LONG)            :: NPCARD              =   0      ! Count of no. of PLOAD1, PLOAD2 cards written to filename.L1Q 
-      INTEGER(LONG)            :: NPCOMP              =   0      ! Count of no. of PCOMP   Bulk Data cards 
+      INTEGER(LONG)            :: NPCOMP              =   0      ! Count of no. of PCOMP   Bulk Data cards
       INTEGER(LONG)            :: NPDAT               =   0      ! Count of no. of rows that go into array PDATA
-      INTEGER(LONG)            :: NPELAS              =   0      ! Count of no. of PELAS  Bulk Data cards 
+      INTEGER(LONG)            :: NPELAS              =   0      ! Count of no. of PELAS  Bulk Data cards
       INTEGER(LONG)            :: NPLATEOFF           =   0      ! Count of no. of plate element offsets on plate elem conn entries
       INTEGER(LONG)            :: NPLATETHICK         =   0      ! Count of no. of plate thicknesses on plate elem conn entries
       INTEGER(LONG)            :: NPLOTEL             =   0      ! Count of no. of PLOTEL
-      INTEGER(LONG)            :: NPLOAD              =   0      ! Count of no. of PLOADi  Bulk Data cards 
+      INTEGER(LONG)            :: NPLOAD              =   0      ! Count of no. of PLOADi Bulk Data cards
+      INTEGER(LONG)            :: NPLOAD1             =   0      ! Count of no. of PLOAD1 Bulk Data cards
       INTEGER(LONG)            :: NPLOAD4_3D          =   0      ! Count of no. of PLOAD4 entries that are for solid elements
-      INTEGER(LONG)            :: NPMASS              =   0      ! Count of no. of PMASS  Bulk Data cards 
-      INTEGER(LONG)            :: NPROD               =   0      ! Count of no. of PROD   Bulk Data cards 
+      INTEGER(LONG)            :: NPMASS              =   0      ! Count of no. of PMASS  Bulk Data cards
+      INTEGER(LONG)            :: NPROD               =   0      ! Count of no. of PROD   Bulk Data cards
+      INTEGER(LONG)            :: NPTUBE              =   0      ! Count of no. of PTUBE  Bulk Data cards
       INTEGER(LONG)            :: NPSHEAR             =   0      ! Count of no. of PSHEAR Bulk Data cards
-      INTEGER(LONG)            :: NPSHEL              =   0      ! Count of no. of PSHELL Bulk Data cards 
-      INTEGER(LONG)            :: NPSOLID             =   0      ! Count of no. of PSOLID Bulk Data cards 
-      INTEGER(LONG)            :: NPUSER1             =   0      ! Count of no. of PUSER1 Bulk Data cards 
-      INTEGER(LONG)            :: NPUSERIN            =   0      ! Count of no. of PUSER1 Bulk Data cards 
+      INTEGER(LONG)            :: NPSHEL              =   0      ! Count of no. of PSHELL Bulk Data cards
+      INTEGER(LONG)            :: NPSOLID             =   0      ! Count of no. of PSOLID Bulk Data cards
+      INTEGER(LONG)            :: NPUSER1             =   0      ! Count of no. of PUSER1 Bulk Data cards
+      INTEGER(LONG)            :: NPUSERIN            =   0      ! Count of no. of PUSER1 Bulk Data cards
       INTEGER(LONG)            :: NRBAR               =   0      ! Count of no. of RBAR rigid elems
       INTEGER(LONG)            :: NRBE1               =   0      ! Count of no. of RBE1 rigid elems
       INTEGER(LONG)            :: NRBE2               =   0      ! Count of no. of RBE2 rigid elems
@@ -448,6 +454,7 @@
       INTEGER(LONG), PARAMETER :: MEDAT_CPENTA15      =  17      ! No. terms that go into EDAT array for CPENTA elems with 15 nodes
       INTEGER(LONG), PARAMETER :: MEDAT_CQUAD         =  11      ! No. terms that go into EDAT array for CQUAD  elems
       INTEGER(LONG), PARAMETER :: MEDAT_CROD          =   4      ! No. terms that go into EDAT array for CROD   elems
+      INTEGER(LONG), PARAMETER :: MEDAT_CTUBE         =   4      ! No. terms that go into EDAT array for CTUBE  elems????
       INTEGER(LONG), PARAMETER :: MEDAT_CSHEAR        =   6      ! No. terms that go into EDAT array for CSHEAR elems with  4 nodes
       INTEGER(LONG), PARAMETER :: MEDAT_CTETRA4       =   6      ! No. terms that go into EDAT array for CTETRA elems with  4 nodes
       INTEGER(LONG), PARAMETER :: MEDAT_CTETRA10      =  12      ! No. terms that go into EDAT array for CTETRA elems with 10 nodes
@@ -475,12 +482,16 @@
       INTEGER(LONG), PARAMETER :: MMSPRNT             =   3      ! No. cols allowed in dimensioning array MSPRNT
       INTEGER(LONG), PARAMETER :: MOGEL               =  12      ! No. cols allowed in dimensioning array OGEL
       INTEGER(LONG), PARAMETER :: MPDAT_PLOAD1        =   2      ! No. pressures on PLOAD1 Bulk Data card
-      INTEGER(LONG), PARAMETER :: MPDAT_PLOAD2        =   1      ! No. pressures on PLOAD2 Bulk Data card 
-      INTEGER(LONG), PARAMETER :: MPDAT_PLOAD4        =   4      ! No. pressuresa on PLOAD4 Bulk Data card 
+      INTEGER(LONG), PARAMETER :: MREAL_PLOAD1        =   4      ! No. reals on PLOAD1 Bulk Data card (x1, p1, x2, p2)
+      INTEGER(LONG), PARAMETER :: MINT_PLOAD1         =   4      ! No. ints on PLOAD1 Bulk Data card (sid, eid, type, scale)
+      INTEGER(LONG), PARAMETER :: MPDAT_PLOAD2        =   1      ! No. pressures on PLOAD2 Bulk Data card
+      INTEGER(LONG), PARAMETER :: MPDAT_PLOAD4        =   4      ! No. pressures on PLOAD4 Bulk Data card
       INTEGER(LONG), PARAMETER :: MPBAR               =   3      ! No. cols allowed in dimensioning array PBAR
       INTEGER(LONG), PARAMETER :: MPBARLU             =   6      ! Max num of dec places in format for writing PBAR equivs of PBARL
       INTEGER(LONG), PARAMETER :: MPBEAM              =   4      ! No. cols allowed in dimensioning array PBEAM
       INTEGER(LONG), PARAMETER :: MPBUSH              =   2      ! No. cols allowed in dimensioning array PBUSH
+      INTEGER(LONG), PARAMETER :: MPLOAD1_INT         =   4      ! No. cols allowed for array PLOAD1_INT  (eid, type, scale)
+      INTEGER(LONG), PARAMETER :: MPLOAD1_REAL        =   4      ! No. cols allowed for array PLOAD1_REAL (x1, p1, x2, p2)
       INTEGER(LONG), PARAMETER :: MPLOAD4_3D_DATA     =   5      ! No. cols allowed for array PLOAD4_3D_DATA
       INTEGER(LONG), PARAMETER :: MPCOMP0             =   6      ! No. integer data on PCOMP parent entry (PID,FT,LAM) + NUM_LAYERS
       INTEGER(LONG), PARAMETER :: MPCOMP_PLIES        =   2      ! No. integer data for each layer on PCOMP (MIDi, SOUTi)
@@ -488,6 +499,7 @@
       INTEGER(LONG), PARAMETER :: MPMASS              =   1      ! No. cols allowed in dimensioning array PMASS
       INTEGER(LONG), PARAMETER :: MPRESS              =   3      ! No. rows allowed in dimensioning array PRESS
       INTEGER(LONG), PARAMETER :: MPROD               =   2      ! No. cols allowed in dimensioning array PROD
+      INTEGER(LONG), PARAMETER :: MPTUBE              =   2      ! No. cols allowed in dimensioning array PTUBE???
       INTEGER(LONG), PARAMETER :: MPSHEAR             =   2      ! No. cols allowed in dimensioning array PSHEAR
       INTEGER(LONG), PARAMETER :: MPSHEL              =   6      ! No. cols allowed in dimensioning array PSHEL
       INTEGER(LONG), PARAMETER :: MPSOLID             =   6      ! No. cols allowed in dimensioning array PSOLID

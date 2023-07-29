@@ -43,7 +43,7 @@
       USE MODEL_STUF, ONLY            :  SEQ1, SEQ2
       USE MODEL_STUF, ONLY            :  BAROFF, BUSHOFF, EDAT, EOFF, EPNT, ESORT1, ESORT2, ETYPE, VVEC
       USE MODEL_STUF, ONLY            :  PRESS_SIDS, PDATA, PPNT, PTYPE
-      USE MODEL_STUF, ONLY            :  PLOAD4_3D_DATA
+      USE MODEL_STUF, ONLY            :  PLOAD1_INT, PLOAD1_REAL, PLOAD4_3D_DATA
       USE MODEL_STUF, ONLY            :  FORMOM_SIDS
       USE MODEL_STUF, ONLY            :  GRAV_SIDS, RFORCE_SIDS, SLOAD_SIDS
       USE MODEL_STUF, ONLY            :  GRID, RGRID
@@ -304,7 +304,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'SCNUM') THEN                    ! Deallocate array SC_NUM
-
          NAME = 'SCNUM'
          IF (ALLOCATED(SCNUM)) THEN
             DEALLOCATE (SCNUM,STAT=IERR)
@@ -319,7 +318,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'SUBLOD') THEN                   ! Deallocate array SUBLOD
-
          NAME = 'SUBLOD'
          IF (ALLOCATED(SUBLOD)) THEN
             DEALLOCATE (SUBLOD,STAT=IERR)
@@ -334,7 +332,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'SPC_MPC_SET') THEN                   ! Deallocate array SUBLOD
-
          NAME = 'SPCSETS'
          IF (ALLOCATED(SPCSETS)) THEN
             DEALLOCATE (SPCSETS,STAT=IERR)
@@ -362,7 +359,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'SEQ1,2') THEN                   ! Deallocate arrays for SEQ1,2
-
          NAME = 'SEQ1'
          IF (ALLOCATED(SEQ1)) THEN
             DEALLOCATE (SEQ1,STAT=IERR)
@@ -390,7 +386,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'FORMOM_SIDS') THEN              ! Deallocate arrays for force/moment set ID's
-
          NAME = 'FORMOM_SIDS'
          IF (ALLOCATED(FORMOM_SIDS)) THEN
             DEALLOCATE (FORMOM_SIDS,STAT=IERR)
@@ -405,7 +400,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'PRESS_SIDS') THEN               ! Deallocate arrays for pressure load set ID's
-
          NAME = 'PRESS_SIDS'
          IF (ALLOCATED(PRESS_SIDS)) THEN
             DEALLOCATE (PRESS_SIDS,STAT=IERR)
@@ -420,7 +414,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'GRAV_SIDS') THEN                ! Deallocate arrays for grav load set ID's
-
          NAME = 'GRAV_SIDS'
          IF (ALLOCATED(GRAV_SIDS)) THEN
             DEALLOCATE (GRAV_SIDS,STAT=IERR)
@@ -435,7 +428,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'LOAD_SIDS, LOAD_FACS') THEN     ! Deallocate arrays for load set ID's and factors
-
          NAME = 'LOAD_SIDS'
          IF (ALLOCATED(LOAD_SIDS)) THEN
             DEALLOCATE (LOAD_SIDS,STAT=IERR)
@@ -463,7 +455,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'MPC_SIDS') THEN                 ! Deallocate arrays for MPC set ID's
-
          NAME = 'MPC_SIDS'
          IF (ALLOCATED(MPC_SIDS)) THEN
             DEALLOCATE (MPC_SIDS,STAT=IERR)
@@ -478,7 +469,6 @@
          ENDIF
  
       ELSE IF (NAME_IN == 'MPCSIDS') THEN                  ! Deallocate arrays for MPC set ID's used in 1 execution
-
          NAME = 'MPCSIDS'
          IF (ALLOCATED(MPCSIDS)) THEN
             DEALLOCATE (MPCSIDS,STAT=IERR)
@@ -493,7 +483,6 @@
          ENDIF
  
       ELSE IF (NAME_IN == 'MPCADD_SIDS') THEN              ! Deallocate arrays for MPCADD set ID's
-
          NAME = 'MPCADD_SIDS'
          IF (ALLOCATED(MPCADD_SIDS)) THEN
             DEALLOCATE (MPCADD_SIDS,STAT=IERR)
@@ -508,7 +497,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'RFORCE_SIDS') THEN              ! Deallocate arrays for grav load set ID's
-
          NAME = 'RFORCE_SIDS'
          IF (ALLOCATED(RFORCE_SIDS)) THEN
             DEALLOCATE (RFORCE_SIDS,STAT=IERR)
@@ -523,7 +511,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'SLOAD_SIDS') THEN               ! Deallocate arrays for grav load set ID's
-
          NAME = 'SLOAD_SIDS'
          IF (ALLOCATED(SLOAD_SIDS)) THEN
             DEALLOCATE (SLOAD_SIDS,STAT=IERR)
@@ -538,7 +525,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'SPC_SIDS, SPC1_SIDS') THEN      ! Deallocate arrays for SPC, SPC1 set ID's
-
          NAME = 'SPC_SIDS'
          IF (ALLOCATED(SPC_SIDS)) THEN
             DEALLOCATE (SPC_SIDS,STAT=IERR)
@@ -566,7 +552,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'SPCSIDS') THEN                  ! Deallocate arrays for SPC set ID's used in 1 execution
-
          NAME = 'SPCSIDS'
          IF (ALLOCATED(SPCSIDS)) THEN
             DEALLOCATE (SPCSIDS,STAT=IERR)
@@ -581,7 +566,6 @@
          ENDIF
  
       ELSE IF (NAME_IN == 'SPCADD_SIDS') THEN              ! Deallocate arrays for SPCADD set ID's
-
          NAME = 'SPCADD_SIDS'
          IF (ALLOCATED(SPCADD_SIDS)) THEN
             DEALLOCATE (SPCADD_SIDS,STAT=IERR)
@@ -596,7 +580,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'ETYPE, EDAT, EPNT') THEN        ! Deallocate arrays for ETYPE, EDAT, EPNT
-
          NAME = 'ETYPE'
          IF (ALLOCATED(ETYPE)) THEN
             DEALLOCATE (ETYPE,STAT=IERR)
@@ -637,7 +620,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'EOFF') THEN                     ! Deallocate array for EOFF
-
          NAME = 'EOFF'
          IF (ALLOCATED(EOFF)) THEN
             DEALLOCATE (EOFF,STAT=IERR)
@@ -652,7 +634,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'ELEM PROPERTIES AND MATERIALS') THEN ! Deallocate arrays for element property and materials
-
          NAME = 'MATL'
          IF (ALLOCATED(MATL)) THEN
             DEALLOCATE (MATL,STAT=IERR)
@@ -953,7 +934,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'USERIN_ACT_GRDS, USERIN_ACT_COMPS') THEN
-
          NAME = 'USERIN_ACT_COMPS'
          IF (ALLOCATED(USERIN_ACT_COMPS)) THEN
             DEALLOCATE (USERIN_ACT_COMPS,STAT=IERR)
@@ -981,7 +961,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'VVEC, OFFSETS, PLATE stuff') THEN! Deallocate arrays for bar v vectors and offsets
-
          NAME = 'VVEC'
          IF (ALLOCATED(VVEC)) THEN
             DEALLOCATE (VVEC,STAT=IERR)
@@ -1061,7 +1040,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'GRID, RGRID') THEN              ! Deallocate arrays for GRID, RGRID
-
          NAME = 'GRID'
          IF (ALLOCATED(GRID)) THEN
             DEALLOCATE (GRID,STAT=IERR)
@@ -1089,7 +1067,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'CORD, RCORD') THEN              ! Deallocate arrays for coord systems
-
          NAME = 'CORD'
          IF (ALLOCATED(CORD)) THEN
             DEALLOCATE (CORD,STAT=IERR)
@@ -1117,7 +1094,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'CMASS, PMASS, RPMASS') THEN     ! Deallocate arrays for CMASS's
-
          NAME = 'CMASS'
          IF (ALLOCATED(CMASS)) THEN
             DEALLOCATE (CMASS,STAT=IERR)
@@ -1158,7 +1134,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'CONM2, RCONM2') THEN            ! Deallocate arrays for CONM2's
-
          NAME = 'CONM2'
          IF (ALLOCATED(CONM2)) THEN
             DEALLOCATE (CONM2,STAT=IERR)
@@ -1186,7 +1161,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'ESORT1') THEN                   ! Deallocate arrays for ESORT1
-
          NAME = 'ESORT1'
          IF (ALLOCATED(ESORT1)) THEN
             DEALLOCATE (ESORT1,STAT=IERR)
@@ -1201,7 +1175,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'ESORT2') THEN                   ! Deallocate arrays for ESORT2
-
          NAME = 'ESORT2'
          IF (ALLOCATED(ESORT2)) THEN
             DEALLOCATE (ESORT2,STAT=IERR)
@@ -1216,7 +1189,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'GRID_ID') THEN                  ! Deallocate arrays for GRID_ID
-
          NAME = 'GRID_ID'
          IF (ALLOCATED(GRID_ID)) THEN
             DEALLOCATE (GRID_ID,STAT=IERR)
@@ -1231,7 +1203,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'GRID_SEQ, INV_GRID_SEQ') THEN   ! Deallocate arrays for grid sequence
-
          NAME = 'GRID_SEQ'
          IF (ALLOCATED(GRID_SEQ)) THEN
             DEALLOCATE (GRID_SEQ,STAT=IERR)
@@ -1259,7 +1230,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'TN') THEN                       ! Deallocate array TN
-
          NAME = 'TN'
          IF (ALLOCATED(TN)) THEN
             DEALLOCATE (TN,STAT=IERR)
@@ -1274,7 +1244,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'GROUT, ELOUT') THEN             ! Deallocate arrays for OGROUT, OELOUT, etc
-
          NAME = 'OGROUT'
          IF (ALLOCATED(OGROUT)) THEN
             DEALLOCATE (OGROUT,STAT=IERR)
@@ -1328,7 +1297,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'ELDT') THEN                     ! Deallocate array ELDT
-
          NAME = 'ELDT'
          IF (ALLOCATED(ELDT)) THEN
             DEALLOCATE (ELDT,STAT=IERR)
@@ -1343,7 +1311,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'SYS_LOAD') THEN                 ! Deallocate array SYS_LOAD
-
          NAME = 'SYS_LOAD'
          IF (ALLOCATED(SYS_LOAD)) THEN
             DEALLOCATE (SYS_LOAD,STAT=IERR)
@@ -1358,7 +1325,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'GTEMP') THEN                    ! Deallocate arrays for GTEMP
-
          NAME = 'GTEMP'
          IF (ALLOCATED(GTEMP)) THEN
             DEALLOCATE (GTEMP,STAT=IERR)
@@ -1373,7 +1339,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'CGTEMP') THEN                   ! Deallocate arrays for CGTEMP
-
          NAME = 'CGTEMP'
          IF (ALLOCATED(CGTEMP)) THEN
             DEALLOCATE (CGTEMP,STAT=IERR)
@@ -1388,7 +1353,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'ETEMP') THEN                    ! Deallocate arrays for ETEMP
-
          NAME = 'ETEMP'
          IF (ALLOCATED(ETEMP)) THEN
             DEALLOCATE (ETEMP,STAT=IERR)
@@ -1403,7 +1367,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'CETEMP') THEN                   ! Deallocate arrays for CETEMP
-
          NAME = 'CETEMP'
          IF (ALLOCATED(CETEMP)) THEN
             DEALLOCATE (CETEMP,STAT=IERR)
@@ -1418,7 +1381,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'TPNT, TDATA') THEN              ! Deallocate arrays for TPNT, TDATA
-
          NAME = 'TPNT'
          IF (ALLOCATED(TPNT)) THEN
             DEALLOCATE (TPNT,STAT=IERR)
@@ -1446,7 +1408,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'PPNT, PDATA, PTYPE') THEN       ! Deallocate arrays for PPNT, PDATA
-
          NAME = 'PPNT'
          IF (ALLOCATED(PPNT)) THEN
             DEALLOCATE (PPNT,STAT=IERR)
@@ -1487,7 +1448,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'PLOAD4_3D_DATA') THEN  ! Deallocate arrays for PLOAD4_3D_DATA
-
          NAME = 'PLOAD4_3D_DATA'
          IF (ALLOCATED(PLOAD4_3D_DATA)) THEN
             DEALLOCATE (PLOAD4_3D_DATA,STAT=IERR)
@@ -1501,8 +1461,34 @@
             ENDIF 
          ENDIF
 
-      ELSE IF (NAME_IN == 'SINGLE ELEMENT ARRAYS') THEN! Deallocate arrays for element subcase arrays
+      ELSE IF (NAME_IN == 'PLOAD1_REAL, PLOAD1_INT') THEN               ! Deallocate arrays for pressure load set ID's
+         NAME = 'PLOAD1_REAL'
+         IF (ALLOCATED(PLOAD1_REAL)) THEN
+            DEALLOCATE (PLOAD1_REAL,STAT=IERR)
+            IF (IERR == 0) THEN
+               CALL ALLOCATED_MEMORY ( NAME, ZERO, 'DEALLOC', 'Y', CUR_MB_ALLOCATED, SUBR_NAME )
+               CALL WRITE_MEM_SUM_TO_F04 ( NAME, 'DEALLOC', -CUR_MB_ALLOCATED, 0, 0, SUBR_BEGEND )
+            ELSE
+               WRITE(ERR,992) NAME, SUBR_NAME
+               WRITE(F06,992) NAME, SUBR_NAME
+               JERR = JERR + 1
+            ENDIF
+         ENDIF
 
+         NAME = 'PLOAD1_INT'
+         IF (ALLOCATED(PLOAD1_INT)) THEN
+            DEALLOCATE (PLOAD1_INT,STAT=IERR)
+            IF (IERR == 0) THEN
+               CALL ALLOCATED_MEMORY ( NAME, ZERO, 'DEALLOC', 'Y', CUR_MB_ALLOCATED, SUBR_NAME )
+               CALL WRITE_MEM_SUM_TO_F04 ( NAME, 'DEALLOC', -CUR_MB_ALLOCATED, 0, 0, SUBR_BEGEND )
+            ELSE
+               WRITE(ERR,992) NAME, SUBR_NAME
+               WRITE(F06,992) NAME, SUBR_NAME
+               JERR = JERR + 1
+            ENDIF
+         ENDIF
+
+      ELSE IF (NAME_IN == 'SINGLE ELEMENT ARRAYS') THEN! Deallocate arrays for element subcase arrays
          NAME = 'AGRID'
          IF (ALLOCATED(AGRID)) THEN
             DEALLOCATE (AGRID,STAT=IERR)
@@ -1972,7 +1958,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'RIGID_ELEM_IDS') THEN           ! Deallocate array for rigid element ID's
-
          NAME = 'RIGID_ELEM_IDS'
          IF (ALLOCATED(RIGID_ELEM_IDS)) THEN
             DEALLOCATE (RIGID_ELEM_IDS,STAT=IERR)
@@ -1987,7 +1972,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'MPC_IND_GRIDS') THEN            ! Allocate array for MPC_IND_GRIDS
-
          NAME = 'MPC_IND_GRIDS'
          IF (ALLOCATED(MPC_IND_GRIDS)) THEN
             DEALLOCATE (MPC_IND_GRIDS,STAT=IERR)
@@ -2002,7 +1986,6 @@
          ENDIF
 
       ELSE IF (NAME_IN == 'GRID_ELEM_CONN_ARRAY') THEN     ! Allocate array for GRID_ELEM_CONN_ARRAY
-
          NAME = 'GRID_ELEM_CONN_ARRAY'
          IF (ALLOCATED(GRID_ELEM_CONN_ARRAY)) THEN
             DEALLOCATE (GRID_ELEM_CONN_ARRAY,STAT=IERR)
@@ -2017,7 +2000,6 @@
          ENDIF
 
       ELSE                                                 ! NAME not recognized, so coding error
-
          WRITE(ERR,915) SUBR_NAME, 'DEALLOCATED', NAME_IN
          WRITE(F06,915) SUBR_NAME, 'DEALLOCATED', NAME_IN
          FATAL_ERR = FATAL_ERR + JERR
@@ -2025,8 +2007,7 @@
 
       ENDIF
  
-! Quit if there were errors
-
+      ! Quit if there were errors
       IF (JERR /= 0) THEN
          CALL OUTA_HERE ( 'Y' )
       ENDIF

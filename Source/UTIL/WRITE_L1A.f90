@@ -84,7 +84,7 @@
       CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: SUBR_NAME = 'WRITE_L1A'
       CHARACTER(LEN=*), INTENT(IN)    :: CLOSE_STAT        ! STATUS when closing file LINK1A
       CHARACTER(LEN=*), INTENT(IN)    :: CALL_OUTA_HERE    ! 'Y'/'N' indicator of whether to call OUTA_HERE (this should be 'Y'
-!                                                             except when this subr is called by OUTA_HERE
+                                                           !  except when this subr is called by OUTA_HERE
       CHARACTER(LEN=*), INTENT(IN)    :: WRITE_F04         ! If 'Y' write subr begin/end times to F04 (if WRT_LOG >= SUBR_BEGEND)
 
       INTEGER(LONG)                   :: I                 ! DO loop index
@@ -100,13 +100,11 @@
       ENDIF
 
 ! **********************************************************************************************************************************
-! Units for writing open errors
- 
+      ! Units for writing open errors
       OUNT(1) = ERR
       OUNT(2) = F06
 
-! Open L1A file and write STIME
- 
+      ! Open L1A file and write STIME
       OPEN (L1A,FILE=LINK1A,STATUS='REPLACE',IOSTAT=IOCHK)
       IF (IOCHK /= 0) THEN
          CALL OPNERR (IOCHK, LINK1A, OUNT, WRITE_F04 )
@@ -116,17 +114,14 @@
          ENDIF
       ENDIF
       WRITE(L1A,110) STIME
- 
-! Write current LINK number
 
+      ! Write current LINK number
       WRITE(L1A,110) LINKNO
 
-! Write solution name
- 
+      ! Write solution name
       WRITE(L1A,120) SOL_NAME
- 
-! Write I/0 unit numbers, close status and names
- 
+
+      ! Write I/0 unit numbers, close status and names
       WRITE(L1A,140) SC1                                   !   1
 
       WRITE(L1A,151) ANS,ANSSTAT,ANS_MSG,ANSFIL            !   2
@@ -136,7 +131,7 @@
       WRITE(L1A,151) ERR,ERRSTAT,ERR_MSG,ERRFIL            !   6
       WRITE(L1A,151) F04,F04STAT,F04_MSG,F04FIL            !   7
       WRITE(L1A,151) F06,F06STAT,F06_MSG,F06FIL            !   8
-		WRITE(L1A,151) IN0,IN0STAT,IN0_MSG,IN0FIL            !   9
+      WRITE(L1A,151) IN0,IN0STAT,IN0_MSG,IN0FIL            !   9
       WRITE(L1A,151) L1A,L1ASTAT,L1A_MSG,LINK1A            !  10
       WRITE(L1A,151) NEU,NEUSTAT,NEU_MSG,NEUFIL            !  11
       WRITE(L1A,151) PCH,PCHSTAT,PCH_MSG,PCHFIL            !  12
@@ -201,6 +196,7 @@
       WRITE(L1A,151) L5A,L5ASTAT,L5A_MSG,LINK5A            ! 70
       WRITE(L1A,151) L5B,L5BSTAT,L5B_MSG,LINK5B            ! 71
       WRITE(L1A,151) OP2,OP2STAT,OP2_MSG,OP2FIL            ! 72
+     !WRITE(L1A,151) CSV,CSVSTAT,CSV_MSG,CSVFIL            ! 73
       DO I=1,MOU4
          WRITE(L1A,151) OU4(I),OU4STAT(I),OU4FIL(I)        ! 72+I
       ENDDO
@@ -208,10 +204,8 @@
          WRITE(L1A,151) OT4(I),OT4STAT(I),OT4FIL(I)        ! 72+MOU4+I
       ENDDO
 
-! Write counter info from module SCONTR
- 
+      ! Write counter info from module SCONTR
       I = 0
-
       I = I + 1  ;     WRITE(L1A,160) LBAROFF            , 'LBAROFF               (  1)'  !
       I = I + 1  ;     WRITE(L1A,160) LBUSHOFF           , 'LBUSHOFF              (  2)'  !
       I = I + 1  ;     WRITE(L1A,160) LCMASS             , 'LCMASS                (  3)'  !
@@ -242,6 +236,7 @@
       I = I + 1  ;     WRITE(L1A,160) LPLATEOFF          , 'LPLATEOFF             ( 28)'  !
       I = I + 1  ;     WRITE(L1A,160) LPLATETHICK        , 'LPLATETHICK           ( 29)'  !
       I = I + 1  ;     WRITE(L1A,160) LPLOAD             , 'LPLOAD                ( 30)'  !
+     !I = I + 1  ;     WRITE(L1A,160) LPLOAD1            , 'LPLOAD1               ( 30)'  !
       I = I + 1  ;     WRITE(L1A,160) LPLOTEL            , 'LPLOTEL               ( 31)'  !
       I = I + 1  ;     WRITE(L1A,160) LPMASS             , 'LPMASS                ( 32)'  !
       I = I + 1  ;     WRITE(L1A,160) LPROD              , 'LPROD                 ( 33)'  !
@@ -307,6 +302,7 @@
       I = I + 1  ;     WRITE(L1A,160) NCQUAD4            , 'NCQUAD4               ( 93)'  !
       I = I + 1  ;     WRITE(L1A,160) NCQUAD4K           , 'NCQUAD4K              ( 94)'  !
       I = I + 1  ;     WRITE(L1A,160) NCROD              , 'NCROD                 ( 95)'  !
+     !I = I + 1  ;     WRITE(L1A,160) NCTUBE             , 'NCTUBE                ( 95)'  !
       I = I + 1  ;     WRITE(L1A,160) NCSHEAR            , 'NCSHEAR               ( 96)'  !
       I = I + 1  ;     WRITE(L1A,160) NCTETRA4           , 'NCTETRA4              ( 97)'  !
       I = I + 1  ;     WRITE(L1A,160) NCTETRA10          , 'NCTETRA10             ( 98)'  !
@@ -353,9 +349,11 @@
       I = I + 1  ;     WRITE(L1A,160) NPLATETHICK        , 'NPLATETHICK           (139)'  !
       I = I + 1  ;     WRITE(L1A,160) NPLOTEL            , 'NPLOTEL               (140)'  !
       I = I + 1  ;     WRITE(L1A,160) NPLOAD             , 'NPLOAD                (141)'  !
+     !I = I + 1  ;     WRITE(L1A,160) NPLOAD1            , 'NPLOAD1               (141)'  !
       I = I + 1  ;     WRITE(L1A,160) NPLOAD4_3D         , 'NPLOAD4_3D            (142)'  !
       I = I + 1  ;     WRITE(L1A,160) NPMASS             , 'NPMASS                (143)'  !
       I = I + 1  ;     WRITE(L1A,160) NPROD              , 'NPROD                 (144)'  !
+     !I = I + 1  ;     WRITE(L1A,160) NPTUBE             , 'NPTUBE                (144)'  !
       I = I + 1  ;     WRITE(L1A,160) NPSHEAR            , 'NPSHEAR               (145)'  !
       I = I + 1  ;     WRITE(L1A,160) NPSHEL             , 'NPSHEL                (146)'  !
       I = I + 1  ;     WRITE(L1A,160) NPSOLID            , 'NPSOLID               (147)'  !
@@ -517,8 +515,7 @@
       I = I + 1  ;     WRITE(L1A,160) PCH_LINE_NUM       , 'PCH_LINE_NUM          (303)'  !
       I = I + 1  ;     WRITE(L1A,160) SETLEN             , 'SETLEN                (304)'  !
 
-! Write PARAM's (some need to stay the same in a restart)
-
+      ! Write PARAM's (some need to stay the same in a restart)
       WRITE(L1A,191) ELFORCEN, 'PARAM ELFORCEN (needed for restart)'
       WRITE(L1A,191) HEXAXIS , 'PARAM HEXAXIS  (needed for restart)'
       WRITE(L1A,191) MATSPARS, 'PARAM MATSPARS (needed for restart)'
@@ -534,8 +531,7 @@
       WRITE(L1A,193) CBMIN3  , 'PARAM CBMIN3   (needed for restart)'
       WRITE(L1A,193) CBMIN4  , 'PARAM CBMIN4   (needed for restart)'
 
-! Write COMM
-
+      ! Write COMM
       WRITE(L1A,103) (COMM(I),I=0,49)
 
       CALL FILE_CLOSE ( L1A, LINK1A, CLOSE_STAT, 'Y' )

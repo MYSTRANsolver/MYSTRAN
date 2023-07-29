@@ -364,9 +364,23 @@
 
       CHARACTER( 1*BYTE), ALLOCATABLE :: PTYPE(:)            ! NELE x 1 array of how many pressures there are in PDATA for an elem.
 !                                                              ('6' for PLOAD1, '1' for PLOAD2, and '3' or '4' for PLOAD4)
+!                                                               TODO PLOAD1 is inconsistent with elsewhere in the code (should be '2'???)
 
       INTEGER(LONG), ALLOCATABLE      :: PPNT(:,:)           ! NELE x 1 array of pointers to where in PDATA the elem pressure data
 !                                                              begins for an element
+
+      INTEGER(LONG), ALLOCATABLE      :: PLOAD1_INT(:,:)       ! PLOAD1_INT x 1 array of elem ID and 3 ints for the flags
+!                                                              a line element where an x1/p1 and x2/p2 are defined (via PLOAD1 B.D. entry)
+!                                                              Col 1 is type
+!                                                              Col 2 is scale
+!                                                              Col 3 is the actual element ID (add later???; reorder column if yes)
+
+      INTEGER(LONG), ALLOCATABLE      :: PLOAD1_REAL(:,:)      ! PLOAD1_REAL x 1 array of elem ID and 3 or 4 grids for the face on
+!                                                              a line element where an x1/p1 and x2/p2 are defined (via PLOAD1 B.D. entry)
+!                                                              Col 1 is x1
+!                                                              Col 2 is p1
+!                                                              Col 3 is x2
+!                                                              Col 4 is p2
 
       INTEGER(LONG), ALLOCATABLE      :: PLOAD4_3D_DATA(:,:) ! NPLOAD4_3D x 1 array of elem ID and 3 or 4 grids for the face on
 !                                                              a solid element where a pressure is defined (via PLOAD4 B.D. entry)
@@ -590,6 +604,7 @@
       INTEGER(LONG), ALLOCATABLE      :: PCOMP  (:,:)         ! See description below
       INTEGER(LONG), ALLOCATABLE      :: PELAS  (:,:)         ! See description below
       INTEGER(LONG), ALLOCATABLE      :: PROD   (:,:)         ! See description below
+      INTEGER(LONG), ALLOCATABLE      :: PTUBE  (:,:)         ! See description below
       INTEGER(LONG), ALLOCATABLE      :: PSHEAR (:,:)         ! See description below
       INTEGER(LONG), ALLOCATABLE      :: PSHEL  (:,:)         ! See description below
       INTEGER(LONG), ALLOCATABLE      :: PSOLID (:,:)         ! See description below
@@ -603,6 +618,7 @@
       REAL(DOUBLE) , ALLOCATABLE      :: RPCOMP (:,:)         ! See description below
       REAL(DOUBLE) , ALLOCATABLE      :: RPELAS (:,:)         ! See description below
       REAL(DOUBLE) , ALLOCATABLE      :: RPROD  (:,:)         ! See description below
+      REAL(DOUBLE) , ALLOCATABLE      :: RPTUBE (:,:)         ! See description below
       REAL(DOUBLE) , ALLOCATABLE      :: RPSHEAR(:,:)         ! See description below
       REAL(DOUBLE) , ALLOCATABLE      :: RPSHEL (:,:)         ! See description below
       REAL(DOUBLE) , ALLOCATABLE      :: RPUSER1(:,:)         ! See description below
@@ -733,15 +749,19 @@
 !             ( 2) Col  2: Damping coefficient, GE
 !             ( 3) Col  3: Stress recovery coefficient, S
 
-!  PROD   = Array of integer data from PROD  Bulk Data entries. Each row is for one PROD  entry read in B.D. and contains:
+!  PROD   = Array of integer data from PROD  Bulk Data entries. Each row is for one PROD entry read in B.D. and contains:
 !             ( 1) Col  1: Property ID
 !             ( 2) Col  2: Material ID
 
-!  RPROD  = Array of real data from PROD  Bulk Data entries. Each row is for one PROD  entry read in B.D. and contains:
+!  RPROD  = Array of real data from PROD  Bulk Data entries. Each row is for one PROD entry read in B.D. and contains:
 !             ( 1) Col  1: Cross sectional area, A
 !             ( 2) Col  2: Torsion constant, J
 !             ( 3) Col  3: Torsion stress recov. coeff, C
 !             ( 4) Col  4: Non structural mass, NSM
+
+
+!  PTUBE  = Array of integer data from TUBE Bulk Data entries. Each row is for one PTUBE entry read in B.D. and contains:
+!  RPTUBE = Array of real data from TUBE Bulk Data entries. Each row is for one PTUBE entry read in B.D. and contains:
 
 !  PSHEAR = Array of integer data from PSHEL Bulk Data entries. Each row is for one PSHELL entry read in B.D. and contains:
 !             ( 1) Col  1: Property ID
@@ -879,6 +899,7 @@
 !       13)  'QUAD4   ' for QUAD4   element
 !       14)  'QUAD4K  ' for QUAD4K  element
 !       15)  'ROD     ' for ROD     element
+!       xx)  'TUBE    ' for TUBE    element
 !       16)  'SHEAR   ' for SHEAR   element
 !       17)  'TETRA4  ' for TETRA4  element
 !       18)  'TETRA10 ' for TETRA10 element
@@ -1001,7 +1022,7 @@
 !                                 2) Prop ID
 !                                 3) Grid A
 !                                 4) Grid B
- 
+
 !       16)   SHEAR               1) Elem ID
 !                                 2) Prop ID
 !                                 3) Grid A 
@@ -1045,7 +1066,7 @@
 !                                 6) Grid D
 !                                 7) Grid V
 !                                 8) - 11) Pin Flags (A, B, C, D)
- 
+
 !       21)   USERIN
 !                                 1) Elem ID
 !                                 2) Prop ID
@@ -1059,7 +1080,7 @@
 ! ------------------
 !  1) After the Bulk Data has been read, all of the above arrays are in the order in which the elems were read from the B.D. deck.
 !     Thus, at this point, ESORT2 is an array of consecutive integers starting with 1 and ending with NELE (the number of elements).
- 
+
 !  2) After subr ELESORT has run, arrays ESORT1, ESORT2, EOFF, EPNT, ETYPE are sorted together such that the elems in ESORT1 are in
 !     numerically increasing order. EDAT remains as it was constructed when the Bulk Data was read - in the order in which elems
 !     were placed in the Bulk Data Deck.

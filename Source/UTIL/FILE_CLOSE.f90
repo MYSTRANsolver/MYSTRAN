@@ -25,9 +25,22 @@
 ! End MIT license text.                                                                                      
  
       SUBROUTINE FILE_CLOSE ( UNIT, FILNAM, CLOSE_STAT, WRITE_F04 )
- 
-! Closes files and writes message if the close fails
- 
+      ! Closes a file
+      !
+      ! Parameters
+      ! ----------
+      ! UNIT : int
+      !    the file number to close
+      ! FILNAM : str
+      !    the filename to close (presumably just for informational purposes)
+      ! CLOSE_STAT : str8
+      !    'keep'   : keep the file
+      !    'delete' : delete the file
+      !    'scratch': delete the file if the file status is scratch
+      ! WRITE_F04 : str1
+      !    Y/N : write to F04 about closing the file
+
+      ! Closes files and writes message if the close fails
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
       USE IOUNT1, ONLY                :  FILE_NAM_MAXLEN, WRT_ERR, WRT_LOG, F04, SC1
       USE SCONTR, ONLY                :  BLNK_SUB_NAM
@@ -37,7 +50,7 @@
       USE FILE_CLOSE_USE_IFs
 
       IMPLICIT NONE
- 
+
       LOGICAL                         :: FILE_EXIST
       LOGICAL                         :: FILE_OPND
 
@@ -48,7 +61,7 @@
 
       CHARACTER(LEN=*)   , INTENT(IN) :: CLOSE_STAT        ! Status for close
       CHARACTER(LEN=*)   , INTENT(IN) :: WRITE_F04         ! If 'Y' write to F04, otherwise do not
-      CHARACTER( 6*BYTE)              :: NAM_CLS 
+      CHARACTER( 6*BYTE)              :: NAM_CLS
       CHARACTER( 3*BYTE)              :: UNIT_NAME = '???' ! Extension of FILNAM (e.g. F06, etc)
 
       INTEGER(LONG), INTENT(IN)       :: UNIT              ! File unit number
