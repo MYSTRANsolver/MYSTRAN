@@ -39,7 +39,7 @@
       USE DEBUG_PARAMETERS, ONLY      :  DEBUG
       USE SUBR_BEGEND_LEVELS, ONLY    :  ELMOFF_BEGEND
       USE CONSTANTS_1, ONLY           :  ZERO, ONE
-      USE PARAMS, ONLY                :  K6ROT
+      USE PARAMS, ONLY                :  K6ROT, EPSIL
       USE MODEL_STUF, ONLY            :  CAN_ELEM_TYPE_OFFSET, ELDOF, ELGP, EID, KE, ME, NUM_EMG_FATAL_ERRS, RMATL, RPSHEL,        &
                                          OFFDIS, OFFSET, PPE, PTE, SE1, SE2, SE3, XEL, ERR_SUB_NAM, EMG_IFE, EMG_RFE, TYPE
       USE ELMOFF_USE_IFs
@@ -212,10 +212,10 @@
          CALL MATMULT_FFF   ( KE1, E     , 6*ELGP, 6*ELGP, 6*ELGP, DUM_KE )
          CALL MATMULT_FFF_T ( E  , DUM_KE, 6*ELGP, 6*ELGP, 6*ELGP, KE1    )
 
-! Set KE = KE1 for 6*ELGP by 6*ELGP terms
-         
+        
 ! Get the Jacobian in order to compute the Ksita virtual stiffness
 
+! Here begins the code copied from QDEL
 ! Calculate side diffs
   
          XSD(1) = XEL(1,1) - XEL(2,1)                         ! x coord diffs (in local elem coords)
@@ -250,7 +250,8 @@
          ENDDO   
  
 ! If AREA <= 0, set error and return
-          
+         EPS1 = EPSIL(1)
+         !WRITE(F06, 1926) EID, TYPE, AREA, EPS1
          IF (AREA < EPS1) THEN
             NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
             FATAL_ERR = FATAL_ERR + 1
@@ -266,7 +267,9 @@
             ENDIF
             RETURN
          ENDIF
-         
+
+! Set KE = KE1 for 6*ELGP by 6*ELGP terms
+
 ! Compute the Ksita matrix for virtual stiffness
          
          Ksita = 10.0**(-6.0)*RMATL(NMATL, 2)*RPSHEL(NPSHEL, 1)*abs(DETJ)*K6ROT
@@ -575,6 +578,8 @@
                     ,/,14X,' ELEMENT TYPE ',A,' DOES NOT SUPPORT OFFSETS. ERROR OCCURRED FOR ELEMENT NUMBER ',I8)
 
 1925 FORMAT(' *ERROR  1925: ELEMENT ',I8,', TYPE ',A,', HAS ZERO OR NEGATIVE ',A,' = ',1ES9.1)
+
+1926 FORMAT("K6ROT DEBUG: EID=", I8, ", TYPE=", A, ", AREA=", ES0.2, ", EPS1=", ES0.2, /)
 
 1927 FORMAT(' *ERROR  1927: PROGRAMMING ERROR IN SUBROUTINE ',A                                                                   &
                     ,/,14X,' CHAR PARAMETER QUAD4TYP MUST BE EITHER "MIN4T" OR "MIN4 " BUT IS "',A,'"')
