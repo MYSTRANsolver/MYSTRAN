@@ -579,7 +579,7 @@
 
 1925 FORMAT(' *ERROR  1925: ELEMENT ',I8,', TYPE ',A,', HAS ZERO OR NEGATIVE ',A,' = ',1ES9.1)
 
-1926 FORMAT("K6ROT DEBUG: EID=", I8, ", TYPE=", A, ", AREA=", ES0.2, ", EPS1=", ES0.2, /)
+!1926 FORMAT("K6ROT DEBUG: EID=", I8, ", TYPE=", A, ", AREA=", ES0.2, ", EPS1=", ES0.2, /)
 
 1927 FORMAT(' *ERROR  1927: PROGRAMMING ERROR IN SUBROUTINE ',A                                                                   &
                     ,/,14X,' CHAR PARAMETER QUAD4TYP MUST BE EITHER "MIN4T" OR "MIN4 " BUT IS "',A,'"')
