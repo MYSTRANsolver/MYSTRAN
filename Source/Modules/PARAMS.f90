@@ -148,7 +148,7 @@
       INTEGER(LONG)            :: GRDPNT_IN      =    -1     ! Value of GRDPNT read in the Bulk Data File
 
 ! ----------------------------------------------------------------------------------------------------------------------------------
-      CHARACTER(  8*BYTE)      :: GRIDSEQ        ='BANDIT  ' ! Method for sequencing grids:
+      CHARACTER(  8*BYTE)      :: GRIDSEQ        = 'INPUT   '! Method for sequencing grids:
 !                                                              BANDIT for bandit auto grid swquencing
 !                                                              GRID for grid numerical order
 !                                                              INPUT for grid input order
