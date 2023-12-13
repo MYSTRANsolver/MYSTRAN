@@ -3124,24 +3124,36 @@ do_i:    DO I=1,JCARD_LEN
          CALL BD_IMBEDDED_BLANK   ( JCARD,0,3,0,0,0,0,0,0 )! Make sure that there are no imbedded blanks in field 3
          CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,4,5,6,7,8,9 )! Issue warning if fields 4-9 not blank
          CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
+
          
-! WTMASS multiplies the mass matrix (after the grid pt wgt generator) by the real WTMASS value
-         
+! K6ROT is a small stiffness added to the drilling dof of 5-dof shells.
+
       ELSE IF (JCARD(2)(1:8) == 'K6ROT   ') THEN
          PARNAM = 'K6ROT   '
          CALL R8FLD ( JCARD(3), JF(3), R8PARM )
          IF (IERRFL(3) == 'N') THEN
             IF (R8PARM >= 0) THEN
                K6ROT = R8PARM
+               IF (K6ROT == 0) THEN
+                  WARN_ERR = WARN_ERR + 1
+                  WRITE(ERR,101) CARD
+                  WRITE(ERR,106)
+                  IF (SUPWARN == 'N') THEN
+                     IF (ECHO == 'NONE  ') THEN
+                        WRITE(F06,101) CARD
+                     ENDIF
+                     WRITE(F06,106)
+                  ENDIF
+               ENDIF
             ELSE
                FATAL_ERR = FATAL_ERR + 1
                WRITE(ERR,101) CARD
-               WRITE(ERR,1147) PARNAM,'< 0',R8PARM
+               WRITE(ERR,1173) PARNAM,'>= 0.D0',R8PARM
                IF (SUPWARN == 'N') THEN
                   IF (ECHO == 'NONE  ') THEN
                      WRITE(F06,101) CARD
                   ENDIF
-                  WRITE(F06,1147) PARNAM,'< 0',R8PARM
+                  WRITE(F06,1173) PARNAM,'>= 0.D0',R8PARM
                ENDIF
             ENDIF
          ENDIF
@@ -3186,6 +3198,8 @@ do_i:    DO I=1,JCARD_LEN
 
   104 FORMAT(' *WARNING    : USE OF ":" SEPERATOR FOR THE PARAM USETSTR BULK DATA ENTRY NOT ALLOWED. ENTRY HAD "',A,'" IN FIELD 3')
 
+  106 FORMAT(" *WARNING    : PARAMETER K6ROT SHOULD NOT BE SET TO ZERO SAVE FOR DEBUGGING.")
+  
  1110 FORMAT(' *ERROR  1110: PARAMETER NAMED ',A,' MUST BE >= ',I2,' AND <= ',I2,' BUT INPUT VALUE IS: ',A)
 
  1146 FORMAT(' *INFORMATION: PARAMETER ',A,' CHANGED FROM ',I8,' TO ',I8,/)
@@ -3217,7 +3231,6 @@ do_i:    DO I=1,JCARD_LEN
              ' *WARNING    : PARAMETER ',A15,' SHOULD NOT BE CHANGED FROM "SYM" TO "NONSYM". WRONG ANSWERS WILL PROBABLY RESULT',/,&
              ' >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>',&
              '>>>>>>>>>>>>>>>>>')
-             
 ! ##################################################################################################################################
  
       CONTAINS
