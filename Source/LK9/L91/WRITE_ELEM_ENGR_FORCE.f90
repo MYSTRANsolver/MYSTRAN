@@ -682,7 +682,7 @@ headr:IF (IHDR == 'Y') THEN
          DO II=1,NUM
             WRITE(ANS,1412) FILL(1:16), EID_OUT_ARRAY(II,1),(OGEL(II,JJ),JJ=1,3)
          ENDDO   
-         WRITE(ANS,1413) (MAX_ANS(JJ),JJ=1,8),(MIN_ANS(JJ),JJ=1,8),(ABS_ANS(JJ),JJ=1,3)
+         WRITE(ANS,1413) (MAX_ANS(JJ),JJ=1,3),(MIN_ANS(JJ),JJ=1,3),(ABS_ANS(JJ),JJ=1,3)
 
       ELSE IF (WHICH == 'SHELL') THEN
          DO II=1,NUM
