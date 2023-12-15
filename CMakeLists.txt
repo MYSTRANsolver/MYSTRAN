@@ -8,8 +8,8 @@ enable_language(Fortran)
 project(Mystran)
 
 # basic compiler and output options
-set(CMAKE_SOURCE_DIR "Source")
-set(PROJECT_BINARY_DIR "Binaries")
+set(CMAKE_SOURCE_DIR "${PROJECT_SOURCE_DIR}/Source")
+set(PROJECT_BINARY_DIR "${PROJECT_SOURCE_DIR}/Binaries")
 set(CMAKE_FLAGS "-c -fbacktrace")
 # set(CMAKE_BUILD_TYPE Debug)
 
@@ -47,7 +47,7 @@ if(GIT_FOUND AND EXISTS "${PROJECT_SOURCE_DIR}/.git")
 endif()
 
 # check for SuperLU
-set(SUPERLU_DIR "superlu")
+set(SUPERLU_DIR "${PROJECT_SOURCE_DIR}/superlu")
 include_directories("${SUPERLU_DIR}/SRC")
 if(NOT EXISTS "${SUPERLU_DIR}/CMakeLists.txt")
   message(
@@ -58,7 +58,7 @@ endif()
 
 
 # f2c stuff
-set(F2C_DIR "f2c")
+set(F2C_DIR "${PROJECT_SOURCE_DIR}/f2c")
 set(F2C_INCLUDE_DIR "${F2C_DIR}/include")
 set(F2C_FN "${F2C_DIR}/libf2c.zip")
 set(F2C_URL "https://www.netlib.org/${F2C_FN}")
