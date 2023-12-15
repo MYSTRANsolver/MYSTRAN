@@ -968,6 +968,8 @@
           NVALUES = NUM * NUM_WIDE
           NTOTAL = NVALUES * 4
 
+          ! the below call is a placeholder to prevent a memory bug
+          CALL GET_STRESS_CODE( STRESS_CODE, 1,            0,         1)
           ! eid, max_shear, avg_shear, margin
           CALL WRITE_OES3_STATIC(ITABLE, ISUBCASE, DEVICE_CODE, ELEMENT_TYPE, NUM_WIDE, STRESS_CODE, &
                                  TITLE, SUBTITLE, LABEL, FIELD5_INT_MODE, FIELD6_EIGENVALUE)
