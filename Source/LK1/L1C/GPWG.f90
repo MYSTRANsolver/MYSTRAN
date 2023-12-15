@@ -512,6 +512,7 @@ userin:        IF ((WHICH(1:8) == 'OA MODEL') .OR. (WHICH(1:6) == 'USERIN')) THE
       IF ((INFO == 0) .AND. (REFPNT >= 0)) THEN  
 
          IF(REFPNT > -1) THEN
+           ITABLE = -3
  1         FORMAT("WRITE OGPWG OP2: ",A)
  2         FORMAT("* DEBUG OGPWG ITABLE=",i4)
            WRITE(ERR,1) "START"
@@ -519,7 +520,6 @@ userin:        IF ((WHICH(1:8) == 'OA MODEL') .OR. (WHICH(1:6) == 'USERIN')) THE
            
            TABLE_NAME = "OGPWG   "
            CALL WRITE_TABLE_HEADER(TABLE_NAME)
-           ITABLE = -3
            ANALYSIS_CODE = 1   ! TODO: this is probably wrong, but is weird for this table
 
            WRITE(ERR,2) ITABLE
@@ -690,5 +690,3 @@ userin:        IF ((WHICH(1:8) == 'OA MODEL') .OR. (WHICH(1:6) == 'USERIN')) THE
 
       ITABLE = ITABLE - 1        ! flip it to -4, -6, ... so we don't have to do this later
       END SUBROUTINE WRITE_OPGWG_TABLE3
-
-
