@@ -61,7 +61,7 @@ endif()
 set(F2C_DIR "${PROJECT_SOURCE_DIR}/f2c")
 set(F2C_INCLUDE_DIR "${F2C_DIR}/include")
 set(F2C_FN "${F2C_DIR}/libf2c.zip")
-set(F2C_URL "https://www.netlib.org/${F2C_FN}")
+set(F2C_URL "https://www.netlib.org/f2c/libf2c.zip")
 
 # download f2c
 if(NOT EXISTS ${F2C_DIR})
