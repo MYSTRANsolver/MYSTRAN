@@ -175,6 +175,14 @@ target_link_libraries(mystran dgssv superlu f2c)
 set_target_properties(
   mystran PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}
 )
+if (CMAKE_COMPILER_IS_GNUCC)
+  target_compile_options(
+    mystran PRIVATE
+    -Wall -Wextra
+    -Wno-unused-variable -Wno-unused-label -Wno-unused-parameter -Wno-tabs
+    -Wno-compare-reals -Wno-character-truncation -Wno-unused-dummy-argument
+  )
+endif()
 
 # issue a couple messages about compilation
 include(ProcessorCount)
