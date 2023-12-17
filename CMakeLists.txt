@@ -181,6 +181,7 @@ if (CMAKE_COMPILER_IS_GNUCC)
     -Wall -Wextra
     -Wno-unused-variable -Wno-unused-label -Wno-unused-parameter -Wno-tabs
     -Wno-compare-reals -Wno-character-truncation -Wno-unused-dummy-argument
+    -Wmaybe-uninitialized
   )
 endif()
 
