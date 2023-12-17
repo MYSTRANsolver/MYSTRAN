@@ -72,6 +72,8 @@
             WRITE(ERR,992) NAME,SUBR_NAME
             WRITE(F06,992) NAME,SUBR_NAME
             JERR = JERR + 1
+         ELSE
+            CALL ALLOCATED_MEMORY ( NAME, ZERO, 'DEALLOC', 'Y', CUR_MB_ALLOCATED, SUBR_NAME )
          ENDIF 
       ENDIF
 
@@ -83,7 +85,6 @@
       ENDIF
 
 ! **********************************************************************************************************************************
-      CALL ALLOCATED_MEMORY ( NAME, ZERO, 'DEALLOC', 'Y', CUR_MB_ALLOCATED, SUBR_NAME )
 
       IF (WRT_LOG >= SUBR_BEGEND) THEN
          CALL OURTIM
