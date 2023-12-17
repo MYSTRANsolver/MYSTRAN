@@ -54,6 +54,7 @@
       USE CONSTANTS_1, ONLY           :  ZERO
       USE DEBUG_PARAMETERS, ONLY      :  DEBUG
       USE SUBR_BEGEND_LEVELS, ONLY    :  READ_MATRIX_1_BEGEND
+      USE PARAMS, ONLY                :  NOCOUNTS
 
       USE READ_MATRIX_1_USE_IFs
 
@@ -145,7 +146,9 @@
       I_MATOUT(1) = 1
 
 !xx   WRITE(SC1, * )
-      WRITE(SC1,12345,ADVANCE='NO') NAME, IROW_OLD+1, NROWS, NTERM, CR13
+      IF (NOCOUNTS /= 'Y') THEN
+         WRITE(SC1,12345,ADVANCE='NO') NAME, IROW_OLD+1, NROWS, NTERM, CR13
+      ENDIF
 k_do1:DO K = 1,NTERM
          READ(UNT,IOSTAT=IOCHK) IROW,JCOL,RVAL
          IF (IOCHK /= 0) THEN
@@ -159,7 +162,9 @@ k_do1:DO K = 1,NTERM
             CYCLE k_do1
          ELSE
             IF (IROW > IROW_OLD) THEN
-               WRITE(SC1,12345,ADVANCE='NO') NAME, IROW, NROWS, NTERM, CR13
+               IF (NOCOUNTS /= 'Y') THEN
+                  WRITE(SC1,12345,ADVANCE='NO') NAME, IROW, NROWS, NTERM, CR13
+               ENDIF
                DO I=IROW_OLD+1,IROW
                   I_MATOUT(I+1) = I_MATOUT(I)
                ENDDO

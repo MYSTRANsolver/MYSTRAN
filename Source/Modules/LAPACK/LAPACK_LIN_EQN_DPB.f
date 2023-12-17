@@ -9,6 +9,7 @@
      &                                      SFRAC, TSEC
       USE SUBR_BEGEND_LEVELS, ONLY       :  LAPACK_BEGEND
       USE LAPACK_BLAS_AUX
+      USE PARAMS, ONLY                   :  NOCOUNTS
 
       character(1*byte), parameter      :: cr13_dpb = char(13)
 
@@ -806,7 +807,9 @@
 *
          WRITE(SC1,*)
          DO 10 J = 1, N
-            write(sc1,12345,advance='no') j,n,cr13_dpb
+            IF (NOCOUNTS .NE. 'Y') THEN
+                  write(sc1,12345,advance='no') j,n,cr13_dpb
+            ENDIF
 *
 *           Compute U(J,J) and test for non-positive-definiteness.
 *
@@ -833,7 +836,9 @@
 *
          WRITE(SC1,*)
          DO 20 J = 1, N
-            write(sc1,12345,advance='no') j,n,cr13_dpb
+            IF (NOCOUNTS .NE. 'Y') THEN
+                  write(sc1,12345,advance='no') j,n,cr13_dpb
+            ENDIF
 *
 *           Compute L(J,J) and test for non-positive-definiteness.
 *

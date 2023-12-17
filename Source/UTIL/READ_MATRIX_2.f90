@@ -52,6 +52,7 @@
       USE TIMDAT, ONLY                :  TSEC
       USE CONSTANTS_1, ONLY           :  ZERO
       USE SUBR_BEGEND_LEVELS, ONLY    :  READ_MATRIX_2_BEGEND
+      USE PARAMS, ONLY                :  NOCOUNTS
  
       USE READ_MATRIX_2_USE_IFs
 
@@ -132,7 +133,9 @@
 !xx   WRITE(SC1, * )
       OLD_ROW_NUM = 0
       IERROR  = 0
-      WRITE(SC1,12345,ADVANCE='NO') NAME, OLD_ROW_NUM+1, NROWS, NTERMS, CR13
+      IF (NOCOUNTS /= 'Y') THEN
+         WRITE(SC1,12345,ADVANCE='NO') NAME, OLD_ROW_NUM+1, NROWS, NTERMS, CR13
+      ENDIF
       DO K = 1,NTERMS
          READ(UNT,IOSTAT=IOCHK) I2_MATOUT(K), J_MATOUT(K), MATOUT(K)
          IF (IOCHK /= 0) THEN
@@ -145,7 +148,9 @@
             IERROR = IERROR + 1
          ENDIF
          IF (I2_MATOUT(K) > OLD_ROW_NUM) THEN
-            WRITE(SC1,12345,ADVANCE='NO') NAME, I2_MATOUT(K), NROWS, NTERMS, CR13
+            IF (NOCOUNTS /= 'Y') THEN
+               WRITE(SC1,12345,ADVANCE='NO') NAME, I2_MATOUT(K), NROWS, NTERMS, CR13
+            ENDIF
          ENDIF
       ENDDO
       WRITE(SC1,*) CR13      

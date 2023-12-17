@@ -35,7 +35,7 @@
       USE IOUNT1, ONLY                :  FILE_NAM_MAXLEN, WRT_ERR, WRT_LOG, ERR, F04, F06, SCR
       USE SCONTR, ONLY                :  BLNK_SUB_NAM, FACTORED_MATRIX, FATAL_ERR, KLL_SDIA, NDOFR, NDOFL, NTERM_DLR, NTERM_KLL,   &
                                          NTERM_KRL
-      USE PARAMS, ONLY                :  EPSIL, PRTDLR, SOLLIB, SPARSE_FLAVOR, SPARSTOR
+      USE PARAMS, ONLY                :  EPSIL, PRTDLR, SOLLIB, SPARSE_FLAVOR, SPARSTOR, NOCOUNTS
       USE TIMDAT, ONLY                :  HOUR, MINUTE, SEC, SFRAC, TSEC
       USE SUBR_BEGEND_LEVELS, ONLY    :  SOLVE_DLR_BEGEND
       USE CONSTANTS_1, ONLY           :  ZERO, ONE
@@ -165,7 +165,9 @@
 
          CALL OURTIM
          MODNAM1 = '    Solve for DLR col '
-         WRITE(SC1,12345,ADVANCE='NO') MODNAM1, J, NDOFR, CR13
+         IF (NOCOUNTS /= 'Y') THEN
+            WRITE(SC1,12345,ADVANCE='NO') MODNAM1, J, NDOFR, CR13
+         ENDIF
 
 ! To solve for the j-th col of DLR, use the j-th row of KRL (j-th col of KLR) as a rhs vector. Get the j-th row of KRL and put
 ! the negative of it into array INOUT_COL:

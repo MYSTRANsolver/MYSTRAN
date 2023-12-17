@@ -37,7 +37,7 @@
       USE SCONTR, ONLY                :  BLNK_SUB_NAM, FACTORED_MATRIX, FATAL_ERR, LINKNO
       USE TIMDAT, ONLY                :  HOUR, MINUTE, SEC, SFRAC, STIME, TSEC       
       USE CONSTANTS_1, ONLY           :  ZERO, ONE, ONEPP6
-      USE PARAMS, ONLY                :  BAILOUT, EPSIL, MAXRATIO, SUPINFO
+      USE PARAMS, ONLY                :  BAILOUT, EPSIL, MAXRATIO, SUPINFO, NOCOUNTS
       USE LAPACK_DPB_MATRICES, ONLY   :  ABAND, LAPACK_S
       USE DEBUG_PARAMETERS, ONLY      :  DEBUG, NDEBUG
       USE MACHINE_PARAMS, ONLY        :  MACH_LARGE_NUM  
@@ -341,7 +341,9 @@
       WRITE(SC1,3092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
 
       DO I=1,NROWS                                         ! First, get diagonal terms from MATIN
-         WRITE(SC1,12345,ADVANCE='NO') I, NROWS, CR13
+         IF (NOCOUNTS /= 'Y') THEN
+            WRITE(SC1,12345,ADVANCE='NO') I, NROWS, CR13
+         ENDIF
          IF (I_MATIN(I) == I_MATIN(I+1)) THEN
             MATIN_DIAG(I) = ZERO
          ELSE
@@ -356,7 +358,9 @@
 
          CALL GET_GRID_AND_COMP ( MATIN_SET, I, GRIDV, COMPV  )
 
-         WRITE(SC1,22345,ADVANCE='NO') I, NROWS, CR13
+         IF (NOCOUNTS /= 'Y') THEN
+            WRITE(SC1,22345,ADVANCE='NO') I, NROWS, CR13
+         ENDIF
          FAC_DIAG = ABAND(MATIN_SDIA+1,I)
 
          IF (FAC_DIAG <= EPS1) THEN                        ! Zero or negative factor diagonal. (MATIN is nonpositive definite)
@@ -505,10 +509,3 @@
 !***********************************************************************************************************************************
 
       END SUBROUTINE SYM_MAT_DECOMP_LAPACK
-
-
-
-
-
-
-

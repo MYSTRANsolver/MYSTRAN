@@ -68,6 +68,7 @@
       USE CONSTANTS_1, ONLY           :  ZERO
       USE SUBR_BEGEND_LEVELS, ONLY    :  PARTITION_SS_BEGEND
       USE DEBUG_PARAMETERS, ONLY      :  DEBUG
+      USE PARAMS, ONLY                :  NOCOUNTS
  
       USE PARTITION_SS_USE_IFs
 
@@ -251,7 +252,9 @@ i_do: DO I=1,NROW_A                                        ! Matrix partition lo
 
                                                            ! Write message to screen
             CALL OURTIM
-            WRITE(SC1,12345,ADVANCE='NO') MAT_B_NAME, MAT_A_NAME, L, NROW_B, SYM_A, SYM_B, HOUR, MINUTE, SEC, SFRAC, CR13
+            IF (NOCOUNTS /= 'Y') THEN
+               WRITE(SC1,12345,ADVANCE='NO') MAT_B_NAME, MAT_A_NAME, L, NROW_B, SYM_A, SYM_B, HOUR, MINUTE, SEC, SFRAC, CR13
+            ENDIF
             DO K=1,AROW_MAX_TERMS                          ! Null J_AROW and AROW each time we begin a new row of A
                AROW(K)    = ZERO
                J_AROW(K)  = 0

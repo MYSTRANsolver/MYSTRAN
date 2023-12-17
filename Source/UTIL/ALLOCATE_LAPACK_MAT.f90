@@ -34,7 +34,7 @@
       USE SCONTR, ONLY                :  BLNK_SUB_NAM, FATAL_ERR, TOT_MB_MEM_ALLOC
       USE TIMDAT, ONLY                :  TSEC
       USE DEBUG_PARAMETERS, ONLY      :  DEBUG
-      USE PARAMS, ONLY                :  WINAMEM
+      USE PARAMS, ONLY                :  WINAMEM, NOCOUNTS
       USE SUBR_BEGEND_LEVELS, ONLY    :  ALLOCATE_LAPACK_MAT_BEGEND
       USE ARPACK_MATRICES_1 , ONLY    :  IWORK, RFAC, RESID, SELECT, VBAS, WORKD, WORKL
       USE LAPACK_DPB_MATRICES, ONLY   :  ABAND, BBAND, LAPACK_S, RES
@@ -101,7 +101,9 @@
             IF (IERR == 0) THEN
          !xx   WRITE(SC1, * )                              ! Advance 1 line for screen messages
                DO I=1,NROWS
-                  WRITE(SC1,12345,ADVANCE='NO') NAME, I, NROWS, NCOLS, CR13 
+                  IF (NOCOUNTS /= 'Y') THEN
+                     WRITE(SC1,12345,ADVANCE='NO') NAME, I, NROWS, NCOLS, CR13
+                  ENDIF
                   DO J=1,NCOLS
                      ABAND(I,J) = ZERO
                   ENDDO
@@ -129,7 +131,9 @@
             IF (IERR == 0) THEN
          !xx   WRITE(SC1, * )                              ! Advance 1 line for screen messages
                DO I=1,NROWS
-                  WRITE(SC1,12345,ADVANCE='NO') NAME, I, NROWS, NCOLS, CR13 
+                  IF (NOCOUNTS /= 'Y') THEN
+                     WRITE(SC1,12345,ADVANCE='NO') NAME, I, NROWS, NCOLS, CR13 
+                  ENDIF
                   DO J=1,NCOLS
                      BBAND(I,J) = ZERO
                   ENDDO
@@ -269,7 +273,9 @@
             IF (IERR == 0) THEN
          !xx   WRITE(SC1, * )                              ! Advance 1 line for screen messages
                DO I=1,NROWS
-                  WRITE(SC1,12345,ADVANCE='NO') NAME, I, NROWS, NCOLS, CR13
+                  IF (NOCOUNTS /= 'Y') THEN
+                     WRITE(SC1,12345,ADVANCE='NO') NAME, I, NROWS, NCOLS, CR13
+                  ENDIF
                   DO J=1,NCOLS
                      RFAC(I,J) = ZERO
                   ENDDO
@@ -297,7 +303,9 @@
             IF (IERR == 0) THEN
          !xx   WRITE(SC1, * )                              ! Advance 1 line for screen messages
                DO I=1,NROWS
-                  WRITE(SC1,12345,ADVANCE='NO') NAME, I, NROWS, NCOLS, CR13
+                  IF (NOCOUNTS /= 'Y') THEN
+                     WRITE(SC1,12345,ADVANCE='NO') NAME, I, NROWS, NCOLS, CR13
+                  ENDIF
                   DO J=1,NCOLS
                      VBAS(I,J) = ZERO
                   ENDDO

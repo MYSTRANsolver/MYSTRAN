@@ -37,6 +37,7 @@
       USE SCONTR, ONLY                :  BLNK_SUB_NAM
       USE TIMDAT, ONLY                :  TSEC
       USE SUBR_BEGEND_LEVELS, ONLY    :  WRITE_MATRIX_1_BEGEND
+      USE PARAMS, ONLY                :  NOCOUNTS
 
       USE WRITE_MATRIX_1_USE_IFs
 
@@ -84,7 +85,9 @@
 !xx   WRITE(SC1, * )
       DO I=1,NROWS
          NTERM_ROW_I = I_MATIN(I+1) - I_MATIN(I)
-         WRITE(SC1,12345,ADVANCE='NO') NAME, I, NROWS, CR13
+         IF (NOCOUNTS /= 'Y') THEN
+            WRITE(SC1,12345,ADVANCE='NO') NAME, I, NROWS, CR13
+         ENDIF
          DO J=1,NTERM_ROW_I
             K = K + 1
             IF (K > NTERM) CALL ARRAY_SIZE_ERROR_1( SUBR_NAME, NTERM, NAME) 

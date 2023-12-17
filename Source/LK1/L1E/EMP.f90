@@ -39,7 +39,7 @@
       USE TIMDAT, ONLY                :  TSEC
       USE DEBUG_PARAMETERS, ONLY      :  DEBUG
       USE CONSTANTS_1, ONLY           :  ZERO
-      USE PARAMS, ONLY                :  EPSIL, SPARSTOR
+      USE PARAMS, ONLY                :  EPSIL, SPARSTOR, NOCOUNTS
       USE SUBR_BEGEND_LEVELS, ONLY    :  EMP_BEGEND
       USE DOF_TABLES, ONLY            :  TDOF, TDOF_ROW_START
       USE MODEL_STUF, ONLY            :  AGRID, ELDT, ELDOF, ELGP, GRID_ID, NUM_EMG_FATAL_ERRS, ME, OELDT, PLY_NUM, TYPE
@@ -124,8 +124,9 @@
       IERROR = 0
 !xx   WRITE(SC1, * )                                       ! Advance 1 line for screen messages         
 elems:DO I=1,NELE
-
-         WRITE(SC1,12345,ADVANCE='NO') I, NELE, CR13
+         IF (NOCOUNTS /= 'Y') THEN
+            WRITE(SC1,12345,ADVANCE='NO') I, NELE, CR13
+         ENDIF
 
          DO J=0,MBUG-1
             WRT_BUG(J) = 0

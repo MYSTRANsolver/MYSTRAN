@@ -34,7 +34,7 @@
       USE SCONTR, ONLY                :  FATAL_ERR, NDOFG, NSUB, NTERM_PG, BLNK_SUB_NAM, SOL_NAME
       USE TIMDAT, ONLY                :  TSEC
       USE SUBR_BEGEND_LEVELS, ONLY    :  SPARSE_PG_BEGEND
-      USE PARAMS, ONLY                :  EPSIL, PRTFOR
+      USE PARAMS, ONLY                :  EPSIL, PRTFOR, NOCOUNTS
       USE NONLINEAR_PARAMS, ONLY      :  LOAD_ISTEP, NL_NUM_LOAD_STEPS
       USE MODEL_STUF, ONLY            :  SYS_LOAD
       USE SPARSE_MATRICES, ONLY       :  I_PG, J_PG, PG
@@ -110,7 +110,9 @@
       WRITE(SC1, * )
       DO I=1,NDOFG                                         ! Inner loop must be over subcases so that READ_MATRIX_1 will be reading
          DO J=1,NSUB                                       ! one row of sparse PG after another
-            WRITE(SC1,12345,ADVANCE='NO') I, NDOFG, J, NSUB, CR13
+            IF (NOCOUNTS /= 'Y') THEN
+               WRITE(SC1,12345,ADVANCE='NO') I, NDOFG, J, NSUB, CR13
+            ENDIF
             IF (DABS(SYS_LOAD(I,J)) > EPS1) THEN
                KTERM_PG = KTERM_PG + 1
                J_PG(KTERM_PG) = J

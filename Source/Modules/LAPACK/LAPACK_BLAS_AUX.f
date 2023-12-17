@@ -10,6 +10,7 @@
       USE TIMDAT, ONLY                  :  HOUR, MINUTE, SEC,
      &                                     SFRAC, TSEC
       USE SUBR_BEGEND_LEVELS, ONLY      :  LAPACK_BEGEND
+      USE PARAMS, ONLY                  :  NOCOUNTS
 
       USE OUTA_HERE_Interface
 
@@ -1038,7 +1039,9 @@ c
          KPLUS1 = K + 1
          IF( ( INCX.EQ.1 ).AND.( INCY.EQ.1 ) )THEN
             DO 60, J = 1, N
-               write(sc1,12345,advance='no') j,n,col_num,cr13_lba
+               IF (NOCOUNTS .NE. 'Y') THEN
+                  write(sc1,12345,advance='no') j,n,col_num,cr13_lba
+               ENDIF
                TEMP1 = ALPHA*X( J )
                TEMP2 = ZERO
                L     = KPLUS1 - J
@@ -1078,7 +1081,9 @@ c
 *
          IF( ( INCX.EQ.1 ).AND.( INCY.EQ.1 ) )THEN
             DO 100, J = 1, N
-               write(sc1,12345,advance='no') j,n,col_num,cr13_lba
+               IF (NOCOUNTS .NE. 'Y') THEN
+                  write(sc1,12345,advance='no') j,n,col_num,cr13_lba
+               ENDIF
                TEMP1  = ALPHA*X( J )
                TEMP2  = ZERO
                Y( J ) = Y( J )       + TEMP1*A( 1, J )
@@ -2679,7 +2684,7 @@ c
             KPLUS1 = K + 1
             IF( INCX.EQ.1 )THEN
                DO 20, J = N, 1, -1
-                  if (dtbsv_msg == 'Y') then
+                  if (dtbsv_msg == 'Y' .AND. (NOCOUNTS .NE. 'Y')) then
                      write(sc1,22345,advance='no') j,cr13_lba
                   endif
                   IF( X( J ).NE.ZERO )THEN
@@ -2696,7 +2701,7 @@ c
                KX = KX + ( N - 1 )*INCX
                JX = KX
                DO 40, J = N, 1, -1
-                  if (dtbsv_msg == 'Y') then
+                  if (dtbsv_msg == 'Y' .AND. (NOCOUNTS .NE. 'Y')) then
                      write(sc1,22345,advance='no') j,cr13_lba
                   endif
                   KX = KX - INCX
@@ -2717,7 +2722,7 @@ c
          ELSE
             IF( INCX.EQ.1 )THEN
                DO 60, J = 1, N
-                  if (dtbsv_msg == 'Y') then
+                  if (dtbsv_msg == 'Y' .and. (NOCOUNTS .NE. 'Y')) then
                      write(sc1,12345,advance='no') j,n,cr13_lba
                   endif
                   IF( X( J ).NE.ZERO )THEN
@@ -2733,7 +2738,7 @@ c
             ELSE
                JX = KX
                DO 80, J = 1, N
-                  if (dtbsv_msg == 'Y') then
+                  if (dtbsv_msg == 'Y' .and. (NOCOUNTS .NE. 'Y')) then
                      write(sc1,12345,advance='no') j,n,cr13_lba
                   endif
                   KX = KX + INCX
@@ -2760,7 +2765,7 @@ c
             KPLUS1 = K + 1
             IF( INCX.EQ.1 )THEN
                DO 100, J = 1, N
-                  if (dtbsv_msg == 'Y') then
+                  if (dtbsv_msg == 'Y' .and. (NOCOUNTS .NE. 'Y')) then
                      write(sc1,12345,advance='no') j,n,cr13_lba
                   endif
                   TEMP = X( J )
@@ -2775,7 +2780,7 @@ c
             ELSE
                JX = KX
                DO 120, J = 1, N
-                  if (dtbsv_msg == 'Y') then
+                  if (dtbsv_msg == 'Y' .and. (NOCOUNTS .NE. 'Y')) then
                      write(sc1,12345,advance='no') j,n,cr13_lba
                   endif
                   TEMP = X( JX )
@@ -2796,7 +2801,7 @@ c
          ELSE
             IF( INCX.EQ.1 )THEN
                DO 140, J = N, 1, -1
-                  if (dtbsv_msg == 'Y') then
+                  if (dtbsv_msg == 'Y' .AND. (NOCOUNTS .NE. 'Y')) then
                      write(sc1,22345,advance='no') j,cr13_lba
                   endif
                   TEMP = X( J )
@@ -2812,7 +2817,7 @@ c
                KX = KX + ( N - 1 )*INCX
                JX = KX
                DO 160, J = N, 1, -1
-                  if (dtbsv_msg == 'Y') then
+                  if (dtbsv_msg == 'Y' .AND. (NOCOUNTS .NE. 'Y')) then
                      write(sc1,22345,advance='no') j,cr13_lba
                   endif
                   TEMP = X( JX )
@@ -5932,14 +5937,18 @@ CIBM           PREFER SCALAR
          VALUE = ZERO
          IF( LSAME( UPLO, 'U' ) ) THEN
             DO 20 J = 1, N
-               write(sc1,12345,advance='no') j, n, cr13_lba
+               IF (NOCOUNTS .NE. 'Y') THEN
+                  write(sc1,12345,advance='no') j, n, cr13_lba
+               ENDIF
                DO 10 I = MAX( K+2-J, 1 ), K + 1
                   VALUE = MAX( VALUE, ABS( AB( I, J ) ) )
    10          CONTINUE
    20       CONTINUE
          ELSE
             DO 40 J = 1, N
-               write(sc1,12345,advance='no') j, n, cr13_lba
+               IF (NOCOUNTS .NE. 'Y') THEN
+                  write(sc1,12345,advance='no') j, n, cr13_lba
+               ENDIF
                DO 30 I = 1, MIN( N+1-J, K+1 )
                   VALUE = MAX( VALUE, ABS( AB( I, J ) ) )
    30          CONTINUE
@@ -5953,7 +5962,9 @@ CIBM           PREFER SCALAR
          VALUE = ZERO
          IF( LSAME( UPLO, 'U' ) ) THEN
             DO 60 J = 1, N
-               write(sc1,12345,advance='no') j, n, cr13_lba
+               IF (NOCOUNTS .NE. 'Y') THEN
+                  write(sc1,12345,advance='no') j, n, cr13_lba
+               ENDIF
                SUM = ZERO
                L = K + 1 - J
                DO 50 I = MAX( 1, J-K ), J - 1
@@ -5964,7 +5975,9 @@ CIBM           PREFER SCALAR
                WORK( J ) = SUM + ABS( AB( K+1, J ) )
    60       CONTINUE
             DO 70 I = 1, N
-               write(sc1,12345,advance='no') i, n, cr13_lba
+               IF (NOCOUNTS .NE. 'Y') THEN
+                  write(sc1,12345,advance='no') i, n, cr13_lba
+               ENDIF
                VALUE = MAX( VALUE, WORK( I ) )
    70       CONTINUE
          ELSE
@@ -5972,7 +5985,9 @@ CIBM           PREFER SCALAR
                WORK( I ) = ZERO
    80       CONTINUE
             DO 100 J = 1, N
-               write(sc1,12345,advance='no') j, n, cr13_lba
+               IF (NOCOUNTS .NE. 'Y') THEN
+                  write(sc1,12345,advance='no') j, n, cr13_lba
+               ENDIF
                SUM = WORK( J ) + ABS( AB( 1, J ) )
                L = 1 - J
                DO 90 I = J + 1, MIN( N, J+K )
@@ -5992,14 +6007,18 @@ CIBM           PREFER SCALAR
          IF( K.GT.0 ) THEN
             IF( LSAME( UPLO, 'U' ) ) THEN
                DO 110 J = 2, N
-                  write(sc1,12345,advance='no') j, n, cr13_lba
+                  IF (NOCOUNTS .NE. 'Y') THEN
+                     write(sc1,12345,advance='no') j, n, cr13_lba
+                  ENDIF
                   CALL DLASSQ( MIN( J-1, K ), AB( MAX( K+2-J, 1 ), J ),
      $                         1, SCALE, SUM )
   110          CONTINUE
                L = K + 1
             ELSE
                DO 120 J = 1, N - 1
-                  write(sc1,12345,advance='no') j, n, cr13_lba
+                  IF (NOCOUNTS .NE. 'Y') THEN
+                     write(sc1,12345,advance='no') j, n, cr13_lba
+                  ENDIF
                   CALL DLASSQ( MIN( N-J, K ), AB( 2, J ), 1, SCALE,
      $                         SUM )
   120          CONTINUE

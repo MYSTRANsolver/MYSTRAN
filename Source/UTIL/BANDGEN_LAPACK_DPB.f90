@@ -34,7 +34,7 @@
       USE SCONTR, ONLY                :  BLNK_SUB_NAM, FATAL_ERR
       USE TIMDAT, ONLY                :  TSEC
       USE CONSTANTS_1, ONLY           :  ZERO
-      USE PARAMS, ONLY                :  SPARSTOR
+      USE PARAMS, ONLY                :  SPARSTOR, NOCOUNTS
       USE SUBR_BEGEND_LEVELS, ONLY    :  BANDGEN_BEGEND
 
       USE BANDGEN_LAPACK_DPB_USE_IFs
@@ -77,7 +77,9 @@
       K  = 0
       DO I=1,N
          NUM_TERMS_ROW_I = I_MATIN(I+1) - I_MATIN(I)       ! Number of terms in row I
-         WRITE(SC1,12345,ADVANCE='NO') I, N, NUM_TERMS_ROW_I, CR13
+         IF (NOCOUNTS /= 'Y') THEN
+            WRITE(SC1,12345,ADVANCE='NO') I, N, NUM_TERMS_ROW_I, CR13
+         ENDIF
          DO J=1,NUM_TERMS_ROW_I
             K = K + 1
             IF (K > NTERM_MATIN) THEN

@@ -38,7 +38,8 @@
                                          NTERM_GMN , NTERM_RMN , NTERM_RMM ,                                                       &
                                          PROG_NAME , SOL_NAME, BLNK_SUB_NAM
       USE TIMDAT, ONLY                :  HOUR, MINUTE, SEC, SFRAC, TSEC
-      USE PARAMS, ONLY                :  AUTOSPC, AUTOSPC_NSET, EQCHK_OUTPUT, MATSPARS, PRTSTIFD, PRTSTIFF, PRTMASS, PRTFOR, SUPINFO
+      USE PARAMS, ONLY                :  AUTOSPC, AUTOSPC_NSET, EQCHK_OUTPUT, MATSPARS, PRTSTIFD, PRTSTIFF, PRTMASS, PRTFOR,       &
+                                         SUPINFO, NOCOUNTS
       USE NONLINEAR_PARAMS, ONLY      :  LOAD_ISTEP
       USE DOF_TABLES, ONLY            :  TDOF, TDOFI
       USE MODEL_STUF, ONLY            :  GRID_ID
@@ -636,7 +637,9 @@
       JSTART = 1
 !xx   WRITE(SC1, * )                                       ! Advance 1 line for screen messages         
 i_do: DO I=1,NDOFN
-         WRITE(SC1,12345,ADVANCE='NO') I, NDOFN, CR13
+         IF (NOCOUNTS /= 'Y') THEN
+            WRITE(SC1,12345,ADVANCE='NO') I, NDOFN, CR13
+         ENDIF
          IF (I_KNN(I+1) == I_KNN(I)) THEN                  ! If true, row i is null
 j_do:       DO J=JSTART,NDOFG                              ! Loop over rows of TDOFI to find where this N-set row is null
                IF (TDOFI(J,N_SET_COL) == I) THEN
@@ -753,7 +756,7 @@ j_do:       DO J=JSTART,NDOFG                              ! Loop over rows of T
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
       USE SCONTR, ONLY                :  DATA_NAM_LEN, NDOFN, NDOFG, NDOFSA, NGRID, NUM_PCHD_SPC1, PROG_NAME
       USE IOUNT1, ONLY                :  WRT_ERR, WRT_LOG, ERR, F04, F06, L1C, L1C_MSG, LINK1C, SPC, SPCFIL
-      USE PARAMS, ONLY                :  AUTOSPC, AUTOSPC_INFO, AUTOSPC_NSET, AUTOSPC_RAT, PCHSPC1, PRTTSET, SPC1SID
+      USE PARAMS, ONLY                :  AUTOSPC, AUTOSPC_INFO, AUTOSPC_NSET, AUTOSPC_RAT, PCHSPC1, PRTTSET, SPC1SID, NOCOUNTS
       USE CONSTANTS_1, ONLY           :  ZERO
       USE DOF_TABLES, ONLY            :  TDOF, TDOFI, TSET
       USE MODEL_STUF, ONLY            :  GRID, GRID_ID, GRID_SEQ
@@ -816,7 +819,9 @@ j_do:       DO J=JSTART,NDOFG                              ! Loop over rows of T
       JSTART = 1
 !xx   WRITE(SC1, * )                                       ! Advance 1 line for screen messages         
 i_do: DO I=1,NDOFN
-         WRITE(SC1,22345,ADVANCE='NO') I, NDOFN, CR13
+         IF (NOCOUNTS /= 'Y') THEN
+            WRITE(SC1,22345,ADVANCE='NO') I, NDOFN, CR13
+         ENDIF
          IF ((DABS(KNN_DIAG(I)/KNN_MAX_DIAG) < AUTOSPC_RAT) .OR. (KNN_DIAG(I) < ZERO)) THEN
 j_do:       DO J=JSTART,NDOFG                               ! Loop over rows of TDOFI to find where this N-set row is null
                IF (TDOFI(J,N_SET_COL) == I) THEN
@@ -931,4 +936,3 @@ j_do:       DO J=JSTART,NDOFG                               ! Loop over rows of 
       END SUBROUTINE N_SET_AUTOSPC_PROC_2
 
       END SUBROUTINE REDUCE_G_NM
-

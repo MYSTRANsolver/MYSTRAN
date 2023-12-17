@@ -43,7 +43,7 @@
                                          ELDT_F23_KE_BIT, ELDT_F24_SE_BIT, ELDT_BUG_BCHK_BIT, ELDT_BUG_BMAT_BIT, ELDT_BUG_SHPJ_BIT,&
                                          FATAL_ERR, IBIT, LINKNO, LTERM_KGG, LTERM_KGGD, MBUG, MELDOF, NDOFG, NELE, NGRID,         &
                                          NTERM_KGG, NTERM_KGGD, NSUB, SOL_NAME
-      USE PARAMS, ONLY                :  EPSIL, SPARSTOR
+      USE PARAMS, ONLY                :  EPSIL, SPARSTOR, NOCOUNTS
       USE TIMDAT, ONLY                :  TSEC
       USE CONSTANTS_1, ONLY           :  ZERO
       USE SUBR_BEGEND_LEVELS, ONLY    :  ESP_BEGEND
@@ -170,7 +170,9 @@
 !xx   WRITE(SC1, * )                                       ! Advance 1 line for screen messages         
 elems:DO I=1,NELE
 
-         WRITE(SC1,12345,ADVANCE='NO') I, NELE, CR13
+         IF (NOCOUNTS /= 'Y') THEN
+            WRITE(SC1,12345,ADVANCE='NO') I, NELE, CR13
+         ENDIF
 
          IF ((DEBUG(10) == 12) .OR. (DEBUG(10) == 13) .OR. (DEBUG(10) == 32) .OR. (DEBUG(10) == 33)) THEN
             WRITE(F06,14001)

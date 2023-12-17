@@ -43,7 +43,7 @@
       USE IOUNT1, ONLY                :  ERR, F04, F06, SC1, WRT_ERR, WRT_LOG
       USE SCONTR, ONLY                :  LTERM_MGGE, BLNK_SUB_NAM
       USE TIMDAT, ONLY                :  TSEC
-      USE PARAMS, ONLY                :  GRIDSEQ, SETLKTM, USR_LTERM_MGG
+      USE PARAMS, ONLY                :  GRIDSEQ, SETLKTM, USR_LTERM_MGG, NOCOUNTS
       USE SUBR_BEGEND_LEVELS, ONLY    :  EMP0_BEGEND
 
       USE EMP0_USE_IFs
@@ -226,8 +226,9 @@
       IERROR = 0
       LTERM_MGGE = 0
 elems:DO I=1,NELE
-
-         WRITE(SC1,12345,ADVANCE='NO') I, NELE, CR13
+         IF (NOCOUNTS /= 'Y') THEN
+            WRITE(SC1,12345,ADVANCE='NO') I, NELE, CR13
+         ENDIF
 
          PLY_NUM = 0
          CALL EMG ( I   , OPT, 'N', SUBR_NAME, 'N' )       ! 'N' means do not write to BUG file
