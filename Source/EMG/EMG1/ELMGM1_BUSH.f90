@@ -434,6 +434,7 @@ bcid: IF (BUSH_CID > 0) THEN                               ! Get transformation 
                      OFFDIS_B(1,J) = T0I(J,1)*OFFDIS_O(1,1) + T0I(J,2)*OFFDIS_O(1,2) + T0I(J,3)*OFFDIS_O(1,3) 
                   ENDDO
                   write(f06,*)
+               ELSE
                   NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
                   FATAL_ERR = FATAL_ERR + 1
                   WRITE(ERR,1822) 'COORD SYSTEM ', BUSH_OCID, TYPE, EID
