@@ -734,19 +734,23 @@
          ELSE IF (TYPE(1:4) == 'BUSH') THEN
             IROW = EDAT(EPNTK + 8)
             IF (IROW > 0) THEN
-               EOFF(INT_ELEM_ID) = 'Y'
-
                   IF(BUSH_OCID == -1) THEN                 ! Offsets are along line GA-GB and use only S
+                     IF (ELEM_LEN_12 >= .0001) THEN
+                                                           ! Offsets require an axis, so nonzero length
+                        EOFF(INT_ELEM_ID) = 'Y'            ! is needed since we can't use GA-GB when OCID=-1
+                        OFFDIS(1,1) = ELEM_LEN_12*BUSHOFF(IROW,1)
+                        OFFDIS(1,2) = ELEM_LEN_12*BUSHOFF(IROW,2)
+                        OFFDIS(1,3) = ELEM_LEN_12*BUSHOFF(IROW,3)
 
-                     OFFDIS(1,1) = ELEM_LEN_12*BUSHOFF(IROW,1)
-                     OFFDIS(1,2) = ELEM_LEN_12*BUSHOFF(IROW,2)
-                     OFFDIS(1,3) = ELEM_LEN_12*BUSHOFF(IROW,3)
-
-                     OFFDIS(2,1) =-ELEM_LEN_12*(ONE - BUSHOFF(IROW,1))
-                     OFFDIS(2,2) = ELEM_LEN_12*BUSHOFF(IROW,2)
-                     OFFDIS(2,3) = ELEM_LEN_12*BUSHOFF(IROW,3)
-
-                  ELSE                                     ! Offsets are 3 dimensional and we can't get OFFDIS for grid GB yet
+                        OFFDIS(2,1) =-ELEM_LEN_12*(ONE - BUSHOFF(IROW,1))
+                        OFFDIS(2,2) = ELEM_LEN_12*BUSHOFF(IROW,2)
+                        OFFDIS(2,3) = ELEM_LEN_12*BUSHOFF(IROW,3)
+                     ELSE
+                        EOFF(INT_ELEM_ID) = 'N'           ! No axis, no OCID, no offset.
+                     END IF
+                  ELSE           
+                                               ! Offsets are 3 dimensional and we can't get OFFDIS for grid GB yet
+                     EOFF(INT_ELEM_ID) = 'Y'            ! is required since we can't use GA-GB (OCID=-1)
 
                      OFFDIS(1,1) = BUSHOFF(IROW,1)
                      OFFDIS(1,2) = BUSHOFF(IROW,2)
