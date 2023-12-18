@@ -215,69 +215,71 @@
         
 ! Get the Jacobian in order to compute the Ksita virtual stiffness
 
-! Here begins the code copied from QDEL
-! Calculate side diffs
-  
-         XSD(1) = XEL(1,1) - XEL(2,1)                         ! x coord diffs (in local elem coords)
-         XSD(2) = XEL(2,1) - XEL(3,1)
-         XSD(3) = XEL(3,1) - XEL(4,1)
-         XSD(4) = XEL(4,1) - XEL(1,1)
-   
-         YSD(1) = XEL(1,2) - XEL(2,2)                         ! y coord diffs (in local elem coords)
-         YSD(2) = XEL(2,2) - XEL(3,2)
-         YSD(3) = XEL(3,2) - XEL(4,2)
-         YSD(4) = XEL(4,2) - XEL(1,2)
-   
-         IF ((DEBUG(6) > 0) .AND. (WRT_BUG(0) > 0)) THEN
-            WRITE(BUG,*) ' Element side differences in x, y coords:'
-            WRITE(BUG,*) ' ---------------------------------------'
-            WRITE(BUG,98761) XSD(1), YSD(1)
-            WRITE(BUG,98762) XSD(2), YSD(2)
-            WRITE(BUG,98763) XSD(3), YSD(3)
-            WRITE(BUG,98764) XSD(4), YSD(4)
-            WRITE(BUG,*)
-         ENDIF 
 
-! Calculate area by Gaussian integration
-  
-         AREA = ZERO
-         CALL ORDER_GAUSS ( 2, SSS, HHH )
-         DO I=1,2
-            DO J=1,2
-               CALL JAC2D ( SSS(I), SSS(J), XSD, YSD, 'N', JAC, JACI, DETJ )
-               AREA = AREA + HHH(I)*HHH(J)*DETJ
-            ENDDO   
-         ENDDO   
- 
-! If AREA <= 0, set error and return
-         EPS1 = EPSIL(1)
-         !WRITE(F06, 1926) EID, TYPE, AREA, EPS1
-         IF (AREA < EPS1) THEN
-            NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
-            FATAL_ERR = FATAL_ERR + 1
-            IF (WRT_ERR > 0) THEN
-               WRITE(ERR,1925) EID, TYPE, 'AREA', AREA
-               WRITE(F06,1925) EID, TYPE, 'AREA', AREA
-            ELSE
-               IF (NUM_EMG_FATAL_ERRS <= MEFE) THEN
-                  ERR_SUB_NAM(NUM_EMG_FATAL_ERRS) = SUBR_NAME
-                  EMG_IFE(NUM_EMG_FATAL_ERRS,1) = 1925
-                  EMG_RFE(NUM_EMG_FATAL_ERRS,1) = AREA
-               ENDIF
-            ENDIF
-            RETURN
-         ENDIF
 
 ! Set KE = KE1 for 6*ELGP by 6*ELGP terms
 
 ! Compute the Ksita matrix for virtual stiffness
          
-         Ksita = 10.0**(-6.0)*RMATL(NMATL, 2)*RPSHEL(NPSHEL, 1)*abs(DETJ)*K6ROT
+         ! restrict to QUAD4 and TRIA3 shell elements
+         IF (TYPE(1:5) == "QUAD4" .OR. TYPE(1:5) == "TRIA3") THEN
+            IF (NPSHEL > 0) THEN
+               ! Here begins the code copied from QDEL
+  
+               XSD(1) = XEL(1,1) - XEL(2,1)                         ! x coord diffs (in local elem coords)
+               XSD(2) = XEL(2,1) - XEL(3,1)
+               XSD(3) = XEL(3,1) - XEL(4,1)
+               XSD(4) = XEL(4,1) - XEL(1,1)
+         
+               YSD(1) = XEL(1,2) - XEL(2,2)                         ! y coord diffs (in local elem coords)
+               YSD(2) = XEL(2,2) - XEL(3,2)
+               YSD(3) = XEL(3,2) - XEL(4,2)
+               YSD(4) = XEL(4,2) - XEL(1,2)
+         
+               IF ((DEBUG(6) > 0) .AND. (WRT_BUG(0) > 0)) THEN
+                  WRITE(BUG,*) ' Element side differences in x, y coords:'
+                  WRITE(BUG,*) ' ---------------------------------------'
+                  WRITE(BUG,98761) XSD(1), YSD(1)
+                  WRITE(BUG,98762) XSD(2), YSD(2)
+                  WRITE(BUG,98763) XSD(3), YSD(3)
+                  WRITE(BUG,98764) XSD(4), YSD(4)
+                  WRITE(BUG,*)
+               ENDIF 
+      
+               AREA = ZERO
+               CALL ORDER_GAUSS ( 2, SSS, HHH )
+               DO I=1,2
+                  DO J=1,2
+                     CALL JAC2D ( SSS(I), SSS(J), XSD, YSD, 'N', JAC, JACI, DETJ )
+                     AREA = AREA + HHH(I)*HHH(J)*DETJ
+                  ENDDO   
+               ENDDO   
+               EPS1 = EPSIL(1)
+               IF (AREA < EPS1) THEN
+                  NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
+                  FATAL_ERR = FATAL_ERR + 1
+                  IF (WRT_ERR > 0) THEN
+                     WRITE(ERR,1925) EID, TYPE, 'AREA', AREA
+                     WRITE(F06,1925) EID, TYPE, 'AREA', AREA
+                  ELSE
+                     IF (NUM_EMG_FATAL_ERRS <= MEFE) THEN
+                        ERR_SUB_NAM(NUM_EMG_FATAL_ERRS) = SUBR_NAME
+                        EMG_IFE(NUM_EMG_FATAL_ERRS,1) = 1925
+                        EMG_RFE(NUM_EMG_FATAL_ERRS,1) = AREA
+                     ENDIF
+                  ENDIF
+                  RETURN
+               ENDIF
+               Ksita = 10.0**(-6.0)*RMATL(NMATL, 2)*RPSHEL(NPSHEL, 1)*ABS(DETJ)*K6ROT
+            ENDIF
+         ELSE
+            Ksita = 0.0
+         ENDIF
          
          
          DO J=1,6*ELGP
             DO K=1,6*ELGP
-               KE(J,K) = KE1(J,K)+Ksita
+               KE(J,K) = KE1(J,K)!+Ksita
             ENDDO
          ENDDO
 
