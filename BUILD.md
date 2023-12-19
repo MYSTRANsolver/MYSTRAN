@@ -18,8 +18,9 @@ First, download and install MSYS2 from the
 Open the MSYS2 terminal and run the following commands:
 
   1. **`pacman -Syu`**
-This updates repository information and installed packages.
-  2. **`pacman -S mingw-w64-x86_64-gcc-fortran mingw-w64-x86_64-cmake mingw-w64-x86_64-make git`**
+This updates repository information and installed packages, and might require
+you close and reopen MSYS2 terminals.
+  1. **`pacman -S mingw-w64-x86_64-gcc-fortran mingw-w64-x86_64-cmake mingw-w64-x86_64-make git`**
 This installs the required compilers (the GNU C and Fortran compilers), CMake
 itself, and `git`.
   1. **`export PATH="/mingw64/bin:$PATH"`**
@@ -32,10 +33,11 @@ are lost when you reopen the terminal, so you might want to append it to your
 
 Follow your distribution's steps to install the following programs/libraries:
   - **`gcc`**
+  - **`g++`**
   - **`gfortran`**
   - **`make`**
-  - **`cmake`** (version 3.18 or above)
-  - **`git`** (optional, you can also download the source .zip from GitHub)
+  - **`cmake`**
+  - **`git`**
 
 All of those are fairly common, so get in touch in the MYSTRAN Forums or
 MYSTRAN Discord if you have trouble installing any of them. Also, note that
@@ -77,13 +79,13 @@ straightforward.
   **`git clone https://github.com/MYSTRANsolver/MYSTRAN.git`**.
   3. Move the terminal to the MYSTRAN folder. If you've just run `git clone`,
   just do a **`cd MYSTRAN`**.
-  4.  Generate the build scripts by running **`cmake .`**.
-  5. Compile with **`make`**. If you have an N-core processor, running
+  1. Generate the build scripts by running **`cmake .`**.
+  2. Compile with **`make`**. If you have an N-core processor, running
   **`make -jN`** will probably me much faster. A good choice of N is printed in
   the previous step, right before the end. You can also find the number of
   cores/threads with the `nproc` command (not all distros ship it
   out-of-the-box though).
-  6. The executable will reside at **`Binaries/mystran`**.
+  1. The executable will reside at **`Binaries/mystran`**.
 
 ---
 
