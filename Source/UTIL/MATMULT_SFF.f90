@@ -53,7 +53,7 @@
       USE TIMDAT, ONLY                :  TSEC
       USE SUBR_BEGEND_LEVELS, ONLY    :  MATMULT_SFF_BEGEND
       USE CONSTANTS_1, ONLY           :  ZERO
-      USE PARAMS, ONLY                :  EPSIL
+      USE PARAMS, ONLY                :  EPSIL, NOCOUNTS
       USE DEBUG_PARAMETERS, ONLY      :  DEBUG
       USE SPARSE_ALG_ARRAYS, ONLY     :  AROW, J_AROW
  
@@ -132,7 +132,7 @@
       A_ROW_BEG      = 1
       AROW_MAX_TERMS = 0                                   ! Find the max number of nonzero terms in any row of input matrix A
       DO I=1,NROWS_A
-         IF (WRITE_SC1 == 'Y') THEN
+         IF (WRITE_SC1 == 'Y' .AND. NOCOUNTS /= 'Y') THEN
             WRITE(SC1,22345,ADVANCE='NO') I, NROWS_A, CR13
          ENDIF
          A_NTERM_ROW_I = I_A(I+1) - I_A(I)
@@ -202,7 +202,7 @@ i_do: DO I=1,NROWS_A                                       ! Matrix multiply loo
 
 j_do:    DO J=1,NCOLS_B                                    ! J loops over the number of columns in B
 
-            IF (WRITE_SC1 == 'Y') THEN
+            IF (WRITE_SC1 == 'Y' .AND. NOCOUNTS /= 'Y') THEN
                WRITE(SC1,12345,ADVANCE='NO') I, NROWS_A, J, NCOLS_B, CR13
             ENDIF 
 

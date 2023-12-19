@@ -434,6 +434,7 @@ bcid: IF (BUSH_CID > 0) THEN                               ! Get transformation 
                      OFFDIS_B(1,J) = T0I(J,1)*OFFDIS_O(1,1) + T0I(J,2)*OFFDIS_O(1,2) + T0I(J,3)*OFFDIS_O(1,3) 
                   ENDDO
                   write(f06,*)
+               ELSE
                   NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
                   FATAL_ERR = FATAL_ERR + 1
                   WRITE(ERR,1822) 'COORD SYSTEM ', BUSH_OCID, TYPE, EID
@@ -474,7 +475,7 @@ bcid: IF (BUSH_CID > 0) THEN                               ! Get transformation 
       IF (EOFF(INT_ELEM_ID) == 'Y') THEN
 
          IF (BUSH_OCID /= -1) THEN                         ! We need to calc OFFDIS_B for grid 2. If OCID = -1 then that OFFDIS
-!                                                            was already calculated in subr ELMDAT1 since it lay along line GA-GB
+                                                           ! was already calculated in subr ELMDAT1 since it lay along line GA-GB
             DO I=1,3
                XEB(3,I)      = XEB(1,I) + OFFDIS_B(1,I)    ! Put BUSH basic coords in XEB (has extra row for more than the 2 grids)
                OFFDIS_B(2,I) = XEB(3,I) - XEB(2,I)         ! Offset from GB is location of BUSH minus location of GB

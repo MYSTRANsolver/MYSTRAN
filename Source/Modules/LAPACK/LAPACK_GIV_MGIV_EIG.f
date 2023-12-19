@@ -68,7 +68,7 @@
      &                             method, eig_num, mvec )
 *
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
-      USE PARAMS, ONLY                :  SUPINFO
+      USE PARAMS, ONLY                :  SUPINFO, NOCOUNTS
       USE SCONTR, ONLY                :  SOL_NAME
 
       CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: subr_name = 'DSBGVX_GIV_MGIV'
@@ -2474,7 +2474,9 @@
 *
             write(sc1,*)
             DO 90 I = 1, N - 2
-               write(sc1,12345,advance='no') i,n-2,cr13_lge
+               IF (NOCOUNTS .NE. 'Y') THEN
+                  write(sc1,12345,advance='no') i,n-2,cr13_lge
+               ENDIF
 *
 *              Reduce i-th row of matrix to tridiagonal form
 *

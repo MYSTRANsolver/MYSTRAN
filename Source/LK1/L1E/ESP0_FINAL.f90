@@ -34,7 +34,7 @@
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
       USE IOUNT1, ONLY                :  ERR, F04, F06, SC1, WRT_LOG
       USE SCONTR, ONLY                :  BLNK_SUB_NAM, FATAL_ERR, IBIT, LTERM_KGG, MELDOF, NELE, NGRID, NTERM_KGG, NSUB
-      USE PARAMS, ONLY                :  EPSIL, SPARSTOR, SUPINFO
+      USE PARAMS, ONLY                :  EPSIL, SPARSTOR, SUPINFO, NOCOUNTS
       USE TIMDAT, ONLY                :  TSEC
       USE CONSTANTS_1, ONLY           :  ZERO
       USE SUBR_BEGEND_LEVELS, ONLY    :  ESP0_FINAL_BEGEND
@@ -112,7 +112,9 @@
  
 elems:DO I=1,NELE
 
-         WRITE(SC1,12345,ADVANCE='NO') I, NELE, CR13
+         IF (NOCOUNTS /= 'Y') THEN
+            WRITE(SC1,12345,ADVANCE='NO') I, NELE, CR13
+         ENDIF
 
          PLY_NUM = 0
          CALL EMG ( I   , OPT, 'N', SUBR_NAME, 'N' )       ! 'N' means do not write to BUG file
@@ -238,4 +240,3 @@ stfpnt0:          DO                                       ! so, run this loop u
 ! **********************************************************************************************************************************
  
       END SUBROUTINE ESP0_FINAL
-

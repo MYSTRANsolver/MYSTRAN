@@ -39,7 +39,7 @@
       USE CONSTANTS_1, ONLY           :  ZERO, ONE
       USE DOF_TABLES,ONLY             :  TDOF_ROW_START
       USE MODEL_STUF, ONLY            :  GRID_ID
-      USE PARAMS, ONLY                :  EPSIL, PRTMASS, SUPINFO, WTMASS
+      USE PARAMS, ONLY                :  EPSIL, PRTMASS, SUPINFO, WTMASS, NOCOUNTS
       USE EMS_ARRAYS, ONLY            :  EMS, EMSCOL, EMSKEY, EMSPNT
       USE SPARSE_MATRICES, ONLY       :  I2_MGG, I_MGG, J_MGG, MGG, I_MGGC, J_MGGC, MGGC, I_MGGE, J_MGGE, MGGE,                    &
                                          I_MGGS, J_MGGS, MGGS,  SYM_MGGC, SYM_MGGE, SYM_MGGS
@@ -140,7 +140,9 @@ j_do0:   DO J = 1,NDOFG
       WRITE(SC1, * )
 i_do: DO I = 1,NGRID
 
-         WRITE(SC1,12345,ADVANCE='NO') I, NGRID, CR13
+         IF (NOCOUNTS /= 'Y') THEN
+            WRITE(SC1,12345,ADVANCE='NO') I, NGRID, CR13
+         ENDIF
 
          GRID_NUM = GRID_ID(I)
 

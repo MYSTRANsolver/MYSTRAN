@@ -57,6 +57,7 @@
       USE TIMDAT, ONLY                :  TSEC
       USE CONSTANTS_1, ONLY           :  ZERO
       USE SUBR_BEGEND_LEVELS, ONLY    :  CRS_SYM_TO_CRS_NONSYM_BEGEND
+      USE PARAMS, ONLY                :  NOCOUNTS
  
       USE CRS_SYM_TO_CRS_NONSYM_USE_IFs
 
@@ -125,7 +126,7 @@
       A_ROW_BEG = 1
 i_do: DO I=1,NROW_A                                        ! Matrix multiply loop. Range over the rows in A
 
-         IF (WRT_SCREEN == 'Y') THEN
+         IF (WRT_SCREEN == 'Y' .AND. NOCOUNTS /= 'Y') THEN
             WRITE(SC1,12345,ADVANCE='NO') I, NROW_A, NAME_B, CR13
          ENDIF 
 

@@ -30,7 +30,7 @@
 
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
       USE IOUNT1, ONLY                :  WRT_ERR, WRT_LOG, ERR, F04, F06, L1M
-      USE SCONTR, ONLY                :  BLNK_SUB_NAM, FATAL_ERR, IERRFL, JCARD_LEN, JF
+      USE SCONTR, ONLY                :  BLNK_SUB_NAM, FATAL_ERR, IERRFL, JCARD_LEN, JF, LSUB
       USE TIMDAT, ONLY                :  TSEC
       USE CONSTANTS_1, ONLY           :  ZERO, ONEPM4
       USE SUBR_BEGEND_LEVELS, ONLY    :  BD_EIG_BEGEND
@@ -64,7 +64,7 @@
       ENDIF
 
 ! **********************************************************************************************************************************
-! EIGR Bulk Data Card routine
+! EIGRL Bulk Data Card routine
   
 !  Card 1:
  
@@ -114,7 +114,14 @@
 
       CALL R8FLD ( JCARD(4), JF(4), EIG_FRQ2 )             ! Read field 4: higher frequency of search range
 
-      CALL I4FLD ( JCARD(5), JF(5), EIG_N2 )               ! Read field 5: number of desired roots
+      ! default N should be 1, not 0
+      EIG_N2 = 1
+      IF (JCARD(6)(1:) /= ' ') THEN
+         CALL I4FLD ( JCARD(5), JF(5), I4INP )            ! Read field 5: number of desired roots
+         IF (IERRFL(6) == 'N') THEN
+            EIG_N2 = I4INP
+         ENDIF
+      ENDIF
 
       IF (JCARD(6)(1:) /= ' ') THEN                        ! Read field 6: MSGLVL
          CALL I4FLD ( JCARD(6), JF(6), I4INP )
@@ -237,6 +244,9 @@
          MAXMIJ        = ZERO
          MIJ_ROW       = 0
          MIJ_COL       = 0
+
+         ! ensure a proper size for SCNUM
+         LSUB          = EIG_N2
 
          CALL WRITE_L1M
 

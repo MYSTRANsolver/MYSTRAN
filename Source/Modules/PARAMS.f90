@@ -148,7 +148,7 @@
       INTEGER(LONG)            :: GRDPNT_IN      =    -1     ! Value of GRDPNT read in the Bulk Data File
 
 ! ----------------------------------------------------------------------------------------------------------------------------------
-      CHARACTER(  8*BYTE)      :: GRIDSEQ        ='BANDIT  ' ! Method for sequencing grids:
+      CHARACTER(  8*BYTE)      :: GRIDSEQ        = 'INPUT   '! Method for sequencing grids:
 !                                                              BANDIT for bandit auto grid swquencing
 !                                                              GRID for grid numerical order
 !                                                              INPUT for grid input order
@@ -473,8 +473,11 @@
 
 ! ----------------------------------------------------------------------------------------------------------------------------------
       REAL(DOUBLE)             :: WTMASS         =   ONE     ! Value from PARAM WTMASS Bulk Data card
-
-
+! ----------------------------------------------------------------------------------------------------------------------------------
+      REAL(DOUBLE)             :: K6ROT          = 100.0     ! Virtual rotational stiffness
+! ----------------------------------------------------------------------------------------------------------------------------------
+      CHARACTER(  1*BYTE)      :: NOCOUNTS        =    'N'   ! 'Y' supresses the "counter" non-advance writes to stdout.
+                                                             ! Good for debugging or when writing to a log file.
 
 ! Fixed values ---------------------------------------------------------------------------------------------------------------------
 ! >>>>>>>>>>>>

@@ -60,6 +60,7 @@
       USE SPARSE_ALG_ARRAYS, ONLY     :  ALG, J_AROW
       USE DEBUG_PARAMETERS, ONLY      :  DEBUG
       USE SUBR_BEGEND_LEVELS, ONLY    :  PARTITION_SS_NTERM_BEGEND
+      USE PARAMS, ONLY                :  NOCOUNTS
  
       USE PARTITION_SS_NTERM_USE_IFs
 
@@ -256,7 +257,9 @@ i_do: DO I=1,NROW_A                                        ! Matrix partition lo
             L = L + 1
                                                            ! Write message to screen
             CALL OURTIM
-            WRITE(SC1,12345,ADVANCE='NO') MAT_B_NAME, L, NROW_B, SYM_A, SYM_B, HOUR, MINUTE, SEC, SFRAC, CR13
+            IF (NOCOUNTS /= 'Y') THEN
+               WRITE(SC1,12345,ADVANCE='NO') MAT_B_NAME, L, NROW_B, SYM_A, SYM_B, HOUR, MINUTE, SEC, SFRAC, CR13
+            ENDIF
 
             B_ROW_NUM = B_ROW_NUM_ARRAY(I)
 

@@ -281,7 +281,7 @@
       USE CONSTANTS_1, ONLY           :  ZERO, ONE
       USE IOUNT1, ONLY                :  FILE_NAM_MAXLEN, WRT_ERR, WRT_LOG, ERR, F04, F06
       USE SCONTR, ONLY                :  NDOFG, NDOFM, NDOFN, NTERM_GMN, NTERM_RMM, NTERM_RMN, BLNK_SUB_NAM
-      USE PARAMS, ONLY                :  EPSIL, SOLLIB, SPARSE_FLAVOR
+      USE PARAMS, ONLY                :  EPSIL, SOLLIB, SPARSE_FLAVOR, NOCOUNTS
       USE TIMDAT, ONLY                :  HOUR, MINUTE, SEC, SFRAC, TSEC
       USE SUBR_BEGEND_LEVELS, ONLY    :  SOLVE_GMN_BEGEND
       USE SPARSE_MATRICES, ONLY       :  I_RMN, J_RMN, RMN, I_RMM, J_RMM, RMM, I2_GMN, I_GMN, J_GMN, GMN
@@ -428,7 +428,9 @@
 
          CALL OURTIM
          MODNAM1 = '      Solve for GMN col '
-         WRITE(SC1,22345,ADVANCE='NO') MODNAM1,J,NDOFN, CR13
+         IF (NOCOUNTS /= 'Y') THEN
+            WRITE(SC1,22345,ADVANCE='NO') MODNAM1,J,NDOFN, CR13
+         ENDIF
 
 ! Set RMN_COL to the negative of i-th col of array RMN. First, initialize RMN_COL to zero
 ! Keep track of whether this col is null, so we can avoid FBS if it is.

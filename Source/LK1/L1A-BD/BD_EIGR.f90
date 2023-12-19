@@ -30,7 +30,7 @@
 
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
       USE IOUNT1, ONLY                :  WRT_ERR, WRT_LOG, ERR, F04, F06, L1M
-      USE SCONTR, ONLY                :  BLNK_SUB_NAM, FATAL_ERR, IERRFL, JCARD_LEN, JF
+      USE SCONTR, ONLY                :  BLNK_SUB_NAM, FATAL_ERR, IERRFL, JCARD_LEN, JF, LSUB
       USE TIMDAT, ONLY                :  TSEC
       USE CONSTANTS_1, ONLY           :  ZERO
       USE SUBR_BEGEND_LEVELS, ONLY    :  BD_EIG_BEGEND
@@ -217,6 +217,9 @@
          EIG_MODE         = 0
          EIG_MSGLVL       = 0
          EIG_NCVFACL      = 0
+
+         ! to ensure SCNUM is alloc'd right. #subcases = #eigenvecs
+         LSUB             = EIG_N2
 
          NUM_FAIL_CRIT    = 0                              ! Following have not been determined yet but write values to L1M anyway
          MAXMIJ           = ZERO

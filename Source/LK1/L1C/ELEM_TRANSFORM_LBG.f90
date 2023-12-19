@@ -345,7 +345,7 @@ k_cord2:       DO K=1,NCORD
             CALL MATGET ( ZE, MELDOF, MELDOF, BEG_ROW, BEG_COL, NROW, NCOL, DUM11 )
             CALL MATMULT_FFF   ( DUM11, TET_GA_GB, NROWA, NCOLA, NCOLB, DUM12 )
             CALL MATMULT_FFF_T ( TE_GA_GB, DUM12, NROWA, NCOLA, NCOLB, DUM11 )
-            CALL MATPUT ( DUM11, MELDOF, MELDOF, BEG_ROW, BEG_COL, NROW, NCOL, KEO_BUSH )
+            CALL MATPUT ( DUM11, SIZE(KEO_BUSH, 2), SIZE(KEO_BUSH, 1), BEG_ROW, BEG_COL, NROW, NCOL, KEO_BUSH )
          ENDDO 
       ENDDO
       DO II=1,ELDOF                                        ! Set lower portion of KE using symmetry.

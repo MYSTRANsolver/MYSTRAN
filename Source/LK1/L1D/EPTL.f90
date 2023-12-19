@@ -36,7 +36,7 @@
       USE SCONTR, ONLY                :  BLNK_SUB_NAM, ELDT_BUG_P_T_BIT, ELDT_F21_P_T_BIT, IBIT, LINKNO, MBUG, MELDOF, NCORD,      &
                                          NELE, NGRID, NSUB, NTSUB
       USE CONSTANTS_1, ONLY           :  ZERO
-      USE PARAMS, ONLY                :  EPSIL
+      USE PARAMS, ONLY                :  EPSIL, NOCOUNTS
       USE TIMDAT, ONLY                :  TSEC
       USE DOF_TABLES, ONLY            :  TDOF, TDOF_ROW_START
       USE SUBR_BEGEND_LEVELS, ONLY    :  EPTL_BEGEND
@@ -151,8 +151,9 @@
          OPT(1) = 'N'                                      ! OPT(1) is for calc of ME
          OPT(3) = 'N'                                      ! OPT(3) is for calc of SEi, STEi
          OPT(4) = 'N'                                      ! OPT(4) is for calc of KE
- 
-         WRITE(SC1,12345,ADVANCE='NO') I, NELE, CR13
+         IF (NOCOUNTS /= 'Y') THEN
+            WRITE(SC1,12345,ADVANCE='NO') I, NELE, CR13
+         ENDIF
          PLY_NUM = 0
          CALL EMG ( I   , OPT, 'N', SUBR_NAME, 'Y' )       ! 'Y' means write to BUG file
 

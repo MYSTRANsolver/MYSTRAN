@@ -8,8 +8,8 @@ enable_language(Fortran)
 project(Mystran)
 
 # basic compiler and output options
-set(CMAKE_SOURCE_DIR "Source")
-set(PROJECT_BINARY_DIR "Binaries")
+set(CMAKE_SOURCE_DIR "${PROJECT_SOURCE_DIR}/Source")
+set(PROJECT_BINARY_DIR "${PROJECT_SOURCE_DIR}/Binaries")
 set(CMAKE_FLAGS "-c -fbacktrace")
 # set(CMAKE_BUILD_TYPE Debug)
 
@@ -26,6 +26,13 @@ if(NOT DEFINED CMAKE_SUPPRESS_DEVELOPER_WARNINGS)
   set(CMAKE_SUPPRESS_DEVELOPER_WARNINGS 1 CACHE INTERNAL "No dev warnings")
 endif()
 
+# recommend the appropriate make command
+if(WIN32)
+  set(RECOMMENDED_MAKE "mingw32-make")
+else()
+  set(RECOMMENDED_MAKE "make")
+endif()
+
 # submodules (i.e. SuperLU)
 find_package(Git QUIET)
 if(GIT_FOUND AND EXISTS "${PROJECT_SOURCE_DIR}/.git")
@@ -33,21 +40,21 @@ if(GIT_FOUND AND EXISTS "${PROJECT_SOURCE_DIR}/.git")
   if(GIT_SUBMODULE)
     message(STATUS "Updating submodules")
     execute_process(
-      COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive
+      COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive --force
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
       RESULT_VARIABLE GIT_SUBMOD_RESULT
     )
     if(NOT GIT_SUBMOD_RESULT EQUAL "0")
       message(
         FATAL_ERROR
-        "git submodule update --init --recursive failed"
+        "git submodule update --init --recursive --force failed"
       )
     endif()
   endif()
 endif()
 
 # check for SuperLU
-set(SUPERLU_DIR "superlu")
+set(SUPERLU_DIR "${PROJECT_SOURCE_DIR}/superlu")
 include_directories("${SUPERLU_DIR}/SRC")
 if(NOT EXISTS "${SUPERLU_DIR}/CMakeLists.txt")
   message(
@@ -58,10 +65,10 @@ endif()
 
 
 # f2c stuff
-set(F2C_DIR "f2c")
+set(F2C_DIR "${PROJECT_SOURCE_DIR}/f2c")
 set(F2C_INCLUDE_DIR "${F2C_DIR}/include")
 set(F2C_FN "${F2C_DIR}/libf2c.zip")
-set(F2C_URL "https://www.netlib.org/${F2C_FN}")
+set(F2C_URL "https://www.netlib.org/f2c/libf2c.zip")
 
 # download f2c
 if(NOT EXISTS ${F2C_DIR})
@@ -175,11 +182,20 @@ target_link_libraries(mystran dgssv superlu f2c)
 set_target_properties(
   mystran PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}
 )
+if (CMAKE_COMPILER_IS_GNUCC)
+  target_compile_options(
+    mystran PRIVATE
+    -Wall -Wextra
+    -Wno-unused-variable -Wno-unused-label -Wno-unused-parameter -Wno-tabs
+    -Wno-compare-reals -Wno-character-truncation -Wno-unused-dummy-argument
+    -Wmaybe-uninitialized -Wrealloc-lhs -fcheck=all
+  )
+endif()
 
 # issue a couple messages about compilation
 include(ProcessorCount)
 ProcessorCount(NCPU)
-message(STATUS "You can now compile MYSTRAN with make.")
+message(STATUS "You can now compile MYSTRAN with ${RECOMMENDED_MAKE}.")
 if (NOT NCPU EQUAL 0)
-  message(STATUS "Compile faster by passing -j${NCPU} to make.")
+  message(STATUS "Compile faster by passing -j${NCPU} to ${RECOMMENDED_MAKE}.")
 endif()

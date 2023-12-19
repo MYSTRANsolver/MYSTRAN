@@ -66,10 +66,10 @@
                                          SEQPRT          , SEQQUIT         , SETLKTM         , SETLKTK         , SHRFXFAC        , &
                                          SKIPMGG         , SOLLIB          , SPARSE_FLAVOR   , SPARSTOR        ,                   &
                                          SPC1QUIT        , SORT_MAX        , SPC1SID         , STR_CID                           , &
-                                         SUPINFO         , SUPWARN                                                               , &
+                                         SUPINFO         , SUPWARN         , NOCOUNTS                                            , &
                                          THRESHK         , THRESHK_LAP     , TINY            ,                                     &
                                          TSTM_DEF        , USR_JCT         , USR_LTERM_KGG   , USR_LTERM_MGG   , WINAMEM         , &
-                                         WTMASS
+                                         WTMASS          , K6ROT
  
       USE BD_PARAM_USE_IFs
 
@@ -2966,6 +2966,37 @@
          CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,4,5,6,7,8,9 )! Issue warning if fields 4-9 not blank
          CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
 
+! NOCOUNT suppresses all "counter", progress-indicating, non-advance writes to
+! standard output. It's good when debugging, and basically required if stdout
+! has no rewrite capabilities (like a file). We should probably check if the
+! output is not rewrite-friendly and set it automatically at some point.
+
+      ELSE IF (JCARD(2)(1:8) == 'NOCOUNTS') THEN
+         PARNAM = 'NOCOUNTS'
+         CALL CHAR_FLD ( JCARD(3), JF(3), CHRPARM )
+         IF (IERRFL(3) == 'N') THEN
+            CALL LEFT_ADJ_BDFLD ( CHRPARM )
+            IF      (CHRPARM(1:1) == 'Y') THEN
+               NOCOUNTS = 'Y'
+            ELSE IF (CHRPARM(1:1) == 'N') THEN
+               NOCOUNTS = 'N'
+            ELSE
+               WARN_ERR = WARN_ERR + 1
+               WRITE(ERR,101) CARD
+               WRITE(ERR,1189) PARNAM,'Y OR N',CHRPARM,SUPWARN
+               IF (SUPWARN == 'N') THEN
+                  IF (ECHO == 'NONE  ') THEN
+                     WRITE(F06,101) CARD
+                  ENDIF
+                  WRITE(F06,1189) PARNAM,'Y OR N',CHRPARM,SUPWARN
+               ENDIF
+            ENDIF
+         ENDIF
+
+         CALL BD_IMBEDDED_BLANK   ( JCARD,0,3,0,0,0,0,0,0 )! Make sure that there are no imbedded blanks in field 3
+         CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,4,5,6,7,8,9 )! Issue warning if fields 4-9 not blank
+         CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
+
 ! THRESHK is used in determining if equilibration is performed (see LAPACK subr DLAQSB in MODULE LAPACK_BLAS_AUX_1)
 
       ELSE IF (JCARD(2)(1:8) == 'THRESHK ') THEN
@@ -3125,6 +3156,45 @@ do_i:    DO I=1,JCARD_LEN
          CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,4,5,6,7,8,9 )! Issue warning if fields 4-9 not blank
          CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
 
+         
+! K6ROT is a small stiffness added to the drilling dof of 5-dof shells.
+
+      ELSE IF (JCARD(2)(1:8) == 'K6ROT   ') THEN
+         PARNAM = 'K6ROT   '
+         CALL R8FLD ( JCARD(3), JF(3), R8PARM )
+         IF (IERRFL(3) == 'N') THEN
+            IF (R8PARM >= 0) THEN
+               K6ROT = R8PARM
+               IF (K6ROT == 0) THEN
+                  WARN_ERR = WARN_ERR + 1
+                  WRITE(ERR,101) CARD
+                  WRITE(ERR,106)
+                  IF (SUPWARN == 'N') THEN
+                     IF (ECHO == 'NONE  ') THEN
+                        WRITE(F06,101) CARD
+                     ENDIF
+                     WRITE(F06,106)
+                  ENDIF
+               ENDIF
+            ELSE
+               FATAL_ERR = FATAL_ERR + 1
+               WRITE(ERR,101) CARD
+               WRITE(ERR,1173) PARNAM,'>= 0.D0',R8PARM
+               IF (SUPWARN == 'N') THEN
+                  IF (ECHO == 'NONE  ') THEN
+                     WRITE(F06,101) CARD
+                  ENDIF
+                  WRITE(F06,1173) PARNAM,'>= 0.D0',R8PARM
+               ENDIF
+            ENDIF
+         ENDIF
+
+         CALL BD_IMBEDDED_BLANK   ( JCARD,0,3,0,0,0,0,0,0 )! Make sure that there are no imbedded blanks in field 3
+         CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,4,5,6,7,8,9 )! Issue warning if fields 4-9 not blank
+         CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
+         
+         !WRITE(*,*) 'K6ROT = ', K6ROT
+
 ! PARAM parameter name not recognized
 
       ELSE
@@ -3159,6 +3229,8 @@ do_i:    DO I=1,JCARD_LEN
 
   104 FORMAT(' *WARNING    : USE OF ":" SEPERATOR FOR THE PARAM USETSTR BULK DATA ENTRY NOT ALLOWED. ENTRY HAD "',A,'" IN FIELD 3')
 
+  106 FORMAT(" *WARNING    : PARAMETER K6ROT SHOULD NOT BE SET TO ZERO SAVE FOR DEBUGGING.")
+  
  1110 FORMAT(' *ERROR  1110: PARAMETER NAMED ',A,' MUST BE >= ',I2,' AND <= ',I2,' BUT INPUT VALUE IS: ',A)
 
  1146 FORMAT(' *INFORMATION: PARAMETER ',A,' CHANGED FROM ',I8,' TO ',I8,/)
@@ -3190,7 +3262,6 @@ do_i:    DO I=1,JCARD_LEN
              ' *WARNING    : PARAMETER ',A15,' SHOULD NOT BE CHANGED FROM "SYM" TO "NONSYM". WRONG ANSWERS WILL PROBABLY RESULT',/,&
              ' >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>',&
              '>>>>>>>>>>>>>>>>>')
-             
 ! ##################################################################################################################################
  
       CONTAINS

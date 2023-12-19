@@ -85,7 +85,6 @@
 ! -------
  
 ! Generate GRID_ID and GRID_SEQ data.
-
       WRITE(SC1,12345,ADVANCE='NO') '    Initialize arrays GRID and GRID_SEQ                                     ', CR13
       DO I=1,NGRID
          GRID_ID(I)  = GRID(I,1)

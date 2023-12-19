@@ -42,7 +42,7 @@
                                          GROUT, LABEL, PLY_NUM, PEG, PTE, SCNUM, STITLE, SUBLOD, TITLE, TYPE
       USE LINK9_STUFF, ONLY           :  GID_OUT_ARRAY
       USE COL_VECS, ONLY              :  FG_COL, PG_COL, QGm_COL, QGs_COL, QGr_COL, UG_COL
-      USE PARAMS, ONLY                :  EPSIL
+      USE PARAMS, ONLY                :  EPSIL, NOCOUNTS
 
       USE GP_FORCE_BALANCE_PROC_USE_IFs
 
@@ -267,7 +267,9 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
 
 !xx   WRITE(SC1, * )                                       ! Advance 1 line for screen messages
       DO I=1,NGRID
-         WRITE(SC1,12345,ADVANCE='NO') I, NREQ, CR13
+         IF (NOCOUNTS /= 'Y') THEN
+            WRITE(SC1,12345,ADVANCE='NO') I, NREQ, CR13
+         ENDIF
          IB = IAND(GROUT(I,INT_SC_NUM),IBIT(GROUT_GPFO_BIT))
          GRID_NUM  = GRID(I,1)
          CALL GET_GRID_NUM_COMPS ( GRID_NUM, NUM_COMPS, SUBR_NAME )

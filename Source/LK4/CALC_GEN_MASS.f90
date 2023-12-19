@@ -45,7 +45,7 @@
       USE TIMDAT, ONLY                :  TSEC
       USE CONSTANTS_1, ONLY           :  ZERO, ONE
       USE DEBUG_PARAMETERS, ONLY      :  DEBUG
-      USE PARAMS, ONLY                :  EPSIL
+      USE PARAMS, ONLY                :  EPSIL, NOCOUNTS
       USE SUBR_BEGEND_LEVELS, ONLY    :  CALC_GEN_MASS_BEGEND
       USE EIGEN_MATRICES_1, ONLY      :  GEN_MASS, EIGEN_VEC
       USE MODEL_STUF, ONLY            :  EIG_CRIT, MAXMIJ, MIJ_COL, MIJ_ROW, NUM_FAIL_CRIT
@@ -90,7 +90,9 @@
 
       DO I=1,NVEC
 
-         WRITE(SC1,12345,ADVANCE='NO') I, NVEC, CR13
+         IF (NOCOUNTS /= 'Y') THEN
+            WRITE(SC1,12345,ADVANCE='NO') I, NVEC, CR13
+         ENDIF
 
          DO K=1,NDOFL                                      ! Calc diag terms
             OUTVECI(K,1) = EIGEN_VEC(K,I)
@@ -110,7 +112,9 @@
 
             DO J=1,I-1
 
-               WRITE(SC1,22345,ADVANCE='NO') J, NVEC, I, NVEC, CR13
+               IF (NOCOUNTS /= 'Y') THEN
+                  WRITE(SC1,22345,ADVANCE='NO') J, NVEC, I, NVEC, CR13
+               ENDIF
 
                DO K=1,NDOFL
                   OUTVECJ(K,1) = EIGEN_VEC(K,J)

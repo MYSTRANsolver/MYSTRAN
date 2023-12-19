@@ -31,7 +31,7 @@
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
       USE IOUNT1, ONLY                :  ERR, F04, F06, OP2, SC1, WRT_BUG, WRT_ERR, WRT_LOG
       USE SCONTR, ONLY                :  BLNK_SUB_NAM, ELDT_BUG_ME_BIT, IBIT, MBUG, NCONM2, NCORD, NELE, NGRID, SOL_NAME, WARN_ERR
-      USE PARAMS, ONLY                :  EPSIL, GRDPNT, MEFMGRID, MEFMLOC, SUPWARN, WTMASS
+      USE PARAMS, ONLY                :  EPSIL, GRDPNT, MEFMGRID, MEFMLOC, SUPWARN, WTMASS, NOCOUNTS
       USE DEBUG_PARAMETERS, ONLY      :  DEBUG
       USE TIMDAT, ONLY                :  TSEC
       USE SUBR_BEGEND_LEVELS, ONLY    :  GPWG_BEGEND
@@ -177,8 +177,9 @@
 
       IERROR = 0
 elems:DO I = 1,NELE
-
-         WRITE(SC1,12345,ADVANCE='NO') I, NELE, CR13
+         IF (NOCOUNTS /= 'Y') THEN
+            WRITE(SC1,12345,ADVANCE='NO') I, NELE, CR13
+         ENDIF
 
          PLY_NUM = 0
          CALL EMG ( I   , OPT, 'N', SUBR_NAME, 'N' )       ! 'N' means do not write to BUG file
@@ -512,6 +513,7 @@ userin:        IF ((WHICH(1:8) == 'OA MODEL') .OR. (WHICH(1:6) == 'USERIN')) THE
       IF ((INFO == 0) .AND. (REFPNT >= 0)) THEN  
 
          IF(REFPNT > -1) THEN
+           ITABLE = -3
  1         FORMAT("WRITE OGPWG OP2: ",A)
  2         FORMAT("* DEBUG OGPWG ITABLE=",i4)
            WRITE(ERR,1) "START"
@@ -519,7 +521,6 @@ userin:        IF ((WHICH(1:8) == 'OA MODEL') .OR. (WHICH(1:6) == 'USERIN')) THE
            
            TABLE_NAME = "OGPWG   "
            CALL WRITE_TABLE_HEADER(TABLE_NAME)
-           ITABLE = -3
            ANALYSIS_CODE = 1   ! TODO: this is probably wrong, but is weird for this table
 
            WRITE(ERR,2) ITABLE
@@ -690,5 +691,3 @@ userin:        IF ((WHICH(1:8) == 'OA MODEL') .OR. (WHICH(1:6) == 'USERIN')) THE
 
       ITABLE = ITABLE - 1        ! flip it to -4, -6, ... so we don't have to do this later
       END SUBROUTINE WRITE_OPGWG_TABLE3
-
-

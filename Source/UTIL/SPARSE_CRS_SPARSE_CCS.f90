@@ -35,6 +35,7 @@
       USE CONSTANTS_1, ONLY           :  ZERO
       USE SUBR_BEGEND_LEVELS, ONLY    :  SPARSE_CRS_SPARSE_CCS_BEGEND
       USE DEBUG_PARAMETERS, ONLY      :  DEBUG
+      USE PARAMS, ONLY                :  NOCOUNTS
  
       USE SPARSE_CRS_SPARSE_CCS_USE_IFs
 
@@ -102,7 +103,7 @@
       L = 0                                                ! Counter for terms going into B
       J_B(1) = 1
       DO J=1,NCOLS_A
-         IF (WRT_SCREEN == 'Y') THEN
+         IF (WRT_SCREEN == 'Y' .AND. NOCOUNTS /= 'Y') THEN
             WRITE(SC1,12345,ADVANCE='NO') J, NCOLS_A, MAT_A_NAME, MAT_B_NAME, CR13
          ENDIF 
          COL_J_NUM_TERMS = 0 

@@ -750,7 +750,8 @@ ply_do:  DO K=1,NUM_PLIES_TO_PROC
          WRITE(BUG,*)
 
       ELSE IF (WHAT == 23) THEN
-
+         
+         PCOMP_PLIES = PCOMP(INTL_PID,5)
          WRITE(BUG,92301) PCOMP(INTL_PID,1), PCOMP_PLIES
 
          DO I=1,3                                         ! Write final result, SHELL_A

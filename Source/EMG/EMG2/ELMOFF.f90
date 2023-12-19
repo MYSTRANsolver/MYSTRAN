@@ -32,13 +32,16 @@
 ! ======================================
 
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
-      USE IOUNT1, ONLY                :  ERR, F04, F06, WRT_LOG
-      USE SCONTR, ONLY                :  BLNK_SUB_NAM, FATAL_ERR, MAX_STRESS_POINTS, NSUB, NTSUB
+      USE IOUNT1, ONLY                :  BUG, ERR, F04, F06, WRT_LOG, WRT_BUG, WRT_ERR
+      USE SCONTR, ONLY                :  BLNK_SUB_NAM, FATAL_ERR, MAX_STRESS_POINTS, NSUB, NTSUB, MAX_ORDER_GAUSS, MEFE, NMATL,    &
+                                         NPSHEL
       USE TIMDAT, ONLY                :  TSEC
+      USE DEBUG_PARAMETERS, ONLY      :  DEBUG
       USE SUBR_BEGEND_LEVELS, ONLY    :  ELMOFF_BEGEND
       USE CONSTANTS_1, ONLY           :  ZERO, ONE
-      USE MODEL_STUF, ONLY            :  CAN_ELEM_TYPE_OFFSET, ELDOF, ELGP, EID, KE, ME, NUM_EMG_FATAL_ERRS,                       &
-                                         OFFDIS, OFFSET, PPE, PTE, SE1, SE2, SE3, TYPE
+      USE PARAMS, ONLY                :  K6ROT, EPSIL
+      USE MODEL_STUF, ONLY            :  CAN_ELEM_TYPE_OFFSET, ELDOF, ELGP, EID, KE, ME, NUM_EMG_FATAL_ERRS, RMATL, RPSHEL,        &
+                                         OFFDIS, OFFSET, PPE, PTE, SE1, SE2, SE3, XEL, ERR_SUB_NAM, EMG_IFE, EMG_RFE, TYPE
       USE ELMOFF_USE_IFs
 
       IMPLICIT NONE
@@ -76,6 +79,19 @@
       REAL(DOUBLE)                    :: E(6*ELGP,6*ELGP)
       REAL(DOUBLE)                    :: Ei(ELGP,6,6)
       REAL(DOUBLE)                    :: KE1(6*ELGP,6*ELGP)
+      REAL(DOUBLE)                    :: Ksita                ! virtual rotational stiffness derived from K6ROT
+      
+      ! below block is stolen from QDEL1
+      REAL(DOUBLE)                    :: AREA                 ! Elem area
+      REAL(DOUBLE)                    :: HHH(MAX_ORDER_GAUSS) ! An output from subr ORDER, called herein.  Gauss weights.
+      REAL(DOUBLE)                    :: SSS(MAX_ORDER_GAUSS) ! An output from subr ORDER, called herein. Gauss abscissa's.
+      REAL(DOUBLE)                    :: XSD(4)               ! Diffs in x coords of quad sides in local coords
+      REAL(DOUBLE)                    :: YSD(4)               ! Diffs in y coords of quad sides in local coords
+      REAL(DOUBLE)                    :: JAC(2,2)             ! An output from subr JAC2D4, called herein. 2 x 2 Jacobian matrix.
+      REAL(DOUBLE)                    :: JACI(2,2)            ! An output from subr JAC2D4, called herein. 2 x 2 Jacobian inverse.
+      REAL(DOUBLE)                    :: DETJ                 ! An output from subr JAC2D4, called herein. Determinant of JAC
+      REAL(DOUBLE)                    :: EPS1                 ! A small number to compare to real zero
+      ! end copied decls
       
       INTRINSIC                       :: DABS
 
@@ -196,11 +212,74 @@
          CALL MATMULT_FFF   ( KE1, E     , 6*ELGP, 6*ELGP, 6*ELGP, DUM_KE )
          CALL MATMULT_FFF_T ( E  , DUM_KE, 6*ELGP, 6*ELGP, 6*ELGP, KE1    )
 
+        
+! Get the Jacobian in order to compute the Ksita virtual stiffness
+
+
+
 ! Set KE = KE1 for 6*ELGP by 6*ELGP terms
 
+! Compute the Ksita matrix for virtual stiffness
+         
+         ! restrict to QUAD4 and TRIA3 shell elements
+         IF (TYPE(1:5) == "QUAD4" .OR. TYPE(1:5) == "TRIA3") THEN
+            IF (NPSHEL > 0) THEN
+               ! Here begins the code copied from QDEL
+  
+               XSD(1) = XEL(1,1) - XEL(2,1)                         ! x coord diffs (in local elem coords)
+               XSD(2) = XEL(2,1) - XEL(3,1)
+               XSD(3) = XEL(3,1) - XEL(4,1)
+               XSD(4) = XEL(4,1) - XEL(1,1)
+         
+               YSD(1) = XEL(1,2) - XEL(2,2)                         ! y coord diffs (in local elem coords)
+               YSD(2) = XEL(2,2) - XEL(3,2)
+               YSD(3) = XEL(3,2) - XEL(4,2)
+               YSD(4) = XEL(4,2) - XEL(1,2)
+         
+               IF ((DEBUG(6) > 0) .AND. (WRT_BUG(0) > 0)) THEN
+                  WRITE(BUG,*) ' Element side differences in x, y coords:'
+                  WRITE(BUG,*) ' ---------------------------------------'
+                  WRITE(BUG,98761) XSD(1), YSD(1)
+                  WRITE(BUG,98762) XSD(2), YSD(2)
+                  WRITE(BUG,98763) XSD(3), YSD(3)
+                  WRITE(BUG,98764) XSD(4), YSD(4)
+                  WRITE(BUG,*)
+               ENDIF 
+      
+               AREA = ZERO
+               CALL ORDER_GAUSS ( 2, SSS, HHH )
+               DO I=1,2
+                  DO J=1,2
+                     CALL JAC2D ( SSS(I), SSS(J), XSD, YSD, 'N', JAC, JACI, DETJ )
+                     AREA = AREA + HHH(I)*HHH(J)*DETJ
+                  ENDDO   
+               ENDDO   
+               EPS1 = EPSIL(1)
+               IF (AREA < EPS1) THEN
+                  NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
+                  FATAL_ERR = FATAL_ERR + 1
+                  IF (WRT_ERR > 0) THEN
+                     WRITE(ERR,1925) EID, TYPE, 'AREA', AREA
+                     WRITE(F06,1925) EID, TYPE, 'AREA', AREA
+                  ELSE
+                     IF (NUM_EMG_FATAL_ERRS <= MEFE) THEN
+                        ERR_SUB_NAM(NUM_EMG_FATAL_ERRS) = SUBR_NAME
+                        EMG_IFE(NUM_EMG_FATAL_ERRS,1) = 1925
+                        EMG_RFE(NUM_EMG_FATAL_ERRS,1) = AREA
+                     ENDIF
+                  ENDIF
+                  RETURN
+               ENDIF
+               Ksita = 10.0**(-6.0)*RMATL(NMATL, 2)*RPSHEL(NPSHEL, 1)*ABS(DETJ)*K6ROT
+            ENDIF
+         ELSE
+            Ksita = 0.0
+         ENDIF
+         
+         
          DO J=1,6*ELGP
             DO K=1,6*ELGP
-               KE(J,K) = KE1(J,K)
+               KE(J,K) = KE1(J,K)!+Ksita
             ENDDO
          ENDDO
 
@@ -500,6 +579,23 @@
  1955 FORMAT(' *ERROR  1955: PROGRAMMING ERROR IN SUBROUTINE ',A                                                                   &
                     ,/,14X,' ELEMENT TYPE ',A,' DOES NOT SUPPORT OFFSETS. ERROR OCCURRED FOR ELEMENT NUMBER ',I8)
 
+1925 FORMAT(' *ERROR  1925: ELEMENT ',I8,', TYPE ',A,', HAS ZERO OR NEGATIVE ',A,' = ',1ES9.1)
+
+!1926 FORMAT("K6ROT DEBUG: EID=", I8, ", TYPE=", A, ", AREA=", ES0.2, ", EPS1=", ES0.2, /)
+
+1927 FORMAT(' *ERROR  1927: PROGRAMMING ERROR IN SUBROUTINE ',A                                                                   &
+                    ,/,14X,' CHAR PARAMETER QUAD4TYP MUST BE EITHER "MIN4T" OR "MIN4 " BUT IS "',A,'"')
+
+1948 FORMAT(' *ERROR  1948: ',A,I8,' MUST HAVE INTEGRATION ORDERS FOR PARAMS ',A,' = ',I3,' IF THE ELEMENT IS A PCOMP'            &
+                             ,/,14X,' WITH SYM LAYUP. HOWEVER, THE TWO INTEGRATION ORDERS WERE: ',A,' = ',I3,' AND ',A,' = ',I3)
+
+98761 FORMAT('   X1-X2 = ',1ES14.6,'   Y1-Y2 = ',1ES14.6)
+
+98762 FORMAT('   X2-X3 = ',1ES14.6,'   Y2-Y3 = ',1ES14.6)
+
+98763 FORMAT('   X3-X4 = ',1ES14.6,'   Y3-Y4 = ',1ES14.6)
+
+98764 FORMAT('   X4-X1 = ',1ES14.6,'   Y4-Y1 = ',1ES14.6)
 ! ##################################################################################################################################
 
       CONTAINS
@@ -591,4 +687,3 @@
       END SUBROUTINE MULT_OFFSET
 
       END SUBROUTINE ELMOFF
-

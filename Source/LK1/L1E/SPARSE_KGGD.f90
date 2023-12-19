@@ -36,7 +36,7 @@
       USE TIMDAT, ONLY                :  TSEC
       USE SUBR_BEGEND_LEVELS, ONLY    :  SPARSE_KGGD_BEGEND
       USE CONSTANTS_1, ONLY           :  ZERO
-      USE PARAMS, ONLY                :  AUTOSPC, AUTOSPC_RAT, EPSIL, PRTSTIFF, SPC1QUIT, SUPINFO, SUPWARN
+      USE PARAMS, ONLY                :  AUTOSPC, AUTOSPC_RAT, EPSIL, PRTSTIFF, SPC1QUIT, SUPINFO, SUPWARN, NOCOUNTS
       USE NONLINEAR_PARAMS, ONLY      :  LOAD_ISTEP
       USE MODEL_STUF, ONLY            :  GRID, GRID_ID, GRID_SEQ, MPC_IND_GRIDS, INV_GRID_SEQ
       USE DOF_TABLES, ONLY            :  TDOF, TDOF_ROW_START, TDOFI, TSET
@@ -145,7 +145,9 @@
 !xx   WRITE(SC1, * )
 i_do: DO I = 1,NGRID
 
-         WRITE(SC1,12345,ADVANCE='NO') I, NGRID, CR13
+         IF (NOCOUNTS /= 'Y') THEN
+            WRITE(SC1,12345,ADVANCE='NO') I, NGRID, CR13
+         ENDIF
 
          DO K=1,6                                          ! Make KGGD_II 6x6 even though for SPOINT's we only use 1-1 term
             DO L=1,6
