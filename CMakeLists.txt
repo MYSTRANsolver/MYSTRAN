@@ -26,6 +26,13 @@ if(NOT DEFINED CMAKE_SUPPRESS_DEVELOPER_WARNINGS)
   set(CMAKE_SUPPRESS_DEVELOPER_WARNINGS 1 CACHE INTERNAL "No dev warnings")
 endif()
 
+# recommend the appropriate make command
+if(WIN32)
+  set(RECOMMENDED_MAKE "mingw32-make")
+else()
+  set(RECOMMENDED_MAKE "make")
+endif()
+
 # submodules (i.e. SuperLU)
 find_package(Git QUIET)
 if(GIT_FOUND AND EXISTS "${PROJECT_SOURCE_DIR}/.git")
@@ -188,7 +195,7 @@ endif()
 # issue a couple messages about compilation
 include(ProcessorCount)
 ProcessorCount(NCPU)
-message(STATUS "You can now compile MYSTRAN with make.")
+message(STATUS "You can now compile MYSTRAN with ${RECOMMENDED_MAKE}.")
 if (NOT NCPU EQUAL 0)
-  message(STATUS "Compile faster by passing -j${NCPU} to make.")
+  message(STATUS "Compile faster by passing -j${NCPU} to ${RECOMMENDED_MAKE}.")
 endif()
