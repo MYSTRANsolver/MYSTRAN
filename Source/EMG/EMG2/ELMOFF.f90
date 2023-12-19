@@ -279,7 +279,7 @@
          
          DO J=1,6*ELGP
             DO K=1,6*ELGP
-               KE(J,K) = KE1(J,K)!+Ksita
+               KE(J,K) = KE1(J,K)+Ksita
             ENDDO
          ENDDO
 
