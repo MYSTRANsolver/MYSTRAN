@@ -116,9 +116,9 @@
 
       ! default N should be 1, not 0
       EIG_N2 = 1
-      IF (JCARD(6)(1:) /= ' ') THEN
+      IF (JCARD(5)(1:) /= ' ') THEN
          CALL I4FLD ( JCARD(5), JF(5), I4INP )            ! Read field 5: number of desired roots
-         IF (IERRFL(6) == 'N') THEN
+         IF (IERRFL(5) == 'N') THEN
             EIG_N2 = I4INP
          ENDIF
       ENDIF
