@@ -219,8 +219,9 @@
 
 ! Set KE = KE1 for 6*ELGP by 6*ELGP terms
 
-! Compute the Ksita matrix for virtual stiffness
+! Compute the Ksita virtual stiffness
          
+         Ksita = 0.0
          ! restrict to QUAD4 and TRIA3 shell elements
          IF (TYPE(1:5) == "QUAD4" .OR. TYPE(1:5) == "TRIA3") THEN
             IF (NPSHEL > 0) THEN
@@ -272,8 +273,6 @@
                ENDIF
                Ksita = 10.0**(-6.0)*RMATL(NMATL, 2)*RPSHEL(NPSHEL, 1)*ABS(DETJ)*K6ROT
             ENDIF
-         ELSE
-            Ksita = 0.0
          ENDIF
          
          
