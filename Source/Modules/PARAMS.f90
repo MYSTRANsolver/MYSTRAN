@@ -474,7 +474,7 @@
 ! ----------------------------------------------------------------------------------------------------------------------------------
       REAL(DOUBLE)             :: WTMASS         =   ONE     ! Value from PARAM WTMASS Bulk Data card
 ! ----------------------------------------------------------------------------------------------------------------------------------
-      REAL(DOUBLE)             :: K6ROT          = 100.0     ! Virtual rotational stiffness
+      REAL(DOUBLE)             :: K6ROT          =   0.0     ! Virtual rotational stiffness
 ! ----------------------------------------------------------------------------------------------------------------------------------
       CHARACTER(  1*BYTE)      :: NOCOUNTS        =    'N'   ! 'Y' supresses the "counter" non-advance writes to stdout.
                                                              ! Good for debugging or when writing to a log file.

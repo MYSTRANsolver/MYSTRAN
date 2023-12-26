@@ -3165,15 +3165,15 @@ do_i:    DO I=1,JCARD_LEN
          IF (IERRFL(3) == 'N') THEN
             IF (R8PARM >= 0) THEN
                K6ROT = R8PARM
-               IF (K6ROT == 0) THEN
+               IF (K6ROT > 0) THEN
                   WARN_ERR = WARN_ERR + 1
                   WRITE(ERR,101) CARD
-                  WRITE(ERR,106)
+                  WRITE(ERR,1198)
                   IF (SUPWARN == 'N') THEN
                      IF (ECHO == 'NONE  ') THEN
                         WRITE(F06,101) CARD
                      ENDIF
-                     WRITE(F06,106)
+                     WRITE(F06,1198)
                   ENDIF
                ENDIF
             ELSE
@@ -3262,6 +3262,8 @@ do_i:    DO I=1,JCARD_LEN
              ' *WARNING    : PARAMETER ',A15,' SHOULD NOT BE CHANGED FROM "SYM" TO "NONSYM". WRONG ANSWERS WILL PROBABLY RESULT',/,&
              ' >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>',&
              '>>>>>>>>>>>>>>>>>')
+
+ 1198 FORMAT("*WARNING    : THE K6ROT PARAMETER IS AN EXPERIMENTAL FEATURE. WHEN IN DOUBT, SET IT TO ZERO.",/)
 ! ##################################################################################################################################
  
       CONTAINS
