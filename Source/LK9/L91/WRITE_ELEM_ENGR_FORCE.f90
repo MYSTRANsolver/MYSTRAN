@@ -263,6 +263,8 @@ headr:IF (IHDR == 'Y') THEN
 
       ! Write element force output
       IF      (TYPE == 'BAR     ') THEN
+         
+         CALL GET_MAX_MIN_ABS ( 1, 8 )
 
          ! (1) PRINT, (2) PLOT, (3) PUNCH, (4) NEU, (5) CSV
          IF (WRITE_OP2)  THEN  ! op2/plot
@@ -279,7 +281,7 @@ headr:IF (IHDR == 'Y') THEN
            DO I=1,NUM
               WRITE(F06,1102) FILL(1: 0), EID_OUT_ARRAY(I,1),(OGEL(I,J),J=1,8)
            ENDDO   
-           CALL GET_MAX_MIN_ABS ( 1, 8 )
+           !CALL GET_MAX_MIN_ABS ( 1, 8 )
            WRITE(F06,1103) FILL(1: 0), FILL(1: 0), (MAX_ANS(J),J=1,8), FILL(1: 0), (MIN_ANS(J),J=1,8), FILL(1: 0),                 &
                                                    (ABS_ANS(J),J=1,8), FILL(1: 0)
          ENDIF
