@@ -5,12 +5,12 @@ There are a few main ways to export data (to verify):
 
 | Location |  Case Control Command  |  Notes       |
 | -------- |  --------------------  |  -----       |
-| F06/ans  |  DISP=ALL              |              |
-| F06/ans  |  DISP(PRINT)=ALL       |              |
-| OP2      |  DISP(PLOT)=ALL        |              |
-| PUNCH    |  DISP(PUNCH)=ALL       |              |
-| CSV      |  DISP(CSV)=ALL         | future |
-| NEU      |  DISP(NEU)=ALL         | future |
+| F06/ans  |  DISP=ALL              | Defaults to PRINT |
+| F06/ans  |  DISP(PRINT)=ALL       | Writes to the F06 file (and ANS if DEBUG,200)  |
+| OP2      |  DISP(PLOT)=ALL        | Writes to the OP2 file |
+| PUNCH    |  DISP(PUNCH)=ALL       | Writes to the PCH file |
+| CSV      |  DISP(CSV)=ALL         | TODO: Write to a CSV file |
+| NEU      |  DISP(NEU)=ALL         | TODO: Writes to a NEU file (currently generated with PARAM,POST,-1) |
 
 The F06 and ANS files are basically the same, so main results support is the same.
 However, the ANS file is incomplete, so until they're the same, we'll document it.
@@ -116,7 +116,7 @@ see https://github.com/dr-bill-c/MYSTRAN/pull/24#event-5702809912
 | Solid               | Yes  | ???  | Yes  | ???  | No   | No directional vectors; No coordinate system support; no transform support         |
 
 
-| Strain Result        | F06  | F06  | OP2  | PCH | CSV | Notes |
+| Strain Result        | F06  | ANS  | OP2  | PCH | CSV | Notes |
 | -------------        | ---  | ---  | ---  | --- | --- | ----- |
 | CELASx               | ???  | ???  | ???  | ??? | No  |       |
 | CROD                 | Yes  | ???  | Yes  | ??? | No  | no axial/torsion margin |
@@ -130,7 +130,7 @@ see https://github.com/dr-bill-c/MYSTRAN/pull/24#event-5702809912
 | CQUAD4 Comp          | ???  | ???  | Yes  | ??? | No  | no FIBER/CURV support (FIBER only); no MAXS/MISES support (MISES only)
 | Solid                | Yes  | ???  | Yes  | ??? | No  | No directional vectors; No coordinate system support; no transform support
 
-| Strain Energy Result | F06  | F06  | OP2  | PCH  | CSV  | Notes |
+| Strain Energy Result | F06  | ANS  | OP2  | PCH  | CSV  | Notes |
 | -------------------- | ---  | ---  | ---  | ---  | ---  | ----- |
 | CELASx               | ???  | ???  | No   | ???  | No   |       |
 | CROD                 | ???  | ???  | No   | ???  | No   |       |
