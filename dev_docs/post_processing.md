@@ -7,7 +7,7 @@ There are a few main ways to export data (to verify):
 | -------- |  --------------------  |  -----       |
 | F06/ans  |  DISP=ALL              |              |
 | F06/ans  |  DISP(PRINT)=ALL       |              |
-| OP2      |  DISP(PLOT)=ALL        | partial      |
+| OP2      |  DISP(PLOT)=ALL        |              |
 | PUNCH    |  DISP(PUNCH)=ALL       |              |
 | CSV      |  DISP(CSV)=ALL         | future |
 | NEU      |  DISP(NEU)=ALL         | future |
@@ -18,16 +18,16 @@ However, the ANS file is incomplete, so until they're the same, we'll document i
 OP2 PLOT Support
 ================
 
-| Command  | Support |
+| Command  | Notes   |
 | ------   | ------- |
-| DISP     | True    |
-| ACCEL    | True    |
-| OLOAD    | True    |
-| SPCFORCE | True    |
-| MPCFORCE | True    |
-| STRESS   | True    |
-| STRAIN   | True    |
-| FORCE    | True    |
+| DISP     |         |
+| ACCEL    |         |
+| OLOAD    |         |
+| SPCFORCE |         |
+| MPCFORCE |         |
+| STRESS   |         |
+| STRAIN   |         |
+| FORCE    |         |
 | ESE      | N/A     |
 | GPFORCE  | N/A     |
 
@@ -46,10 +46,17 @@ which begs the question of is the code compatible with sets, when we do?
 
 FAQ
 ---------
-**Q:** What is the difference between ANS and F06?
+**Q1:** What is the difference between F06, OP2, and ANS files?
 
-**A:** ANS is LINK9 (results) only and requires a debug flag to export
+**A1:** F06 is the main human readable Nastran/Mystran output.  It contains error messages, warnings, etc. which can make things harder to parse.  In general, you'd use this for quick checks, but post-processors like FEMAP / PATRAN / pyNastran can't read it.  An F06 result is requested with a PRINT flag.
 
+THe OP2 is the main binary output file that FEMAP / PATRAN / pyNastran can read.  An OP2 result is requested with a PLOT flag.
+
+The ANS is LINK9 (results) only and requires a debug flag to export.  It is simpler to parse, but basically the same as the F06.  An ANS result is requested with a PRINT flag and a DEBUG, 200 flag.
+
+**Q2:** Why is my OP2 basically empty (<1 KB)?
+
+**A2:** You forgot to request results.  Use DISP(PLOT) = ALL.
 
 
 OP2 Params (TODO)
