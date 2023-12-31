@@ -46,17 +46,17 @@ which begs the question of is the code compatible with sets, when we do?
 
 FAQ
 ---------
-**Q1:** What is the difference between F06, OP2, and ANS files?
+**What is the difference between F06, OP2, and ANS files?**
 
-**A1:** F06 is the main human readable Nastran/Mystran output.  It contains error messages, warnings, etc. which can make things harder to parse.  In general, you'd use this for quick checks, but post-processors like FEMAP / PATRAN / pyNastran can't read it.  An F06 result is requested with a PRINT flag.
+F06 is the main human readable Nastran/Mystran output.  It contains error messages, warnings, etc. which can make things harder to parse.  In general, you'd use this for quick checks, but post-processors like FEMAP / PATRAN / pyNastran can't read it.  An F06 result is requested with a PRINT flag.
 
 THe OP2 is the main binary output file that FEMAP / PATRAN / pyNastran can read.  An OP2 result is requested with a PLOT flag.
 
 The ANS is LINK9 (results) only and requires a debug flag to export.  It is simpler to parse, but basically the same as the F06.  An ANS result is requested with a PRINT flag and a DEBUG, 200 flag.
 
-**Q2:** Why is my OP2 basically empty (<1 KB)?
+**Why is my OP2 basically empty (<1 KB)?**
 
-**A2:** You forgot to request results.  Use DISP(PLOT) = ALL.
+You forgot to request results.  Use DISP(PLOT) = ALL.
 
 
 OP2 Params (TODO)
