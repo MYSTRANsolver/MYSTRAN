@@ -62,14 +62,16 @@ The ANS is LINK9 (results) only and requires a debug flag to export.  It is simp
 OP2 Params (TODO)
 =================
 PARAM,POST,-1
- - current: activates the NEU output?
- - new: activates op2 output
- - default=0 (consistent with Nastran) -> no op2???  PLOT does nothing?
+ - default=0 (consistent with Nastran) -> no op2
+ - NX/MSC Nastran: activates the OP2 (vs. XDB)
+ - Mystran (future option): activates OP2 output (vs. nothing)
+ - Mystran current: activates the NEU output (vs. using a flag)
 
 PARAM,OGEOM,YES
- - current: doesn't exist (NO)
- - new: YES=activates op2 geometry writing; NO=no geometry
  - default=YES (consistent with Nastran)
+ - NX/MSC Nastran: activates op2 geometry writing 
+ - Mystran current: doesn't exist (NO)
+ - Mystran future: YES=activates op2 geometry writing; NO=no geometry
 
 
 Static Post-Processing Support
