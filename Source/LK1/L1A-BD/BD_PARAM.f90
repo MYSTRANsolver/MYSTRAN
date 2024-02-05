@@ -878,12 +878,13 @@
 ! GRDPNT causes the grid point weight generator to be run to calculate mass of the model relative to G.P defined by PARAM GRDPNT.
 
       ELSE IF (JCARD(2)(1:8) == 'GRDPNT  ') THEN
-         GRDPNT_IN = GRDPNT                                ! GRDPNT_IN is used to decide if GPWG is run in LINK0
+         ! GRDPNT_IN is used to decide if GPWG is run in LINK0
          PARNAM = 'GRDPNT  '
          CALL I4FLD ( JCARD(3), JF(3), I4PARM )
          IF (IERRFL(3) == 'N') THEN
             IF (I4PARM >= 0) THEN
-               GRDPNT = I4PARM
+               GRDPNT    = I4PARM
+               GRDPNT_IN = I4PARM
             ELSE
                WARN_ERR = WARN_ERR + 1
                WRITE(ERR,101) CARD
