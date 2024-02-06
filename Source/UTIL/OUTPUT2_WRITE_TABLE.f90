@@ -28,15 +28,16 @@
 
 
 ! ##################################################################################################################################
-    SUBROUTINE WRITE_OUG3_EIGN(ITABLE, ISUBCASE, DEVICE_CODE, ANALYSIS_CODE, TABLE_CODE, NEW_RESULT, &
+    SUBROUTINE WRITE_OUG3_EIGN(ITABLE, ISUBCASE, DEVICE_CODE, ANALYSIS_CODE, NEW_RESULT, &
                                TITLE, SUBTITLE, LABEL, MODE, EIGENVALUE)
       USE PENTIUM_II_KIND, ONLY  :  BYTE, LONG, DOUBLE
       IMPLICIT NONE
-      INTEGER(LONG), INTENT(IN)        :: ITABLE, ISUBCASE, DEVICE_CODE, ANALYSIS_CODE, TABLE_CODE
+      INTEGER(LONG), INTENT(IN)        :: ITABLE, ISUBCASE, DEVICE_CODE, ANALYSIS_CODE
       CHARACTER(LEN=128), INTENT(IN)   :: TITLE            ! Solution title
       CHARACTER(LEN=128), INTENT(IN)   :: SUBTITLE         ! Subcase subtitle
       CHARACTER(LEN=128), INTENT(IN)   :: LABEL            ! Subcase label
       LOGICAL, INTENT(INOUT)           :: NEW_RESULT
+      INTEGER(LONG)                    :: TABLE_CODE
       INTEGER(LONG)                    :: FORMAT_CODE
       INTEGER(LONG)                    :: NUM_WIDE
       INTEGER(LONG)                    :: NINT = 4
@@ -47,7 +48,10 @@
 !      1 = OP2 is the output file
 !      DEVICE_CODE = 1
 
-!     real
+      ! eigenvector
+      TABLE_CODE = 7
+
+      ! real
       FORMAT_CODE = 1
       NUM_WIDE = 8
 

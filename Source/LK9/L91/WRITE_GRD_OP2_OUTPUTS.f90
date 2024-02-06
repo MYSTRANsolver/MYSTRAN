@@ -74,6 +74,7 @@
       INTEGER(LONG)                   :: NTOTAL            ! the number of total bytes for all the "words"
       INTEGER(LONG)                   :: NUM_WIDE          ! the width in bytes of a result
       INTEGER(LONG)                   :: NVALUES           ! the width in "words" of a result
+      INTEGER(LONG)                   :: ISUBCASE_INDEX    ! the index into SCNUM
 
 ! **********************************************************************************************************************************
       ! TODO: assuming PLOT
@@ -117,19 +118,20 @@
 
       EIGENVALUE = 0.0
       MODE = 0
-      CALL GET_ANALYSIS_CODE_FIELD5_FIELD6(JSUB, ANALYSIS_CODE, MODE, EIGENVALUE)
-      ISUBCASE = SCNUM(JSUB)
+      ISUBCASE_INDEX = 0
+      CALL GET_ANALYSIS_CODE_FIELD5_FIELD6(JSUB, ANALYSIS_CODE, MODE, EIGENVALUE, ISUBCASE_INDEX)
       
       TITLEI = TITLE(INT_SC_NUM)
       STITLEI = STITLE(INT_SC_NUM)
       LABELI = LABEL(INT_SC_NUM)
-      
+
+      ISUBCASE = SCNUM(ISUBCASE_INDEX)
       IF ((ANALYSIS_CODE == 1) .OR. (ANALYSIS_CODE == 10)) THEN
-         ! static
+          ! static
           CALL WRITE_OUG3_STATIC(ITABLE, ISUBCASE, DEVICE_CODE, ANALYSIS_CODE, TABLE_CODE, NEW_RESULT, &
                                  TITLEI, STITLEI, LABELI)
       ELSE
-          CALL WRITE_OUG3_EIGN(ITABLE, ISUBCASE, DEVICE_CODE, ANALYSIS_CODE, TABLE_CODE, NEW_RESULT, &
+          CALL WRITE_OUG3_EIGN(ITABLE, ISUBCASE, DEVICE_CODE, ANALYSIS_CODE, NEW_RESULT, &
                                TITLEI, STITLEI, LABELI, MODE, EIGENVALUE)
       ENDIF
 
@@ -250,7 +252,7 @@
       END SUBROUTINE GET_G_OR_S
 
 !==============================================================================
-      SUBROUTINE GET_ANALYSIS_CODE_FIELD5_FIELD6(JSUB, ANALYSIS_CODE, MODE, EIGENVALUE)
+      SUBROUTINE GET_ANALYSIS_CODE_FIELD5_FIELD6(JSUB, ANALYSIS_CODE, MODE, EIGENVALUE, ISUBCASE_INDEX)
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
       USE IOUNT1, ONLY                :  ERR
       USE SCONTR, ONLY                :  SOL_NAME
@@ -263,17 +265,22 @@
       INTEGER(LONG), INTENT(INOUT)    :: ANALYSIS_CODE     ! flag for the solution type
       INTEGER(LONG), INTENT(INOUT)    :: MODE              ! mode number for an eigenvector solution
       REAL(DOUBLE), INTENT(INOUT)     :: EIGENVALUE        ! the eigenvalue for an eigenvector solution
+      INTEGER(LONG), INTENT(INOUT)    :: ISUBCASE_INDEX    ! the index into SCNUM
 
       IF (SOL_NAME(1:7) == 'STATICS') THEN
+        ISUBCASE_INDEX = JSUB
         ANALYSIS_CODE = 1  ! statics
       ELSE IF((SOL_NAME(1:5) == 'MODES') .OR. (SOL_NAME(1:12) == 'GEN CB MODEL')) THEN
+        ISUBCASE_INDEX = 1
         ANALYSIS_CODE = 2 ! eigenvectors
         EIGENVALUE = EIGEN_VAL(JSUB)
         MODE = JSUB
       ELSE IF ((SOL_NAME(1:8) == 'BUCKLING') .AND. (LOAD_ISTEP == 1)) THEN
+        ISUBCASE_INDEX = 1
         ANALYSIS_CODE = 1 ! statics
         
       ELSE IF ((SOL_NAME(1:8) == 'BUCKLING') .AND. (LOAD_ISTEP == 2)) THEN
+        ISUBCASE_INDEX = 2
         ANALYSIS_CODE = 7 ! pre-buckling
         EIGENVALUE = EIGEN_VAL(JSUB)
         MODE = JSUB
@@ -284,6 +291,7 @@
 !      ELSE IF ???
 !        ANALYSIS_CODE = 9 ! complex eigenvectors
       ELSE IF (SOL_NAME(1:8) == 'NLSTATIC') THEN
+        ISUBCASE_INDEX = 1
         ANALYSIS_CODE = 10 ! nonlinear statics
       ELSE
         ANALYSIS_CODE = -1 ! error
