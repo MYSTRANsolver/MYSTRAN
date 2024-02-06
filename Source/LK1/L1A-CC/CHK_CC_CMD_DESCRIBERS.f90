@@ -212,30 +212,30 @@ jdo_1:   DO J=1,NUM_POSS_CCD
 
          IF (CC_CMD_DESCRIBERS(I)(1:5) == 'SORT2') THEN
             WARN_ERR = WARN_ERR + 1
-            WRITE(ERR,201)
+            WRITE(ERR,201) WHAT
             IF (SUPWARN == 'N') THEN
                IF (ECHO == 'NONE  ') THEN
-                  WRITE(F06,201)
+                  WRITE(F06,201) WHAT
                ENDIF
             ENDIF
          ENDIF
 
          IF (CC_CMD_DESCRIBERS(I)(1:5) == 'PUNCH') THEN
             WARN_ERR = WARN_ERR + 1
-            WRITE(ERR,202)
+            WRITE(ERR,202) WHAT
             IF (SUPWARN == 'N') THEN
                IF (ECHO == 'NONE  ') THEN
-                  WRITE(F06,202)
+                  WRITE(F06,202) WHAT
                ENDIF
             ENDIF
          ENDIF
 
-         IF (CC_CMD_DESCRIBERS(I)(1:4) == 'PLOT') THEN
+         IF ((WHAT == 'GPFO') .AND. (CC_CMD_DESCRIBERS(I)(1:4) == 'PLOT')) THEN
             WARN_ERR = WARN_ERR + 1
-            WRITE(ERR,203)
+            WRITE(ERR,203) WHAT
             IF (SUPWARN == 'N') THEN
                IF (ECHO == 'NONE  ') THEN
-                  WRITE(F06,203)
+                  WRITE(F06,203) WHAT
                ENDIF
             ENDIF
          ENDIF
@@ -248,33 +248,33 @@ jdo_1:   DO J=1,NUM_POSS_CCD
 
             IF (CC_CMD_DESCRIBERS(I)(1:5) == 'STRCUR') THEN
                WARN_ERR = WARN_ERR + 1
-               WRITE(ERR,301)
+               WRITE(ERR,301) WHAT
                IF (SUPWARN == 'N') THEN
                   IF (ECHO == 'NONE  ') THEN
-                     WRITE(F06,301)
+                     WRITE(F06,301) WHAT
                   ENDIF
                ENDIF
             ENDIF
 
             IF (CC_CMD_DESCRIBERS(I)(1:5) == 'SGAGE') THEN
                WARN_ERR = WARN_ERR + 1
-               WRITE(ERR,302)
+               WRITE(ERR,302) WHAT
                IF (SUPWARN == 'N') THEN
                   IF (ECHO == 'NONE  ') THEN
-                     WRITE(F06,302)
+                     WRITE(F06,302) WHAT
                   ENDIF
                ENDIF
-            ENDIF      
+            ENDIF
 
             IF (CC_CMD_DESCRIBERS(I)(1:5) == 'CUBIC') THEN
                WARN_ERR = WARN_ERR + 1
-               WRITE(ERR,303)
+               WRITE(ERR,303) WHAT
                IF (SUPWARN == 'N') THEN
                   IF (ECHO == 'NONE  ') THEN
-                     WRITE(F06,303)
+                     WRITE(F06,303) WHAT
                   ENDIF
                ENDIF
-            ENDIF      
+            ENDIF
 
          ENDDO
 
@@ -347,17 +347,17 @@ jdo_1:   DO J=1,NUM_POSS_CCD
 ! **********************************************************************************************************************************
   101 FORMAT(' *WARNING    : "',A,'" IS NOT A RECOGNIZED CASE CONTROL COMMAND OPTION FOR OUTPUT TYPE "',A,'". OPTION IGNORED')
 
-  201 FORMAT(' *WARNING    : "SORT2"    IS NOT AN OPTION IN MYSTRAN. "SORT1" WILL BE USED')
+  201 FORMAT(' *WARNING    : "SORT2"    IS NOT AN OPTION IN MYSTRAN FOR ',A,'. "SORT1" WILL BE USED')
 
-  202 FORMAT(' *WARNING    : "PUNCH"    IS NOT AN OPTION IN MYSTRAN. "PRINT" WILL BE USED')
+  202 FORMAT(' *WARNING    : "PUNCH"    IS NOT AN OPTION IN MYSTRAN FOR ',A,'. "PRINT" WILL BE USED')
 
-  203 FORMAT(' *WARNING    : "PLOT"     IS NOT AN OPTION IN MYSTRAN. "PLOT"   IGNORED')
+  203 FORMAT(' *WARNING    : "PLOT"     IS NOT AN OPTION IN MYSTRAN FOR ',A,'. "PLOT"   IGNORED')
 
-  301 FORMAT(' *WARNING    : "STRCUR"   IS NOT AN OPTION IN MYSTRAN. "STRCUR" IGNORED')
+  301 FORMAT(' *WARNING    : "STRCUR"   IS NOT AN OPTION IN MYSTRAN FOR ',A,'. "STRCUR" IGNORED')
 
-  302 FORMAT(' *WARNING    : "SGAGE"    IS NOT AN OPTION IN MYSTRAN. "SGAGE"  IGNORED')
+  302 FORMAT(' *WARNING    : "SGAGE"    IS NOT AN OPTION IN MYSTRAN FOR ',A,'. "SGAGE"  IGNORED')
 
-  303 FORMAT(' *WARNING    : "CUBIC"    IS NOT AN OPTION IN MYSTRAN. "CUBIC"  IGNORED')
+  303 FORMAT(' *WARNING    : "CUBIC"    IS NOT AN OPTION IN MYSTRAN FOR ',A,'. "CUBIC"  IGNORED')
 
  1204 FORMAT(' *ERROR  1205: PROGRAMMING ERROR IN SUBROUTINE ',A,'. INVALID VALUE ',A,' FOR VARIABLE "WHAT"')
 

@@ -267,14 +267,11 @@
                   ENDIF
 
                ELSE
-
                   WRITE(ERR,1017) TOKEN(1)
                   WRITE(F06,1017) TOKEN(1)
                   FATAL_ERR = FATAL_ERR + 1
                   CYCLE
-
                ENDIF
-
             ENDIF
            
          ELSE IF (CARD1(1: 4) == 'TIME'      ) THEN
@@ -287,16 +284,15 @@
             IF (SUPWARN == 'N') THEN
                WRITE(F06,9993) PROG_NAME
             ENDIF
-
          ENDIF
 
-      ENDDO   
+      ENDDO
   
       IF (DOLLAR_WARN == 'Y') THEN
          WARN_ERR = WARN_ERR + 1
-         WRITE(ERR,1101)
+         WRITE(ERR,1101) CARD
          IF (SUPWARN == 'N') THEN
-            WRITE(F06,1101)
+            WRITE(F06,1101) CARD
          ENDIF
       ENDIF
 
@@ -389,7 +385,8 @@
  1101 FORMAT(' *WARNING    : BE CAREFUL WITH LINES THAT BEGIN WITH A $ SIGN IN COL 1 FOLLOWED BY AN UPPER CASE LETTER IN EXEC OR', &
                            ' CASE CONTROL.'                                                                                        &
                     ,/,14X,' THE LINE CAN BE MISINTERPRETED AS A DIRECTIVE FOR THE BANDIT GRID RESEQUENCING ALGORITHM.'            &
-                    ,/,14X,' SEE THE BANDIT.PDF FILE INSTALLED WHEN YOU RAN SETUP.EXE TO INSTALL MYSTRAN')
+                    ,/,14X,' SEE THE BANDIT.PDF FILE INSTALLED WHEN YOU RAN SETUP.EXE TO INSTALL MYSTRAN' &
+                    ,/,14X, A)
 
  1102 FORMAT(' *WARNING    : REQUEST FOR RESTART IS NOT ALLOWED IN SOLUTION ',A)
 

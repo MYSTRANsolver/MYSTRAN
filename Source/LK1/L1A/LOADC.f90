@@ -64,15 +64,14 @@
       ENDIF
 
 ! **********************************************************************************************************************************
-      DOLLAR_WARN = 'N'
 
 ! Process CASE CONTROL DECK
- 
+
 outer:DO
- 
+         DOLLAR_WARN = 'N'
          READ(IN1,101,IOSTAT=IOCHK) CARD
 
-! Quit if EOF/EOR occurs during read
+         ! Quit if EOF/EOR occurs during read
  
          IF (IOCHK < 0) THEN
             WRITE(ERR,1011) END_CARD
@@ -103,9 +102,9 @@ outer:DO
          ELSE IF(CARD1(1:10) == 'BEGIN BULK') THEN
             IF (DOLLAR_WARN == 'Y') THEN
                WARN_ERR = WARN_ERR + 1
-               WRITE(ERR,1199)
+               WRITE(ERR,1199) CARD1
                IF (SUPWARN == 'N') THEN
-                  WRITE(F06,1199)
+                  WRITE(F06,1199) CARD1
                ENDIF
             ENDIF
             EXIT outer
@@ -374,7 +373,8 @@ inner:         DO                                          ! so read all entries
  1199 FORMAT(' *WARNING    : BE CAREFUL WITH LINES THAT BEGIN WITH A $ SIGN IN COL 1 FOLLOWED BY AN UPPER CASE LETTER IN EXEC OR', &
                            ' CASE CONTROL.'                                                                                        &
                     ,/,14X,' THE LINE CAN BE MISINTERPRETED AS A DIRECTIVE FOR THE BANDIT GRID RESEQUENCING ALGORITHM.'            &
-                    ,/,14X,' SEE THE BANDIT.PDF FILE INSTALLED WHEN YOU RAN SETUP.EXE TO INSTALL MYSTRAN')
+                    ,/,14X,' SEE THE BANDIT.PDF FILE INSTALLED WHEN YOU RAN SETUP.EXE TO INSTALL MYSTRAN' &
+                    ,/,14X, A)
 
  1803 FORMAT(' *ERROR  1803: CASE CONTROL FOUND NTSUB = ',I8,' TEMP ENTRIES WHEN THERE ARE ONLY NSUB = ',I8,' SUBCASES.',          &
                            ' NTSUB MUST BE <= NSUB')
