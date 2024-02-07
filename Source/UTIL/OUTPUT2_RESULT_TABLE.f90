@@ -1,11 +1,21 @@
 !==================================================================================================
       SUBROUTINE WRITE_TABLE_HEADER(TABLE_NAME)
+      ! the hard part is getting the date
+      !https://docs.oracle.com/cd/E19957-01/805-4942/6j4m3r8t2/index.html
+      !
       USE PENTIUM_II_KIND, ONLY  :  BYTE, LONG
       USE IOUNT1, ONLY           :  ERR, OP2
       CHARACTER(LEN=8*BYTE), INTENT(IN) :: TABLE_NAME ! The table name
       !INTEGER(LONG) :: ITABLE ! the subtable id
-      INTEGER(LONG), DIMENSION(3) :: DATE_
-      DATE_ = (/ 3, 24, 2013 /)
+      INTEGER(LONG), DIMENSION(8) :: DATE_TIME
+      INTEGER(LONG)               :: MONTH, DAY, YEAR
+      CHARACTER(LEN=10*BYTE) B(3)
+
+      CALL DATE_AND_TIME(B(1), B(2), B(3), DATE_TIME)  
+      YEAR  = DATE_TIME(1)
+      MONTH = DATE_TIME(2)
+      DAY   = DATE_TIME(3)
+
       WRITE(ERR,9110) TABLE_NAME
 
 !      table0 = [
@@ -16,7 +26,7 @@
       WRITE(OP2) 2
       WRITE(OP2) TABLE_NAME
       !WRITE(OP2) 0
-      
+
       !data_a = [4, -1, 4,]
       !data_c = [4, 7, 4,]
       WRITE(OP2) -1
@@ -36,7 +46,6 @@
       WRITE(OP2) -2
       WRITE(OP2) 1
       WRITE(OP2) 0
-!      DYEAR = DATE_(3) - 2000
 
 !      table2 = [
 !        4, 7, 4,
@@ -46,7 +55,7 @@
 !        28,
 !      ]
       WRITE(OP2) 7
-      WRITE(OP2) 0, 1, DATE_(1), DATE_(2), DATE_(3) - 2000, 0, 1
+      WRITE(OP2) 0, 1, MONTH, DAY, YEAR - 2000, 0, 1
       
       !ITABLE = -3
       !CALL WRITE_ITABLE(ITABLE)
