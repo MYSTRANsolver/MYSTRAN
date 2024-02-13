@@ -98,6 +98,7 @@
       INTEGER(LONG)                   :: NTOTAL       ! the number of bytes for all NVALUES
       INTEGER(LONG)                   :: ISUBCASE     ! the subcase ID
       INTEGER(LONG)                   :: NELEMENTS
+      INTEGER(LONG)                   :: ISUBCASE_INDEX   ! the index into SCNUM
       INTEGER(LONG)                   :: CID          ! coordinate system
       CHARACTER(4*BYTE)               :: CEN_WORD     ! the word "CEN/" (we need to cast the length)
 
@@ -109,7 +110,7 @@
       ENDIF
 
 ! **********************************************************************************************************************************
-! Initialize
+      ! Initialize
       DEVICE_CODE = 1  ! PLOT
       STRESS_CODE = 0
  1    FORMAT("WRITE OSTR F06/OP2; ITABLE=",I8," (should be -4, -6, ...)")
@@ -144,38 +145,42 @@
       WRITE_ANS = (DEBUG(200) > 0)
 
       IF (IHDR == 'Y') THEN
-
-         WRITE(F06,*)
-         WRITE(F06,*)
+         IF (WRITE_F06) WRITE(F06,*)
+         IF (WRITE_F06) WRITE(F06,*)
          IF (WRITE_ANS) WRITE(ANS,*)
          IF (WRITE_ANS) WRITE(ANS,*)
 
          ! -- F06 header: OUTPUT FOR SUBCASE, EIGENVECTOR or CRAIG-BAMPTON DOF
-         ISUBCASE = SCNUM(JSUB)
+         ISUBCASE_INDEX = 0
          IF    (SOL_NAME(1:7) == 'STATICS') THEN
+            ISUBCASE_INDEX = JSUB
             ANALYSIS_CODE = 1
             FIELD5_INT_MODE = 1  ! temp
             FIELD5_INT_MODE = SCNUM(JSUB)
             IF (WRITE_F06) WRITE(F06,101) SCNUM(JSUB)
             IF (WRITE_ANS) WRITE(ANS,101) SCNUM(JSUB)
          ELSE IF (SOL_NAME(1:8) == 'NLSTATIC') THEN
+            ISUBCASE_INDEX = 1  ! statics
             ANALYSIS_CODE = 10
             FIELD5_INT_MODE = SCNUM(JSUB)
             IF (WRITE_F06) WRITE(F06,101) SCNUM(JSUB)
             IF (WRITE_ANS) WRITE(ANS,101) SCNUM(JSUB)
 
          ELSE IF ((SOL_NAME(1:8) == 'BUCKLING') .AND. (LOAD_ISTEP == 1)) THEN
+            ISUBCASE_INDEX = 1  ! statics
             ANALYSIS_CODE = 1
             FIELD5_INT_MODE = SCNUM(JSUB)
             IF (WRITE_F06) WRITE(F06,101) SCNUM(JSUB)
 
          ELSE IF ((SOL_NAME(1:8) == 'BUCKLING') .AND. (LOAD_ISTEP == 2)) THEN
+            ISUBCASE_INDEX = 2  ! modes
             ANALYSIS_CODE = 7
             FIELD5_INT_MODE = JSUB
             ! FIELD6_EIGENVALUE = ????
             IF (WRITE_F06) WRITE(F06,102) JSUB
 
          ELSE IF (SOL_NAME(1:5) == 'MODES') THEN
+            ISUBCASE_INDEX = 1  ! modes
             ANALYSIS_CODE = 2
             FIELD5_INT_MODE = JSUB
             ! FIELD6_EIGENVALUE = ????
@@ -183,7 +188,7 @@
             IF (WRITE_ANS) WRITE(ANS,102) JSUB
 
          ELSE IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
-
+            ISUBCASE_INDEX = 1  ! modes
             IF ((JSUB <= NDOFR) .OR. (JSUB >= NDOFR+NVEC)) THEN 
                IF (JSUB <= NDOFR) THEN
                   BDY_DOF_NUM = JSUB
@@ -212,8 +217,8 @@
                   WRITE(ANS,103) JSUB, NUM_CB_DOFS, 'displacement', BDY_GRID, BDY_COMP
                ENDIF
             ENDIF  ! write ans
-
          ENDIF
+         ISUBCASE = SCNUM(ISUBCASE_INDEX)
 
          ! -- F06 header for TITLE, SUBTITLE, LABEL (but only to F06)
          TITLEI = TITLE(INT_SC_NUM)
@@ -373,7 +378,7 @@
                 ENDIF
 
              ELSE IF  (TYPE == 'BUSH    ') THEN
-                WRITE(F06,1801) FILL(1:  1), FILL(1:  1)
+                IF (WRITE_F06) WRITE(F06,1801) FILL(1:  1), FILL(1:  1)
 
              ELSE IF  (TYPE == 'USERIN  ') THEN
                 WRITE(F06,1901) FILL(1:  1), FILL(1:  1)
@@ -406,7 +411,7 @@
 
              WRITE(OP2) NVALUES
              WRITE(OP2) (EID_OUT_ARRAY(I,1)*10+DEVICE_CODE, REAL(OGEL(I,1), 4), I=1,NUM)
-         ENDIF
+         ENDIF   ! end of op2
 
          WRITE(F06,1103) (FILL(1:1), EID_OUT_ARRAY(I,1), OGEL(I,1),I=1,NUM)
 
@@ -475,7 +480,7 @@
                       ! szz             txz                s3                  c1  c2  c3
                      REAL(OGEL(I,3),4), REAL(OGEL(I,6),4), REAL(OGEL(I,11),4), 0., 0., 0.,  &
                      J=1,NNODES), I=1,NUM)
-         ENDIF
+         ENDIF  ! end of op2
 
          IF (STRN_OPT == 'VONMISES') THEN
             NCOLS = 7

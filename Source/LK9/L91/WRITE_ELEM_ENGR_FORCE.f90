@@ -67,6 +67,7 @@
       CHARACTER( 8*BYTE)              :: TABLE_NAME             ! the name of the op2 table
 
       ! table -3 info
+      INTEGER(LONG)                   :: ISUBCASE_INDEX         ! the index into SCNUM
       INTEGER(LONG)                   :: ANALYSIS_CODE          ! static/modal/time/etc. flag
       INTEGER(LONG)                   :: ELEMENT_TYPE           ! the OP2 flag for the element
       CHARACTER(LEN=128)              :: TITLEI                 ! the model TITLE
@@ -117,28 +118,33 @@ headr:IF (IHDR == 'Y') THEN
          !--- Subcase num, TITLE, SUBT, LABEL:
          IF(WRITE_F06) WRITE(F06,*)
          IF(WRITE_F06) WRITE(F06,*)
-         ISUBCASE = SCNUM(JSUB)
+         ISUBCASE_INDEX = 0
          IF    (SOL_NAME(1:7) == 'STATICS') THEN
+            ISUBCASE_INDEX = JSUB ! statics
             ANALYSIS_CODE = 1
             FIELD5_INT_MODE = SCNUM(JSUB)
             IF(WRITE_F06) WRITE(F06,101) SCNUM(JSUB)
          ELSE IF (SOL_NAME(1:8) == 'NLSTATIC') THEN
+            ISUBCASE_INDEX = 1
             ANALYSIS_CODE = 10
             FIELD5_INT_MODE = SCNUM(JSUB)
             IF(WRITE_F06) WRITE(F06,101) SCNUM(JSUB)
 
          ELSE IF ((SOL_NAME(1:8) == 'BUCKLING') .AND. (LOAD_ISTEP == 1)) THEN
+            ISUBCASE_INDEX = 1
             ANALYSIS_CODE = 1
             FIELD5_INT_MODE = SCNUM(JSUB)
             IF(WRITE_F06) WRITE(F06,101) SCNUM(JSUB)
 
          ELSE IF ((SOL_NAME(1:8) == 'BUCKLING') .AND. (LOAD_ISTEP == 2)) THEN
+            ISUBCASE_INDEX = 2
             ANALYSIS_CODE = 7
             FIELD5_INT_MODE = JSUB
             ! FIELD6_EIGENVALUE = ????
             IF(WRITE_F06) WRITE(F06,102) JSUB
 
          ELSE IF (SOL_NAME(1:5) == 'MODES') THEN
+            ISUBCASE_INDEX = 1
             ANALYSIS_CODE = 2
             FIELD5_INT_MODE = JSUB
             ! FIELD6_EIGENVALUE = ????
@@ -146,6 +152,7 @@ headr:IF (IHDR == 'Y') THEN
 
          ELSE IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
             ! Write info on what CB DOF the output is for
+            ISUBCASE_INDEX = 1
             IF ((JSUB <= NDOFR) .OR. (JSUB >= NDOFR+NVEC)) THEN 
                IF (JSUB <= NDOFR) THEN
                   BDY_DOF_NUM = JSUB
@@ -165,6 +172,7 @@ headr:IF (IHDR == 'Y') THEN
                 ENDIF
             ENDIF  ! write f06
          ENDIF
+         ISUBCASE = SCNUM(ISUBCASE_INDEX)
 
          TITLEI = TITLE(INT_SC_NUM)
          STITLEI = STITLE(INT_SC_NUM)
