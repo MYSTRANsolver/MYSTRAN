@@ -302,6 +302,8 @@ D_do1:   DO J=2,9                                          ! --- Read cross-sect
       ELSE IF (CS_TYPE(1:8) == BAR_SHAPE(17)%Col_1) THEN;  NUM_D = BAR_SHAPE(17)%Col_2;   CALL SECTION_PROPS_TUBE  ( IERR )
       ELSE IF (CS_TYPE(1:8) == BAR_SHAPE(18)%Col_1) THEN;  NUM_D = BAR_SHAPE(18)%Col_2;   CALL SECTION_PROPS_Z     ( IERR )
       ELSE IF (CS_TYPE(1:8) == BAR_SHAPE(19)%Col_1) THEN;  NUM_D = BAR_SHAPE(19)%Col_2;   CALL SECTION_PROPS_TUBE2 ( IERR )
+      !HAT1
+      !DBOX
       ELSE
          FATAL_ERR = FATAL_ERR + 1
          WRITE(ERR,1162) JCARD(5), JF(5), NAME, ID
@@ -1417,7 +1419,7 @@ D_do1:   DO J=2,9                                          ! --- Read cross-sect
 
       END SUBROUTINE SECTION_PROPS_TUBE
 
-##################################################################################################################################
+! ##################################################################################################################################
 
       SUBROUTINE SECTION_PROPS_TUBE2 ( JERR )
 
@@ -1427,7 +1429,8 @@ D_do1:   DO J=2,9                                          ! --- Read cross-sect
 
       REAL(DOUBLE)                    :: JCONS             ! Intermediate variable
       REAL(DOUBLE)                    :: NU                ! Poisson ratio
-      REAL(DOUBLE)                    :: RAD1,RAD2,T       ! Radii
+      REAL(DOUBLE)                    :: RAD1,RAD2         ! Radii
+      REAL(DOUBLE)                    :: T                 ! Tube thickness
       REAL(DOUBLE)                    :: RAD21             ! RAD2/RAD1
 
 ! **********************************************************************************************************************************
