@@ -1230,7 +1230,13 @@ j_do: DO JVEC=1,NUM_SOLNS
       WRITE(SC1,12345,ADVANCE='NO') '       Deallocate GMNt', CR13  ;   CALL DEALLOCATE_SPARSE_MAT ( 'GMNt' )
       WRITE(SC1,12345,ADVANCE='NO') '       Deallocate HMN ', CR13  ;   CALL DEALLOCATE_SPARSE_MAT ( 'HMN' )
       WRITE(SC1,12345,ADVANCE='NO') '       Deallocate MSF ', CR13  ;   CALL DEALLOCATE_SPARSE_MAT ( 'MSF' )
-      WRITE(SC1,12345,ADVANCE='NO') '       Deallocate MLL ', CR13  ;   CALL DEALLOCATE_SPARSE_MAT ( 'MLL' )
+      
+      ! save MLL from deallocation in case we need to use it for eigenvalue
+      ! estimation in a next step of the eigen solution
+      IF ((SOL_NAME(1:8) /= 'BUCKLING') .OR. (LOAD_ISTEP == 2)) THEN
+         WRITE(SC1,12345,ADVANCE='NO') '       Deallocate MLL ', CR13  ;   CALL DEALLOCATE_SPARSE_MAT ( 'MLL' )
+      END IF
+      
       WRITE(SC1,12345,ADVANCE='NO') '       Deallocate LMN ', CR13  ;   CALL DEALLOCATE_SPARSE_MAT ( 'LMN' )
       WRITE(SC1,12345,ADVANCE='NO') '       Deallocate QSYS', CR13  ;   CALL DEALLOCATE_COL_VEC    ( 'QSYS_COL' )
 

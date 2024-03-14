@@ -569,8 +569,8 @@
       IF (WHICH  == 1) THEN
          IF (SOL_NAME(1:8) /= 'BUCKLING') THEN
             CALL DEALLOCATE_SPARSE_MAT ( 'KLL'     )
+            CALL DEALLOCATE_SPARSE_MAT ( 'MLL'     )
          ENDIF
-         CALL DEALLOCATE_SPARSE_MAT ( 'MLL'     )
          CALL DEALLOCATE_SPARSE_MAT ( 'PL'      )
       ELSE IF (WHICH == 2) THEN
          CALL DEALLOCATE_SPARSE_MAT ( 'GMN'     )
