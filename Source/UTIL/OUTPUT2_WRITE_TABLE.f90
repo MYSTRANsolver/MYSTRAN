@@ -170,6 +170,9 @@
         
         ! do nothing statement
         APPROACH_CODE = 0
+        
+        ! TODO gotta figure out the appropriate value
+        FIELD7 = 0.0
       ELSE
         WRITE(ERR,100) ANALYSIS_CODE
         STOP
@@ -204,4 +207,3 @@
       
  100  FORMAT(" analysis_code=", i4, " is not supported...stopping")
       END SUBROUTINE WRITE_OUG3
-

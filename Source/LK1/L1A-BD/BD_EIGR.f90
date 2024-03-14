@@ -219,7 +219,13 @@
          EIG_NCVFACL      = 0
 
          ! to ensure SCNUM is alloc'd right. #subcases = #eigenvecs
-         LSUB             = EIG_N2
+         IF (EIG_N2 > LSUB) THEN
+            LSUB             = EIG_N2
+         ELSE
+            ! no idea what the # of eigenvectors should be for now, let's keep
+            ! it large for now. this ought to be fixed someday
+            LSUB = 1000
+         END IF
 
          NUM_FAIL_CRIT    = 0                              ! Following have not been determined yet but write values to L1M anyway
          MAXMIJ           = ZERO
