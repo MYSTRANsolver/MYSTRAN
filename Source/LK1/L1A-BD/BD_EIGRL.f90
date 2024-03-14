@@ -246,7 +246,13 @@
          MIJ_COL       = 0
 
          ! ensure a proper size for SCNUM
-         LSUB          = EIG_N2
+         IF (EIG_N2 > LSUB) THEN
+            LSUB          = EIG_N2
+         ELSE
+            ! no idea what the # of eigenvectors should be for now, let's keep
+            ! it large for now. this ought to be fixed someday
+            LSUB = 1000
+         END IF
 
          CALL WRITE_L1M
 
