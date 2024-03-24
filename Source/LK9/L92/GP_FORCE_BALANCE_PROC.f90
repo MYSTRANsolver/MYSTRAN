@@ -102,7 +102,9 @@
       INTEGER(LONG)                   :: ANALYSIS_CODE      !      
       INTEGER(LONG)                   :: NROWS, NCOLS, NNODE_GPFORCE, INODE_GPFORCE, IERR  ! GPFORCE table helper
 
-      LOGICAL                         :: WRITE_F06, WRITE_OP2, WRITE_ANS, IS_GPFORCE_SUMMARY_INFO, IS_THERMAL  ! flags
+      LOGICAL                         :: WRITE_F06, WRITE_OP2, WRITE_ANS, IS_GPFORCE_SUMMARY_INFO  ! flags
+      LOGICAL                         :: IS_THERMAL, IS_APP, IS_SPC, IS_MPC
+
       INTEGER, ALLOCATABLE            :: GPFORCE_NID_EID(:,:)    ! currently unused
       CHARACTER, ALLOCATABLE          :: GPFORCE_ETYPE(:,:)      ! currently unused
       REAL, ALLOCATABLE               :: GPFORCE_FXYZ_MXYZ(:,:)  ! currently unused
@@ -453,14 +455,16 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
                ENDIF
             ENDDO
 
+            IS_APP = IS_ABS_POSITIVE(PG1)
+            IS_SPC = IS_ABS_POSITIVE(QGs1)
+            IS_MPC = IS_ABS_POSITIVE(QGm1)
             IF (WRITE_F06) THEN
-               IF MAX(PG1(1), PG1(2), PG1(3), PG1(4), PG1(5), PG1(6))
-               WRITE(F06,9203) (PG1(J),J=1,6)  ! applied load
+               IF (IS_APP) WRITE(F06,9203) (PG1(J),J=1,6)  ! applied load
                IF (IS_THERMAL) THEN
                   WRITE(F06,9204) (-PTET(J),J=1,6)  ! thermal
                ENDIF
-               WRITE(F06,9205) (QGs1(J),J=1,6)  ! spc force
-               WRITE(F06,9206) (QGm1(J),J=1,6)  ! mpc force
+               IF(IS_SPC) WRITE(F06,9205) (QGs1(J),J=1,6)  ! spc force
+               IF(IS_MPC) WRITE(F06,9206) (QGm1(J),J=1,6)  ! mpc force
 
                IF ((SOL_NAME(1:5) == 'MODES') .OR. (SOL_NAME(1:12) == 'GEN CB MODEL')) THEN
                   DO J=1,6
@@ -474,12 +478,12 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
             ENDIF
 
             IF (WRITE_ANS) THEN
-               WRITE(ANS,9203) (PG1(J),J=1,6)  ! applied load
+               IF (IS_APP) WRITE(ANS,9203) (PG1(J),J=1,6)  ! applied load
                IF (IS_THERMAL) THEN
                   WRITE(ANS,9204) (-PTET(J),J=1,6)  ! thermal
                ENDIF
-               WRITE(ANS,9205) (QGs1(J),J=1,6)  ! spc force
-               WRITE(ANS,9206) (QGm1(J),J=1,6)  ! mpc force
+               IF(IS_SPC) WRITE(ANS,9205) (QGs1(J),J=1,6)  ! spc force
+               IF(IS_MPC) WRITE(ANS,9206) (QGm1(J),J=1,6)  ! mpc force
                IF ((SOL_NAME(1:5) == 'MODES') .OR. (SOL_NAME(1:12) == 'GEN CB MODEL')) THEN
                   WRITE(ANS,9207) ACHAR(Udd), (-FG1(J),J=1,6)  ! inertia force
                ENDIF
@@ -668,7 +672,6 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
 
       INTEGER(LONG)                   :: II                ! DO loop index
 
-! **********************************************************************************************************************************
 
       DO II=1,NDOFG
 
@@ -700,6 +703,24 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
 
       END SUBROUTINE CHK_COL_ARRAYS_ZEROS
 
+      !------------------------------------------------------
+      LOGICAL FUNCTION IS_ABS_POSITIVE(ARRAY)
+      ! IS_ABS_POSITIVE has an implicit return that has the same name as the function
+
+      USE PENTIUM_II_KIND, ONLY       :  LONG, DOUBLE
+      IMPLICIT NONE
+      REAL(DOUBLE), INTENT(IN)        :: ARRAY(6)         ! The 6 values
+      INTEGER(LONG)                   :: I                ! counter
+
+      IS_ABS_POSITIVE = .FALSE.
+      DO I=1,6
+          IF (ABS(ARRAY(I)) > 0.0) THEN
+              IS_ABS_POSITIVE = .TRUE.
+              !RETURN IS_ABS
+          ENDIF
+      ENDDO
+      END FUNCTION IS_ABS_POSITIVE
+      !------------------------------------------------------
 
       SUBROUTINE CALCULATE_GPFB_IMBALANCE(CHAR_PCT, MAX_ABS, MAX_ABS_PCT, MAX_ABS_GRID, MAX_ABS_ALL_GRDS)
       ! For each of the 6 components (J=1,6 for components T1, T2, T3, R1, R2, R3)
