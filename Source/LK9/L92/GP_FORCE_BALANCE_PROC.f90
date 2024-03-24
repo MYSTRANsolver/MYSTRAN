@@ -285,30 +285,30 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
       !WRITE(OP2) (GRID(I,1)*10+DEVICE_CODE, I=1,NGRID)
 
 !xx   WRITE(SC1, * )             ! Advance 1 line for screen messages
-!     DO I=1,NGRID
-!        IB = IAND(GROUT(I,INT_SC_NUM),IBIT(GROUT_GPFO_BIT))
-!        GRID_NUM  = GRID(I,1)
-!        CALL GET_GRID_NUM_COMPS ( GRID_NUM, NUM_COMPS, SUBR_NAME )
-!
-!        IF ((IB > 0) .AND. (NUM_COMPS == 6)) THEN         ! Do not do force balance for SPOINT's
-!           G_CID = GRID(I,3)
-!           IF (SUBLOD(INT_SC_NUM,2) > 0) THEN
-!              NUM_CONN_ELEMS = GRID_ELEM_CONN_ARRAY(I,2)
-!              DO J=1,NUM_CONN_ELEMS
-!                 AELEM = GRID_ELEM_CONN_ARRAY(I,2+J)
-!                 CALL GET_ARRAY_ROW_NUM ( 'ESORT1', SUBR_NAME, NELE, ESORT1, AELEM, IELE )
-!                 CALL GET_ELGP ( IELE )
-!                 CALL GET_ELEM_AGRID_BGRID ( IELE, 'N' )
-!                 DO K=1,ELGP
-!                    IF (AGRID(K) == GRID_NUM) THEN
-!                        NNODE_GPFORCE = NNODE_GPFORCE + 1
-!                    ENDIF
-!                 ENDDO
-!              ENDDO
-!           ENDIF
-!        ENDIF
-!     ENDDO
-      NNODE_GPFORCE = 10
+      DO I=1,NGRID
+         IB = IAND(GROUT(I,INT_SC_NUM),IBIT(GROUT_GPFO_BIT))
+         GRID_NUM  = GRID(I,1)
+         CALL GET_GRID_NUM_COMPS ( GRID_NUM, NUM_COMPS, SUBR_NAME )
+ 
+         IF ((IB > 0) .AND. (NUM_COMPS == 6)) THEN         ! Do not do force balance for SPOINT's
+            G_CID = GRID(I,3)
+            IF (SUBLOD(INT_SC_NUM,2) > 0) THEN
+               NUM_CONN_ELEMS = GRID_ELEM_CONN_ARRAY(I,2)
+               DO J=1,NUM_CONN_ELEMS
+                  AELEM = GRID_ELEM_CONN_ARRAY(I,2+J)
+                  CALL GET_ARRAY_ROW_NUM ( 'ESORT1', SUBR_NAME, NELE, ESORT1, AELEM, IELE )
+                  CALL GET_ELGP ( IELE )
+                  CALL GET_ELEM_AGRID_BGRID ( IELE, 'N' )
+                  DO K=1,ELGP
+                     IF (AGRID(K) == GRID_NUM) THEN
+                         NNODE_GPFORCE = NNODE_GPFORCE + 1
+                     ENDIF
+                  ENDDO
+               ENDDO
+            ENDIF
+         ENDIF
+      ENDDO
+      !NNODE_GPFORCE = 10
       !------------------------------------------------------------------------
       ! ALLOCATE: GPFORCE_NID_EID, GPFORCE_ETYPE, GPFORCE_FXYZ_MXYZ
       !ref mystran SUB ALLOCATE_DOF_TABLES
