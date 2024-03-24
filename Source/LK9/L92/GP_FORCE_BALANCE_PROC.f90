@@ -102,7 +102,7 @@
       INTEGER(LONG)                   :: ANALYSIS_CODE      !      
       INTEGER(LONG)                   :: NROWS, NCOLS, NNODE_GPFORCE, INODE_GPFORCE, IERR  ! GPFORCE table helper
 
-      LOGICAL                         :: WRITE_F06, WRITE_OP2, WRITE_ANS, IS_GPFORCE_SUMMARY_INFO  ! flags
+      LOGICAL                         :: WRITE_F06, WRITE_OP2, WRITE_ANS, IS_GPFORCE_SUMMARY_INFO, IS_THERMAL  ! flags
       INTEGER, ALLOCATABLE            :: GPFORCE_NID_EID(:,:)    ! currently unused
       CHARACTER, ALLOCATABLE          :: GPFORCE_ETYPE(:,:)      ! currently unused
       REAL, ALLOCATABLE               :: GPFORCE_FXYZ_MXYZ(:,:)  ! currently unused
@@ -123,6 +123,8 @@
       ! (where filename is the name of the DAT data file submitted to MYSTRAN).
       ! This feature is generally only useful to the author when performing checkout of test problem answers
       WRITE_ANS = (DEBUG(200) > 0)
+
+      IS_THERMAL = (SUBLOD(INT_SC_NUM,2) > 0)
 
       WRITE_OP2 = .FALSE.
       WRITE_F06 = .TRUE.
@@ -159,9 +161,9 @@
             ANALYSIS_CODE = 2
             WRITE(F06,9102) JVEC
 
-         ELSE IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN   ! Write info on what CB DOF the output is for
+         ELSE IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN  ! Write info on what CB DOF the output is for
 
-            IF ((JVEC <= NDOFR) .OR. (JVEC >= NDOFR+NVEC)) THEN 
+            IF ((JVEC <= NDOFR) .OR. (JVEC >= NDOFR+NVEC)) THEN
                IF (JVEC <= NDOFR) THEN
                   BNDY_DOF_NUM = JVEC
                ELSE
@@ -292,8 +294,11 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
  
          IF ((IB > 0) .AND. (NUM_COMPS == 6)) THEN         ! Do not do force balance for SPOINT's
             G_CID = GRID(I,3)
-            IF (SUBLOD(INT_SC_NUM,2) > 0) THEN
+            IF (IS_THERMAL) THEN
                NUM_CONN_ELEMS = GRID_ELEM_CONN_ARRAY(I,2)
+               
+               ! applied load, thermal, spc force, mpc force
+               NNODE_GPFORCE = NNODE_GPFORCE + 4
                DO J=1,NUM_CONN_ELEMS
                   AELEM = GRID_ELEM_CONN_ARRAY(I,2+J)
                   CALL GET_ARRAY_ROW_NUM ( 'ESORT1', SUBR_NAME, NELE, ESORT1, AELEM, IELE )
@@ -396,7 +401,7 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
             DO J=1,6
                PTET(J) = ZERO
             ENDDO
-            IF (SUBLOD(INT_SC_NUM,2) > 0) THEN
+            IF (IS_THERMAL) THEN
                NUM_CONN_ELEMS = GRID_ELEM_CONN_ARRAY(I,2)
                DO J=1,NUM_CONN_ELEMS
                   AELEM = GRID_ELEM_CONN_ARRAY(I,2+J)
@@ -437,7 +442,9 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
                QGs1(J) = QGs_COL(GDOF)
                IF (NDOFM > 0) THEN
                   QGm1(J) = QGm_COL(GDOF)
-               ENDIF                                       ! PTET = 0 unless INT_SC_NUM is a thermal subcase (see above)
+               ENDIF
+               
+               ! PTET = 0 unless INT_SC_NUM is a thermal subcase (see above)
                IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
                   QGr1(J) = QGr_COL(GDOF)
                   TOTALS(J) = -FG1(J) + PG1(J) - PTET(J) + QGs1(J) + QGm1(J) + QGr1(J)
@@ -445,35 +452,39 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
                   TOTALS(J) = -FG1(J) + PG1(J) - PTET(J) + QGs1(J) + QGm1(J)
                ENDIF
             ENDDO
-            WRITE(F06,9203) ( PG1(J),J=1,6)
-            IF (SUBLOD(INT_SC_NUM,2) > 0) THEN
-               WRITE(F06,9204) (-PTET(J),J=1,6)
-            ENDIF
-            WRITE(F06,9205) (QGs1(J),J=1,6)
-            WRITE(F06,9206) (QGm1(J),J=1,6)
 
-            IF ((SOL_NAME(1:5) == 'MODES') .OR. (SOL_NAME(1:12) == 'GEN CB MODEL')) THEN
-               DO J=1,6
-                  IF(FG1(J) == ZERO) THEN  ;  FG1(J) = -ZERO  ;  ENDIF  ! Avoids writing -0.0 for -FG1(J) below
-               ENDDO
-               WRITE(F06,9207) ACHAR(Udd), ( -FG1(J),J=1,6)
-            ENDIF
-            IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
-               WRITE(F06,9208) (QGr1(J),J=1,6)
+            IF (WRITE_F06) THEN
+               IF MAX(PG1(1), PG1(2), PG1(3), PG1(4), PG1(5), PG1(6))
+               WRITE(F06,9203) (PG1(J),J=1,6)  ! applied load
+               IF (IS_THERMAL) THEN
+                  WRITE(F06,9204) (-PTET(J),J=1,6)  ! thermal
+               ENDIF
+               WRITE(F06,9205) (QGs1(J),J=1,6)  ! spc force
+               WRITE(F06,9206) (QGm1(J),J=1,6)  ! mpc force
+
+               IF ((SOL_NAME(1:5) == 'MODES') .OR. (SOL_NAME(1:12) == 'GEN CB MODEL')) THEN
+                  DO J=1,6
+                     IF(FG1(J) == ZERO) THEN;  FG1(J) = -ZERO;  ENDIF  ! Avoids writing -0.0 for -FG1(J) below
+                  ENDDO
+                  WRITE(F06,9207) ACHAR(Udd), (-FG1(J),J=1,6)  ! inertia force
+               ENDIF
+               IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
+                  WRITE(F06,9208) (QGr1(J),J=1,6)
+               ENDIF
             ENDIF
 
             IF (WRITE_ANS) THEN
-               WRITE(ANS,9203) ( PG1(J),J=1,6)
-               IF (SUBLOD(INT_SC_NUM,2) > 0) THEN
-                  WRITE(ANS,9204) (-PTET(J),J=1,6)
+               WRITE(ANS,9203) (PG1(J),J=1,6)  ! applied load
+               IF (IS_THERMAL) THEN
+                  WRITE(ANS,9204) (-PTET(J),J=1,6)  ! thermal
                ENDIF
-               WRITE(ANS,9205) (QGs1(J),J=1,6)
-               WRITE(ANS,9206) (QGm1(J),J=1,6)
+               WRITE(ANS,9205) (QGs1(J),J=1,6)  ! spc force
+               WRITE(ANS,9206) (QGm1(J),J=1,6)  ! mpc force
                IF ((SOL_NAME(1:5) == 'MODES') .OR. (SOL_NAME(1:12) == 'GEN CB MODEL')) THEN
-                  WRITE(ANS,9207) ACHAR(Udd), ( -FG1(J),J=1,6)
+                  WRITE(ANS,9207) ACHAR(Udd), (-FG1(J),J=1,6)  ! inertia force
                ENDIF
             ENDIF
-            
+
             ! Calc elem forces
             OPT(1) = 'N'  ! OPT(1) is for calc of ME
             OPT(2) = 'Y'  ! OPT(2) is for calc of PTE
@@ -501,13 +512,13 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
                      DO L=1,6
                         BEG_ROW_NUM = 6*(K-1) + 1
                         PEG1(L) = PEG(BEG_ROW_NUM + L - 1) ! PEG are elem forces at elem ends in global coords
-                        IF(PEG1(L) == ZERO) THEN  ;  PEG1(L) = -ZERO  ;  ENDIF  ! Avoids writing -0.0 for -PEG1(J) below
+                        IF(PEG1(L) == ZERO) THEN;  PEG1(L) = -ZERO;  ENDIF  ! Avoids writing -0.0 for -PEG1(J) below
 
                         TOTALS(L) = TOTALS(L) - PEG1(L)
                      ENDDO
-                     WRITE(F06,9209) TYPE, EID, ( -PEG1(L),L=1,6)
+                     WRITE(F06,9209) TYPE, EID, (-PEG1(L),L=1,6)
                      IF (WRITE_ANS) THEN
-                        WRITE(ANS,9209) TYPE, EID, ( -PEG1(L),L=1,6)
+                        WRITE(ANS,9209) TYPE, EID, (-PEG1(L),L=1,6)
                      ENDIF
                   ENDIF
                ENDDO 
@@ -547,7 +558,8 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
 
          ENDIF
 
-         ! For each of the 6 components (J=1,6 for components T1, T2, T3, R1, R2, R3) , calc % of grid force imbalance as a % of the largest
+         ! For each of the 6 components (J=1,6 for components T1, T2, T3, R1, R2, R3),
+         ! calc % of grid force imbalance as a % of the largest
          ! force item in that component
          DO J=1,6
             IF (DABS( FG1(J)) > MAX_ABS(J)) MAX_ABS(J) = DABS( FG1(J))
@@ -661,27 +673,27 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
       DO II=1,NDOFG
 
          IF (ALLOCATED( FG_COL)) THEN
-            IF ( FG_COL(II) == -ZERO) THEN   ;    FG_COL(II) = ZERO   ;   ENDIF
+            IF ( FG_COL(II) == -ZERO) THEN;    FG_COL(II) = ZERO;   ENDIF
          ENDIF
 
          IF (ALLOCATED( PG_COL)) THEN
-            IF ( PG_COL(II) == -ZERO) THEN   ;    PG_COL(II) = ZERO   ;   ENDIF
+            IF ( PG_COL(II) == -ZERO) THEN;    PG_COL(II) = ZERO;   ENDIF
          ENDIF
 
          IF (ALLOCATED(QGs_COL)) THEN
-            IF (QGs_COL(II) == -ZERO) THEN   ;   QGs_COL(II) = ZERO   ;   ENDIF
+            IF (QGs_COL(II) == -ZERO) THEN;   QGs_COL(II) = ZERO;   ENDIF
          ENDIF
 
          IF (ALLOCATED(QGm_COL)) THEN
-            IF (QGm_COL(II) == -ZERO) THEN   ;   QGm_COL(II) = ZERO   ;   ENDIF
+            IF (QGm_COL(II) == -ZERO) THEN;   QGm_COL(II) = ZERO;   ENDIF
          ENDIF
 
          IF (ALLOCATED(QGr_COL)) THEN
-            IF (QGr_COL(II) == -ZERO) THEN   ;   QGr_COL(II) = ZERO   ;   ENDIF
+            IF (QGr_COL(II) == -ZERO) THEN;   QGr_COL(II) = ZERO;   ENDIF
          ENDIF
 
          IF (ALLOCATED( UG_COL)) THEN
-            IF ( UG_COL(II) == -ZERO) THEN   ;    UG_COL(II) = ZERO   ;   ENDIF
+            IF ( UG_COL(II) == -ZERO) THEN;    UG_COL(II) = ZERO;   ENDIF
          ENDIF
 
       ENDDO
