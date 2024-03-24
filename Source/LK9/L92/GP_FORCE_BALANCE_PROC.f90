@@ -568,25 +568,26 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
       !ref mystran SUB DEALLOCATE_DOF_TABLES
       !KTSTACK(5500,3)
 
-     !IF (ALLOCATED(GPFORCE_NID_EID)) THEN
-     !   DEALLOCATE (GPFORCE_NID_EID,STAT=IERR)
-     !   IF (IERR /= 0) THEN
-     !   WRITE(6,*) 'MB_DEALLOCATED err'
-     !ENDIF
+      IF (ALLOCATED(GPFORCE_NID_EID)) THEN
+         DEALLOCATE (GPFORCE_NID_EID,STAT=IERR)
+         IF (IERR /= 0) THEN
+             WRITE(6,*) 'MB_DEALLOCATED err'
+         ENDIF
+      ENDIF
 
-     !IF (ALLOCATED(GPFORCE_ETYPE)) THEN
-     !   DEALLOCATE (GPFORCE_ETYPE,STAT=IERR)
-     !   IF (IERR /= 0) THEN
-     !   WRITE(6,*) 'MB_DEALLOCATED err'
-     !   ENDIF
-     !ENDIF
+     IF (ALLOCATED(GPFORCE_ETYPE)) THEN
+         DEALLOCATE (GPFORCE_ETYPE,STAT=IERR)
+         IF (IERR /= 0) THEN
+             WRITE(6,*) 'MB_DEALLOCATED err'
+         ENDIF
+     ENDIF
 
-     !IF (ALLOCATED(GPFORCE_FXYZ_MXYZ)) THEN
-     !   DEALLOCATE (GPFORCE_FXYZ_MXYZ,STAT=IERR)
-     !   IF (IERR /= 0) THEN
-     !   WRITE(6,*) 'MB_DEALLOCATED err'
-     !   ENDIF
-     !ENDIF
+     IF (ALLOCATED(GPFORCE_FXYZ_MXYZ)) THEN
+         DEALLOCATE (GPFORCE_FXYZ_MXYZ,STAT=IERR)
+         IF (IERR /= 0) THEN
+             WRITE(6,*) 'MB_DEALLOCATED err'
+         ENDIF
+     ENDIF
 
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
