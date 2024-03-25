@@ -116,17 +116,16 @@
 !    .      NSM (last entry)
  
  
-! Initialize
-
+      ! Initialize
       AREA = ZERO
       I1   = ZERO
       I2   = ZERO
       I12  = ZERO
       JTOR = ZERO
-      Y(1) = ZERO   ;   Z(1) = ZERO
-      Y(2) = ZERO   ;   Z(2) = ZERO
-      Y(3) = ZERO   ;   Z(3) = ZERO
-      Y(4) = ZERO   ;   Z(4) = ZERO
+      Y(1) = ZERO;   Z(1) = ZERO
+      Y(2) = ZERO;   Z(2) = ZERO
+      Y(3) = ZERO;   Z(3) = ZERO
+      Y(4) = ZERO;   Z(4) = ZERO
       K1   = ZERO
       K2   = ZERO
 
@@ -138,37 +137,39 @@
          D(I)                   = ZERO
       ENDDO
 
-      BAR_SHAPE( 1)%Col_1(1:8) = 'BAR     '   ;  BAR_SHAPE( 1)%Col_2 = 2  
-      BAR_SHAPE( 2)%Col_1(1:8) = 'BOX     '   ;  BAR_SHAPE( 2)%Col_2 = 4  
-      BAR_SHAPE( 3)%Col_1(1:8) = 'BOX1    '   ;  BAR_SHAPE( 3)%Col_2 = 6  
-      BAR_SHAPE( 4)%Col_1(1:8) = 'CHAN    '   ;  BAR_SHAPE( 4)%Col_2 = 4  
-      BAR_SHAPE( 5)%Col_1(1:8) = 'CHAN1   '   ;  BAR_SHAPE( 5)%Col_2 = 4  
-      BAR_SHAPE( 6)%Col_1(1:8) = 'CHAN2   '   ;  BAR_SHAPE( 6)%Col_2 = 4  
-      BAR_SHAPE( 7)%Col_1(1:8) = 'CROSS   '   ;  BAR_SHAPE( 7)%Col_2 = 4  
-      BAR_SHAPE( 8)%Col_1(1:8) = 'H       '   ;  BAR_SHAPE( 8)%Col_2 = 4  
-      BAR_SHAPE( 9)%Col_1(1:8) = 'HAT     '   ;  BAR_SHAPE( 9)%Col_2 = 4  
-      BAR_SHAPE(10)%Col_1(1:8) = 'HEXA    '   ;  BAR_SHAPE(10)%Col_2 = 3  
-      BAR_SHAPE(11)%Col_1(1:8) = 'I       '   ;  BAR_SHAPE(11)%Col_2 = 6  
-      BAR_SHAPE(12)%Col_1(1:8) = 'I1      '   ;  BAR_SHAPE(12)%Col_2 = 4  
-      BAR_SHAPE(13)%Col_1(1:8) = 'ROD     '   ;  BAR_SHAPE(13)%Col_2 = 1  
-      BAR_SHAPE(14)%Col_1(1:8) = 'T       '   ;  BAR_SHAPE(14)%Col_2 = 4  
-      BAR_SHAPE(15)%Col_1(1:8) = 'T1      '   ;  BAR_SHAPE(15)%Col_2 = 4  
-      BAR_SHAPE(16)%Col_1(1:8) = 'T2      '   ;  BAR_SHAPE(16)%Col_2 = 4  
-      BAR_SHAPE(17)%Col_1(1:8) = 'TUBE    '   ;  BAR_SHAPE(17)%Col_2 = 2  
-      BAR_SHAPE(18)%Col_1(1:8) = 'Z       '   ;  BAR_SHAPE(18)%Col_2 = 4  
+      ! no idea what the Col_1 and Col_2 part refer to, but it's still
+      ! easy to add a new section
+      BAR_SHAPE( 1)%Col_1(1:8) = 'BAR     ';  BAR_SHAPE( 1)%Col_2 = 2  
+      BAR_SHAPE( 2)%Col_1(1:8) = 'BOX     ';  BAR_SHAPE( 2)%Col_2 = 4  
+      BAR_SHAPE( 3)%Col_1(1:8) = 'BOX1    ';  BAR_SHAPE( 3)%Col_2 = 6  
+      BAR_SHAPE( 4)%Col_1(1:8) = 'CHAN    ';  BAR_SHAPE( 4)%Col_2 = 4  
+      BAR_SHAPE( 5)%Col_1(1:8) = 'CHAN1   ';  BAR_SHAPE( 5)%Col_2 = 4  
+      BAR_SHAPE( 6)%Col_1(1:8) = 'CHAN2   ';  BAR_SHAPE( 6)%Col_2 = 4  
+      BAR_SHAPE( 7)%Col_1(1:8) = 'CROSS   ';  BAR_SHAPE( 7)%Col_2 = 4  
+      BAR_SHAPE( 8)%Col_1(1:8) = 'H       ';  BAR_SHAPE( 8)%Col_2 = 4  
+      BAR_SHAPE( 9)%Col_1(1:8) = 'HAT     ';  BAR_SHAPE( 9)%Col_2 = 4  
+      BAR_SHAPE(10)%Col_1(1:8) = 'HEXA    ';  BAR_SHAPE(10)%Col_2 = 3  
+      BAR_SHAPE(11)%Col_1(1:8) = 'I       ';  BAR_SHAPE(11)%Col_2 = 6  
+      BAR_SHAPE(12)%Col_1(1:8) = 'I1      ';  BAR_SHAPE(12)%Col_2 = 4  
+      BAR_SHAPE(13)%Col_1(1:8) = 'ROD     ';  BAR_SHAPE(13)%Col_2 = 1  
+      BAR_SHAPE(14)%Col_1(1:8) = 'T       ';  BAR_SHAPE(14)%Col_2 = 4  
+      BAR_SHAPE(15)%Col_1(1:8) = 'T1      ';  BAR_SHAPE(15)%Col_2 = 4  
+      BAR_SHAPE(16)%Col_1(1:8) = 'T2      ';  BAR_SHAPE(16)%Col_2 = 4  
+      BAR_SHAPE(17)%Col_1(1:8) = 'TUBE    ';  BAR_SHAPE(17)%Col_2 = 2  
+      BAR_SHAPE(18)%Col_1(1:8) = 'Z       ';  BAR_SHAPE(18)%Col_2 = 4  
+      BAR_SHAPE(19)%Col_1(1:8) = 'TUBE2   ';  BAR_SHAPE(19)%Col_2 = 2  
 
       NPBAR         = NPBAR  + 1
       PBAR(NPBAR,3) = NPBARL
 
-! Make JCARD from CARD
- 
+      ! Make JCARD from CARD
       CALL MKJCARD ( SUBR_NAME, CARD, JCARD )
  
       NAME = JCARD(1)
       ID   = JCARD(2)
  
-! Code not written for cross-section dimension data spilling over to a 2nd cont entry so give error if BAR_SHAPE(i)%Col_2 > 7
-
+      ! Code not written for cross-section dimension data spilling over 
+      ! to a 2nd cont entry so give error if BAR_SHAPE(i)%Col_2 > 7
       DO I=1,NS
          IF (BAR_SHAPE(I)%Col_2 > 7) THEN
             FATAL_ERR = FATAL_ERR + 1
@@ -178,8 +179,7 @@
          ENDIF
       ENDDO
 
-! Read and check data on parent card
-
+      ! Read and check data on parent card
       CALL I4FLD ( JCARD(2), JF(2), PROP_ID )              ! Read property ID and enter into array PBAR
       IF (IERRFL(2) == 'N') THEN
          DO J=1,NPBAR-1
@@ -228,8 +228,7 @@
       PBARL_TYPE(1:) = ' '
       PBARL_TYPE(1:) = CS_TYPE(1:)
 
-! Read D(i) dimension values on continuation entries
-
+      ! Read D(i) dimension values on continuation entries
       IERR = 0                                             ! Mandatory 1st continuation entry
       IF (LARGE_FLD_INP == 'N') THEN
          CALL NEXTC  ( CARD, ICONT, IERR )
@@ -282,27 +281,29 @@ D_do1:   DO J=2,9                                          ! --- Read cross-sect
       ENDIF
   
 
-! Call routines to calc bar cross-section props, depending on CS_TYPE
-
+      ! Call routines to calc bar cross-section props, depending on CS_TYPE
       IERR = 0
-      IF      (CS_TYPE(1:8) == BAR_SHAPE( 1)%Col_1) THEN   ;   NUM_D = BAR_SHAPE( 1)%Col_2   ;   CALL SECTION_PROPS_BAR   ( IERR )
-      ELSE IF (CS_TYPE(1:8) == BAR_SHAPE( 2)%Col_1) THEN   ;   NUM_D = BAR_SHAPE( 2)%Col_2   ;   CALL SECTION_PROPS_BOX   ( IERR )
-      ELSE IF (CS_TYPE(1:8) == BAR_SHAPE( 3)%Col_1) THEN   ;   NUM_D = BAR_SHAPE( 3)%Col_2   ;   CALL SECTION_PROPS_BOX1  ( IERR )
-      ELSE IF (CS_TYPE(1:8) == BAR_SHAPE( 4)%Col_1) THEN   ;   NUM_D = BAR_SHAPE( 4)%Col_2   ;   CALL SECTION_PROPS_CHAN  ( IERR )
-      ELSE IF (CS_TYPE(1:8) == BAR_SHAPE( 5)%Col_1) THEN   ;   NUM_D = BAR_SHAPE( 5)%Col_2   ;   CALL SECTION_PROPS_CHAN1 ( IERR )
-      ELSE IF (CS_TYPE(1:8) == BAR_SHAPE( 6)%Col_1) THEN   ;   NUM_D = BAR_SHAPE( 6)%Col_2   ;   CALL SECTION_PROPS_CHAN2 ( IERR )
-      ELSE IF (CS_TYPE(1:8) == BAR_SHAPE( 7)%Col_1) THEN   ;   NUM_D = BAR_SHAPE( 7)%Col_2   ;   CALL SECTION_PROPS_CROSS ( IERR )
-      ELSE IF (CS_TYPE(1:8) == BAR_SHAPE( 8)%Col_1) THEN   ;   NUM_D = BAR_SHAPE( 8)%Col_2   ;   CALL SECTION_PROPS_H     ( IERR )
-      ELSE IF (CS_TYPE(1:8) == BAR_SHAPE( 9)%Col_1) THEN   ;   NUM_D = BAR_SHAPE( 9)%Col_2   ;   CALL SECTION_PROPS_HAT   ( IERR )
-      ELSE IF (CS_TYPE(1:8) == BAR_SHAPE(10)%Col_1) THEN   ;   NUM_D = BAR_SHAPE(10)%Col_2   ;   CALL SECTION_PROPS_HEXA  ( IERR )
-      ELSE IF (CS_TYPE(1:8) == BAR_SHAPE(11)%Col_1) THEN   ;   NUM_D = BAR_SHAPE(11)%Col_2   ;   CALL SECTION_PROPS_I     ( IERR )
-      ELSE IF (CS_TYPE(1:8) == BAR_SHAPE(12)%Col_1) THEN   ;   NUM_D = BAR_SHAPE(12)%Col_2   ;   CALL SECTION_PROPS_I1    ( IERR )
-      ELSE IF (CS_TYPE(1:8) == BAR_SHAPE(13)%Col_1) THEN   ;   NUM_D = BAR_SHAPE(13)%Col_2   ;   CALL SECTION_PROPS_ROD   ( IERR )
-      ELSE IF (CS_TYPE(1:8) == BAR_SHAPE(14)%Col_1) THEN   ;   NUM_D = BAR_SHAPE(14)%Col_2   ;   CALL SECTION_PROPS_T     ( IERR )
-      ELSE IF (CS_TYPE(1:8) == BAR_SHAPE(15)%Col_1) THEN   ;   NUM_D = BAR_SHAPE(15)%Col_2   ;   CALL SECTION_PROPS_T1    ( IERR )
-      ELSE IF (CS_TYPE(1:8) == BAR_SHAPE(16)%Col_1) THEN   ;   NUM_D = BAR_SHAPE(16)%Col_2   ;   CALL SECTION_PROPS_T2    ( IERR )
-      ELSE IF (CS_TYPE(1:8) == BAR_SHAPE(17)%Col_1) THEN   ;   NUM_D = BAR_SHAPE(17)%Col_2   ;   CALL SECTION_PROPS_TUBE  ( IERR )
-      ELSE IF (CS_TYPE(1:8) == BAR_SHAPE(18)%Col_1) THEN   ;   NUM_D = BAR_SHAPE(18)%Col_2   ;   CALL SECTION_PROPS_Z     ( IERR )
+      IF      (CS_TYPE(1:8) == BAR_SHAPE( 1)%Col_1) THEN;  NUM_D = BAR_SHAPE( 1)%Col_2;   CALL SECTION_PROPS_BAR   ( IERR )
+      ELSE IF (CS_TYPE(1:8) == BAR_SHAPE( 2)%Col_1) THEN;  NUM_D = BAR_SHAPE( 2)%Col_2;   CALL SECTION_PROPS_BOX   ( IERR )
+      ELSE IF (CS_TYPE(1:8) == BAR_SHAPE( 3)%Col_1) THEN;  NUM_D = BAR_SHAPE( 3)%Col_2;   CALL SECTION_PROPS_BOX1  ( IERR )
+      ELSE IF (CS_TYPE(1:8) == BAR_SHAPE( 4)%Col_1) THEN;  NUM_D = BAR_SHAPE( 4)%Col_2;   CALL SECTION_PROPS_CHAN  ( IERR )
+      ELSE IF (CS_TYPE(1:8) == BAR_SHAPE( 5)%Col_1) THEN;  NUM_D = BAR_SHAPE( 5)%Col_2;   CALL SECTION_PROPS_CHAN1 ( IERR )
+      ELSE IF (CS_TYPE(1:8) == BAR_SHAPE( 6)%Col_1) THEN;  NUM_D = BAR_SHAPE( 6)%Col_2;   CALL SECTION_PROPS_CHAN2 ( IERR )
+      ELSE IF (CS_TYPE(1:8) == BAR_SHAPE( 7)%Col_1) THEN;  NUM_D = BAR_SHAPE( 7)%Col_2;   CALL SECTION_PROPS_CROSS ( IERR )
+      ELSE IF (CS_TYPE(1:8) == BAR_SHAPE( 8)%Col_1) THEN;  NUM_D = BAR_SHAPE( 8)%Col_2;   CALL SECTION_PROPS_H     ( IERR )
+      ELSE IF (CS_TYPE(1:8) == BAR_SHAPE( 9)%Col_1) THEN;  NUM_D = BAR_SHAPE( 9)%Col_2;   CALL SECTION_PROPS_HAT   ( IERR )
+      ELSE IF (CS_TYPE(1:8) == BAR_SHAPE(10)%Col_1) THEN;  NUM_D = BAR_SHAPE(10)%Col_2;   CALL SECTION_PROPS_HEXA  ( IERR )
+      ELSE IF (CS_TYPE(1:8) == BAR_SHAPE(11)%Col_1) THEN;  NUM_D = BAR_SHAPE(11)%Col_2;   CALL SECTION_PROPS_I     ( IERR )
+      ELSE IF (CS_TYPE(1:8) == BAR_SHAPE(12)%Col_1) THEN;  NUM_D = BAR_SHAPE(12)%Col_2;   CALL SECTION_PROPS_I1    ( IERR )
+      ELSE IF (CS_TYPE(1:8) == BAR_SHAPE(13)%Col_1) THEN;  NUM_D = BAR_SHAPE(13)%Col_2;   CALL SECTION_PROPS_ROD   ( IERR )
+      ELSE IF (CS_TYPE(1:8) == BAR_SHAPE(14)%Col_1) THEN;  NUM_D = BAR_SHAPE(14)%Col_2;   CALL SECTION_PROPS_T     ( IERR )
+      ELSE IF (CS_TYPE(1:8) == BAR_SHAPE(15)%Col_1) THEN;  NUM_D = BAR_SHAPE(15)%Col_2;   CALL SECTION_PROPS_T1    ( IERR )
+      ELSE IF (CS_TYPE(1:8) == BAR_SHAPE(16)%Col_1) THEN;  NUM_D = BAR_SHAPE(16)%Col_2;   CALL SECTION_PROPS_T2    ( IERR )
+      ELSE IF (CS_TYPE(1:8) == BAR_SHAPE(17)%Col_1) THEN;  NUM_D = BAR_SHAPE(17)%Col_2;   CALL SECTION_PROPS_TUBE  ( IERR )
+      ELSE IF (CS_TYPE(1:8) == BAR_SHAPE(18)%Col_1) THEN;  NUM_D = BAR_SHAPE(18)%Col_2;   CALL SECTION_PROPS_Z     ( IERR )
+      ELSE IF (CS_TYPE(1:8) == BAR_SHAPE(19)%Col_1) THEN;  NUM_D = BAR_SHAPE(19)%Col_2;   CALL SECTION_PROPS_TUBE2 ( IERR )
+      !HAT1
+      !DBOX
       ELSE
          FATAL_ERR = FATAL_ERR + 1
          WRITE(ERR,1162) JCARD(5), JF(5), NAME, ID
@@ -1417,6 +1418,53 @@ D_do1:   DO J=2,9                                          ! --- Read cross-sect
       K2   =  K1
 
       END SUBROUTINE SECTION_PROPS_TUBE
+
+! ##################################################################################################################################
+
+      SUBROUTINE SECTION_PROPS_TUBE2 ( JERR )
+
+      IMPLICIT NONE
+
+      INTEGER(LONG), INTENT(OUT)      :: JERR              ! Error indicator
+
+      REAL(DOUBLE)                    :: JCONS             ! Intermediate variable
+      REAL(DOUBLE)                    :: NU                ! Poisson ratio
+      REAL(DOUBLE)                    :: RAD1,RAD2         ! Radii
+      REAL(DOUBLE)                    :: T                 ! Tube thickness
+      REAL(DOUBLE)                    :: RAD21             ! RAD2/RAD1
+
+! **********************************************************************************************************************************
+      JERR = 0
+
+      RAD1 = D(1)
+      T = D(2)
+      RAD2 = RAD1 - T
+
+      IF (T < ZERO) JERR = 1
+      IF (JERR > 0) RETURN
+
+      AREA =  PI*(RAD1*RAD1 - RAD2*RAD2)
+      IF (AREA <= ZERO) THEN
+         JERR = 1
+         RETURN
+      ENDIF
+
+      I1   =  QUARTER*PI*(RAD1*RAD1*RAD1*RAD1 - RAD2*RAD2*RAD2*RAD2)
+      I2   =  I1
+      I12  =  ZERO
+      JTOR =  TWO*I1
+      Y(1) =  RAD1   ;   Z(1) =  ZERO 
+      Y(2) =  ZERO   ;   Z(2) =  RAD1
+      Y(3) = -Y(1)   ;   Z(3) =  ZERO
+      Y(4) =  ZERO   ;   Z(4) = -Z(2)
+
+      NU   =  ZERO
+      RAD21=  RAD2/RAD1
+      JCONS=  (1 + RAD21*RAD21)
+      K1   =  SIX*(1 + NU)*JCONS*JCONS/((SEVEN + SIX*NU)*JCONS*JCONS + TWO*(TEN + SIX*NU)*RAD21*RAD21)
+      K2   =  K1
+
+      END SUBROUTINE SECTION_PROPS_TUBE2
 
 ! ##################################################################################################################################
 
