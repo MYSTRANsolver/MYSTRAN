@@ -24,14 +24,14 @@
                                                                                                         
 ! End MIT license text.                                                                                      
 
-      SUBROUTINE GP_FORCE_BALANCE_PROC ( JVEC, IHDR )
+      SUBROUTINE GP_FORCE_BALANCE_PROC ( JVEC, IHEADER )
 
       ! Processes grid point force balance output requests for one subcase.
       ! The effects of all forces on grids are included so totals
       ! should be zero
 
       USE PENTIUM_II_KIND, ONLY       :  BYTE, SHORT, LONG, DOUBLE
-      USE IOUNT1, ONLY                :  ANS, ERR, F04, F06, SC1, WRT_ERR, WRT_LOG
+      USE IOUNT1, ONLY                :  ANS, ERR, F04, F06, OP2, SC1, WRT_ERR, WRT_LOG
       USE SCONTR, ONLY                :  BLNK_SUB_NAM, GROUT_GPFO_BIT, IBIT, INT_SC_NUM, JTSUB, NDOFG, NDOFM, MELDOF, NDOFO, NDOFR,&
                                          NELE, NGRID, NUM_CB_DOFS, NVEC, SOL_NAME
       USE TIMDAT, ONLY                :  TSEC
@@ -53,10 +53,9 @@
       CHARACTER, PARAMETER            :: CR13 = CHAR(13)   ! This causes a carriage return simulating the "+" action in a FORMAT
       CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: SUBR_NAME = 'GP_FORCE_BALANCE_PROC'
       CHARACTER(13*BYTE)              :: CHAR_PCT(6)       ! Character representation of MEFFMASS sum percents of total model mass
-      CHARACTER(LEN=*) , INTENT(IN)   :: IHDR              ! Indicator of whether to write an output header
+      CHARACTER(LEN=*) , INTENT(IN)   :: IHEADER           ! Indicator of whether to write an output header
       CHARACTER( 1*BYTE), PARAMETER   :: COORD_SYS   = 'G' ! Subr TRANSFORM_NODE_FORCES will calc elem node forces in global coords
       CHARACTER( 1*BYTE)              :: OPT(6)            ! Option flags for subr ELMTLB (to tell it what to transform)
-      CHARACTER(128*BYTE)             :: TITLEI, STITLEI, LABELI ! title, subtitle, label
 
       INTEGER(LONG), INTENT(IN)       :: JVEC              ! Solution vector number
       INTEGER(LONG)                   :: AELEM             ! Actual element ID
@@ -99,12 +98,27 @@
       integer(long)                   :: max_abs_grid(6)    ! Grid where max-abs for GP force balance totals exists
       real(double)                    :: max_abs_all_grds(6)! The 6 max-abs from GP force balance totals
 
-      INTEGER(LONG)                   :: DEVICE_CODE        !
-      INTEGER(LONG)                   :: ANALYSIS_CODE      !
       INTEGER(LONG)                   :: NROWS, NCOLS, NNODE_GPFORCE, INODE_GPFORCE, IERR  ! GPFORCE table helper
 
       LOGICAL                         :: WRITE_F06, WRITE_OP2, WRITE_ANS, IS_GPFORCE_SUMMARY_INFO  ! flags
       LOGICAL                         :: IS_MODES, IS_THERMAL, IS_APP, IS_SPC, IS_MPC
+
+      INTEGER(LONG)                   :: ISUBCASE_INDEX         ! helper to get the title/subcase
+      INTEGER(LONG)                   :: ISUBCASE               ! the correct subcase id
+
+      ! op2 stuff
+      ! table -3 info
+      INTEGER(LONG)                   :: DEVICE_CODE        !
+      INTEGER(LONG)                   :: ANALYSIS_CODE          ! static/modal/time/etc. flag
+      INTEGER(LONG)                   :: ELEMENT_TYPE           ! the OP2 flag for the element
+      LOGICAL                         :: FIELD_5_INT_FLAG       ! flag to trigger FIELD5_INT_MODE vs.
+      INTEGER(LONG)                   :: FIELD5_INT_MODE        ! int value for field 5
+      !REAL(DOUBLE)                    :: FIELD5_FLOAT_TIME_FREQ ! float value for field 5
+      REAL(DOUBLE)                    :: FIELD6_EIGENVALUE      ! float value for field 6
+      CHARACTER(LEN=128)              :: TITLEI                 ! the model TITLE
+      CHARACTER(LEN=128)              :: SUBTITLEI              ! the subcase SUBTITLE
+      CHARACTER(LEN=128)              :: LABELI                 ! the subcase LABEL
+      INTEGER(LONG)                   :: ITABLE                 ! the table counter
 
       INTEGER, ALLOCATABLE            :: GPFORCE_NID_EID(:,:)    ! currently unused
       CHARACTER*8, ALLOCATABLE        :: GPFORCE_ETYPE(:)        ! currently unused
@@ -138,6 +152,13 @@
       !WRITE_PCH = (ACCE_OUT(3:3) == 'Y')
       !WRITE_OP2 = .TRUE.
       !WRITE_F06 = .TRUE.
+
+      ! OP2: Write output headers if this is not the first use of this subr.
+      ANALYSIS_CODE = -1
+      FIELD_5_INT_FLAG = .TRUE.
+      FIELD5_INT_MODE = 0
+      FIELD6_EIGENVALUE = 0.0
+
       INODE_GPFORCE = 1
 
       !WRITE(ERR,*) "Running GPFORCE"
@@ -162,20 +183,28 @@
 
       ! Write output headers.
       ANALYSIS_CODE = -1
-      IF (IHDR == 'Y') THEN
+      IF (IHEADER == 'Y') THEN   ! should we write the header?
          IF (WRITE_F06) THEN
             WRITE(F06,*)
             WRITE(F06,*)
          ENDIF
+
+         ISUBCASE_INDEX = 0
          IF    (SOL_NAME(1:7) == 'STATICS') THEN
+            ISUBCASE_INDEX = JVEC
             ANALYSIS_CODE = 1
+            !FIELD5_INT_MODE = 1  ! temp
+            FIELD5_INT_MODE = SCNUM(JVEC)
             IF (WRITE_F06)  WRITE(F06,9101) SCNUM(JVEC)
 
          ELSE IF (SOL_NAME(1:5) == 'MODES') THEN
+            ISUBCASE_INDEX = 1  ! modes
             ANALYSIS_CODE = 2
+            FIELD5_INT_MODE = JVEC
             IF (WRITE_F06)  WRITE(F06,9102) JVEC
 
          ELSE IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN  ! Write info on what CB DOF the output is for
+            ISUBCASE_INDEX = 1  ! modes
 
             IF ((JVEC <= NDOFR) .OR. (JVEC >= NDOFR+NVEC)) THEN
                IF (JVEC <= NDOFR) THEN
@@ -195,24 +224,26 @@
                  WRITE(F06,9103) JVEC, NUM_CB_DOFS, 'displacement', BNDY_GRID, BNDY_COMP
               ENDIF
             ENDIF
-
          ENDIF
 
+         ISUBCASE = SCNUM(ISUBCASE_INDEX)
 
+         ! -- F06 header for TITLE, SUBTITLE, LABEL (but only to F06)
          TITLEI = TITLE(INT_SC_NUM)
-         STITLEI = STITLE(INT_SC_NUM)
+         SUBTITLEI = STITLE(INT_SC_NUM)
          LABELI = LABEL(INT_SC_NUM)
+
          IF (WRITE_F06) THEN
-            IF (TITLE(INT_SC_NUM)(1:)  /= ' ') THEN
-               WRITE(F06,9799) TITLE(INT_SC_NUM)
+            IF (TITLEI(1:)  /= ' ') THEN
+               WRITE(F06,9799) TITLE
             ENDIF
         
-            IF (STITLE(INT_SC_NUM)(1:) /= ' ') THEN
-               WRITE(F06,9799) STITLE(INT_SC_NUM)
+            IF (SUBTITLEI(1:) /= ' ') THEN
+               WRITE(F06,9799) SUBTITLEI
             ENDIF
         
-            IF (LABEL(INT_SC_NUM)(1:)  /= ' ') THEN
-               WRITE(F06,9799) LABEL(INT_SC_NUM)
+            IF (LABELI(1:)  /= ' ') THEN
+               WRITE(F06,9799) LABELI
             ENDIF
         
             WRITE(F06,*)
@@ -304,7 +335,6 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
       !CALL BUILD_GPFB(GPFB_NROWS)
       !WRITE(OP2) (GRID(I,1)*10+DEVICE_CODE, I=1,NGRID)
 
-!xx   WRITE(SC1, * )             ! Advance 1 line for screen messages
       NNODE_GPFORCE = NGRID
       DO I=1,NGRID
          !WRITE(ERR,*) "  GPFORCE I=",I
@@ -698,8 +728,9 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
 
       ENDDO
       WRITE(SC1,*) CR13
-
-      CALL CALCULATE_GPFB_IMBALANCE(CHAR_PCT, MAX_ABS, MAX_ABS_PCT, MAX_ABS_GRID, MAX_ABS_ALL_GRDS)
+      IF (WRITE_F06 .OR. WRITE_ANS) THEN
+          CALL CALCULATE_GPFB_IMBALANCE(CHAR_PCT, MAX_ABS, MAX_ABS_PCT, MAX_ABS_GRID, MAX_ABS_ALL_GRDS)
+      ENDIF
 
       !----------------
       !WRITE(ERR,*) "  GPFORCE DEALLOCATE: NROWS", NROWS
@@ -712,76 +743,75 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
       !KTSTACK(5500,3)
 
       IF(WRITE_OP2) THEN
-          IF (.TRUE.) THEN
-              !(nid_device, eid, elem_name, f1, f2, f3, m1, m2, m3) = out
-              !nid = nid_device // 10
-              DO I=1,INODE_GPFORCE-1
-                  WRITE(F06,*) GPFORCE_NID_EID(I,1)*10+DEVICE_CODE, &
-                          GPFORCE_NID_EID(I,2), &
-                          GPFORCE_ETYPE(I), &
-                          GPFORCE_FXYZ_MXYZ(I,1), &
-                          GPFORCE_FXYZ_MXYZ(I,2), &
-                          GPFORCE_FXYZ_MXYZ(I,3), &
-                          GPFORCE_FXYZ_MXYZ(I,4), &
-                          GPFORCE_FXYZ_MXYZ(I,5), &
-                          GPFORCE_FXYZ_MXYZ(I,6)
-                  WRITE(ERR,*) GPFORCE_NID_EID(I,1)*10+DEVICE_CODE, &
-                          GPFORCE_NID_EID(I,2), &
-                          GPFORCE_ETYPE(I), &
-                          GPFORCE_FXYZ_MXYZ(I,1), &
-                          GPFORCE_FXYZ_MXYZ(I,2), &
-                          GPFORCE_FXYZ_MXYZ(I,3), &
-                          GPFORCE_FXYZ_MXYZ(I,4), &
-                          GPFORCE_FXYZ_MXYZ(I,5), &
-                          GPFORCE_FXYZ_MXYZ(I,6)
-              ENDDO
-              FLUSH(F06)
-              FLUSH(ERR)
-              !WRITE(OP2) (GPFORCE_NID_EID(I,1)*10+DEVICE_CODE, GPFORCE_NID_EID(I,2), &
-              !            GPFORCE_ETYPE(I), &
-              !            REAL(GPFORCE_FXYZ_MXYZ(I,1), 4), &
-              !            REAL(GPFORCE_FXYZ_MXYZ(I,2), 4), &
-              !            REAL(GPFORCE_FXYZ_MXYZ(I,3), 4), &
-              !            REAL(GPFORCE_FXYZ_MXYZ(I,4), 4), &
-              !            REAL(GPFORCE_FXYZ_MXYZ(I,5), 4), &
-              !            REAL(GPFORCE_FXYZ_MXYZ(I,6), 4), &
-              !            I=1,INODE_GPFORCE)
-          ENDIF
- 
+          ! write the data to the op2
+          !(nid_device, eid, elem_name, f1, f2, f3, m1, m2, m3) = out
+          !nid = nid_device // 10
+          !DO I=1,INODE_GPFORCE-1
+          !    WRITE(F06,*) GPFORCE_NID_EID(I,1)*10+DEVICE_CODE, &
+          !            GPFORCE_NID_EID(I,2), &
+          !            GPFORCE_ETYPE(I), &
+          !            GPFORCE_FXYZ_MXYZ(I,1), &
+          !            GPFORCE_FXYZ_MXYZ(I,2), &
+          !            GPFORCE_FXYZ_MXYZ(I,3), &
+          !            GPFORCE_FXYZ_MXYZ(I,4), &
+          !            GPFORCE_FXYZ_MXYZ(I,5), &
+          !            GPFORCE_FXYZ_MXYZ(I,6)
+          !    WRITE(ERR,*) GPFORCE_NID_EID(I,1)*10+DEVICE_CODE, &
+          !            GPFORCE_NID_EID(I,2), &
+          !            GPFORCE_ETYPE(I), &
+          !            GPFORCE_FXYZ_MXYZ(I,1), &
+          !            GPFORCE_FXYZ_MXYZ(I,2), &
+          !            GPFORCE_FXYZ_MXYZ(I,3), &
+          !            GPFORCE_FXYZ_MXYZ(I,4), &
+          !            GPFORCE_FXYZ_MXYZ(I,5), &
+          !            GPFORCE_FXYZ_MXYZ(I,6)
+          !ENDDO
+
+          ITABLE = -3
+          CALL OUTPUT2_WRITE_OGF(ISUBCASE, ITABLE, INODE_GPFORCE-1, &
+                                 TITLEI, SUBTITLEI, LABELI, &
+                                 FIELD5_INT_MODE, FIELD6_EIGENVALUE)
+          WRITE(OP2) (GPFORCE_NID_EID(I,1)*10+DEVICE_CODE, GPFORCE_NID_EID(I,2), &
+                      GPFORCE_ETYPE(I), &
+                      REAL(GPFORCE_FXYZ_MXYZ(I,1), 4), &
+                      REAL(GPFORCE_FXYZ_MXYZ(I,2), 4), &
+                      REAL(GPFORCE_FXYZ_MXYZ(I,3), 4), &
+                      REAL(GPFORCE_FXYZ_MXYZ(I,4), 4), &
+                      REAL(GPFORCE_FXYZ_MXYZ(I,5), 4), &
+                      REAL(GPFORCE_FXYZ_MXYZ(I,6), 4), &
+                      I=1,INODE_GPFORCE-1)
+          CALL END_OP2_TABLE(ITABLE)   ! close the previous
+          WRITE(OP2) 0
+
+          !---------------------
+          ! deallocate the arrays
           !WRITE(ERR,*) 'GPFORCE_NID_EID is allocated'
           !WRITE(ERR,*) 'GPFORCE_NID_EID(1,:)=',GPFORCE_NID_EID(1,1),GPFORCE_NID_EID(1,2),GPFORCE_ETYPE(1)
           !WRITE(ERR,*) 'GPFORCE_FXYZ(1,:)=',GPFORCE_FXYZ_MXYZ(1,1),GPFORCE_FXYZ_MXYZ(1,2),GPFORCE_FXYZ_MXYZ(1,3)
           !WRITE(ERR,*) 'GPFORCE_MXYZ(1,:)=',GPFORCE_FXYZ_MXYZ(1,4),GPFORCE_FXYZ_MXYZ(1,5),GPFORCE_FXYZ_MXYZ(1,6)
           !FLUSH(ERR)
           DEALLOCATE(GPFORCE_NID_EID,STAT=IERR)
-          !WRITE(ERR,*) 'deallocated?'
-          !FLUSH(ERR)
           IF (IERR /= 0) THEN
               WRITE(ERR,*) 'GPFORCE-1 DEALLOCATED err'
-              !FLUSH(ERR)
           ENDIF
-          !WRITE(ERR,*) "  DEALLOCATED: GPFORCE_NID_EID"
-          !FLUSH(ERR)
 
           ! QUAD4, TRIA3, BAR
           IF (ALLOCATED(GPFORCE_ETYPE)) THEN
                DEALLOCATE (GPFORCE_ETYPE,STAT=IERR)
                IF (IERR /= 0) THEN
                    WRITE(ERR,*) 'GPFORCE-2 DEALLOCATED err'
-                   !FLUSH(ERR)
                ENDIF
            ENDIF
-           !WRITE(ERR,*) "  DEALLOCATED: GPFORCE_ETYPE"
-           !FLUSH(ERR)
 
            DEALLOCATE (GPFORCE_FXYZ_MXYZ,STAT=IERR)
            IF (IERR /= 0) THEN
                WRITE(ERR,*) 'GPFORCE-3 DEALLOCATED err'
-               !FLUSH(ERR)
            ENDIF
-           !WRITE(ERR,*) "  DEALLOCATED: GPFORCE_FXYZ_MXYZ"
-           FLUSH(ERR)
       ENDIF
+      FLUSH(OP2)
+      FLUSH(F06)
+      FLUSH(ANS)
+      FLUSH(ERR)
 
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
@@ -920,7 +950,7 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
       INTEGER(LONG), INTENT(IN)       :: max_abs_grid(6)    ! Grid where max-abs for GP force balance totals exists
       REAL(DOUBLE), INTENT(IN)        :: max_abs_all_grds(6)! The 6 max-abs from GP force balance totals
 
-      IF (IS_GPFORCE_SUMMARY_INFO .AND. (WRITE_F06 .OR. WRITE_ANS)) THEN
+      IF (IS_GPFORCE_SUMMARY_INFO) THEN
          DO I=1,6
             IF (MAX_ABS(I) > ZERO) THEN
                MAX_ABS_PCT(I) = ONE_HUNDRED*MAX_ABS_ALL_GRDS(I)/MAX_ABS(I)
@@ -968,5 +998,160 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
 
       END SUBROUTINE CALCULATE_GPFB_IMBALANCE
 !===================================================================================================================================
+
+      SUBROUTINE OUTPUT2_WRITE_OGF(ISUBCASE, ITABLE, NUM, TITLE, SUBTITLE, LABEL, &
+                                   FIELD5_INT_MODE, FIELD6_EIGENVALUE)
+!     writes the CROD/CTUBE/CONROD stress/strain results.
+!     Data is first written to character variables and then that character variable is output the F06 and ANS.
+!     
+!     Parameters
+!     ==========
+!     ELEM_TYPE : int
+!       flag for the element type
+!       - 1 : CROD
+!       - 3 : CTUBE
+!       - 10 : CONROD
+      USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
+      USE IOUNT1, ONLY                :  OP2, ERR
+      USE, INTRINSIC :: IEEE_ARITHMETIC, ONLY: IEEE_Value, IEEE_QUIET_NAN
+      USE, INTRINSIC :: ISO_FORTRAN_ENV, ONLY: REAL32
+      INTEGER(LONG) :: ANALYSIS_CODE        ! static, time, frequency, modal, etc. flag
+      INTEGER(LONG), INTENT(IN) :: ISUBCASE  ! subcase id
+      CHARACTER(LEN=128), INTENT(IN) :: TITLE              ! the model TITLE
+      CHARACTER(LEN=128), INTENT(IN) :: SUBTITLE           ! the subcase SUBTITLE
+      CHARACTER(LEN=128), INTENT(IN) :: LABEL              ! the subcase LABEL
+      INTEGER(LONG), INTENT(IN) :: NUM                     ! the number of "nodes" that will be printed
+      INTEGER(LONG), INTENT(IN) :: FIELD5_INT_MODE
+      REAL(DOUBLE),  INTENT(IN) :: FIELD6_EIGENVALUE
+
+      CHARACTER*8   :: TABLE_NAME
+      INTEGER(LONG) :: ITABLE       ! the current subtable number
+      INTEGER(LONG) :: NUM_WIDE     ! the number of "words" for a single element
+      INTEGER(LONG) :: DEVICE_CODE  ! PLOT, PRINT, PUNCH flag
+      INTEGER(LONG) :: NVALUES      ! the number of "words" for the OP2 data
+      INTEGER(LONG) :: NTOTAL       ! the number of bytes corresponding to nvalues
+      REAL(REAL32)  :: NAN
+      LOGICAL       :: IS_PRINT     ! is this a PRINT result -> F06
+
+      NAN = IEEE_VALUE(NAN, IEEE_QUIET_NAN)
+      ! TODO: assuming PLOT
+      DEVICE_CODE = 1
+
+      !-------
+      ! we're already setup for subtable -3
+
+      ! nid, eid, ETYPE (8-bytes), fx, fy, fz, mx, my, mz
+      NUM_WIDE = 10
+
+      ! dunno???
+      TABLE_NAME = 'OGPFB1  '
+      !TABLE_NUM = 19
+      CALL WRITE_TABLE_HEADER(TABLE_NAME)
+      ITABLE = -3
+
+      CALL WRITE_OGF3(ITABLE, ISUBCASE, ANALYSIS_CODE, DEVICE_CODE, NUM_WIDE, &
+                      TITLE, SUBTITLE, LABEL,                                          &
+                      FIELD5_INT_MODE, FIELD6_EIGENVALUE)
+      ! ITABLE = -4, -6, ...
+      !NWORDS = NUM * NUM_WIDE
+      !NTOTAL = NBYTES_PER_WORD * NWORDS
+
+ 100  FORMAT("*DEBUG:    ITABLE=",I8, "; NUM=",I8,"; NVALUES=",I8,"; NTOTAL=",I8)
+      NVALUES = NUM * NUM_WIDE
+      NTOTAL = NVALUES * 4
+      WRITE(ERR,100) ITABLE,NUM,NVALUES,NTOTAL
+      WRITE(OP2) NVALUES
+
+ 102  FORMAT("*DEBUG: OUTPUT2_WRITE_OGF      ITABLE=",I8," (should be -5, -7,...)")
+      WRITE(ERR,102) ITABLE
+
+      END SUBROUTINE OUTPUT2_WRITE_OGF
+!==================================================================================================
+      SUBROUTINE WRITE_OGF3(ITABLE, ANALYSIS_CODE, ISUBCASE, DEVICE_CODE, NUM_WIDE, &
+                            TITLE, LABEL, SUBTITLE, &
+                            FIELD5_INT_MODE, FIELD6_EIGENVALUE)
+!      Parameters
+!      ==========
+!      analysis_code
+!        the solution type flag
+!      approach_code
+!        ???
+      USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
+      USE IOUNT1, ONLY                :  ERR,OP2
+      IMPLICIT NONE
+      INTEGER(LONG), INTENT(INOUT) :: ITABLE               ! an OP2 subtable counter
+      INTEGER(LONG), INTENT(IN) :: ANALYSIS_CODE           ! static, modal, time, freq, etc. flag
+      INTEGER(LONG), INTENT(IN) :: ISUBCASE                ! the subcase ID
+      INTEGER(LONG), INTENT(IN) :: DEVICE_CODE             ! PLOT, PRINT, PUNCH flag
+      INTEGER(LONG), INTENT(IN) :: NUM_WIDE                ! the number of words per element 
+
+      CHARACTER(LEN=128), INTENT(IN) :: TITLE              ! the model TITLE
+      CHARACTER(LEN=128), INTENT(IN) :: SUBTITLE           ! the subcase SUBTITLE
+      CHARACTER(LEN=128), INTENT(IN) :: LABEL              ! the subcase LABEL
+
+      CHARACTER(LEN=128) :: TITLE2                 ! the subcase TITLE
+      CHARACTER(LEN=128) :: SUBTITLE2              ! the subcase SUBTITLE
+      CHARACTER(LEN=128) :: LABEL2                 ! the subcase LABEL
+
+      INTEGER(LONG), INTENT(IN) :: FIELD5_INT_MODE
+      REAL(DOUBLE), INTENT(IN)  :: FIELD6_EIGENVALUE
+      REAL(DOUBLE)              :: FIELD7
+      INTEGER(LONG)             :: APPROACH_CODE
+      INTEGER(LONG)             :: FORMAT_CODE        ! 1=real, 2=imag, 3=random
+      INTEGER(LONG)             :: TABLE_CODE, LOAD_SET, THERMAL, ACOUSTIC_FLAG, STRESS_CODE
+
+!     static is real
+      FORMAT_CODE = 1
+
+      TITLE2 = TITLE(1:100)
+      SUBTITLE2 = SUBTITLE(1:67)
+      LABEL2 = LABEL(1:100)
+
+      CALL WRITE_ITABLE(ITABLE)  ! write the -3, -5, ... subtable header
+ 1    FORMAT("WRITE_OGF3: ITABLE_START=",I8)
+      WRITE(ERR,1) ITABLE
+
+      IF ((ANALYSIS_CODE == 1) .OR. (ANALYSIS_CODE == 10)) THEN
+         ! statics
+         FIELD7 = 0.0
+      ELSE
+         ! frequency in radians
+         FIELD7 = SQRT(ABS(FIELD6_EIGENVALUE))
+      ENDIF
+
+      WRITE(OP2) 146
+      ! grid point forces only
+      TABLE_CODE = 19
+      
+      ! ???
+      LOAD_SET = 1
+      
+      ! we're not doing acoustic/stress
+      ACOUSTIC_FLAG = 0
+      STRESS_CODE = 0
+      
+      ! not always 0 for stress, but for now
+      THERMAL = 0
+
+      APPROACH_CODE = ANALYSIS_CODE * 10 + DEVICE_CODE
+2     FORMAT(" APPROACH_CODE=",I4," TABLE_CODE=",I4," ISUBCASE=",I4)
+      ! 584 bytes
+      !WRITE(ERR,2) APPROACH_CODE, TABLE_CODE, ELEM_TYPE, ISUBCASE
+      WRITE(OP2) APPROACH_CODE, TABLE_CODE, 0, ISUBCASE, FIELD5_INT_MODE, &
+            REAL(FIELD6_EIGENVALUE, 4), REAL(FIELD7, 4),                          &
+            LOAD_SET, FORMAT_CODE, NUM_WIDE, &
+            STRESS_CODE, ACOUSTIC_FLAG, 0, 0, 0, &
+            0, 0, 0, 0, 0, &
+            0, 0, THERMAL, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, &
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, &
+            0, 0, 0, 0, &
+            TITLE2, SUBTITLE2, LABEL2
+
+      ITABLE = ITABLE - 1        ! flip it to -4, -6, ... so we don't have to do this later
+ 3    FORMAT("WRITE_OGF3: ITABLE_END=",I8)
+      WRITE(ERR,3) ITABLE
+      CALL WRITE_ITABLE(ITABLE)
+      ITABLE = ITABLE - 1
+      END SUBROUTINE WRITE_OGF3
 
       END SUBROUTINE GP_FORCE_BALANCE_PROC
