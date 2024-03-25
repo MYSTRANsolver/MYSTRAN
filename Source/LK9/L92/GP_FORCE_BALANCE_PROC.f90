@@ -103,10 +103,10 @@
       INTEGER(LONG)                   :: NROWS, NCOLS, NNODE_GPFORCE, INODE_GPFORCE, IERR  ! GPFORCE table helper
 
       LOGICAL                         :: WRITE_F06, WRITE_OP2, WRITE_ANS, IS_GPFORCE_SUMMARY_INFO  ! flags
-      LOGICAL                         :: IS_THERMAL, IS_APP, IS_SPC, IS_MPC
+      LOGICAL                         :: IS_MODES, IS_THERMAL, IS_APP, IS_SPC, IS_MPC, ALLOCATE_STUFF
 
       INTEGER, ALLOCATABLE            :: GPFORCE_NID_EID(:,:)    ! currently unused
-      CHARACTER, ALLOCATABLE          :: GPFORCE_ETYPE(:,:)      ! currently unused
+      !CHARACTER*8, ALLOCATABLE        :: GPFORCE_ETYPE(:)        ! currently unused
       REAL, ALLOCATABLE               :: GPFORCE_FXYZ_MXYZ(:,:)  ! currently unused
 
 ! **********************************************************************************************************************************
@@ -117,6 +117,7 @@
       ENDIF
 
 ! **********************************************************************************************************************************
+      ALLOCATE_STUFF = .FALSE.
 
       ! Print some summary info for max abs value of GP force balance for each solution vector
       IS_GPFORCE_SUMMARY_INFO = (DEBUG(192) > 0)
@@ -127,11 +128,14 @@
       WRITE_ANS = (DEBUG(200) > 0)
 
       IS_THERMAL = (SUBLOD(INT_SC_NUM,2) > 0)
-
+      IS_MODES = ((SOL_NAME(1:5) == 'MODES') .OR. (SOL_NAME(1:12) == 'GEN CB MODEL'))
       WRITE_OP2 = .FALSE.
       WRITE_F06 = .TRUE.
       INODE_GPFORCE = 0
       NNODE_GPFORCE = 0
+      
+      WRITE(ERR,*) "Running GPFORCE"
+      FLUSH(ERR)
 
       ! Initialize
       DO I=1,6
@@ -290,31 +294,41 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
 
 !xx   WRITE(SC1, * )             ! Advance 1 line for screen messages
       DO I=1,NGRID
+         WRITE(ERR,*) "  GPFORCE I=",I
+         FLUSH(ERR)
          IB = IAND(GROUT(I,INT_SC_NUM),IBIT(GROUT_GPFO_BIT))
          GRID_NUM  = GRID(I,1)
          CALL GET_GRID_NUM_COMPS ( GRID_NUM, NUM_COMPS, SUBR_NAME )
  
          IF ((IB > 0) .AND. (NUM_COMPS == 6)) THEN         ! Do not do force balance for SPOINT's
             G_CID = GRID(I,3)
-            IF (IS_THERMAL) THEN
-               NUM_CONN_ELEMS = GRID_ELEM_CONN_ARRAY(I,2)
-               
-               ! applied load, thermal, spc force, mpc force
-               NNODE_GPFORCE = NNODE_GPFORCE + 4
-               DO J=1,NUM_CONN_ELEMS
-                  AELEM = GRID_ELEM_CONN_ARRAY(I,2+J)
-                  CALL GET_ARRAY_ROW_NUM ( 'ESORT1', SUBR_NAME, NELE, ESORT1, AELEM, IELE )
-                  CALL GET_ELGP ( IELE )
-                  CALL GET_ELEM_AGRID_BGRID ( IELE, 'N' )
-                  DO K=1,ELGP
-                     IF (AGRID(K) == GRID_NUM) THEN
-                         NNODE_GPFORCE = NNODE_GPFORCE + 1
-                     ENDIF
-                  ENDDO
-               ENDDO
-            ENDIF
+
+            ! applied load, thermal, spc force, mpc force
+            NNODE_GPFORCE = NNODE_GPFORCE + 4
+
+            NUM_CONN_ELEMS = GRID_ELEM_CONN_ARRAY(I,2)
+            NNODE_GPFORCE = NNODE_GPFORCE + NUM_CONN_ELEMS
+            !DO J=1,NUM_CONN_ELEMS
+
+            !IF (IS_THERMAL) THEN
+            !   NUM_CONN_ELEMS = GRID_ELEM_CONN_ARRAY(I,2)
+            !
+            !   DO J=1,NUM_CONN_ELEMS
+            !      AELEM = GRID_ELEM_CONN_ARRAY(I,2+J)
+            !      CALL GET_ARRAY_ROW_NUM ( 'ESORT1', SUBR_NAME, NELE, ESORT1, AELEM, IELE )
+            !      CALL GET_ELGP ( IELE )
+            !      CALL GET_ELEM_AGRID_BGRID ( IELE, 'N' )
+            !      DO K=1,ELGP
+            !         IF (AGRID(K) == GRID_NUM) THEN
+            !             NNODE_GPFORCE = NNODE_GPFORCE + 1
+            !         ENDIF
+            !      ENDDO
+            !   ENDDO
+            !ENDIF
          ENDIF
       ENDDO
+      WRITE(ERR,*) "NNODE_GPFORCE",NNODE_GPFORCE
+      FLUSH(ERR)
       !NNODE_GPFORCE = 10
       !------------------------------------------------------------------------
       ! ALLOCATE: GPFORCE_NID_EID, GPFORCE_ETYPE, GPFORCE_FXYZ_MXYZ
@@ -322,6 +336,7 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
       !
       !KTSTACK(5500,3)
       !
+      IF(ALLOCATE_STUFF) THEN
       NROWS = NNODE_GPFORCE
       NCOLS = 2
       IF (ALLOCATED(GPFORCE_NID_EID)) THEN
@@ -341,22 +356,19 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
       ENDIF
 
       !----------------
-      NCOLS = 8
-      IF (ALLOCATED(GPFORCE_ETYPE)) THEN
-          WRITE(6,*) 'ALLOCATED!'
-      ELSE
-          ALLOCATE (GPFORCE_ETYPE(NROWS,8),STAT=IERR)
-          !MB_ALLOCATED = REAL(LONG)*REAL(LGRID)*REAL(NCOLS)/ONEPP6
-          IF (IERR == 0) THEN
-              DO I=1,NROWS
-                  DO J=1,NCOLS
-                      GPFORCE_ETYPE(I,J) = "NA"
-                  ENDDO
-              ENDDO
-          ELSE
-              WRITE(6,*) 'MB_ALLOCATED err'
-          ENDIF
-      ENDIF
+      !IF (ALLOCATED(GPFORCE_ETYPE)) THEN
+      !    WRITE(6,*) 'ALLOCATED!'
+      !ELSE
+      !    ALLOCATE (GPFORCE_ETYPE(NROWS),STAT=IERR)
+      !    !MB_ALLOCATED = REAL(LONG)*REAL(LGRID)*REAL(NCOLS)/ONEPP6
+      !    IF (IERR == 0) THEN
+      !        DO I=1,NROWS
+      !            GPFORCE_ETYPE(I) = "NA"
+      !        ENDDO
+      !    ELSE
+      !        WRITE(6,*) 'MB_ALLOCATED err'
+      !    ENDIF
+      !ENDIF
       !----------------
       NCOLS = 6
       IF (ALLOCATED(GPFORCE_FXYZ_MXYZ)) THEN
@@ -373,6 +385,7 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
           ELSE
               WRITE(6,*) 'MB_ALLOCATED err'
           ENDIF
+      ENDIF
       ENDIF
       !------------------------------------------------------------------------
 
@@ -429,7 +442,8 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
                   ENDDO
                ENDDO
             ENDIF
-            
+
+            ! get applied load, thermal load, SPC force, MPC force for a single node
             CALL GET_ARRAY_ROW_NUM ( 'GRID_ID', SUBR_NAME, NGRID, GRID_ID, GRID_NUM, IGRID )
             ROW_NUM_START = TDOF_ROW_START(IGRID)
             CALL GET_GRID_NUM_COMPS ( GRID_NUM, NUM_COMPS, SUBR_NAME )
@@ -437,8 +451,8 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
                CALL TDOF_COL_NUM ( 'G ', G_SET_COL )
                TDOF_ROW = ROW_NUM_START + J - 1
                GDOF = TDOF(TDOF_ROW,G_SET_COL)
-               IF ((SOL_NAME(1:5) == 'MODES') .OR. (SOL_NAME(1:12) == 'GEN CB MODEL')) THEN
-                  FG1(J)  = FG_COL(GDOF)
+               IF (IS_MODES) THEN
+                  FG1(J) = FG_COL(GDOF)
                ENDIF
                PG1(J)  = PG_COL(GDOF)
                QGs1(J) = QGs_COL(GDOF)
@@ -458,6 +472,71 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
             IS_APP = IS_ABS_POSITIVE(PG1)
             IS_SPC = IS_ABS_POSITIVE(QGs1)
             IS_MPC = IS_ABS_POSITIVE(QGm1)
+            !IS_APP = .TRUE.
+            !IS_SPC = .TRUE.
+            !IS_MPC = .TRUE.
+            WRITE(ERR,*) "start - loads WRITE_OP2",WRITE_OP2
+            write(ERR,*) "  INODE_GPFORCE =", INODE_GPFORCE
+            FLUSH(ERR)
+            
+            IF(ALLOCATE_STUFF .AND. WRITE_OP2) THEN
+                IF(IS_APP) THEN
+                    GPFORCE_NID_EID(INODE_GPFORCE,1) = GRID_NUM
+                    GPFORCE_NID_EID(INODE_GPFORCE,2) = EID
+                    GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,1) = PG1(1)
+                    GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,2) = PG1(2)
+                    GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,3) = PG1(3)
+                    GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,4) = PG1(4)
+                    GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,5) = PG1(5)
+                    GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,6) = PG1(6)
+                    !GPFORCE_ETYPE(INODE_GPFORCE) = 'APPLIED'
+                    INODE_GPFORCE = INODE_GPFORCE + 1
+                ENDIF
+                IF(IS_THERMAL) THEN
+                    GPFORCE_NID_EID(INODE_GPFORCE,1) = GRID_NUM
+                    GPFORCE_NID_EID(INODE_GPFORCE,2) = EID
+                    GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,1) = -PTET(1)
+                    GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,2) = -PTET(2)
+                    GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,3) = -PTET(3)
+                    GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,4) = -PTET(4)
+                    GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,5) = -PTET(5)
+                    GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,6) = -PTET(6)
+                    !GPFORCE_ETYPE(INODE_GPFORCE) = 'THERMAL'
+                    INODE_GPFORCE = INODE_GPFORCE + 1
+                ENDIF
+                IF(IS_SPC) THEN
+                    GPFORCE_NID_EID(INODE_GPFORCE,1) = GRID_NUM
+                    GPFORCE_NID_EID(INODE_GPFORCE,2) = EID
+                    GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,1) = QGs1(1)
+                    GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,2) = QGs1(2)
+                    GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,3) = QGs1(3)
+                    GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,4) = QGs1(4)
+                    GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,5) = QGs1(5)
+                    GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,6) = QGs1(6)
+                    !GPFORCE_ETYPE(INODE_GPFORCE) = 'SPC'
+                    INODE_GPFORCE = INODE_GPFORCE + 1
+                ENDIF
+                IF(IS_MPC) THEN
+                    GPFORCE_NID_EID(INODE_GPFORCE,1) = GRID_NUM
+                    GPFORCE_NID_EID(INODE_GPFORCE,2) = EID
+                    GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,1) = QGm1(1)
+                    GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,2) = QGm1(2)
+                    GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,3) = QGm1(3)
+                    GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,4) = QGm1(4)
+                    GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,5) = QGm1(5)
+                    GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,6) = QGm1(6)
+                    !GPFORCE_ETYPE(INODE_GPFORCE) = 'MPC'
+                    INODE_GPFORCE = INODE_GPFORCE + 1
+                ENDIF
+            ELSE
+                IF(IS_APP) INODE_GPFORCE = INODE_GPFORCE + 1
+                IF(IS_THERMAL) INODE_GPFORCE = INODE_GPFORCE + 1
+                IF(IS_SPC) INODE_GPFORCE = INODE_GPFORCE + 1
+                IF(IS_MPC) INODE_GPFORCE = INODE_GPFORCE + 1
+            ENDIF
+            WRITE(ERR,*) "end - loads WRITE_OP2",WRITE_OP2
+            FLUSH(ERR)
+
             IF (WRITE_F06) THEN
                IF (IS_APP) WRITE(F06,9203) (PG1(J),J=1,6)  ! applied load
                IF (IS_THERMAL) THEN
@@ -466,7 +545,7 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
                IF(IS_SPC) WRITE(F06,9205) (QGs1(J),J=1,6)  ! spc force
                IF(IS_MPC) WRITE(F06,9206) (QGm1(J),J=1,6)  ! mpc force
 
-               IF ((SOL_NAME(1:5) == 'MODES') .OR. (SOL_NAME(1:12) == 'GEN CB MODEL')) THEN
+               IF (IS_MODES) THEN
                   DO J=1,6
                      IF(FG1(J) == ZERO) THEN;  FG1(J) = -ZERO;  ENDIF  ! Avoids writing -0.0 for -FG1(J) below
                   ENDDO
@@ -520,13 +599,28 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
 
                         TOTALS(L) = TOTALS(L) - PEG1(L)
                      ENDDO
-                     WRITE(F06,9209) TYPE, EID, (-PEG1(L),L=1,6)
+                     
+                     WRITE(ERR,*) "INODE_GPFORCE=",INODE_GPFORCE
+                     FLUSH(ERR)
+                     IF(ALLOCATE_STUFF .AND. WRITE_OP2) THEN
+                       GPFORCE_NID_EID(INODE_GPFORCE,1) = GRID_NUM
+                       GPFORCE_NID_EID(INODE_GPFORCE,2) = EID
+                       GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,1) = PEG1(1)
+                       GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,2) = PEG1(2)
+                       GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,3) = PEG1(3)
+                       GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,4) = PEG1(4)
+                       GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,5) = PEG1(5)
+                       GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,6) = PEG1(6)
+                       !GPFORCE_ETYPE(INODE_GPFORCE) = TYPE
+                     ENDIF
+                     INODE_GPFORCE = INODE_GPFORCE + 1
+                     IF(WRITE_F06) WRITE(F06,9209) TYPE, EID, (-PEG1(L),L=1,6)  ! element forces
                      IF (WRITE_ANS) THEN
                         WRITE(ANS,9209) TYPE, EID, (-PEG1(L),L=1,6)
                      ENDIF
                   ENDIF
-               ENDDO 
-            ENDDO 
+               ENDDO
+            ENDDO
 
             WRITE(F06,9210)
             IF ((SOL_NAME(1:5) == 'MODES') .OR. (SOL_NAME(1:12) == 'GEN CB MODEL')) THEN
@@ -547,6 +641,7 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
                   ENDIF
                ENDDO
             ENDIF
+
             IF (WRITE_ANS) THEN
                WRITE(ANS,9210)
                IF ((SOL_NAME(1:5) == 'MODES') .OR. (SOL_NAME(1:12) == 'GEN CB MODEL')) THEN
@@ -561,6 +656,8 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
             ENDIF
 
          ENDIF
+         FLUSH(F06)
+         FLUSH(ERR)
 
          ! For each of the 6 components (J=1,6 for components T1, T2, T3, R1, R2, R3),
          ! calc % of grid force imbalance as a % of the largest
@@ -580,29 +677,33 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
       CALL CALCULATE_GPFB_IMBALANCE(CHAR_PCT, MAX_ABS, MAX_ABS_PCT, MAX_ABS_GRID, MAX_ABS_ALL_GRDS)
 
       !----------------
+      WRITE(ERR,*) "  GPFORCE DEALLOCATE: NROWS", NROWS
+      FLUSH(ERR)
       ! DEALLOCATE: GPFORCE_NID_EID, GPFORCE_ETYPE, GPFORCE_FXYZ_MXYZ
       !ref mystran SUB DEALLOCATE_DOF_TABLES
       !KTSTACK(5500,3)
 
-      IF (ALLOCATED(GPFORCE_NID_EID)) THEN
-         DEALLOCATE (GPFORCE_NID_EID,STAT=IERR)
-         IF (IERR /= 0) THEN
-             WRITE(6,*) 'MB_DEALLOCATED err'
-         ENDIF
-      ENDIF
-
-     IF (ALLOCATED(GPFORCE_ETYPE)) THEN
-         DEALLOCATE (GPFORCE_ETYPE,STAT=IERR)
-         IF (IERR /= 0) THEN
-             WRITE(6,*) 'MB_DEALLOCATED err'
-         ENDIF
-     ENDIF
-
-     IF (ALLOCATED(GPFORCE_FXYZ_MXYZ)) THEN
-         DEALLOCATE (GPFORCE_FXYZ_MXYZ,STAT=IERR)
-         IF (IERR /= 0) THEN
-             WRITE(6,*) 'MB_DEALLOCATED err'
-         ENDIF
+      IF(ALLOCATE_STUFF) THEN
+        IF (ALLOCATED(GPFORCE_NID_EID)) THEN
+           DEALLOCATE (GPFORCE_NID_EID,STAT=IERR)
+           IF (IERR /= 0) THEN
+               WRITE(6,*) 'MB_DEALLOCATED err'
+           ENDIF
+        ENDIF
+       
+       !IF (ALLOCATED(GPFORCE_ETYPE)) THEN
+       !    DEALLOCATE (GPFORCE_ETYPE,STAT=IERR)
+       !    IF (IERR /= 0) THEN
+       !        WRITE(6,*) 'MB_DEALLOCATED err'
+       !    ENDIF
+       !ENDIF
+       
+       IF (ALLOCATED(GPFORCE_FXYZ_MXYZ)) THEN
+           DEALLOCATE (GPFORCE_FXYZ_MXYZ,STAT=IERR)
+           IF (IERR /= 0) THEN
+               WRITE(6,*) 'MB_DEALLOCATED err'
+           ENDIF
+       ENDIF
      ENDIF
 
 ! **********************************************************************************************************************************
