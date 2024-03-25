@@ -131,11 +131,10 @@
       IS_MODES = ((SOL_NAME(1:5) == 'MODES') .OR. (SOL_NAME(1:12) == 'GEN CB MODEL'))
       WRITE_OP2 = .TRUE.
       WRITE_F06 = .TRUE.
-      INODE_GPFORCE = 0
-      NNODE_GPFORCE = 0
+      INODE_GPFORCE = 1
 
-      WRITE(ERR,*) "Running GPFORCE"
-      FLUSH(ERR)
+      !WRITE(ERR,*) "Running GPFORCE"
+      !FLUSH(ERR)
 
       ! Initialize
       DO I=1,6
@@ -293,9 +292,10 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
       !WRITE(OP2) (GRID(I,1)*10+DEVICE_CODE, I=1,NGRID)
 
 !xx   WRITE(SC1, * )             ! Advance 1 line for screen messages
+      NNODE_GPFORCE = NGRID
       DO I=1,NGRID
-         WRITE(ERR,*) "  GPFORCE I=",I
-         FLUSH(ERR)
+         !WRITE(ERR,*) "  GPFORCE I=",I
+         !FLUSH(ERR)
          IB = IAND(GROUT(I,INT_SC_NUM),IBIT(GROUT_GPFO_BIT))
          GRID_NUM  = GRID(I,1)
          CALL GET_GRID_NUM_COMPS ( GRID_NUM, NUM_COMPS, SUBR_NAME )
@@ -327,9 +327,8 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
             !ENDIF
          ENDIF
       ENDDO
-      WRITE(ERR,*) "NNODE_GPFORCE",NNODE_GPFORCE
-      FLUSH(ERR)
-      !NNODE_GPFORCE = 10
+      !WRITE(ERR,*) "NNODE_GPFORCE",NNODE_GPFORCE
+      !FLUSH(ERR)
       !------------------------------------------------------------------------
       ! ALLOCATE: GPFORCE_NID_EID, GPFORCE_ETYPE, GPFORCE_FXYZ_MXYZ
       !ref mystran SUB ALLOCATE_DOF_TABLES
@@ -337,47 +336,47 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
       !KTSTACK(5500,3)
       !
       IF(ALLOCATE_STUFF) THEN
-      NROWS = NNODE_GPFORCE
-      NCOLS = 2
-      ALLOCATE (GPFORCE_NID_EID(NROWS,2),STAT=IERR)
-      !MB_ALLOCATED = REAL(LONG)*REAL(LGRID)*REAL(NCOLS)/ONEPP6
-      IF (IERR == 0) THEN
-          DO I=1,NROWS
-              DO J=1,NCOLS
-                  GPFORCE_NID_EID(I,J) = 0
-              ENDDO
-          ENDDO
-      ELSE
-          WRITE(6,*) 'MB_ALLOCATED err'
-      ENDIF
-
-      !----------------
-      IF (ALLOCATED(GPFORCE_ETYPE)) THEN
-          WRITE(6,*) 'ALLOCATED!'
-      ELSE
-          ALLOCATE (GPFORCE_ETYPE(NROWS),STAT=IERR)
+          NROWS = NNODE_GPFORCE
+          NCOLS = 2
+          ALLOCATE (GPFORCE_NID_EID(NROWS,2),STAT=IERR)
           !MB_ALLOCATED = REAL(LONG)*REAL(LGRID)*REAL(NCOLS)/ONEPP6
           IF (IERR == 0) THEN
               DO I=1,NROWS
-                  GPFORCE_ETYPE(I) = "NA"
+                  DO J=1,NCOLS
+                      GPFORCE_NID_EID(I,J) = 0
+                  ENDDO
               ENDDO
           ELSE
               WRITE(6,*) 'MB_ALLOCATED err'
           ENDIF
-      ENDIF
-      !----------------
-      NCOLS = 6
-      ALLOCATE (GPFORCE_FXYZ_MXYZ(NROWS,NCOLS),STAT=IERR)
-      !MB_ALLOCATED = REAL(LONG)*REAL(LGRID)*REAL(NCOLS)/ONEPP6
-      IF (IERR == 0) THEN
-          DO I=1,NROWS
-              DO J=1,NCOLS
-                  GPFORCE_FXYZ_MXYZ(I,J) = 0
+    
+          !----------------
+          IF (ALLOCATED(GPFORCE_ETYPE)) THEN
+              WRITE(6,*) 'ALLOCATED!'
+          ELSE
+              ALLOCATE (GPFORCE_ETYPE(NROWS),STAT=IERR)
+              !MB_ALLOCATED = REAL(LONG)*REAL(LGRID)*REAL(NCOLS)/ONEPP6
+              IF (IERR == 0) THEN
+                  DO I=1,NROWS
+                      GPFORCE_ETYPE(I) = "NA"
+                  ENDDO
+              ELSE
+                  WRITE(6,*) 'MB_ALLOCATED err'
+              ENDIF
+          ENDIF
+          !----------------
+          NCOLS = 6
+          ALLOCATE (GPFORCE_FXYZ_MXYZ(NROWS,NCOLS),STAT=IERR)
+          !MB_ALLOCATED = REAL(LONG)*REAL(LGRID)*REAL(NCOLS)/ONEPP6
+          IF (IERR == 0) THEN
+              DO I=1,NROWS
+                  DO J=1,NCOLS
+                      GPFORCE_FXYZ_MXYZ(I,J) = 0
+                  ENDDO
               ENDDO
-          ENDDO
-      ELSE
-          WRITE(6,*) 'MB_ALLOCATED err'
-      ENDIF
+          ELSE
+              WRITE(6,*) 'MB_ALLOCATED err'
+          ENDIF
 
       ENDIF  ! allocate_stuff
       !------------------------------------------------------------------------
@@ -468,21 +467,24 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
             !IS_APP = .TRUE.
             !IS_SPC = .TRUE.
             !IS_MPC = .TRUE.
-            WRITE(ERR,*) "start - loads WRITE_OP2",WRITE_OP2
-            write(ERR,*) "  INODE_GPFORCE =", INODE_GPFORCE
-            FLUSH(ERR)
+            !WRITE(ERR,*) "start - loads WRITE_OP2",WRITE_OP2
+            !write(ERR,*) "  INODE_GPFORCE =", INODE_GPFORCE
+            !write(ERR,*) "  IS_APP =", IS_APP
+            !write(ERR,*) "  IS_SPC =", IS_SPC
+            !write(ERR,*) "  IS_MPC =", IS_MPC
+            !FLUSH(ERR)
 
             IF(ALLOCATE_STUFF .AND. WRITE_OP2) THEN
                 IF(IS_APP) THEN
                     GPFORCE_NID_EID(INODE_GPFORCE,1) = GRID_NUM
-                    GPFORCE_NID_EID(INODE_GPFORCE,2) = EID
+                    GPFORCE_NID_EID(INODE_GPFORCE,2) = 0
                     GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,1) = PG1(1)
                     GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,2) = PG1(2)
                     GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,3) = PG1(3)
                     GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,4) = PG1(4)
                     GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,5) = PG1(5)
                     GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,6) = PG1(6)
-                    GPFORCE_ETYPE(INODE_GPFORCE) = 'APPLIED'
+                    GPFORCE_ETYPE(INODE_GPFORCE) = 'APP-LOAD'
                     INODE_GPFORCE = INODE_GPFORCE + 1
                 ENDIF
                 IF(IS_THERMAL) THEN
@@ -506,7 +508,7 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
                     GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,4) = QGs1(4)
                     GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,5) = QGs1(5)
                     GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,6) = QGs1(6)
-                    GPFORCE_ETYPE(INODE_GPFORCE) = 'SPC'
+                    GPFORCE_ETYPE(INODE_GPFORCE) = 'F-OF-SPC'
                     INODE_GPFORCE = INODE_GPFORCE + 1
                 ENDIF
                 IF(IS_MPC) THEN
@@ -518,7 +520,7 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
                     GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,4) = QGm1(4)
                     GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,5) = QGm1(5)
                     GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,6) = QGm1(6)
-                    GPFORCE_ETYPE(INODE_GPFORCE) = 'MPC'
+                    GPFORCE_ETYPE(INODE_GPFORCE) = 'F-OF-MPC'
                     INODE_GPFORCE = INODE_GPFORCE + 1
                 ENDIF
             ELSE
@@ -527,8 +529,8 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
                 IF(IS_SPC) INODE_GPFORCE = INODE_GPFORCE + 1
                 IF(IS_MPC) INODE_GPFORCE = INODE_GPFORCE + 1
             ENDIF
-            WRITE(ERR,*) "end - loads WRITE_OP2",WRITE_OP2
-            FLUSH(ERR)
+            !WRITE(ERR,*) "end - loads WRITE_OP2",WRITE_OP2
+            !FLUSH(ERR)
 
             IF (WRITE_F06) THEN
                IF (IS_APP) WRITE(F06,9203) (PG1(J),J=1,6)  ! applied load
@@ -593,8 +595,8 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
                         TOTALS(L) = TOTALS(L) - PEG1(L)
                      ENDDO
 
-                     WRITE(ERR,*) "INODE_GPFORCE=",INODE_GPFORCE
-                     FLUSH(ERR)
+                     !WRITE(ERR,*) "INODE_GPFORCE=",INODE_GPFORCE
+                     !FLUSH(ERR)
                      IF(ALLOCATE_STUFF .AND. WRITE_OP2) THEN
                        GPFORCE_NID_EID(INODE_GPFORCE,1) = GRID_NUM
                        GPFORCE_NID_EID(INODE_GPFORCE,2) = EID
@@ -614,6 +616,19 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
                   ENDIF
                ENDDO
             ENDDO
+
+           IF(ALLOCATE_STUFF .AND. WRITE_OP2) THEN
+             GPFORCE_NID_EID(INODE_GPFORCE,1) = GRID_NUM
+             GPFORCE_NID_EID(INODE_GPFORCE,2) = 0
+             GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,1) = TOTALS(1)
+             GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,2) = TOTALS(2)
+             GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,3) = TOTALS(3)
+             GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,4) = TOTALS(4)
+             GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,5) = TOTALS(5)
+             GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,6) = TOTALS(6)
+             GPFORCE_ETYPE(INODE_GPFORCE) = "*TOTALS*"
+           ENDIF
+           INODE_GPFORCE = INODE_GPFORCE + 1
 
             WRITE(F06,9210)
             IF ((SOL_NAME(1:5) == 'MODES') .OR. (SOL_NAME(1:12) == 'GEN CB MODEL')) THEN
@@ -647,10 +662,9 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
                   WRITE(ANS,9211) (TOTALS(J),J=1,6)  ! KEEP THIS
                ENDIF
             ENDIF
-
          ENDIF
-         FLUSH(F06)
-         FLUSH(ERR)
+         !FLUSH(F06)
+         !FLUSH(ERR)
 
          ! For each of the 6 components (J=1,6 for components T1, T2, T3, R1, R2, R3),
          ! calc % of grid force imbalance as a % of the largest
@@ -670,47 +684,87 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
       CALL CALCULATE_GPFB_IMBALANCE(CHAR_PCT, MAX_ABS, MAX_ABS_PCT, MAX_ABS_GRID, MAX_ABS_ALL_GRDS)
 
       !----------------
-      WRITE(ERR,*) "  GPFORCE DEALLOCATE: NROWS", NROWS
-      WRITE(ERR,*) "  ALLOCATE_STUFF=", ALLOCATE_STUFF
-      WRITE(ERR,*) "  IERR=", IERR
-      FLUSH(ERR)
+      !WRITE(ERR,*) "  GPFORCE DEALLOCATE: NROWS", NROWS
+      !WRITE(ERR,*) "  ALLOCATE_STUFF=", ALLOCATE_STUFF
+      !WRITE(ERR,*) "  IERR=", IERR
+      !WRITE(ERR,*) "  INODE_GPFORCE=", INODE_GPFORCE
+      !WRITE(ERR,*) "  NNODE_GPFORCE=", NNODE_GPFORCE
+      !FLUSH(ERR)
       ! DEALLOCATE: GPFORCE_NID_EID, GPFORCE_ETYPE, GPFORCE_FXYZ_MXYZ
       !ref mystran SUB DEALLOCATE_DOF_TABLES
       !KTSTACK(5500,3)
 
       IF(ALLOCATE_STUFF) THEN
-        WRITE(ERR,*) 'GPFORCE_NID_EID is allocated'
-        WRITE(ERR,*) 'GPFORCE_NID_EID(1,:)=',GPFORCE_NID_EID(1,1),GPFORCE_NID_EID(1,2),GPFORCE_ETYPE(1)
-        FLUSH(ERR)
-        !DEALLOCATE(GPFORCE_NID_EID)
-        DEALLOCATE(GPFORCE_NID_EID,STAT=IERR)
-        WRITE(ERR,*) 'deallocated?'
-        FLUSH(ERR)
-        IF (IERR /= 0) THEN
-            WRITE(ERR,*) 'DEALLOCATED err'
-            FLUSH(ERR)
-        ENDIF
-        WRITE(ERR,*) "  DEALLOCATED: GPFORCE_NID_EID"
-        FLUSH(ERR)
+          IF (.TRUE.) THEN
+              !(nid_device, eid, elem_name, f1, f2, f3, m1, m2, m3) = out
+              !nid = nid_device // 10
+              DO I=1,INODE_GPFORCE-1
+                  WRITE(F06,*) GPFORCE_NID_EID(I,1)*10+DEVICE_CODE, &
+                          GPFORCE_NID_EID(I,2), &
+                          GPFORCE_ETYPE(I), &
+                          GPFORCE_FXYZ_MXYZ(I,1), &
+                          GPFORCE_FXYZ_MXYZ(I,2), &
+                          GPFORCE_FXYZ_MXYZ(I,3), &
+                          GPFORCE_FXYZ_MXYZ(I,4), &
+                          GPFORCE_FXYZ_MXYZ(I,5), &
+                          GPFORCE_FXYZ_MXYZ(I,6)
+                  WRITE(ERR,*) GPFORCE_NID_EID(I,1)*10+DEVICE_CODE, &
+                          GPFORCE_NID_EID(I,2), &
+                          GPFORCE_ETYPE(I), &
+                          GPFORCE_FXYZ_MXYZ(I,1), &
+                          GPFORCE_FXYZ_MXYZ(I,2), &
+                          GPFORCE_FXYZ_MXYZ(I,3), &
+                          GPFORCE_FXYZ_MXYZ(I,4), &
+                          GPFORCE_FXYZ_MXYZ(I,5), &
+                          GPFORCE_FXYZ_MXYZ(I,6)
+              ENDDO
+              FLUSH(F06)
+              FLUSH(ERR)
+              !WRITE(OP2) (GPFORCE_NID_EID(I,1)*10+DEVICE_CODE, GPFORCE_NID_EID(I,2), &
+              !            GPFORCE_ETYPE(I), &
+              !            REAL(GPFORCE_FXYZ_MXYZ(I,1), 4), &
+              !            REAL(GPFORCE_FXYZ_MXYZ(I,2), 4), &
+              !            REAL(GPFORCE_FXYZ_MXYZ(I,3), 4), &
+              !            REAL(GPFORCE_FXYZ_MXYZ(I,4), 4), &
+              !            REAL(GPFORCE_FXYZ_MXYZ(I,5), 4), &
+              !            REAL(GPFORCE_FXYZ_MXYZ(I,6), 4), &
+              !            I=1,INODE_GPFORCE)
+          ENDIF
+ 
+          !WRITE(ERR,*) 'GPFORCE_NID_EID is allocated'
+          !WRITE(ERR,*) 'GPFORCE_NID_EID(1,:)=',GPFORCE_NID_EID(1,1),GPFORCE_NID_EID(1,2),GPFORCE_ETYPE(1)
+          !WRITE(ERR,*) 'GPFORCE_FXYZ(1,:)=',GPFORCE_FXYZ_MXYZ(1,1),GPFORCE_FXYZ_MXYZ(1,2),GPFORCE_FXYZ_MXYZ(1,3)
+          !WRITE(ERR,*) 'GPFORCE_MXYZ(1,:)=',GPFORCE_FXYZ_MXYZ(1,4),GPFORCE_FXYZ_MXYZ(1,5),GPFORCE_FXYZ_MXYZ(1,6)
+          !FLUSH(ERR)
+          DEALLOCATE(GPFORCE_NID_EID,STAT=IERR)
+          !WRITE(ERR,*) 'deallocated?'
+          !FLUSH(ERR)
+          IF (IERR /= 0) THEN
+              WRITE(ERR,*) 'GPFORCE-1 DEALLOCATED err'
+              !FLUSH(ERR)
+          ENDIF
+          !WRITE(ERR,*) "  DEALLOCATED: GPFORCE_NID_EID"
+          !FLUSH(ERR)
 
-       IF (ALLOCATED(GPFORCE_ETYPE)) THEN
-           DEALLOCATE (GPFORCE_ETYPE,STAT=IERR)
-           IF (IERR /= 0) THEN
-               WRITE(ERR,*) 'DEALLOCATED err'
-               FLUSH(ERR)
+          ! QUAD4, TRIA3, BAR
+          IF (ALLOCATED(GPFORCE_ETYPE)) THEN
+               DEALLOCATE (GPFORCE_ETYPE,STAT=IERR)
+               IF (IERR /= 0) THEN
+                   WRITE(ERR,*) 'GPFORCE-2 DEALLOCATED err'
+                   !FLUSH(ERR)
+               ENDIF
            ENDIF
-       ENDIF
-       WRITE(ERR,*) "  DEALLOCATED: GPFORCE_ETYPE"
-       FLUSH(ERR)
+           !WRITE(ERR,*) "  DEALLOCATED: GPFORCE_ETYPE"
+           !FLUSH(ERR)
 
-       DEALLOCATE (GPFORCE_FXYZ_MXYZ,STAT=IERR)
-       IF (IERR /= 0) THEN
-           WRITE(ERR,*) 'DEALLOCATED err'
+           DEALLOCATE (GPFORCE_FXYZ_MXYZ,STAT=IERR)
+           IF (IERR /= 0) THEN
+               WRITE(ERR,*) 'GPFORCE-3 DEALLOCATED err'
+               !FLUSH(ERR)
+           ENDIF
+           !WRITE(ERR,*) "  DEALLOCATED: GPFORCE_FXYZ_MXYZ"
            FLUSH(ERR)
-       ENDIF
-       WRITE(ERR,*) "  DEALLOCATED: GPFORCE_FXYZ_MXYZ"
-       FLUSH(ERR)
-     ENDIF
+      ENDIF
 
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
