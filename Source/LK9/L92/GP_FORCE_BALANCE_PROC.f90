@@ -98,8 +98,8 @@
       integer(long)                   :: max_abs_grid(6)    ! Grid where max-abs for GP force balance totals exists
       real(double)                    :: max_abs_all_grds(6)! The 6 max-abs from GP force balance totals
 
-      INTEGER(LONG)                   :: DEVICE_CODE        ! 
-      INTEGER(LONG)                   :: ANALYSIS_CODE      !      
+      INTEGER(LONG)                   :: DEVICE_CODE        !
+      INTEGER(LONG)                   :: ANALYSIS_CODE      !
       INTEGER(LONG)                   :: NROWS, NCOLS, NNODE_GPFORCE, INODE_GPFORCE, IERR  ! GPFORCE table helper
 
       LOGICAL                         :: WRITE_F06, WRITE_OP2, WRITE_ANS, IS_GPFORCE_SUMMARY_INFO  ! flags
@@ -122,7 +122,7 @@
       ! Print some summary info for max abs value of GP force balance for each solution vector
       IS_GPFORCE_SUMMARY_INFO = (DEBUG(192) > 0)
 
-      ! Write problem answers (displs, etc) to filename.ANS as well as to filename.F06 
+      ! Write problem answers (displs, etc) to filename.ANS as well as to filename.F06
       ! (where filename is the name of the DAT data file submitted to MYSTRAN).
       ! This feature is generally only useful to the author when performing checkout of test problem answers
       WRITE_ANS = (DEBUG(200) > 0)
@@ -133,7 +133,7 @@
       WRITE_F06 = .TRUE.
       INODE_GPFORCE = 0
       NNODE_GPFORCE = 0
-      
+
       WRITE(ERR,*) "Running GPFORCE"
       FLUSH(ERR)
 
@@ -150,7 +150,7 @@
          QGR1(I)        = ZERO
          QGS1(I)        = ZERO
          TOTALS(I)      = ZERO
-      ENDDO     
+      ENDDO
 
       CALL CHK_COL_ARRAYS_ZEROS
 
@@ -205,7 +205,7 @@
          ENDIF
 
          WRITE(F06,*)
- 
+
          ! write f06 header
          IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
             WRITE(F06,8999)
@@ -224,7 +224,7 @@
 
             ELSE IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN   ! Write info on what CB DOF the output is for
 
-               IF ((JVEC <= NDOFR) .OR. (JVEC >= NDOFR+NVEC)) THEN 
+               IF ((JVEC <= NDOFR) .OR. (JVEC >= NDOFR+NVEC)) THEN
                   IF (JVEC <= NDOFR) THEN
                      BNDY_DOF_NUM = JVEC
                   ELSE
@@ -252,8 +252,8 @@
 
          ENDIF
       ENDIF
- 
-      ! Process grid point force balance output requests. 
+
+      ! Process grid point force balance output requests.
       DO I=1,6
          FG1(I)     = ZERO
          PG1(I)     = ZERO
@@ -262,7 +262,7 @@
          QGm1(I)    = ZERO
          PEG1(I)    = ZERO
          MAX_ABS(I) = ZERO
-      ENDDO 
+      ENDDO
 
       IF (IS_GPFORCE_SUMMARY_INFO) THEN                    ! If DEBUG 192 = 1, GPFO summary will be printed out to F06
          DO L=1,6                                          ! (1) Initialize the max valueof the 6 TOTAL components
@@ -299,7 +299,7 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
          IB = IAND(GROUT(I,INT_SC_NUM),IBIT(GROUT_GPFO_BIT))
          GRID_NUM  = GRID(I,1)
          CALL GET_GRID_NUM_COMPS ( GRID_NUM, NUM_COMPS, SUBR_NAME )
- 
+
          IF ((IB > 0) .AND. (NUM_COMPS == 6)) THEN         ! Do not do force balance for SPOINT's
             G_CID = GRID(I,3)
 
@@ -398,7 +398,7 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
                WRITE(ANS,9201) GRID_NUM, G_CID
                WRITE(ANS,9202)
             ENDIF
-            
+
             ! Get element equiv thermal loads so we can sub them from applied loads
             OPT(1) = 'N'  ! OPT(1) is for calc of ME
             OPT(2) = 'Y'  ! OPT(2) is for calc of PTE
@@ -429,7 +429,7 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
                         ENDDO
                         DO L=1,6
                            PTET(L) = PTET(L) + PTE1(L)
-                        ENDDO 
+                        ENDDO
                         INODE_GPFORCE = INODE_GPFORCE + 1
                      ENDIF
                   ENDDO
@@ -452,7 +452,7 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
                IF (NDOFM > 0) THEN
                   QGm1(J) = QGm_COL(GDOF)
                ENDIF
-               
+
                ! PTET = 0 unless INT_SC_NUM is a thermal subcase (see above)
                IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
                   QGr1(J) = QGr_COL(GDOF)
@@ -471,7 +471,7 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
             WRITE(ERR,*) "start - loads WRITE_OP2",WRITE_OP2
             write(ERR,*) "  INODE_GPFORCE =", INODE_GPFORCE
             FLUSH(ERR)
-            
+
             IF(ALLOCATE_STUFF .AND. WRITE_OP2) THEN
                 IF(IS_APP) THEN
                     GPFORCE_NID_EID(INODE_GPFORCE,1) = GRID_NUM
@@ -580,7 +580,7 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
                      CALL EMG ( IELE, OPT, 'N', SUBR_NAME, 'N' )
 
                      CALL ELMDIS                           ! Get local displ, UEL, for this element
-                                                           ! Calc elem loads, PEL. 
+                                                           ! Calc elem loads, PEL.
                      CALL CALC_ELEM_NODE_FORCES            ! JTSUB will only be used if SUBLOD(INT_SC_NUM,2) > 0
                                                            ! Transform elem loads from local to global coords
                      CALL TRANSFORM_NODE_FORCES (COORD_SYS)! Now we have elem node forces in global coords for the elem that has
@@ -592,7 +592,7 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
 
                         TOTALS(L) = TOTALS(L) - PEG1(L)
                      ENDDO
-                     
+
                      WRITE(ERR,*) "INODE_GPFORCE=",INODE_GPFORCE
                      FLUSH(ERR)
                      IF(ALLOCATE_STUFF .AND. WRITE_OP2) THEN
@@ -682,7 +682,8 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
         WRITE(ERR,*) 'GPFORCE_NID_EID is allocated'
         WRITE(ERR,*) 'GPFORCE_NID_EID(1,:)=',GPFORCE_NID_EID(1,1),GPFORCE_NID_EID(1,2),GPFORCE_ETYPE(1)
         FLUSH(ERR)
-        DEALLOCATE (GPFORCE_NID_EID,STAT=IERR)
+        !DEALLOCATE(GPFORCE_NID_EID)
+        DEALLOCATE(GPFORCE_NID_EID,STAT=IERR)
         WRITE(ERR,*) 'deallocated?'
         FLUSH(ERR)
         IF (IERR /= 0) THEN
@@ -691,7 +692,7 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
         ENDIF
         WRITE(ERR,*) "  DEALLOCATED: GPFORCE_NID_EID"
         FLUSH(ERR)
-       
+
        IF (ALLOCATED(GPFORCE_ETYPE)) THEN
            DEALLOCATE (GPFORCE_ETYPE,STAT=IERR)
            IF (IERR /= 0) THEN
@@ -756,7 +757,7 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
  9210 FORMAT(1X,   '                        ------------- ------------- ------------- ------------- ------------- -------------')
 
  9211 FORMAT(1X,   'TOTALS                :',6(1ES14.6),/,                                                                         &
-             1X,   '(should all be 0)',//) 
+             1X,   '(should all be 0)',//)
 
  9310 FORMAT(1X,   'TOTALS                :',6(1ES14.6),13X,/,                                                                     &
              1X,   '(may not be zero since there were OMIT''d DOF''s which can mean that the correct inertia forces at the G-set', &
@@ -767,12 +768,12 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
 12345 FORMAT(5X,'Process grid ',I8,' of ',I8,A)
 
 ! ##################################################################################################################################
- 
+
       CONTAINS
- 
+
 ! ##################################################################################################################################
 
-      SUBROUTINE CHK_COL_ARRAYS_ZEROS 
+      SUBROUTINE CHK_COL_ARRAYS_ZEROS
 
       IMPLICIT NONE
 
@@ -840,10 +841,10 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
       IMPLICIT NONE
       CHARACTER(13*BYTE)              :: CHAR_PCT(6)        ! Character representation of MEFFMASS sum percents of total model mass
       INTEGER(LONG)                   :: I                  ! DO loop index
-                                                            
+
       REAL(DOUBLE), INTENT(IN)        :: MAX_ABS(6)         ! The 6 abs largest values of any force item in the 6 components
       REAL(DOUBLE), INTENT(INOUT)     :: MAX_ABS_PCT(6)     ! Modal mass as % of total mass
-      
+
       !INTRINSIC IAND
       INTEGER(LONG), INTENT(IN)       :: max_abs_grid(6)    ! Grid where max-abs for GP force balance totals exists
       REAL(DOUBLE), INTENT(IN)        :: max_abs_all_grds(6)! The 6 max-abs from GP force balance totals
