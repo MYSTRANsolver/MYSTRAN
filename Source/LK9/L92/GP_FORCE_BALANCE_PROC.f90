@@ -154,15 +154,17 @@
       ! Write output headers.
       ANALYSIS_CODE = -1
       IF (IHDR == 'Y') THEN
-         WRITE(F06,*)
-         WRITE(F06,*)
+         IF (WRITE_F06) THEN
+            WRITE(F06,*)
+            WRITE(F06,*)
+         ENDIF
          IF    (SOL_NAME(1:7) == 'STATICS') THEN
             ANALYSIS_CODE = 1
-            WRITE(F06,9101) SCNUM(JVEC)
+            IF (WRITE_F06)  WRITE(F06,9101) SCNUM(JVEC)
 
          ELSE IF (SOL_NAME(1:5) == 'MODES') THEN
             ANALYSIS_CODE = 2
-            WRITE(F06,9102) JVEC
+            IF (WRITE_F06)  WRITE(F06,9102) JVEC
 
          ELSE IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN  ! Write info on what CB DOF the output is for
 
@@ -175,12 +177,14 @@
                CALL GET_GRID_AND_COMP ( 'R ', BNDY_DOF_NUM, BNDY_GRID, BNDY_COMP  )
             ENDIF
 
-            IF       (JVEC <= NDOFR) THEN
-               WRITE(F06,9103) JVEC, NUM_CB_DOFS, 'acceleration', BNDY_GRID, BNDY_COMP
-            ELSE IF ((JVEC > NDOFR) .AND. (JVEC <= NDOFR+NVEC)) THEN
-               WRITE(F06,9105) JVEC, NUM_CB_DOFS, JVEC-NDOFR
-            ELSE
-               WRITE(F06,9103) JVEC, NUM_CB_DOFS, 'displacement', BNDY_GRID, BNDY_COMP
+            IF (WRITE_F06) THEN
+              IF       (JVEC <= NDOFR) THEN
+                 WRITE(F06,9103) JVEC, NUM_CB_DOFS, 'acceleration', BNDY_GRID, BNDY_COMP
+              ELSE IF ((JVEC > NDOFR) .AND. (JVEC <= NDOFR+NVEC)) THEN
+                 WRITE(F06,9105) JVEC, NUM_CB_DOFS, JVEC-NDOFR
+              ELSE
+                 WRITE(F06,9103) JVEC, NUM_CB_DOFS, 'displacement', BNDY_GRID, BNDY_COMP
+              ENDIF
             ENDIF
 
          ENDIF
@@ -189,25 +193,27 @@
          TITLEI = TITLE(INT_SC_NUM)
          STITLEI = STITLE(INT_SC_NUM)
          LABELI = LABEL(INT_SC_NUM)
-         IF (TITLE(INT_SC_NUM)(1:)  /= ' ') THEN
-            WRITE(F06,9799) TITLE(INT_SC_NUM)
-         ENDIF
-
-         IF (STITLE(INT_SC_NUM)(1:) /= ' ') THEN
-            WRITE(F06,9799) STITLE(INT_SC_NUM)
-         ENDIF
-
-         IF (LABEL(INT_SC_NUM)(1:)  /= ' ') THEN
-            WRITE(F06,9799) LABEL(INT_SC_NUM)
-         ENDIF
-
-         WRITE(F06,*)
-
-         ! write f06 header
-         IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
-            WRITE(F06,8999)
-         ELSE
-            WRITE(F06,9200)
+         IF (WRITE_F06) THEN
+            IF (TITLE(INT_SC_NUM)(1:)  /= ' ') THEN
+               WRITE(F06,9799) TITLE(INT_SC_NUM)
+            ENDIF
+        
+            IF (STITLE(INT_SC_NUM)(1:) /= ' ') THEN
+               WRITE(F06,9799) STITLE(INT_SC_NUM)
+            ENDIF
+        
+            IF (LABEL(INT_SC_NUM)(1:)  /= ' ') THEN
+               WRITE(F06,9799) LABEL(INT_SC_NUM)
+            ENDIF
+        
+            WRITE(F06,*)
+        
+            ! write f06 header
+            IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
+               WRITE(F06,8999)
+            ELSE
+               WRITE(F06,9200)
+            ENDIF
          ENDIF
 
          IF (WRITE_ANS) THEN
@@ -389,8 +395,10 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
 
          IF ((IB > 0) .AND. (NUM_COMPS == 6)) THEN         ! Do not do force balance for SPOINT's
             G_CID = GRID(I,3)
-            WRITE(F06,9201) GRID_NUM, G_CID
-            WRITE(F06,9202)
+            IF (WRITE_F06) THEN
+               WRITE(F06,9201) GRID_NUM, G_CID
+               WRITE(F06,9202)
+            ENDIF
             IF (WRITE_ANS) THEN
                WRITE(ANS,9201) GRID_NUM, G_CID
                WRITE(ANS,9202)
@@ -607,7 +615,7 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
                        GPFORCE_ETYPE(INODE_GPFORCE) = TYPE
                      ENDIF
                      INODE_GPFORCE = INODE_GPFORCE + 1
-                     IF(WRITE_F06) WRITE(F06,9209) TYPE, EID, (-PEG1(L),L=1,6)  ! element forces
+                     IF (WRITE_F06) WRITE(F06,9209) TYPE, EID, (-PEG1(L),L=1,6)  ! element forces
                      IF (WRITE_ANS) THEN
                         WRITE(ANS,9209) TYPE, EID, (-PEG1(L),L=1,6)
                      ENDIF
@@ -628,7 +636,7 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
             ENDIF
             INODE_GPFORCE = INODE_GPFORCE + 1
 
-            IF(WRITE_F06)
+            IF (WRITE_F06) THEN
               WRITE(F06,9210)
               IF ((SOL_NAME(1:5) == 'MODES') .OR. (SOL_NAME(1:12) == 'GEN CB MODEL')) THEN
                  IF (NDOFO == 0) THEN
@@ -662,6 +670,7 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
                   WRITE(ANS,9211) (TOTALS(J),J=1,6)  ! KEEP THIS
                ENDIF
             ENDIF
+
          ENDIF
          !FLUSH(F06)
          !FLUSH(ERR)
