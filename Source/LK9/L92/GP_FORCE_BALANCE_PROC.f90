@@ -227,6 +227,11 @@
          ENDIF
 
          ISUBCASE = SCNUM(ISUBCASE_INDEX)
+         !WRITE(ERR,*) "JVEC=",JVEC
+         !WRITE(ERR,*) "ISUBCASE_INDEX=",ISUBCASE_INDEX
+         !WRITE(ERR,*) "SCNUM(1)=",SCNUM(1)
+         !WRITE(ERR,*) "ISUBCASE=",ISUBCASE
+         !FLUSH(ERR)
 
          ! -- F06 header for TITLE, SUBTITLE, LABEL (but only to F06)
          TITLEI = TITLE(INT_SC_NUM)
@@ -767,10 +772,10 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
           !            GPFORCE_FXYZ_MXYZ(I,6)
           !ENDDO
 
-          ITABLE = -3
-          CALL OUTPUT2_WRITE_OGF(ISUBCASE, ITABLE, INODE_GPFORCE-1, &
+          WRITE(ERR,*) "OP2-ISUBCASE=",ISUBCASE
+          CALL OUTPUT2_WRITE_OGF(ISUBCASE, INODE_GPFORCE-1, &
                                  TITLEI, SUBTITLEI, LABELI, &
-                                 FIELD5_INT_MODE, FIELD6_EIGENVALUE)
+                                 ANALYSIS_CODE, FIELD5_INT_MODE, FIELD6_EIGENVALUE)
           WRITE(OP2) (GPFORCE_NID_EID(I,1)*10+DEVICE_CODE, GPFORCE_NID_EID(I,2), &
                       GPFORCE_ETYPE(I), &
                       REAL(GPFORCE_FXYZ_MXYZ(I,1), 4), &
@@ -780,6 +785,8 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
                       REAL(GPFORCE_FXYZ_MXYZ(I,5), 4), &
                       REAL(GPFORCE_FXYZ_MXYZ(I,6), 4), &
                       I=1,INODE_GPFORCE-1)
+
+          ITABLE = -5
           CALL END_OP2_TABLE(ITABLE)   ! close the previous
           WRITE(OP2) 0
 
@@ -999,28 +1006,25 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
       END SUBROUTINE CALCULATE_GPFB_IMBALANCE
 !===================================================================================================================================
 
-      SUBROUTINE OUTPUT2_WRITE_OGF(ISUBCASE, ITABLE, NUM, TITLE, SUBTITLE, LABEL, &
-                                   FIELD5_INT_MODE, FIELD6_EIGENVALUE)
+      SUBROUTINE OUTPUT2_WRITE_OGF(ISUBCASE, NUM, TITLE, SUBTITLE, LABEL, &
+                                   ANALYSIS_CODE, FIELD5_INT_MODE, FIELD6_EIGENVALUE)
 !     writes the CROD/CTUBE/CONROD stress/strain results.
 !     Data is first written to character variables and then that character variable is output the F06 and ANS.
 !     
 !     Parameters
 !     ==========
-!     ELEM_TYPE : int
-!       flag for the element type
-!       - 1 : CROD
-!       - 3 : CTUBE
-!       - 10 : CONROD
+!
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
       USE IOUNT1, ONLY                :  OP2, ERR
       USE, INTRINSIC :: IEEE_ARITHMETIC, ONLY: IEEE_Value, IEEE_QUIET_NAN
       USE, INTRINSIC :: ISO_FORTRAN_ENV, ONLY: REAL32
-      INTEGER(LONG) :: ANALYSIS_CODE        ! static, time, frequency, modal, etc. flag
-      INTEGER(LONG), INTENT(IN) :: ISUBCASE  ! subcase id
+
+      INTEGER(LONG), INTENT(IN)      :: ISUBCASE           ! subcase id
+      INTEGER(LONG), INTENT(IN)      :: NUM                ! the number of "nodes" that will be printed
       CHARACTER(LEN=128), INTENT(IN) :: TITLE              ! the model TITLE
       CHARACTER(LEN=128), INTENT(IN) :: SUBTITLE           ! the subcase SUBTITLE
       CHARACTER(LEN=128), INTENT(IN) :: LABEL              ! the subcase LABEL
-      INTEGER(LONG), INTENT(IN) :: NUM                     ! the number of "nodes" that will be printed
+      INTEGER(LONG), INTENT(IN) :: ANALYSIS_CODE           ! static, time, frequency, modal, etc. flag
       INTEGER(LONG), INTENT(IN) :: FIELD5_INT_MODE
       REAL(DOUBLE),  INTENT(IN) :: FIELD6_EIGENVALUE
 
@@ -1033,7 +1037,6 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
       REAL(REAL32)  :: NAN
       LOGICAL       :: IS_PRINT     ! is this a PRINT result -> F06
 
-      NAN = IEEE_VALUE(NAN, IEEE_QUIET_NAN)
       ! TODO: assuming PLOT
       DEVICE_CODE = 1
 
@@ -1049,6 +1052,8 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
       CALL WRITE_TABLE_HEADER(TABLE_NAME)
       ITABLE = -3
 
+      !WRITE(ERR,*) "OUTPUT2_WRITE_OGF: ISUBCASE=",ISUBCASE
+      !WRITE(ERR,*) "OUTPUT2_WRITE_OGF: ANALYSIS_CODE=",ANALYSIS_CODE
       CALL WRITE_OGF3(ITABLE, ISUBCASE, ANALYSIS_CODE, DEVICE_CODE, NUM_WIDE, &
                       TITLE, SUBTITLE, LABEL,                                          &
                       FIELD5_INT_MODE, FIELD6_EIGENVALUE)
@@ -1059,15 +1064,15 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
  100  FORMAT("*DEBUG:    ITABLE=",I8, "; NUM=",I8,"; NVALUES=",I8,"; NTOTAL=",I8)
       NVALUES = NUM * NUM_WIDE
       NTOTAL = NVALUES * 4
-      WRITE(ERR,100) ITABLE,NUM,NVALUES,NTOTAL
+      !WRITE(ERR,100) ITABLE,NUM,NVALUES,NTOTAL
       WRITE(OP2) NVALUES
 
  102  FORMAT("*DEBUG: OUTPUT2_WRITE_OGF      ITABLE=",I8," (should be -5, -7,...)")
-      WRITE(ERR,102) ITABLE
+      !WRITE(ERR,102) ITABLE
 
       END SUBROUTINE OUTPUT2_WRITE_OGF
 !==================================================================================================
-      SUBROUTINE WRITE_OGF3(ITABLE, ANALYSIS_CODE, ISUBCASE, DEVICE_CODE, NUM_WIDE, &
+      SUBROUTINE WRITE_OGF3(ITABLE, ISUBCASE, ANALYSIS_CODE, DEVICE_CODE, NUM_WIDE, &
                             TITLE, LABEL, SUBTITLE, &
                             FIELD5_INT_MODE, FIELD6_EIGENVALUE)
 !      Parameters
@@ -1109,7 +1114,7 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
 
       CALL WRITE_ITABLE(ITABLE)  ! write the -3, -5, ... subtable header
  1    FORMAT("WRITE_OGF3: ITABLE_START=",I8)
-      WRITE(ERR,1) ITABLE
+      !WRITE(ERR,1) ITABLE
 
       IF ((ANALYSIS_CODE == 1) .OR. (ANALYSIS_CODE == 10)) THEN
          ! statics
@@ -1136,7 +1141,7 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
       APPROACH_CODE = ANALYSIS_CODE * 10 + DEVICE_CODE
 2     FORMAT(" APPROACH_CODE=",I4," TABLE_CODE=",I4," ISUBCASE=",I4)
       ! 584 bytes
-      !WRITE(ERR,2) APPROACH_CODE, TABLE_CODE, ELEM_TYPE, ISUBCASE
+      !WRITE(ERR,2) APPROACH_CODE, TABLE_CODE, ISUBCASE
       WRITE(OP2) APPROACH_CODE, TABLE_CODE, 0, ISUBCASE, FIELD5_INT_MODE, &
             REAL(FIELD6_EIGENVALUE, 4), REAL(FIELD7, 4),                          &
             LOAD_SET, FORMAT_CODE, NUM_WIDE, &
@@ -1149,7 +1154,7 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
 
       ITABLE = ITABLE - 1        ! flip it to -4, -6, ... so we don't have to do this later
  3    FORMAT("WRITE_OGF3: ITABLE_END=",I8)
-      WRITE(ERR,3) ITABLE
+      !WRITE(ERR,3) ITABLE
       CALL WRITE_ITABLE(ITABLE)
       ITABLE = ITABLE - 1
       END SUBROUTINE WRITE_OGF3
