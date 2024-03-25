@@ -271,7 +271,12 @@
                CALL OUTA_HERE ( 'Y' )
             ENDIF
 
-            CALL FILE_CLOSE ( L1H, LINK1H, L1HSTAT, 'Y' )
+            IF ((SOL_NAME(1:8) == 'BUCKLING') .AND. (LOAD_ISTEP == 1)) THEN
+               ! ensure L1H survives for the second round
+               CALL FILE_CLOSE ( L1H, LINK1H, 'KEEP', 'Y' )
+            ELSE
+               CALL FILE_CLOSE ( L1H, LINK1H, L1HSTAT, 'Y' )
+            END IF
 
          ENDIF
 
