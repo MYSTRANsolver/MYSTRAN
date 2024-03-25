@@ -44,6 +44,7 @@
       USE LINK9_STUFF, ONLY           :  GID_OUT_ARRAY
       USE COL_VECS, ONLY              :  FG_COL, PG_COL, QGm_COL, QGs_COL, QGr_COL, UG_COL
       USE PARAMS, ONLY                :  EPSIL, NOCOUNTS
+      USE CC_OUTPUT_DESCRIBERS, ONLY  :  GPFO_OUT
 
       USE GP_FORCE_BALANCE_PROC_USE_IFs
 
@@ -127,8 +128,16 @@
 
       IS_THERMAL = (SUBLOD(INT_SC_NUM,2) > 0)
       IS_MODES = ((SOL_NAME(1:5) == 'MODES') .OR. (SOL_NAME(1:12) == 'GEN CB MODEL'))
-      WRITE_OP2 = .TRUE.
-      WRITE_F06 = .TRUE.
+
+      WRITE_F06 = (GPFO_OUT(1:1) == 'Y')
+      WRITE_OP2 = (GPFO_OUT(2:2) == 'Y')
+      
+      !WRITE(ERR,*) 'GPFORCE WRITE_F06',WRITE_F06
+      !WRITE(ERR,*) 'GPFORCE WRITE_OP2',WRITE_OP2
+      !FLUSH(ERR)
+      !WRITE_PCH = (ACCE_OUT(3:3) == 'Y')
+      !WRITE_OP2 = .TRUE.
+      !WRITE_F06 = .TRUE.
       INODE_GPFORCE = 1
 
       !WRITE(ERR,*) "Running GPFORCE"
@@ -911,7 +920,7 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
       INTEGER(LONG), INTENT(IN)       :: max_abs_grid(6)    ! Grid where max-abs for GP force balance totals exists
       REAL(DOUBLE), INTENT(IN)        :: max_abs_all_grds(6)! The 6 max-abs from GP force balance totals
 
-      IF (IS_GPFORCE_SUMMARY_INFO) THEN
+      IF (IS_GPFORCE_SUMMARY_INFO .AND. (WRITE_F06 .OR. WRITE_ANS)) THEN
          DO I=1,6
             IF (MAX_ABS(I) > ZERO) THEN
                MAX_ABS_PCT(I) = ONE_HUNDRED*MAX_ABS_ALL_GRDS(I)/MAX_ABS(I)
@@ -920,14 +929,16 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
                CHAR_PCT(I)(1:) = ' '
             ENDIF
          ENDDO
-         WRITE(F06,9214)
-         WRITE(F06,9202)
-         WRITE(F06,9215) (MAX_ABS_ALL_GRDS(I),I=1,6)
-         IF (DEBUG(192) > 1) THEN
-            WRITE(F06,9216) (MAX_ABS(I),I=1,6)
-            WRITE(F06,9217) (CHAR_PCT(I),I=1,6)
+         IF (WRITE_F06) THEN
+            WRITE(F06,9214)
+            WRITE(F06,9202)
+            WRITE(F06,9215) (MAX_ABS_ALL_GRDS(I),I=1,6)
+            IF (DEBUG(192) > 1) THEN
+               WRITE(F06,9216) (MAX_ABS(I),I=1,6)
+               WRITE(F06,9217) (CHAR_PCT(I),I=1,6)
+            ENDIF
+            WRITE(F06,9218) (MAX_ABS_GRID(I),I=1,6)
          ENDIF
-         WRITE(F06,9218) (MAX_ABS_GRID(I),I=1,6)
          IF (WRITE_ANS) THEN
             WRITE(ANS,9214)
             WRITE(ANS,9202)
