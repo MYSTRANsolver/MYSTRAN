@@ -88,6 +88,11 @@
       REAL(DOUBLE)                    :: KFF_DIAG(NDOFF)       ! Diagonal terms from KFF
       REAL(DOUBLE)                    :: KFF_MAX_DIAG          ! Max diag term from KFF
 
+
+      ! ensure output units are set
+      OUNT(1) = ERR
+      OUNT(2) = F06
+
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
          CALL OURTIM
