@@ -103,7 +103,7 @@
       INTEGER(LONG)                   :: NROWS, NCOLS, NNODE_GPFORCE, INODE_GPFORCE, IERR  ! GPFORCE table helper
 
       LOGICAL                         :: WRITE_F06, WRITE_OP2, WRITE_ANS, IS_GPFORCE_SUMMARY_INFO  ! flags
-      LOGICAL                         :: IS_MODES, IS_THERMAL, IS_APP, IS_SPC, IS_MPC, ALLOCATE_STUFF
+      LOGICAL                         :: IS_MODES, IS_THERMAL, IS_APP, IS_SPC, IS_MPC
 
       INTEGER, ALLOCATABLE            :: GPFORCE_NID_EID(:,:)    ! currently unused
       CHARACTER*8, ALLOCATABLE        :: GPFORCE_ETYPE(:)        ! currently unused
@@ -117,8 +117,6 @@
       ENDIF
 
 ! **********************************************************************************************************************************
-      ALLOCATE_STUFF = .TRUE.
-
       ! Print some summary info for max abs value of GP force balance for each solution vector
       IS_GPFORCE_SUMMARY_INFO = (DEBUG(192) > 0)
 
@@ -335,7 +333,7 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
       !
       !KTSTACK(5500,3)
       !
-      IF(ALLOCATE_STUFF) THEN
+      IF(WRITE_OP2) THEN
           NROWS = NNODE_GPFORCE
           NCOLS = 2
           ALLOCATE (GPFORCE_NID_EID(NROWS,2),STAT=IERR)
@@ -378,7 +376,7 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
               WRITE(6,*) 'MB_ALLOCATED err'
           ENDIF
 
-      ENDIF  ! allocate_stuff
+      ENDIF  ! write_op2 allocation
       !------------------------------------------------------------------------
 
       DO I=1,NGRID
@@ -474,7 +472,7 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
             !write(ERR,*) "  IS_MPC =", IS_MPC
             !FLUSH(ERR)
 
-            IF(ALLOCATE_STUFF .AND. WRITE_OP2) THEN
+            IF(WRITE_OP2) THEN
                 IF(IS_APP) THEN
                     GPFORCE_NID_EID(INODE_GPFORCE,1) = GRID_NUM
                     GPFORCE_NID_EID(INODE_GPFORCE,2) = 0
@@ -597,7 +595,7 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
 
                      !WRITE(ERR,*) "INODE_GPFORCE=",INODE_GPFORCE
                      !FLUSH(ERR)
-                     IF(ALLOCATE_STUFF .AND. WRITE_OP2) THEN
+                     IF(WRITE_OP2) THEN
                        GPFORCE_NID_EID(INODE_GPFORCE,1) = GRID_NUM
                        GPFORCE_NID_EID(INODE_GPFORCE,2) = EID
                        GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,1) = PEG1(1)
@@ -617,28 +615,30 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
                ENDDO
             ENDDO
 
-           IF(ALLOCATE_STUFF .AND. WRITE_OP2) THEN
-             GPFORCE_NID_EID(INODE_GPFORCE,1) = GRID_NUM
-             GPFORCE_NID_EID(INODE_GPFORCE,2) = 0
-             GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,1) = TOTALS(1)
-             GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,2) = TOTALS(2)
-             GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,3) = TOTALS(3)
-             GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,4) = TOTALS(4)
-             GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,5) = TOTALS(5)
-             GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,6) = TOTALS(6)
-             GPFORCE_ETYPE(INODE_GPFORCE) = "*TOTALS*"
-           ENDIF
-           INODE_GPFORCE = INODE_GPFORCE + 1
+            IF(WRITE_OP2) THEN
+              GPFORCE_NID_EID(INODE_GPFORCE,1) = GRID_NUM
+              GPFORCE_NID_EID(INODE_GPFORCE,2) = 0
+              GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,1) = TOTALS(1)
+              GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,2) = TOTALS(2)
+              GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,3) = TOTALS(3)
+              GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,4) = TOTALS(4)
+              GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,5) = TOTALS(5)
+              GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,6) = TOTALS(6)
+              GPFORCE_ETYPE(INODE_GPFORCE) = "*TOTALS*"
+            ENDIF
+            INODE_GPFORCE = INODE_GPFORCE + 1
 
-            WRITE(F06,9210)
-            IF ((SOL_NAME(1:5) == 'MODES') .OR. (SOL_NAME(1:12) == 'GEN CB MODEL')) THEN
-               IF (NDOFO == 0) THEN
-                  WRITE(F06,9211) (TOTALS(J),J=1,6)
-               ELSE
-                  WRITE(F06,9310) (TOTALS(J),J=1,6), ACHAR(Udd)
-               ENDIF
-            ELSE
-               WRITE(F06,9211) (TOTALS(J),J=1,6)     ! KEEP THIS
+            IF(WRITE_F06)
+              WRITE(F06,9210)
+              IF ((SOL_NAME(1:5) == 'MODES') .OR. (SOL_NAME(1:12) == 'GEN CB MODEL')) THEN
+                 IF (NDOFO == 0) THEN
+                    WRITE(F06,9211) (TOTALS(J),J=1,6)
+                 ELSE
+                    WRITE(F06,9310) (TOTALS(J),J=1,6), ACHAR(Udd)
+                 ENDIF
+              ELSE
+                 WRITE(F06,9211) (TOTALS(J),J=1,6)     ! KEEP THIS
+              ENDIF
             ENDIF
 
             IF (IS_GPFORCE_SUMMARY_INFO) THEN
@@ -685,7 +685,6 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
 
       !----------------
       !WRITE(ERR,*) "  GPFORCE DEALLOCATE: NROWS", NROWS
-      !WRITE(ERR,*) "  ALLOCATE_STUFF=", ALLOCATE_STUFF
       !WRITE(ERR,*) "  IERR=", IERR
       !WRITE(ERR,*) "  INODE_GPFORCE=", INODE_GPFORCE
       !WRITE(ERR,*) "  NNODE_GPFORCE=", NNODE_GPFORCE
@@ -694,7 +693,7 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
       !ref mystran SUB DEALLOCATE_DOF_TABLES
       !KTSTACK(5500,3)
 
-      IF(ALLOCATE_STUFF) THEN
+      IF(WRITE_OP2) THEN
           IF (.TRUE.) THEN
               !(nid_device, eid, elem_name, f1, f2, f3, m1, m2, m3) = out
               !nid = nid_device // 10
