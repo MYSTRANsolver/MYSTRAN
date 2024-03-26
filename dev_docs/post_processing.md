@@ -5,10 +5,10 @@ There are a few main ways to export data (to verify):
 
 | Location |  Case Control Command  |  Notes       |
 | -------- |  --------------------  |  -----       |
-| F06/ans  |  DISP=ALL              | Defaults to PRINT |
+| F06/ans  |  DISP=ALL              | Defaults to PRINT         |
 | F06/ans  |  DISP(PRINT)=ALL       | Writes to the F06 file (and ANS if DEBUG,200)  |
-| OP2      |  DISP(PLOT)=ALL        | Writes to the OP2 file |
-| PUNCH    |  DISP(PUNCH)=ALL       | Writes to the PCH file |
+| OP2      |  DISP(PLOT)=ALL        | Writes to the OP2 file    |
+| PUNCH    |  DISP(PUNCH)=ALL       | Writes to the PCH file    |
 | CSV      |  DISP(CSV)=ALL         | TODO: Write to a CSV file |
 | NEU      |  DISP(NEU)=ALL         | TODO: Writes to a NEU file (currently generated with PARAM,POST,-1) |
 
@@ -93,7 +93,7 @@ Static Post-Processing Support
 | CBUSH               |  Yes |  Yes |  Yes |  ??? |  No  |        |
 | CBAR                |  Yes |  Yes |  Yes |  ??? |  No  | large difference between output structure of Nastran & Mystran  |
 | CSHEAR              |  Yes |  Yes |  No  |  ??? |  No  |        |
-| CTRIA3              |  Yes |  Yes |  Yes |  ??? |  No  |        |
+| CTRIA3 Iso          |  Yes |  Yes |  Yes |  ??? |  No  |        |
 | TRIA3K/QUAD4K       |  Yes |  Yes |  No  |  ??? |  No  |        |
 | CQUAD4 Iso-Center   |  Yes |  Yes |  Yes |  ??? |  No  |        |
 | CQUAD4 Iso-Corner   |  No  |  No  |  No  |  ??? |  No  |        |
@@ -103,14 +103,14 @@ Static Post-Processing Support
 
 | Stress Result       | F06  | ANS  | OP2  | PCH  | CSV  | Notes        |
 | -------------       | ---  | ---  | ---  | ---  | ---  | -----        |
-| CELASx              | ???  | ???  | ???  | ???  | No	  |              |
+| CELASx              | ???  | ???  | ???  | ???  | No	 |              |
 | CROD                | Yes  | ???  | Yes  | ???  | No   | no axial/torsion margin   |
-| CBUSH               | ???  | ???  | ???  | ???  | No	  |              |
-| CBAR                | Yes  | Yes  | Yes  | ???  | No	  | large difference between output structure of Nastran & Mystran |
-| CSHEAR              | ???  | ???  | Yes  | ???  | No	  |              |
-| CTRIA3 Iso          | ???  | ???  | ???  | ???  | No   | OP2 plane1/2 results faked; no FIBER/CURV support (FIBER only); no MAXS/MISES support (MISES only)             |
-| CQUAD4 Iso-Center   | ???  | ???  | ???  | ???  | No   | OP2 plane1/2 results faked; no FIBER/CURV support (FIBER only); no MAXS/MISES support (MISES only)             |
-| CQUAD4 Iso-Corner   | ???  | ???  | ???  | ???  | No	  |              |
+| CBUSH               | ???  | ???  | ???  | ???  | No	 |              |
+| CBAR                | Yes  | Yes  | Yes  | ???  | No	 | large difference between output structure of Nastran & Mystran |
+| CSHEAR              | ???  | ???  | Yes  | ???  | No	 |              |
+| CTRIA3 Iso          | Yes  | Yes  | Yes  | ???  | No   | OP2 plane1/2 results faked; no FIBER/CURV support (FIBER only); no MAXS/MISES support (MISES only)             |
+| CQUAD4 Iso-Center   | Yes  | Yes  | Yes  | ???  | No   | OP2 plane1/2 results faked; no FIBER/CURV support (FIBER only); no MAXS/MISES support (MISES only)             |
+| CQUAD4 Iso-Corner   | ???  | ???  | ???  | ???  | No	 |              |
 | CTRIA3 Comp         | ???  | ???  | ???  | ???  | No   | no FIBER/CURV support (FIBER only); no MAXS/MISES support (MISES only)             |
 | CQUAD4 Comp         | ???  | ???  | ???  | ???  | No   | no FIBER/CURV support (FIBER only); no MAXS/MISES support (MISES only)             |
 | Solid               | Yes  | ???  | Yes  | ???  | No   | Center support only (no corner); No directional vectors; No coordinate system support; no transform support         |
@@ -121,10 +121,10 @@ Static Post-Processing Support
 | CELASx               | ???  | ???  | ???  | ??? | No  |       |
 | CROD                 | Yes  | ???  | Yes  | ??? | No  | no axial/torsion margin |
 | CBUSH                | ???  | ???  | ???  | ??? | No  |       |
-| CBAR                 | No   | No   | ???  | ??? | No  |       |
-| CBEAM                | No   | No   | No   | No  | No  | results not calculated  |
-| CTRIA3 Iso           | ???  | ???  | ???  | ??? | No  | OP2 plane1/2 results faked; no FIBER/CURV support (FIBER only); no MAXS/MISES support (MISES only)
-| CQUAD4 Iso-Center    | ???  | ???  | Yes  | ??? | No  | OP2 plane1/2 results faked; no FIBER/CURV support (FIBER only); no MAXS/MISES support (MISES only)
+| CBAR                 | No   | No   | No   | ??? | No  | [results not calculated](https://github.com/MYSTRANsolver/MYSTRAN/issues/46)  |
+| CBEAM                | No   | No   | No   | No  | No  | card not supported      |
+| CTRIA3 Iso           | Yes  | Yes  | ???  | ??? | No  | OP2 plane1/2 results faked; no FIBER/CURV support (FIBER only); no MAXS/MISES support (MISES only)
+| CQUAD4 Iso-Center    | Yes  | Yes  | Yes  | ??? | No  | OP2 plane1/2 results faked; no FIBER/CURV support (FIBER only); no MAXS/MISES support (MISES only)
 | CQUAD4 Iso-Corner    | ???  | ???  | Yes  | ??? | No  | OP2 plane1/2 results faked; no FIBER/CURV support (FIBER only); no MAXS/MISES support (MISES only)
 | CTRIA3 Comp          | ???  | ???  | Yes  | ??? | No  | no FIBER/CURV support (FIBER only); no MAXS/MISES support (MISES only)
 | CQUAD4 Comp          | ???  | ???  | Yes  | ??? | No  | no FIBER/CURV support (FIBER only); no MAXS/MISES support (MISES only)
