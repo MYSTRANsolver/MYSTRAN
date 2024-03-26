@@ -788,7 +788,6 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
 
           ITABLE = -5
           CALL END_OP2_TABLE(ITABLE)   ! close the previous
-          WRITE(OP2) 0
 
           !---------------------
           ! deallocate the arrays
