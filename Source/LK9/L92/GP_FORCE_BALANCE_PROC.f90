@@ -395,12 +395,12 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
                   ENDDO
               ENDDO
           ELSE
-              WRITE(6,*) 'MB_ALLOCATED err'
+              WRITE(ERR,*) 'GPFORCE_NID_EID ALLOCATED error'
           ENDIF
     
           !----------------
           IF (ALLOCATED(GPFORCE_ETYPE)) THEN
-              WRITE(6,*) 'ALLOCATED!'
+              WRITE(ERR,*) 'ALLOCATED!'
           ELSE
               ALLOCATE (GPFORCE_ETYPE(NROWS),STAT=IERR)
               !MB_ALLOCATED = REAL(LONG)*REAL(LGRID)*REAL(NCOLS)/ONEPP6
@@ -409,7 +409,7 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
                       GPFORCE_ETYPE(I) = "NA"
                   ENDDO
               ELSE
-                  WRITE(6,*) 'MB_ALLOCATED err'
+                  WRITE(ERR,*) 'GPFORCE_ETYPE ALLOCATED error'
               ENDIF
           ENDIF
           !----------------
@@ -423,7 +423,7 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
                   ENDDO
               ENDDO
           ELSE
-              WRITE(6,*) 'MB_ALLOCATED err'
+              WRITE(6,*) 'GPFORCE_FXYZ_MXYZ ALLOCATED error'
           ENDIF
 
       ENDIF  ! write_op2 allocation
@@ -772,11 +772,12 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
           !            GPFORCE_FXYZ_MXYZ(I,6)
           !ENDDO
 
-          WRITE(ERR,*) "OP2-ISUBCASE=",ISUBCASE
+          !WRITE(ERR,*) "OP2-ISUBCASE=",ISUBCASE
           CALL OUTPUT2_WRITE_OGF(ISUBCASE, INODE_GPFORCE-1, &
                                  TITLEI, SUBTITLEI, LABELI, &
                                  ANALYSIS_CODE, FIELD5_INT_MODE, FIELD6_EIGENVALUE)
-          WRITE(OP2) (GPFORCE_NID_EID(I,1)*10+DEVICE_CODE, GPFORCE_NID_EID(I,2), &
+          WRITE(OP2) (GPFORCE_NID_EID(I,1)*10+DEVICE_CODE, &
+                      GPFORCE_NID_EID(I,2), &
                       GPFORCE_ETYPE(I), &
                       REAL(GPFORCE_FXYZ_MXYZ(I,1), 4), &
                       REAL(GPFORCE_FXYZ_MXYZ(I,2), 4), &
@@ -798,21 +799,19 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
           !FLUSH(ERR)
           DEALLOCATE(GPFORCE_NID_EID,STAT=IERR)
           IF (IERR /= 0) THEN
-              WRITE(ERR,*) 'GPFORCE-1 DEALLOCATED err'
+              WRITE(ERR,*) 'GPFORCE_NID_EID DEALLOCATE error'
           ENDIF
 
           ! QUAD4, TRIA3, BAR
-          IF (ALLOCATED(GPFORCE_ETYPE)) THEN
-               DEALLOCATE (GPFORCE_ETYPE,STAT=IERR)
-               IF (IERR /= 0) THEN
-                   WRITE(ERR,*) 'GPFORCE-2 DEALLOCATED err'
-               ENDIF
-           ENDIF
+          DEALLOCATE (GPFORCE_ETYPE,STAT=IERR)
+          IF (IERR /= 0) THEN
+              WRITE(ERR,*) 'GPFORCE_ETYPE DEALLOCATE error'
+          ENDIF
 
-           DEALLOCATE (GPFORCE_FXYZ_MXYZ,STAT=IERR)
-           IF (IERR /= 0) THEN
-               WRITE(ERR,*) 'GPFORCE-3 DEALLOCATED err'
-           ENDIF
+          DEALLOCATE (GPFORCE_FXYZ_MXYZ,STAT=IERR)
+          IF (IERR /= 0) THEN
+              WRITE(ERR,*) 'GPFORCE_FXYZ_MXYZ DEALLOCATE error'
+          ENDIF
       ENDIF
       FLUSH(OP2)
       FLUSH(F06)
@@ -919,7 +918,8 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
 
       !------------------------------------------------------
       LOGICAL FUNCTION IS_ABS_POSITIVE(ARRAY)
-      ! IS_ABS_POSITIVE has an implicit return that has the same name as the function
+      ! IS_ABS_POSITIVE has an implicit return that has the same name 
+      ! as the function
 
       USE PENTIUM_II_KIND, ONLY       :  LONG, DOUBLE
       IMPLICIT NONE
@@ -930,7 +930,6 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
       DO I=1,6
           IF (ABS(ARRAY(I)) > 0.0) THEN
               IS_ABS_POSITIVE = .TRUE.
-              !RETURN IS_ABS
           ENDIF
       ENDDO
       END FUNCTION IS_ABS_POSITIVE
@@ -1007,7 +1006,7 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
 
       SUBROUTINE OUTPUT2_WRITE_OGF(ISUBCASE, NUM, TITLE, SUBTITLE, LABEL, &
                                    ANALYSIS_CODE, FIELD5_INT_MODE, FIELD6_EIGENVALUE)
-!     writes the CROD/CTUBE/CONROD stress/strain results.
+!     writes the grid point force results header.
 !     Data is first written to character variables and then that character variable is output the F06 and ANS.
 !     
 !     Parameters
@@ -1047,7 +1046,6 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
 
       ! dunno???
       TABLE_NAME = 'OGPFB1  '
-      !TABLE_NUM = 19
       CALL WRITE_TABLE_HEADER(TABLE_NAME)
       ITABLE = -3
 
@@ -1060,13 +1058,13 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
       !NWORDS = NUM * NUM_WIDE
       !NTOTAL = NBYTES_PER_WORD * NWORDS
 
- 100  FORMAT("*DEBUG:    ITABLE=",I8, "; NUM=",I8,"; NVALUES=",I8,"; NTOTAL=",I8)
+! 100  FORMAT("*DEBUG:    ITABLE=",I8, "; NUM=",I8,"; NVALUES=",I8,"; NTOTAL=",I8)
       NVALUES = NUM * NUM_WIDE
       NTOTAL = NVALUES * 4
       !WRITE(ERR,100) ITABLE,NUM,NVALUES,NTOTAL
       WRITE(OP2) NVALUES
 
- 102  FORMAT("*DEBUG: OUTPUT2_WRITE_OGF      ITABLE=",I8," (should be -5, -7,...)")
+! 102  FORMAT("*DEBUG: OUTPUT2_WRITE_OGF      ITABLE=",I8," (should be -5, -7,...)")
       !WRITE(ERR,102) ITABLE
 
       END SUBROUTINE OUTPUT2_WRITE_OGF
@@ -1112,7 +1110,7 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
       LABEL2 = LABEL(1:100)
 
       CALL WRITE_ITABLE(ITABLE)  ! write the -3, -5, ... subtable header
- 1    FORMAT("WRITE_OGF3: ITABLE_START=",I8)
+! 1    FORMAT("WRITE_OGF3: ITABLE_START=",I8)
       !WRITE(ERR,1) ITABLE
 
       IF ((ANALYSIS_CODE == 1) .OR. (ANALYSIS_CODE == 10)) THEN
@@ -1138,7 +1136,7 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
       THERMAL = 0
 
       APPROACH_CODE = ANALYSIS_CODE * 10 + DEVICE_CODE
-2     FORMAT(" APPROACH_CODE=",I4," TABLE_CODE=",I4," ISUBCASE=",I4)
+!2     FORMAT(" APPROACH_CODE=",I4," TABLE_CODE=",I4," ISUBCASE=",I4)
       ! 584 bytes
       !WRITE(ERR,2) APPROACH_CODE, TABLE_CODE, ISUBCASE
       WRITE(OP2) APPROACH_CODE, TABLE_CODE, 0, ISUBCASE, FIELD5_INT_MODE, &
@@ -1152,7 +1150,7 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
             TITLE2, SUBTITLE2, LABEL2
 
       ITABLE = ITABLE - 1        ! flip it to -4, -6, ... so we don't have to do this later
- 3    FORMAT("WRITE_OGF3: ITABLE_END=",I8)
+! 3    FORMAT("WRITE_OGF3: ITABLE_END=",I8)
       !WRITE(ERR,3) ITABLE
       CALL WRITE_ITABLE(ITABLE)
       ITABLE = ITABLE - 1
