@@ -29,7 +29,7 @@ OP2 PLOT Support
 | STRAIN   |         |
 | FORCE    |         |
 | ESE      | N/A     |
-| GPFORCE  | N/A     |
+| GPFORCE  |         |
 
 Using Sets with Output Requests
 ===============================
@@ -77,16 +77,14 @@ PARAM,OGEOM,YES
 Static Post-Processing Support
 ==============================
 
-see https://github.com/dr-bill-c/MYSTRAN/pull/24#event-5702809912
-
 | Result              |  F06  |  ANS  | OP2  | PCH  | CSV |  Notes |
 | ------              |  ---  |  ---  | ---  | ---  | --- |  ----- |
-| Displacement        |  Yes  |  ???  | Yes  | ???  | No  |        |
-| SPC Force           |  Yes  |  ???  | Yes  | ???  | No  |        |
+| Displacement        |  Yes  |  Yes  | Yes  | ???  | No  |        |
+| SPC Force           |  Yes  |  Yes  | Yes  | ???  | No  |        |
 | MPC Force           |  Yes  |  ???  | Yes  | ???  | No  |        |
-| Applied Load Vector |  Yes  |  ???  | Yes  | ???  | No  |        |
-| Grid Point Weight   |  Yes  |  ???  | Yes  | ???  | No  | See Grid Point Weight note |
-| Grid Point Force    |  Yes  |  ???  | No   | ???  | No  | F06 writing is coupled with data structure and limits OP2 integration; should be refactored |
+| Applied Load Vector |  Yes  |  Yes  | Yes  | ???  | No  |        |
+| Grid Point Weight   |  Yes  |  No   | Yes  | ???  | No  | See Grid Point Weight note |
+| Grid Point Force    |  Yes  |  Yes  | Yes  | No   | No  |       |
 
 | Force Result        |  F06 |  ANS |  OP2 |  PCH |  CSV |  Notes |
 | ------------        |  --- |  --- |  --- |  --- |  --- |  ----- |
@@ -101,21 +99,21 @@ see https://github.com/dr-bill-c/MYSTRAN/pull/24#event-5702809912
 | CQUAD4 Iso-Corner   |  No  |  No  |  No  |  ??? |  No  |        |
 | CTRIA3 Comp         |  ??? |  ??? |  No  |  ??? |  No  |        |
 | CQUAD4 Comp         |  ??? |  ??? |  No  |  ??? |  No  |        |
-| Solid               |  N/A |  N/A |  N/A |  N/A |  N/A |  No outputs available; expected | 
+| Solid               |  N/A |  N/A |  N/A |  N/A |  N/A | No outputs available; expected | 
 
 | Stress Result       | F06  | ANS  | OP2  | PCH  | CSV  | Notes        |
 | -------------       | ---  | ---  | ---  | ---  | ---  | -----        |
 | CELASx              | ???  | ???  | ???  | ???  | No	  |              |
 | CROD                | Yes  | ???  | Yes  | ???  | No   | no axial/torsion margin   |
 | CBUSH               | ???  | ???  | ???  | ???  | No	  |              |
-| CBAR                | ???  | ???  | ???  | ???  | No	  | large difference between output structure of Nastran & Mystran |
+| CBAR                | Yes  | Yes  | Yes  | ???  | No	  | large difference between output structure of Nastran & Mystran |
 | CSHEAR              | ???  | ???  | Yes  | ???  | No	  |              |
 | CTRIA3 Iso          | ???  | ???  | ???  | ???  | No   | OP2 plane1/2 results faked; no FIBER/CURV support (FIBER only); no MAXS/MISES support (MISES only)             |
 | CQUAD4 Iso-Center   | ???  | ???  | ???  | ???  | No   | OP2 plane1/2 results faked; no FIBER/CURV support (FIBER only); no MAXS/MISES support (MISES only)             |
 | CQUAD4 Iso-Corner   | ???  | ???  | ???  | ???  | No	  |              |
 | CTRIA3 Comp         | ???  | ???  | ???  | ???  | No   | no FIBER/CURV support (FIBER only); no MAXS/MISES support (MISES only)             |
 | CQUAD4 Comp         | ???  | ???  | ???  | ???  | No   | no FIBER/CURV support (FIBER only); no MAXS/MISES support (MISES only)             |
-| Solid               | Yes  | ???  | Yes  | ???  | No   | No directional vectors; No coordinate system support; no transform support         |
+| Solid               | Yes  | ???  | Yes  | ???  | No   | Center support only (no corner); No directional vectors; No coordinate system support; no transform support         |
 
 
 | Strain Result        | F06  | ANS  | OP2  | PCH | CSV | Notes |
@@ -123,27 +121,27 @@ see https://github.com/dr-bill-c/MYSTRAN/pull/24#event-5702809912
 | CELASx               | ???  | ???  | ???  | ??? | No  |       |
 | CROD                 | Yes  | ???  | Yes  | ??? | No  | no axial/torsion margin |
 | CBUSH                | ???  | ???  | ???  | ??? | No  |       |
-| CBAR                 | ???  | ???  | ???  | ??? | No  |       |
-| CBEAM                | ???  | ???  | ???  | ??? | No  | results not calculated  |
+| CBAR                 | No   | No   | ???  | ??? | No  |       |
+| CBEAM                | No   | No   | No   | No  | No  | results not calculated  |
 | CTRIA3 Iso           | ???  | ???  | ???  | ??? | No  | OP2 plane1/2 results faked; no FIBER/CURV support (FIBER only); no MAXS/MISES support (MISES only)
 | CQUAD4 Iso-Center    | ???  | ???  | Yes  | ??? | No  | OP2 plane1/2 results faked; no FIBER/CURV support (FIBER only); no MAXS/MISES support (MISES only)
 | CQUAD4 Iso-Corner    | ???  | ???  | Yes  | ??? | No  | OP2 plane1/2 results faked; no FIBER/CURV support (FIBER only); no MAXS/MISES support (MISES only)
 | CTRIA3 Comp          | ???  | ???  | Yes  | ??? | No  | no FIBER/CURV support (FIBER only); no MAXS/MISES support (MISES only)
 | CQUAD4 Comp          | ???  | ???  | Yes  | ??? | No  | no FIBER/CURV support (FIBER only); no MAXS/MISES support (MISES only)
-| Solid                | Yes  | ???  | Yes  | ??? | No  | No directional vectors; No coordinate system support; no transform support
+| Solid                | Yes  | ???  | Yes  | ??? | No  | Center support only (no corner); No directional vectors; No coordinate system support; no transform support
 
 | Strain Energy Result | F06  | ANS  | OP2  | PCH  | CSV  | Notes |
 | -------------------- | ---  | ---  | ---  | ---  | ---  | ----- |
-| CELASx               | ???  | ???  | No   | ???  | No   |       |
-| CROD                 | ???  | ???  | No   | ???  | No   |       |
-| CBUSH                | ???  | ???  | No   | ???  | No   |       |
-| CBAR                 | ???  | ???  | No   | ???  | No   |       |
-| CTRIA3 Iso           | ???  | ???  | No   | ???  | No   |       |
-| CQUAD4 Iso-Center    | ???  | ???  | No   | ???  | No   |       |
-| CQUAD4 Iso-Corner    | ???  | ???  | No   | ???  | No   |       |
-| CTRIA3 Comp          | ???  | ???  | No   | ???  | No   |       |
-| CQUAD4 Comp          | ???  | ???  | No   | ???  | No   |       |
-| Solid                | ???  | ???  | No   | ???  | No   |       |
+| CELASx               | No   | No   | No   | No   | No   |       |
+| CROD                 | No   | No   | No   | No   | No   |       |
+| CBUSH                | No   | No   | No   | No   | No   |       |
+| CBAR                 | No   | No   | No   | No   | No   |       |
+| CTRIA3 Iso           | No   | No   | No   | No   | No   |       |
+| CQUAD4 Iso-Center    | No   | No   | No   | No   | No   |       |
+| CQUAD4 Iso-Corner    | No   | No   | No   | No   | No   |       |
+| CTRIA3 Comp          | No   | No   | No   | No   | No   |       |
+| CQUAD4 Comp          | No   | No   | No   | No   | No   |       |
+| Solid                | No   | No   | No   | No   | No   |       |
 
 
 Eigen Post-Processing Support
@@ -151,9 +149,9 @@ Eigen Post-Processing Support
 
 | Result               | F06 | ANS  | OP2  | PCH  | CSV  | Notes |
 | ------               | --- | ---  | ---  | ---  | ---  | ----- |
-| Grid Point Weight    | Yes | ???  | Yes  | ???  | No   |       |
+| Grid Point Weight    | Yes | No   | Yes  | No   | No   |       |
 | Eigenvector          | Yes | ???  | Yes  | ???  | No   |       |
-| Eigenvalue           | Yes | ???  | No   | ???  | No   |       |
+| Eigenvalue           | Yes | ???  | Yes  | ???  | No   |       |
 | MEFFMASS             | ??? | ???  | No   | ???  | No   |       |
 
 Notes
@@ -183,6 +181,7 @@ OP2 Limitations
 
 PCH Limitations
 ---------------
+1. No GPFORCE support
 
 OP2 specific notes
 ------------------
