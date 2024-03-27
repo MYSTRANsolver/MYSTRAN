@@ -60,6 +60,7 @@
       INTEGER(LONG)                    :: I,J               ! DO loop indices
       INTEGER(LONG)                    :: JCOL              ! Designator of a column in an array
       INTEGER(LONG), PARAMETER         :: SUBR_BEGEND = CHK_CC_CMD_DESCRIBERS_BEGEND
+      LOGICAL                          :: IS_PLOT, IS_PRINT, IS_PUNCH
  
 ! *********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
@@ -69,21 +70,33 @@
       ENDIF
 
 ! **********************************************************************************************************************************
-      IF      (WHAT == 'ACCE') THEN   ;   OUTPUT_TYPE( 1) = 'ACCE'   ;   JCOL =  1  ;
-      ELSE IF (WHAT == 'DISP') THEN   ;   OUTPUT_TYPE( 2) = 'DISP'   ;   JCOL =  2  ;
-      ELSE IF (WHAT == 'ELFO') THEN   ;   OUTPUT_TYPE( 3) = 'ELFO'   ;   JCOL =  3  ;
-      ELSE IF (WHAT == 'GPFO') THEN   ;   OUTPUT_TYPE( 4) = 'GPFO'   ;   JCOL =  4  ;
-      ELSE IF (WHAT == 'MPCF') THEN   ;   OUTPUT_TYPE( 5) = 'MPCF'   ;   JCOL =  5  ;
-      ELSE IF (WHAT == 'OLOA') THEN   ;   OUTPUT_TYPE( 6) = 'OLOA'   ;   JCOL =  6  ;
-      ELSE IF (WHAT == 'SPCF') THEN   ;   OUTPUT_TYPE( 7) = 'SPCF'   ;   JCOL =  7  ;
-      ELSE IF (WHAT == 'STRE') THEN   ;   OUTPUT_TYPE( 8) = 'STRE'   ;   JCOL =  8  ;
-      ELSE IF (WHAT == 'STRN') THEN   ;   OUTPUT_TYPE( 9) = 'STRN'   ;   JCOL =  9  ;
+      IF      (WHAT == 'ACCE') THEN;   OUTPUT_TYPE( 1) = 'ACCE';   JCOL =  1;
+      ELSE IF (WHAT == 'DISP') THEN;   OUTPUT_TYPE( 2) = 'DISP';   JCOL =  2;
+      ELSE IF (WHAT == 'ELFO') THEN;   OUTPUT_TYPE( 3) = 'ELFO';   JCOL =  3;
+      ELSE IF (WHAT == 'GPFO') THEN;   OUTPUT_TYPE( 4) = 'GPFO';   JCOL =  4;
+      ELSE IF (WHAT == 'MPCF') THEN;   OUTPUT_TYPE( 5) = 'MPCF';   JCOL =  5;
+      ELSE IF (WHAT == 'OLOA') THEN;   OUTPUT_TYPE( 6) = 'OLOA';   JCOL =  6;
+      ELSE IF (WHAT == 'SPCF') THEN;   OUTPUT_TYPE( 7) = 'SPCF';   JCOL =  7;
+      ELSE IF (WHAT == 'STRE') THEN;   OUTPUT_TYPE( 8) = 'STRE';   JCOL =  8;
+      ELSE IF (WHAT == 'STRN') THEN;   OUTPUT_TYPE( 9) = 'STRN';   JCOL =  9;
       ELSE
          FATAL_ERR = FATAL_ERR + 1
          WRITE(ERR,1204) SUBR_NAME, WHAT
          WRITE(F06,1204) SUBR_NAME, WHAT
          CALL OUTA_HERE ( 'Y' )
       ENDIF
+
+      IS_PLOT = ((WHAT == 'ACCE') .OR. (WHAT == 'DISP') .OR. (WHAT == 'ELFO') .OR. (WHAT == 'GPFO')  .OR.  &
+                 (WHAT == 'MPCF') .OR. (WHAT == 'OLOA') .OR. (WHAT == 'SPCF') .OR.  &
+                 (WHAT == 'STRE') .OR. (WHAT == 'STRN'))
+
+      ! same as plot
+      IS_PRINT = IS_PLOT
+
+      ! remove GPFO from PUNCH
+      IS_PUNCH = ((WHAT == 'ACCE') .OR. (WHAT == 'DISP') .OR. (WHAT == 'ELFO') .OR.  &
+                  (WHAT == 'MPCF') .OR. (WHAT == 'OLOA') .OR. (WHAT == 'SPCF') .OR.  &
+                  (WHAT == 'STRE') .OR. (WHAT == 'STRN'))
 
       ! Set all of the allowable values that can be in ALLOW_CC_CMD_DESCR. 
       ! These are all of the values from MSC NASTRAN. Not all are implemented in MYSTRAN.
@@ -209,7 +222,7 @@ jdo_1:   DO J=1,NUM_POSS_CCD
       ENDDO ido_1
          
       DO I=1,NUM_WORDS
-
+         !write(ERR,*) "CC_CMD_DESCRIBERS(I)",I,CC_CMD_DESCRIBERS(I)
          IF (CC_CMD_DESCRIBERS(I)(1:5) == 'SORT2') THEN
             WARN_ERR = WARN_ERR + 1
             WRITE(ERR,201) WHAT
@@ -219,8 +232,8 @@ jdo_1:   DO J=1,NUM_POSS_CCD
                ENDIF
             ENDIF
          ENDIF
-
-         IF (CC_CMD_DESCRIBERS(I)(1:5) == 'PUNCH') THEN
+         
+         IF ((.NOT. IS_PUNCH) .AND. (CC_CMD_DESCRIBERS(I)(1:5) == 'PUNCH')) THEN
             WARN_ERR = WARN_ERR + 1
             WRITE(ERR,202) WHAT
             IF (SUPWARN == 'N') THEN
@@ -230,7 +243,7 @@ jdo_1:   DO J=1,NUM_POSS_CCD
             ENDIF
          ENDIF
 
-         IF ((WHAT == 'GPFO') .AND. (CC_CMD_DESCRIBERS(I)(1:4) == 'PLOT')) THEN
+         IF ((.NOT. IS_PLOT) .AND. (CC_CMD_DESCRIBERS(I)(1:4) == 'PLOT')) THEN
             WARN_ERR = WARN_ERR + 1
             WRITE(ERR,203) WHAT
             IF (SUPWARN == 'N') THEN

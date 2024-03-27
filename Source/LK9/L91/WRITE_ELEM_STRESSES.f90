@@ -24,7 +24,7 @@
                                                                                                         
 ! End MIT license text.                                                                                      
   
-      SUBROUTINE WRITE_ELEM_STRESSES ( JSUB, NUM, IHDR, NUM_PTS, ITABLE )
+      SUBROUTINE WRITE_ELEM_STRESSES ( JSUB, NUM, IHEADER, NUM_PTS, ITABLE )
   
       ! Writes blocks of element stresses for one subcase and one element type for elements that do not have PCOMP properties, including
       ! all 1-D, 2-D, 3-D elements.
@@ -46,7 +46,7 @@
       IMPLICIT NONE
  
       CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: SUBR_NAME = 'WRITE_ELEM_STRESSES'
-      CHARACTER(LEN=*), INTENT(IN)    :: IHDR              ! Indicator of whether to write an output header
+      CHARACTER(LEN=*), INTENT(IN)    :: IHEADER           ! Indicator of whether to write an output header
 
                                                            ! Array of different notes to write regarding poly fit errors
       CHARACTER( 50*BYTE)             :: ERR_INDEX_NOTE(MAX_NUM_STR)
@@ -146,12 +146,15 @@
       WRITE_OP2 = (STRE_OUT(2:2) == 'Y')
       WRITE_ANS = (DEBUG(200) > 0)
 
-      IF (IHDR == 'Y') THEN
-         IF (WRITE_F06) WRITE(F06,*)
-         IF (WRITE_F06) WRITE(F06,*)
-         IF (WRITE_ANS) WRITE(ANS,*)
-         IF (WRITE_ANS) WRITE(ANS,*)
-
+      IF (IHEADER == 'Y') THEN
+         IF (WRITE_F06) THEN
+             WRITE(F06,*)
+             WRITE(F06,*)
+         ENDIF
+         IF (WRITE_ANS) THEN
+             WRITE(ANS,*)
+             WRITE(ANS,*)
+         ENDIF
          ! -- F06 header: OUTPUT FOR SUBCASE, EIGENVECTOR or CRAIG-BAMPTON DOF
          ISUBCASE_INDEX = 0
          IF    (SOL_NAME(1:7) == 'STATICS') THEN

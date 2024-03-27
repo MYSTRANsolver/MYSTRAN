@@ -24,13 +24,14 @@
                                                                                                         
 ! End MIT license text.                                                                                      
 
-      SUBROUTINE GP_FORCE_BALANCE_PROC ( JVEC, IHDR )
+      SUBROUTINE GP_FORCE_BALANCE_PROC ( JVEC, IHEADER )
 
-! Processes grid point force balance output requests for one subcase. The effects of all forces on grids are included so totals
-! should be zero
+      ! Processes grid point force balance output requests for one subcase.
+      ! The effects of all forces on grids are included so totals
+      ! should be zero
 
       USE PENTIUM_II_KIND, ONLY       :  BYTE, SHORT, LONG, DOUBLE
-      USE IOUNT1, ONLY                :  ANS, ERR, F04, F06, SC1, WRT_ERR, WRT_LOG
+      USE IOUNT1, ONLY                :  ANS, ERR, F04, F06, OP2, SC1, WRT_ERR, WRT_LOG
       USE SCONTR, ONLY                :  BLNK_SUB_NAM, GROUT_GPFO_BIT, IBIT, INT_SC_NUM, JTSUB, NDOFG, NDOFM, MELDOF, NDOFO, NDOFR,&
                                          NELE, NGRID, NUM_CB_DOFS, NVEC, SOL_NAME
       USE TIMDAT, ONLY                :  TSEC
@@ -43,6 +44,7 @@
       USE LINK9_STUFF, ONLY           :  GID_OUT_ARRAY
       USE COL_VECS, ONLY              :  FG_COL, PG_COL, QGm_COL, QGs_COL, QGr_COL, UG_COL
       USE PARAMS, ONLY                :  EPSIL, NOCOUNTS
+      USE CC_OUTPUT_DESCRIBERS, ONLY  :  GPFO_OUT
 
       USE GP_FORCE_BALANCE_PROC_USE_IFs
 
@@ -51,10 +53,9 @@
       CHARACTER, PARAMETER            :: CR13 = CHAR(13)   ! This causes a carriage return simulating the "+" action in a FORMAT
       CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: SUBR_NAME = 'GP_FORCE_BALANCE_PROC'
       CHARACTER(13*BYTE)              :: CHAR_PCT(6)       ! Character representation of MEFFMASS sum percents of total model mass
-      CHARACTER(LEN=*) , INTENT(IN)   :: IHDR              ! Indicator of whether to write an output header
+      CHARACTER(LEN=*) , INTENT(IN)   :: IHEADER           ! Indicator of whether to write an output header
       CHARACTER( 1*BYTE), PARAMETER   :: COORD_SYS   = 'G' ! Subr TRANSFORM_NODE_FORCES will calc elem node forces in global coords
       CHARACTER( 1*BYTE)              :: OPT(6)            ! Option flags for subr ELMTLB (to tell it what to transform)
-      CHARACTER(128*BYTE)             :: TITLEI, STITLEI, LABELI ! title, subtitle, label
 
       INTEGER(LONG), INTENT(IN)       :: JVEC              ! Solution vector number
       INTEGER(LONG)                   :: AELEM             ! Actual element ID
@@ -97,8 +98,32 @@
       integer(long)                   :: max_abs_grid(6)    ! Grid where max-abs for GP force balance totals exists
       real(double)                    :: max_abs_all_grds(6)! The 6 max-abs from GP force balance totals
 
-      INTEGER(LONG)                   :: DEVICE_CODE        ! 
-      INTEGER(LONG)                   :: ANALYSIS_CODE      !      
+      INTEGER(LONG)                   :: NROWS, NCOLS, NNODE_GPFORCE, INODE_GPFORCE, IERR  ! GPFORCE table helper
+
+      LOGICAL                         :: WRITE_F06, WRITE_OP2, WRITE_ANS, IS_GPFORCE_SUMMARY_INFO  ! flags
+      LOGICAL                         :: IS_MODES, IS_THERMAL, IS_APP, IS_SPC, IS_MPC
+
+      INTEGER(LONG)                   :: ISUBCASE_INDEX         ! helper to get the title/subcase
+      INTEGER(LONG)                   :: ISUBCASE               ! the correct subcase id
+
+      ! op2 stuff
+      ! table -3 info
+      INTEGER(LONG)                   :: DEVICE_CODE        !
+      INTEGER(LONG)                   :: ANALYSIS_CODE          ! static/modal/time/etc. flag
+      INTEGER(LONG)                   :: ELEMENT_TYPE           ! the OP2 flag for the element
+      LOGICAL                         :: FIELD_5_INT_FLAG       ! flag to trigger FIELD5_INT_MODE vs.
+      INTEGER(LONG)                   :: FIELD5_INT_MODE        ! int value for field 5
+      !REAL(DOUBLE)                    :: FIELD5_FLOAT_TIME_FREQ ! float value for field 5
+      REAL(DOUBLE)                    :: FIELD6_EIGENVALUE      ! float value for field 6
+      CHARACTER(LEN=128)              :: TITLEI                 ! the model TITLE
+      CHARACTER(LEN=128)              :: SUBTITLEI              ! the subcase SUBTITLE
+      CHARACTER(LEN=128)              :: LABELI                 ! the subcase LABEL
+      INTEGER(LONG)                   :: ITABLE                 ! the table counter
+
+      INTEGER, ALLOCATABLE            :: GPFORCE_NID_EID(:,:)    ! currently unused
+      CHARACTER*8, ALLOCATABLE        :: GPFORCE_ETYPE(:)        ! currently unused
+      REAL, ALLOCATABLE               :: GPFORCE_FXYZ_MXYZ(:,:)  ! currently unused
+
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
          CALL OURTIM
@@ -107,8 +132,39 @@
       ENDIF
 
 ! **********************************************************************************************************************************
-! Initialize
+      ! Print some summary info for max abs value of GP force balance for each solution vector
+      IS_GPFORCE_SUMMARY_INFO = (DEBUG(192) > 0)
 
+      ! Write problem answers (displs, etc) to filename.ANS as well as to filename.F06
+      ! (where filename is the name of the DAT data file submitted to MYSTRAN).
+      ! This feature is generally only useful to the author when performing checkout of test problem answers
+      WRITE_ANS = (DEBUG(200) > 0)
+
+      IS_THERMAL = (SUBLOD(INT_SC_NUM,2) > 0)
+      IS_MODES = ((SOL_NAME(1:5) == 'MODES') .OR. (SOL_NAME(1:12) == 'GEN CB MODEL'))
+
+      WRITE_F06 = (GPFO_OUT(1:1) == 'Y')
+      WRITE_OP2 = (GPFO_OUT(2:2) == 'Y')
+      
+      !WRITE(ERR,*) 'GPFORCE WRITE_F06',WRITE_F06
+      !WRITE(ERR,*) 'GPFORCE WRITE_OP2',WRITE_OP2
+      !FLUSH(ERR)
+      !WRITE_PCH = (ACCE_OUT(3:3) == 'Y')
+      !WRITE_OP2 = .TRUE.
+      !WRITE_F06 = .TRUE.
+
+      ! OP2: Write output headers if this is not the first use of this subr.
+      ANALYSIS_CODE = -1
+      FIELD_5_INT_FLAG = .TRUE.
+      FIELD5_INT_MODE = 0
+      FIELD6_EIGENVALUE = 0.0
+
+      INODE_GPFORCE = 1
+
+      !WRITE(ERR,*) "Running GPFORCE"
+      !FLUSH(ERR)
+
+      ! Initialize
       DO I=1,6
          FG1(I)         = ZERO
          PG1(I)         = ZERO
@@ -121,26 +177,36 @@
          QGR1(I)        = ZERO
          QGS1(I)        = ZERO
          TOTALS(I)      = ZERO
-      ENDDO     
+      ENDDO
 
       CALL CHK_COL_ARRAYS_ZEROS
 
-! Write output headers.
+      ! Write output headers.
       ANALYSIS_CODE = -1
-      IF (IHDR == 'Y') THEN
-         WRITE(F06,*)
-         WRITE(F06,*)
+      IF (IHEADER == 'Y') THEN   ! should we write the header?
+         IF (WRITE_F06) THEN
+            WRITE(F06,*)
+            WRITE(F06,*)
+         ENDIF
+
+         ISUBCASE_INDEX = 0
          IF    (SOL_NAME(1:7) == 'STATICS') THEN
+            ISUBCASE_INDEX = JVEC
             ANALYSIS_CODE = 1
-            WRITE(F06,9101) SCNUM(JVEC)
+            !FIELD5_INT_MODE = 1  ! temp
+            FIELD5_INT_MODE = SCNUM(JVEC)
+            IF (WRITE_F06)  WRITE(F06,9101) SCNUM(JVEC)
 
          ELSE IF (SOL_NAME(1:5) == 'MODES') THEN
+            ISUBCASE_INDEX = 1  ! modes
             ANALYSIS_CODE = 2
-            WRITE(F06,9102) JVEC
+            FIELD5_INT_MODE = JVEC
+            IF (WRITE_F06)  WRITE(F06,9102) JVEC
 
-         ELSE IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN   ! Write info on what CB DOF the output is for
+         ELSE IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN  ! Write info on what CB DOF the output is for
+            ISUBCASE_INDEX = 1  ! modes
 
-            IF ((JVEC <= NDOFR) .OR. (JVEC >= NDOFR+NVEC)) THEN 
+            IF ((JVEC <= NDOFR) .OR. (JVEC >= NDOFR+NVEC)) THEN
                IF (JVEC <= NDOFR) THEN
                   BNDY_DOF_NUM = JVEC
                ELSE
@@ -149,42 +215,53 @@
                CALL GET_GRID_AND_COMP ( 'R ', BNDY_DOF_NUM, BNDY_GRID, BNDY_COMP  )
             ENDIF
 
-            IF       (JVEC <= NDOFR) THEN
-               WRITE(F06,9103) JVEC, NUM_CB_DOFS, 'acceleration', BNDY_GRID, BNDY_COMP
-            ELSE IF ((JVEC > NDOFR) .AND. (JVEC <= NDOFR+NVEC)) THEN
-               WRITE(F06,9105) JVEC, NUM_CB_DOFS, JVEC-NDOFR
-            ELSE
-               WRITE(F06,9103) JVEC, NUM_CB_DOFS, 'displacement', BNDY_GRID, BNDY_COMP
+            IF (WRITE_F06) THEN
+              IF       (JVEC <= NDOFR) THEN
+                 WRITE(F06,9103) JVEC, NUM_CB_DOFS, 'acceleration', BNDY_GRID, BNDY_COMP
+              ELSE IF ((JVEC > NDOFR) .AND. (JVEC <= NDOFR+NVEC)) THEN
+                 WRITE(F06,9105) JVEC, NUM_CB_DOFS, JVEC-NDOFR
+              ELSE
+                 WRITE(F06,9103) JVEC, NUM_CB_DOFS, 'displacement', BNDY_GRID, BNDY_COMP
+              ENDIF
             ENDIF
-
          ENDIF
 
+         ISUBCASE = SCNUM(ISUBCASE_INDEX)
+         !WRITE(ERR,*) "JVEC=",JVEC
+         !WRITE(ERR,*) "ISUBCASE_INDEX=",ISUBCASE_INDEX
+         !WRITE(ERR,*) "SCNUM(1)=",SCNUM(1)
+         !WRITE(ERR,*) "ISUBCASE=",ISUBCASE
+         !FLUSH(ERR)
 
+         ! -- F06 header for TITLE, SUBTITLE, LABEL (but only to F06)
          TITLEI = TITLE(INT_SC_NUM)
-         STITLEI = STITLE(INT_SC_NUM)
+         SUBTITLEI = STITLE(INT_SC_NUM)
          LABELI = LABEL(INT_SC_NUM)
-         IF (TITLE(INT_SC_NUM)(1:)  /= ' ') THEN
-            WRITE(F06,9799) TITLE(INT_SC_NUM)
+
+         IF (WRITE_F06) THEN
+            IF (TITLEI(1:)  /= ' ') THEN
+               WRITE(F06,9799) TITLE
+            ENDIF
+        
+            IF (SUBTITLEI(1:) /= ' ') THEN
+               WRITE(F06,9799) SUBTITLEI
+            ENDIF
+        
+            IF (LABELI(1:)  /= ' ') THEN
+               WRITE(F06,9799) LABELI
+            ENDIF
+        
+            WRITE(F06,*)
+        
+            ! write f06 header
+            IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
+               WRITE(F06,8999)
+            ELSE
+               WRITE(F06,9200)
+            ENDIF
          ENDIF
 
-         IF (STITLE(INT_SC_NUM)(1:) /= ' ') THEN
-            WRITE(F06,9799) STITLE(INT_SC_NUM)
-         ENDIF
-
-         IF (LABEL(INT_SC_NUM)(1:)  /= ' ') THEN
-            WRITE(F06,9799) LABEL(INT_SC_NUM)
-         ENDIF
-
-         WRITE(F06,*)
- 
-         ! write f06 header
-         IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
-            WRITE(F06,8999)
-         ELSE
-            WRITE(F06,9200)
-         ENDIF
-
-         IF (DEBUG(200) > 0) THEN
+         IF (WRITE_ANS) THEN
             WRITE(ANS,*)
             WRITE(ANS,*)
             IF    (SOL_NAME(1:7) == 'STATICS') THEN
@@ -195,7 +272,7 @@
 
             ELSE IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN   ! Write info on what CB DOF the output is for
 
-               IF ((JVEC <= NDOFR) .OR. (JVEC >= NDOFR+NVEC)) THEN 
+               IF ((JVEC <= NDOFR) .OR. (JVEC >= NDOFR+NVEC)) THEN
                   IF (JVEC <= NDOFR) THEN
                      BNDY_DOF_NUM = JVEC
                   ELSE
@@ -215,7 +292,6 @@
             ENDIF
 
             WRITE(ANS,*)
-
             IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
                WRITE(ANS,8999)
             ELSE
@@ -223,10 +299,9 @@
             ENDIF
 
          ENDIF
-
       ENDIF
- 
-! Process grid point force balance output requests. 
+
+      ! Process grid point force balance output requests.
       DO I=1,6
          FG1(I)     = ZERO
          PG1(I)     = ZERO
@@ -235,9 +310,9 @@
          QGm1(I)    = ZERO
          PEG1(I)    = ZERO
          MAX_ABS(I) = ZERO
-      ENDDO 
+      ENDDO
 
-      IF (DEBUG(192) > 0) THEN                             ! If DEBUG 192 = 1, GPFO summary will be printed out to F06
+      IF (IS_GPFORCE_SUMMARY_INFO) THEN                    ! If DEBUG 192 = 1, GPFO summary will be printed out to F06
          DO L=1,6                                          ! (1) Initialize the max valueof the 6 TOTAL components
             MAX_ABS_ALL_GRDS(L) = ZERO
          ENDDO
@@ -265,7 +340,95 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
       !CALL BUILD_GPFB(GPFB_NROWS)
       !WRITE(OP2) (GRID(I,1)*10+DEVICE_CODE, I=1,NGRID)
 
-!xx   WRITE(SC1, * )                                       ! Advance 1 line for screen messages
+      NNODE_GPFORCE = NGRID
+      DO I=1,NGRID
+         !WRITE(ERR,*) "  GPFORCE I=",I
+         !FLUSH(ERR)
+         IB = IAND(GROUT(I,INT_SC_NUM),IBIT(GROUT_GPFO_BIT))
+         GRID_NUM  = GRID(I,1)
+         CALL GET_GRID_NUM_COMPS ( GRID_NUM, NUM_COMPS, SUBR_NAME )
+
+         IF ((IB > 0) .AND. (NUM_COMPS == 6)) THEN         ! Do not do force balance for SPOINT's
+            G_CID = GRID(I,3)
+
+            ! applied load, thermal, spc force, mpc force
+            NNODE_GPFORCE = NNODE_GPFORCE + 4
+
+            NUM_CONN_ELEMS = GRID_ELEM_CONN_ARRAY(I,2)
+            NNODE_GPFORCE = NNODE_GPFORCE + NUM_CONN_ELEMS
+            !DO J=1,NUM_CONN_ELEMS
+
+            !IF (IS_THERMAL) THEN
+            !   NUM_CONN_ELEMS = GRID_ELEM_CONN_ARRAY(I,2)
+            !
+            !   DO J=1,NUM_CONN_ELEMS
+            !      AELEM = GRID_ELEM_CONN_ARRAY(I,2+J)
+            !      CALL GET_ARRAY_ROW_NUM ( 'ESORT1', SUBR_NAME, NELE, ESORT1, AELEM, IELE )
+            !      CALL GET_ELGP ( IELE )
+            !      CALL GET_ELEM_AGRID_BGRID ( IELE, 'N' )
+            !      DO K=1,ELGP
+            !         IF (AGRID(K) == GRID_NUM) THEN
+            !             NNODE_GPFORCE = NNODE_GPFORCE + 1
+            !         ENDIF
+            !      ENDDO
+            !   ENDDO
+            !ENDIF
+         ENDIF
+      ENDDO
+      !WRITE(ERR,*) "NNODE_GPFORCE",NNODE_GPFORCE
+      !FLUSH(ERR)
+      !------------------------------------------------------------------------
+      ! ALLOCATE: GPFORCE_NID_EID, GPFORCE_ETYPE, GPFORCE_FXYZ_MXYZ
+      !ref mystran SUB ALLOCATE_DOF_TABLES
+      !
+      !KTSTACK(5500,3)
+      !
+      IF(WRITE_OP2) THEN
+          NROWS = NNODE_GPFORCE
+          NCOLS = 2
+          ALLOCATE (GPFORCE_NID_EID(NROWS,2),STAT=IERR)
+          !MB_ALLOCATED = REAL(LONG)*REAL(LGRID)*REAL(NCOLS)/ONEPP6
+          IF (IERR == 0) THEN
+              DO I=1,NROWS
+                  DO J=1,NCOLS
+                      GPFORCE_NID_EID(I,J) = 0
+                  ENDDO
+              ENDDO
+          ELSE
+              WRITE(ERR,*) 'GPFORCE_NID_EID ALLOCATED error'
+          ENDIF
+    
+          !----------------
+          IF (ALLOCATED(GPFORCE_ETYPE)) THEN
+              WRITE(ERR,*) 'ALLOCATED!'
+          ELSE
+              ALLOCATE (GPFORCE_ETYPE(NROWS),STAT=IERR)
+              !MB_ALLOCATED = REAL(LONG)*REAL(LGRID)*REAL(NCOLS)/ONEPP6
+              IF (IERR == 0) THEN
+                  DO I=1,NROWS
+                      GPFORCE_ETYPE(I) = "NA"
+                  ENDDO
+              ELSE
+                  WRITE(ERR,*) 'GPFORCE_ETYPE ALLOCATED error'
+              ENDIF
+          ENDIF
+          !----------------
+          NCOLS = 6
+          ALLOCATE (GPFORCE_FXYZ_MXYZ(NROWS,NCOLS),STAT=IERR)
+          !MB_ALLOCATED = REAL(LONG)*REAL(LGRID)*REAL(NCOLS)/ONEPP6
+          IF (IERR == 0) THEN
+              DO I=1,NROWS
+                  DO J=1,NCOLS
+                      GPFORCE_FXYZ_MXYZ(I,J) = 0
+                  ENDDO
+              ENDDO
+          ELSE
+              WRITE(6,*) 'GPFORCE_FXYZ_MXYZ ALLOCATED error'
+          ENDIF
+
+      ENDIF  ! write_op2 allocation
+      !------------------------------------------------------------------------
+
       DO I=1,NGRID
          IF (NOCOUNTS /= 'Y') THEN
             WRITE(SC1,12345,ADVANCE='NO') I, NREQ, CR13
@@ -276,23 +439,26 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
 
          IF ((IB > 0) .AND. (NUM_COMPS == 6)) THEN         ! Do not do force balance for SPOINT's
             G_CID = GRID(I,3)
-            WRITE(F06,9201) GRID_NUM, G_CID
-            WRITE(F06,9202)
-            IF (DEBUG(200) > 0) THEN
+            IF (WRITE_F06) THEN
+               WRITE(F06,9201) GRID_NUM, G_CID
+               WRITE(F06,9202)
+            ENDIF
+            IF (WRITE_ANS) THEN
                WRITE(ANS,9201) GRID_NUM, G_CID
                WRITE(ANS,9202)
             ENDIF
-                                                           ! Get element equiv thermal loads so we can sub them from applied loads
-            OPT(1) = 'N'                                   ! OPT(1) is for calc of ME
-            OPT(2) = 'Y'                                   ! OPT(2) is for calc of PTE
-            OPT(3) = 'N'                                   ! OPT(3) is for calc of SEi, STEi
-            OPT(4) = 'N'                                   ! OPT(4) is for calc of KE-linear
-            OPT(5) = 'N'                                   ! OPT(5) is for calc of PPE
-            OPT(6) = 'N'                                   ! OPT(6) is for calc of KE-diff stiff
+
+            ! Get element equiv thermal loads so we can sub them from applied loads
+            OPT(1) = 'N'  ! OPT(1) is for calc of ME
+            OPT(2) = 'Y'  ! OPT(2) is for calc of PTE
+            OPT(3) = 'N'  ! OPT(3) is for calc of SEi, STEi
+            OPT(4) = 'N'  ! OPT(4) is for calc of KE-linear
+            OPT(5) = 'N'  ! OPT(5) is for calc of PPE
+            OPT(6) = 'N'  ! OPT(6) is for calc of KE-diff stiff
             DO J=1,6
                PTET(J) = ZERO
             ENDDO
-            IF (SUBLOD(INT_SC_NUM,2) > 0) THEN
+            IF (IS_THERMAL) THEN
                NUM_CONN_ELEMS = GRID_ELEM_CONN_ARRAY(I,2)
                DO J=1,NUM_CONN_ELEMS
                   AELEM = GRID_ELEM_CONN_ARRAY(I,2+J)
@@ -312,12 +478,14 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
                         ENDDO
                         DO L=1,6
                            PTET(L) = PTET(L) + PTE1(L)
-                        ENDDO 
+                        ENDDO
+                        INODE_GPFORCE = INODE_GPFORCE + 1
                      ENDIF
                   ENDDO
                ENDDO
             ENDIF
 
+            ! get applied load, thermal load, SPC force, MPC force for a single node
             CALL GET_ARRAY_ROW_NUM ( 'GRID_ID', SUBR_NAME, NGRID, GRID_ID, GRID_NUM, IGRID )
             ROW_NUM_START = TDOF_ROW_START(IGRID)
             CALL GET_GRID_NUM_COMPS ( GRID_NUM, NUM_COMPS, SUBR_NAME )
@@ -325,14 +493,16 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
                CALL TDOF_COL_NUM ( 'G ', G_SET_COL )
                TDOF_ROW = ROW_NUM_START + J - 1
                GDOF = TDOF(TDOF_ROW,G_SET_COL)
-               IF ((SOL_NAME(1:5) == 'MODES') .OR. (SOL_NAME(1:12) == 'GEN CB MODEL')) THEN
-                  FG1(J)  = FG_COL(GDOF)
+               IF (IS_MODES) THEN
+                  FG1(J) = FG_COL(GDOF)
                ENDIF
                PG1(J)  = PG_COL(GDOF)
                QGs1(J) = QGs_COL(GDOF)
                IF (NDOFM > 0) THEN
                   QGm1(J) = QGm_COL(GDOF)
-               ENDIF                                       ! PTET = 0 unless INT_SC_NUM is a thermal subcase (see above)
+               ENDIF
+
+               ! PTET = 0 unless INT_SC_NUM is a thermal subcase (see above)
                IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
                   QGr1(J) = QGr_COL(GDOF)
                   TOTALS(J) = -FG1(J) + PG1(J) - PTET(J) + QGs1(J) + QGm1(J) + QGr1(J)
@@ -340,41 +510,116 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
                   TOTALS(J) = -FG1(J) + PG1(J) - PTET(J) + QGs1(J) + QGm1(J)
                ENDIF
             ENDDO
-            WRITE(F06,9203) ( PG1(J),J=1,6)
-            IF (SUBLOD(INT_SC_NUM,2) > 0) THEN
-               WRITE(F06,9204) (-PTET(J),J=1,6)
-            ENDIF
-            WRITE(F06,9205) (QGs1(J),J=1,6)
-            WRITE(F06,9206) (QGm1(J),J=1,6)
 
-            IF ((SOL_NAME(1:5) == 'MODES') .OR. (SOL_NAME(1:12) == 'GEN CB MODEL')) THEN
-               DO J=1,6
-                  IF(FG1(J) == ZERO) THEN  ;  FG1(J) = -ZERO  ;  ENDIF  ! Avoids writing -0.0 for -FG1(J) below
-               ENDDO
-               WRITE(F06,9207) ACHAR(Udd), ( -FG1(J),J=1,6)
-            ENDIF
-            IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
-               WRITE(F06,9208) (QGr1(J),J=1,6)
-            ENDIF
+            IS_APP = IS_ABS_POSITIVE(PG1)
+            IS_SPC = IS_ABS_POSITIVE(QGs1)
+            IS_MPC = IS_ABS_POSITIVE(QGm1)
+            !IS_APP = .TRUE.
+            !IS_SPC = .TRUE.
+            !IS_MPC = .TRUE.
+            !WRITE(ERR,*) "start - loads WRITE_OP2",WRITE_OP2
+            !write(ERR,*) "  INODE_GPFORCE =", INODE_GPFORCE
+            !write(ERR,*) "  IS_APP =", IS_APP
+            !write(ERR,*) "  IS_SPC =", IS_SPC
+            !write(ERR,*) "  IS_MPC =", IS_MPC
+            !FLUSH(ERR)
 
-            IF (DEBUG(200) > 0) THEN
-               WRITE(ANS,9203) ( PG1(J),J=1,6)
-               IF (SUBLOD(INT_SC_NUM,2) > 0) THEN
-                  WRITE(ANS,9204) (-PTET(J),J=1,6)
+            IF(WRITE_OP2) THEN
+                IF(IS_APP) THEN
+                    GPFORCE_NID_EID(INODE_GPFORCE,1) = GRID_NUM
+                    GPFORCE_NID_EID(INODE_GPFORCE,2) = 0
+                    GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,1) = PG1(1)
+                    GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,2) = PG1(2)
+                    GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,3) = PG1(3)
+                    GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,4) = PG1(4)
+                    GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,5) = PG1(5)
+                    GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,6) = PG1(6)
+                    GPFORCE_ETYPE(INODE_GPFORCE) = 'APP-LOAD'
+                    INODE_GPFORCE = INODE_GPFORCE + 1
+                ENDIF
+                IF(IS_THERMAL) THEN
+                    GPFORCE_NID_EID(INODE_GPFORCE,1) = GRID_NUM
+                    GPFORCE_NID_EID(INODE_GPFORCE,2) = EID
+                    GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,1) = -PTET(1)
+                    GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,2) = -PTET(2)
+                    GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,3) = -PTET(3)
+                    GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,4) = -PTET(4)
+                    GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,5) = -PTET(5)
+                    GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,6) = -PTET(6)
+                    GPFORCE_ETYPE(INODE_GPFORCE) = 'THERMAL'
+                    INODE_GPFORCE = INODE_GPFORCE + 1
+                ENDIF
+                IF(IS_SPC) THEN
+                    GPFORCE_NID_EID(INODE_GPFORCE,1) = GRID_NUM
+                    GPFORCE_NID_EID(INODE_GPFORCE,2) = EID
+                    GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,1) = QGs1(1)
+                    GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,2) = QGs1(2)
+                    GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,3) = QGs1(3)
+                    GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,4) = QGs1(4)
+                    GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,5) = QGs1(5)
+                    GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,6) = QGs1(6)
+                    GPFORCE_ETYPE(INODE_GPFORCE) = 'F-OF-SPC'
+                    INODE_GPFORCE = INODE_GPFORCE + 1
+                ENDIF
+                IF(IS_MPC) THEN
+                    GPFORCE_NID_EID(INODE_GPFORCE,1) = GRID_NUM
+                    GPFORCE_NID_EID(INODE_GPFORCE,2) = EID
+                    GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,1) = QGm1(1)
+                    GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,2) = QGm1(2)
+                    GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,3) = QGm1(3)
+                    GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,4) = QGm1(4)
+                    GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,5) = QGm1(5)
+                    GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,6) = QGm1(6)
+                    GPFORCE_ETYPE(INODE_GPFORCE) = 'F-OF-MPC'
+                    INODE_GPFORCE = INODE_GPFORCE + 1
+                ENDIF
+            ELSE
+                IF(IS_APP) INODE_GPFORCE = INODE_GPFORCE + 1
+                IF(IS_THERMAL) INODE_GPFORCE = INODE_GPFORCE + 1
+                IF(IS_SPC) INODE_GPFORCE = INODE_GPFORCE + 1
+                IF(IS_MPC) INODE_GPFORCE = INODE_GPFORCE + 1
+            ENDIF
+            !WRITE(ERR,*) "end - loads WRITE_OP2",WRITE_OP2
+            !FLUSH(ERR)
+
+            IF (WRITE_F06) THEN
+               IF (IS_APP) WRITE(F06,9203) (PG1(J),J=1,6)  ! applied load
+               IF (IS_THERMAL) THEN
+                  WRITE(F06,9204) (-PTET(J),J=1,6)  ! thermal
                ENDIF
-               WRITE(ANS,9205) (QGs1(J),J=1,6)
-               WRITE(ANS,9206) (QGm1(J),J=1,6)
+               IF(IS_SPC) WRITE(F06,9205) (QGs1(J),J=1,6)  ! spc force
+               IF(IS_MPC) WRITE(F06,9206) (QGm1(J),J=1,6)  ! mpc force
+
+               IF (IS_MODES) THEN
+                  DO J=1,6
+                     IF(FG1(J) == ZERO) THEN;  FG1(J) = -ZERO;  ENDIF  ! Avoids writing -0.0 for -FG1(J) below
+                  ENDDO
+                  WRITE(F06,9207) ACHAR(Udd), (-FG1(J),J=1,6)  ! inertia force
+               ENDIF
+               IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
+                  WRITE(F06,9208) (QGr1(J),J=1,6)
+               ENDIF
+            ENDIF
+
+            IF (WRITE_ANS) THEN
+               IF (IS_APP) WRITE(ANS,9203) (PG1(J),J=1,6)  ! applied load
+               IF (IS_THERMAL) THEN
+                  WRITE(ANS,9204) (-PTET(J),J=1,6)  ! thermal
+               ENDIF
+               IF(IS_SPC) WRITE(ANS,9205) (QGs1(J),J=1,6)  ! spc force
+               IF(IS_MPC) WRITE(ANS,9206) (QGm1(J),J=1,6)  ! mpc force
                IF ((SOL_NAME(1:5) == 'MODES') .OR. (SOL_NAME(1:12) == 'GEN CB MODEL')) THEN
-                  WRITE(ANS,9207) ACHAR(Udd), ( -FG1(J),J=1,6)
+                  WRITE(ANS,9207) ACHAR(Udd), (-FG1(J),J=1,6)  ! inertia force
                ENDIF
             ENDIF
-                                                           ! Calc elem forces
-            OPT(1) = 'N'                                   ! OPT(1) is for calc of ME
-            OPT(2) = 'Y'                                   ! OPT(2) is for calc of PTE
-            OPT(3) = 'N'                                   ! OPT(3) is for calc of SEi, STEi
-            OPT(4) = 'Y'                                   ! OPT(4) is for calc of KE
-            OPT(5) = 'N'                                   ! OPT(5) is for calc of PPE
-            OPT(6) = 'N'                                   ! OPT(6) is for calc of KE-diff stiff
+
+            ! Calc elem forces
+            OPT(1) = 'N'  ! OPT(1) is for calc of ME
+            OPT(2) = 'Y'  ! OPT(2) is for calc of PTE
+            OPT(3) = 'N'  ! OPT(3) is for calc of SEi, STEi
+            OPT(4) = 'Y'  ! OPT(4) is for calc of KE
+            OPT(5) = 'N'  ! OPT(5) is for calc of PPE
+            OPT(6) = 'N'  ! OPT(6) is for calc of KE-diff stiff
             NUM_CONN_ELEMS = GRID_ELEM_CONN_ARRAY(I,2)
             DO J=1,NUM_CONN_ELEMS
                AELEM = GRID_ELEM_CONN_ARRAY(I,2+J)
@@ -387,7 +632,7 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
                      CALL EMG ( IELE, OPT, 'N', SUBR_NAME, 'N' )
 
                      CALL ELMDIS                           ! Get local displ, UEL, for this element
-                                                           ! Calc elem loads, PEL. 
+                                                           ! Calc elem loads, PEL.
                      CALL CALC_ELEM_NODE_FORCES            ! JTSUB will only be used if SUBLOD(INT_SC_NUM,2) > 0
                                                            ! Transform elem loads from local to global coords
                      CALL TRANSFORM_NODE_FORCES (COORD_SYS)! Now we have elem node forces in global coords for the elem that has
@@ -395,30 +640,60 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
                      DO L=1,6
                         BEG_ROW_NUM = 6*(K-1) + 1
                         PEG1(L) = PEG(BEG_ROW_NUM + L - 1) ! PEG are elem forces at elem ends in global coords
-                        IF(PEG1(L) == ZERO) THEN  ;  PEG1(L) = -ZERO  ;  ENDIF  ! Avoids writing -0.0 for -PEG1(J) below
+                        IF(PEG1(L) == ZERO) THEN;  PEG1(L) = -ZERO;  ENDIF  ! Avoids writing -0.0 for -PEG1(J) below
 
                         TOTALS(L) = TOTALS(L) - PEG1(L)
                      ENDDO
-                     WRITE(F06,9209) TYPE, EID, ( -PEG1(L),L=1,6)
-                     IF (DEBUG(200) > 0) THEN
-                        WRITE(ANS,9209) TYPE, EID, ( -PEG1(L),L=1,6)
+
+                     !WRITE(ERR,*) "INODE_GPFORCE=",INODE_GPFORCE
+                     !FLUSH(ERR)
+                     IF(WRITE_OP2) THEN
+                       GPFORCE_NID_EID(INODE_GPFORCE,1) = GRID_NUM
+                       GPFORCE_NID_EID(INODE_GPFORCE,2) = EID
+                       GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,1) = PEG1(1)
+                       GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,2) = PEG1(2)
+                       GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,3) = PEG1(3)
+                       GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,4) = PEG1(4)
+                       GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,5) = PEG1(5)
+                       GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,6) = PEG1(6)
+                       GPFORCE_ETYPE(INODE_GPFORCE) = TYPE
+                     ENDIF
+                     INODE_GPFORCE = INODE_GPFORCE + 1
+                     IF (WRITE_F06) WRITE(F06,9209) TYPE, EID, (-PEG1(L),L=1,6)  ! element forces
+                     IF (WRITE_ANS) THEN
+                        WRITE(ANS,9209) TYPE, EID, (-PEG1(L),L=1,6)
                      ENDIF
                   ENDIF
-               ENDDO 
-            ENDDO 
+               ENDDO
+            ENDDO
 
-            WRITE(F06,9210)
-            IF ((SOL_NAME(1:5) == 'MODES') .OR. (SOL_NAME(1:12) == 'GEN CB MODEL')) THEN
-               IF (NDOFO == 0) THEN
-                  WRITE(F06,9211) (TOTALS(J),J=1,6)
-               ELSE
-                  WRITE(F06,9310) (TOTALS(J),J=1,6), ACHAR(Udd)
-               ENDIF
-            ELSE
-               WRITE(F06,9211) (TOTALS(J),J=1,6)     ! KEEP THIS
+            IF(WRITE_OP2) THEN
+              GPFORCE_NID_EID(INODE_GPFORCE,1) = GRID_NUM
+              GPFORCE_NID_EID(INODE_GPFORCE,2) = 0
+              GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,1) = TOTALS(1)
+              GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,2) = TOTALS(2)
+              GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,3) = TOTALS(3)
+              GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,4) = TOTALS(4)
+              GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,5) = TOTALS(5)
+              GPFORCE_FXYZ_MXYZ(INODE_GPFORCE,6) = TOTALS(6)
+              GPFORCE_ETYPE(INODE_GPFORCE) = "*TOTALS*"
+            ENDIF
+            INODE_GPFORCE = INODE_GPFORCE + 1
+
+            IF (WRITE_F06) THEN
+              WRITE(F06,9210)
+              IF ((SOL_NAME(1:5) == 'MODES') .OR. (SOL_NAME(1:12) == 'GEN CB MODEL')) THEN
+                 IF (NDOFO == 0) THEN
+                    WRITE(F06,9211) (TOTALS(J),J=1,6)
+                 ELSE
+                    WRITE(F06,9310) (TOTALS(J),J=1,6), ACHAR(Udd)
+                 ENDIF
+              ELSE
+                 WRITE(F06,9211) (TOTALS(J),J=1,6)     ! KEEP THIS
+              ENDIF
             ENDIF
 
-            IF (DEBUG(192) > 0) THEN
+            IF (IS_GPFORCE_SUMMARY_INFO) THEN
                DO J=1,6
                   IF (DABS(TOTALS(J)) > MAX_ABS_ALL_GRDS(J)) THEN
                      MAX_ABS_ALL_GRDS(J) = DABS(TOTALS(J))
@@ -426,7 +701,8 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
                   ENDIF
                ENDDO
             ENDIF
-            IF (DEBUG(200) > 0) THEN
+
+            IF (WRITE_ANS) THEN
                WRITE(ANS,9210)
                IF ((SOL_NAME(1:5) == 'MODES') .OR. (SOL_NAME(1:12) == 'GEN CB MODEL')) THEN
                   IF (NDOFO == 0) THEN
@@ -440,10 +716,12 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
             ENDIF
 
          ENDIF
+         !FLUSH(F06)
+         !FLUSH(ERR)
 
-! For each of the 6 components (J=1,6 for components T1, T2, T3, R1, R2, R3) , calc % of grid force imbalance as a % of the largest
-! force item in that component
-
+         ! For each of the 6 components (J=1,6 for components T1, T2, T3, R1, R2, R3),
+         ! calc % of grid force imbalance as a % of the largest
+         ! force item in that component
          DO J=1,6
             IF (DABS( FG1(J)) > MAX_ABS(J)) MAX_ABS(J) = DABS( FG1(J))
             IF (DABS( PG1(J)) > MAX_ABS(J)) MAX_ABS(J) = DABS( PG1(J))
@@ -455,8 +733,90 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
 
       ENDDO
       WRITE(SC1,*) CR13
+      IF (WRITE_F06 .OR. WRITE_ANS) THEN
+          CALL CALCULATE_GPFB_IMBALANCE(CHAR_PCT, MAX_ABS, MAX_ABS_PCT, MAX_ABS_GRID, MAX_ABS_ALL_GRDS)
+      ENDIF
 
-      CALL CALCULATE_GPFB_IMBALANCE(CHAR_PCT, MAX_ABS, MAX_ABS_PCT, MAX_ABS_GRID, MAX_ABS_ALL_GRDS)
+      !----------------
+      !WRITE(ERR,*) "  GPFORCE DEALLOCATE: NROWS", NROWS
+      !WRITE(ERR,*) "  IERR=", IERR
+      !WRITE(ERR,*) "  INODE_GPFORCE=", INODE_GPFORCE
+      !WRITE(ERR,*) "  NNODE_GPFORCE=", NNODE_GPFORCE
+      !FLUSH(ERR)
+      ! DEALLOCATE: GPFORCE_NID_EID, GPFORCE_ETYPE, GPFORCE_FXYZ_MXYZ
+      !ref mystran SUB DEALLOCATE_DOF_TABLES
+      !KTSTACK(5500,3)
+
+      IF(WRITE_OP2) THEN
+          ! write the data to the op2
+          !(nid_device, eid, elem_name, f1, f2, f3, m1, m2, m3) = out
+          !nid = nid_device // 10
+          !DO I=1,INODE_GPFORCE-1
+          !    WRITE(F06,*) GPFORCE_NID_EID(I,1)*10+DEVICE_CODE, &
+          !            GPFORCE_NID_EID(I,2), &
+          !            GPFORCE_ETYPE(I), &
+          !            GPFORCE_FXYZ_MXYZ(I,1), &
+          !            GPFORCE_FXYZ_MXYZ(I,2), &
+          !            GPFORCE_FXYZ_MXYZ(I,3), &
+          !            GPFORCE_FXYZ_MXYZ(I,4), &
+          !            GPFORCE_FXYZ_MXYZ(I,5), &
+          !            GPFORCE_FXYZ_MXYZ(I,6)
+          !    WRITE(ERR,*) GPFORCE_NID_EID(I,1)*10+DEVICE_CODE, &
+          !            GPFORCE_NID_EID(I,2), &
+          !            GPFORCE_ETYPE(I), &
+          !            GPFORCE_FXYZ_MXYZ(I,1), &
+          !            GPFORCE_FXYZ_MXYZ(I,2), &
+          !            GPFORCE_FXYZ_MXYZ(I,3), &
+          !            GPFORCE_FXYZ_MXYZ(I,4), &
+          !            GPFORCE_FXYZ_MXYZ(I,5), &
+          !            GPFORCE_FXYZ_MXYZ(I,6)
+          !ENDDO
+
+          !WRITE(ERR,*) "OP2-ISUBCASE=",ISUBCASE
+          CALL OUTPUT2_WRITE_OGF(ISUBCASE, INODE_GPFORCE-1, &
+                                 TITLEI, SUBTITLEI, LABELI, &
+                                 ANALYSIS_CODE, FIELD5_INT_MODE, FIELD6_EIGENVALUE)
+          WRITE(OP2) (GPFORCE_NID_EID(I,1)*10+DEVICE_CODE, &
+                      GPFORCE_NID_EID(I,2), &
+                      GPFORCE_ETYPE(I), &
+                      REAL(GPFORCE_FXYZ_MXYZ(I,1), 4), &
+                      REAL(GPFORCE_FXYZ_MXYZ(I,2), 4), &
+                      REAL(GPFORCE_FXYZ_MXYZ(I,3), 4), &
+                      REAL(GPFORCE_FXYZ_MXYZ(I,4), 4), &
+                      REAL(GPFORCE_FXYZ_MXYZ(I,5), 4), &
+                      REAL(GPFORCE_FXYZ_MXYZ(I,6), 4), &
+                      I=1,INODE_GPFORCE-1)
+
+          ITABLE = -5
+          CALL END_OP2_TABLE(ITABLE)   ! close the previous
+
+          !---------------------
+          ! deallocate the arrays
+          !WRITE(ERR,*) 'GPFORCE_NID_EID is allocated'
+          !WRITE(ERR,*) 'GPFORCE_NID_EID(1,:)=',GPFORCE_NID_EID(1,1),GPFORCE_NID_EID(1,2),GPFORCE_ETYPE(1)
+          !WRITE(ERR,*) 'GPFORCE_FXYZ(1,:)=',GPFORCE_FXYZ_MXYZ(1,1),GPFORCE_FXYZ_MXYZ(1,2),GPFORCE_FXYZ_MXYZ(1,3)
+          !WRITE(ERR,*) 'GPFORCE_MXYZ(1,:)=',GPFORCE_FXYZ_MXYZ(1,4),GPFORCE_FXYZ_MXYZ(1,5),GPFORCE_FXYZ_MXYZ(1,6)
+          !FLUSH(ERR)
+          DEALLOCATE(GPFORCE_NID_EID,STAT=IERR)
+          IF (IERR /= 0) THEN
+              WRITE(ERR,*) 'GPFORCE_NID_EID DEALLOCATE error'
+          ENDIF
+
+          ! QUAD4, TRIA3, BAR
+          DEALLOCATE (GPFORCE_ETYPE,STAT=IERR)
+          IF (IERR /= 0) THEN
+              WRITE(ERR,*) 'GPFORCE_ETYPE DEALLOCATE error'
+          ENDIF
+
+          DEALLOCATE (GPFORCE_FXYZ_MXYZ,STAT=IERR)
+          IF (IERR /= 0) THEN
+              WRITE(ERR,*) 'GPFORCE_FXYZ_MXYZ DEALLOCATE error'
+          ENDIF
+      ENDIF
+      FLUSH(OP2)
+      FLUSH(F06)
+      FLUSH(ANS)
+      FLUSH(ERR)
 
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
@@ -503,7 +863,7 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
  9210 FORMAT(1X,   '                        ------------- ------------- ------------- ------------- ------------- -------------')
 
  9211 FORMAT(1X,   'TOTALS                :',6(1ES14.6),/,                                                                         &
-             1X,   '(should all be 0)',//) 
+             1X,   '(should all be 0)',//)
 
  9310 FORMAT(1X,   'TOTALS                :',6(1ES14.6),13X,/,                                                                     &
              1X,   '(may not be zero since there were OMIT''d DOF''s which can mean that the correct inertia forces at the G-set', &
@@ -514,49 +874,66 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
 12345 FORMAT(5X,'Process grid ',I8,' of ',I8,A)
 
 ! ##################################################################################################################################
- 
+
       CONTAINS
- 
+
 ! ##################################################################################################################################
 
-      SUBROUTINE CHK_COL_ARRAYS_ZEROS 
+      SUBROUTINE CHK_COL_ARRAYS_ZEROS
 
       IMPLICIT NONE
 
       INTEGER(LONG)                   :: II                ! DO loop index
 
-! **********************************************************************************************************************************
 
       DO II=1,NDOFG
 
          IF (ALLOCATED( FG_COL)) THEN
-            IF ( FG_COL(II) == -ZERO) THEN   ;    FG_COL(II) = ZERO   ;   ENDIF
+            IF ( FG_COL(II) == -ZERO) THEN;    FG_COL(II) = ZERO;   ENDIF
          ENDIF
 
          IF (ALLOCATED( PG_COL)) THEN
-            IF ( PG_COL(II) == -ZERO) THEN   ;    PG_COL(II) = ZERO   ;   ENDIF
+            IF ( PG_COL(II) == -ZERO) THEN;    PG_COL(II) = ZERO;   ENDIF
          ENDIF
 
          IF (ALLOCATED(QGs_COL)) THEN
-            IF (QGs_COL(II) == -ZERO) THEN   ;   QGs_COL(II) = ZERO   ;   ENDIF
+            IF (QGs_COL(II) == -ZERO) THEN;   QGs_COL(II) = ZERO;   ENDIF
          ENDIF
 
          IF (ALLOCATED(QGm_COL)) THEN
-            IF (QGm_COL(II) == -ZERO) THEN   ;   QGm_COL(II) = ZERO   ;   ENDIF
+            IF (QGm_COL(II) == -ZERO) THEN;   QGm_COL(II) = ZERO;   ENDIF
          ENDIF
 
          IF (ALLOCATED(QGr_COL)) THEN
-            IF (QGr_COL(II) == -ZERO) THEN   ;   QGr_COL(II) = ZERO   ;   ENDIF
+            IF (QGr_COL(II) == -ZERO) THEN;   QGr_COL(II) = ZERO;   ENDIF
          ENDIF
 
          IF (ALLOCATED( UG_COL)) THEN
-            IF ( UG_COL(II) == -ZERO) THEN   ;    UG_COL(II) = ZERO   ;   ENDIF
+            IF ( UG_COL(II) == -ZERO) THEN;    UG_COL(II) = ZERO;   ENDIF
          ENDIF
 
       ENDDO
 
       END SUBROUTINE CHK_COL_ARRAYS_ZEROS
 
+      !------------------------------------------------------
+      LOGICAL FUNCTION IS_ABS_POSITIVE(ARRAY)
+      ! IS_ABS_POSITIVE has an implicit return that has the same name 
+      ! as the function
+
+      USE PENTIUM_II_KIND, ONLY       :  LONG, DOUBLE
+      IMPLICIT NONE
+      REAL(DOUBLE), INTENT(IN)        :: ARRAY(6)         ! The 6 values
+      INTEGER(LONG)                   :: I                ! counter
+
+      IS_ABS_POSITIVE = .FALSE.
+      DO I=1,6
+          IF (ABS(ARRAY(I)) > 0.0) THEN
+              IS_ABS_POSITIVE = .TRUE.
+          ENDIF
+      ENDDO
+      END FUNCTION IS_ABS_POSITIVE
+      !------------------------------------------------------
 
       SUBROUTINE CALCULATE_GPFB_IMBALANCE(CHAR_PCT, MAX_ABS, MAX_ABS_PCT, MAX_ABS_GRID, MAX_ABS_ALL_GRDS)
       ! For each of the 6 components (J=1,6 for components T1, T2, T3, R1, R2, R3)
@@ -570,15 +947,15 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
       IMPLICIT NONE
       CHARACTER(13*BYTE)              :: CHAR_PCT(6)        ! Character representation of MEFFMASS sum percents of total model mass
       INTEGER(LONG)                   :: I                  ! DO loop index
-                                                            
+
       REAL(DOUBLE), INTENT(IN)        :: MAX_ABS(6)         ! The 6 abs largest values of any force item in the 6 components
       REAL(DOUBLE), INTENT(INOUT)     :: MAX_ABS_PCT(6)     ! Modal mass as % of total mass
-      
+
       !INTRINSIC IAND
       INTEGER(LONG), INTENT(IN)       :: max_abs_grid(6)    ! Grid where max-abs for GP force balance totals exists
       REAL(DOUBLE), INTENT(IN)        :: max_abs_all_grds(6)! The 6 max-abs from GP force balance totals
 
-      IF (DEBUG(192) > 0) THEN
+      IF (IS_GPFORCE_SUMMARY_INFO) THEN
          DO I=1,6
             IF (MAX_ABS(I) > ZERO) THEN
                MAX_ABS_PCT(I) = ONE_HUNDRED*MAX_ABS_ALL_GRDS(I)/MAX_ABS(I)
@@ -587,15 +964,17 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
                CHAR_PCT(I)(1:) = ' '
             ENDIF
          ENDDO
-         WRITE(F06,9214)
-         WRITE(F06,9202)
-         WRITE(F06,9215) (MAX_ABS_ALL_GRDS(I),I=1,6)
-         IF (DEBUG(192) > 1) THEN
-            WRITE(F06,9216) (MAX_ABS(I),I=1,6)
-            WRITE(F06,9217) (CHAR_PCT(I),I=1,6)
+         IF (WRITE_F06) THEN
+            WRITE(F06,9214)
+            WRITE(F06,9202)
+            WRITE(F06,9215) (MAX_ABS_ALL_GRDS(I),I=1,6)
+            IF (DEBUG(192) > 1) THEN
+               WRITE(F06,9216) (MAX_ABS(I),I=1,6)
+               WRITE(F06,9217) (CHAR_PCT(I),I=1,6)
+            ENDIF
+            WRITE(F06,9218) (MAX_ABS_GRID(I),I=1,6)
          ENDIF
-         WRITE(F06,9218) (MAX_ABS_GRID(I),I=1,6)
-         IF (DEBUG(200) > 0) THEN
+         IF (WRITE_ANS) THEN
             WRITE(ANS,9214)
             WRITE(ANS,9202)
             WRITE(ANS,9215) (MAX_ABS_ALL_GRDS(I),I=1,6)
@@ -624,5 +1003,157 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
 
       END SUBROUTINE CALCULATE_GPFB_IMBALANCE
 !===================================================================================================================================
+
+      SUBROUTINE OUTPUT2_WRITE_OGF(ISUBCASE, NUM, TITLE, SUBTITLE, LABEL, &
+                                   ANALYSIS_CODE, FIELD5_INT_MODE, FIELD6_EIGENVALUE)
+!     writes the grid point force results header.
+!     Data is first written to character variables and then that character variable is output the F06 and ANS.
+!     
+!     Parameters
+!     ==========
+!
+      USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
+      USE IOUNT1, ONLY                :  OP2, ERR
+      USE, INTRINSIC :: IEEE_ARITHMETIC, ONLY: IEEE_Value, IEEE_QUIET_NAN
+      USE, INTRINSIC :: ISO_FORTRAN_ENV, ONLY: REAL32
+
+      INTEGER(LONG), INTENT(IN)      :: ISUBCASE           ! subcase id
+      INTEGER(LONG), INTENT(IN)      :: NUM                ! the number of "nodes" that will be printed
+      CHARACTER(LEN=128), INTENT(IN) :: TITLE              ! the model TITLE
+      CHARACTER(LEN=128), INTENT(IN) :: SUBTITLE           ! the subcase SUBTITLE
+      CHARACTER(LEN=128), INTENT(IN) :: LABEL              ! the subcase LABEL
+      INTEGER(LONG), INTENT(IN) :: ANALYSIS_CODE           ! static, time, frequency, modal, etc. flag
+      INTEGER(LONG), INTENT(IN) :: FIELD5_INT_MODE
+      REAL(DOUBLE),  INTENT(IN) :: FIELD6_EIGENVALUE
+
+      CHARACTER*8   :: TABLE_NAME
+      INTEGER(LONG) :: ITABLE       ! the current subtable number
+      INTEGER(LONG) :: NUM_WIDE     ! the number of "words" for a single element
+      INTEGER(LONG) :: DEVICE_CODE  ! PLOT, PRINT, PUNCH flag
+      INTEGER(LONG) :: NVALUES      ! the number of "words" for the OP2 data
+      INTEGER(LONG) :: NTOTAL       ! the number of bytes corresponding to nvalues
+      REAL(REAL32)  :: NAN
+      LOGICAL       :: IS_PRINT     ! is this a PRINT result -> F06
+
+      ! TODO: assuming PLOT
+      DEVICE_CODE = 1
+
+      !-------
+      ! we're already setup for subtable -3
+
+      ! nid, eid, ETYPE (8-bytes), fx, fy, fz, mx, my, mz
+      NUM_WIDE = 10
+
+      ! dunno???
+      TABLE_NAME = 'OGPFB1  '
+      CALL WRITE_TABLE_HEADER(TABLE_NAME)
+      ITABLE = -3
+
+      !WRITE(ERR,*) "OUTPUT2_WRITE_OGF: ISUBCASE=",ISUBCASE
+      !WRITE(ERR,*) "OUTPUT2_WRITE_OGF: ANALYSIS_CODE=",ANALYSIS_CODE
+      CALL WRITE_OGF3(ITABLE, ISUBCASE, ANALYSIS_CODE, DEVICE_CODE, NUM_WIDE, &
+                      TITLE, SUBTITLE, LABEL,                                          &
+                      FIELD5_INT_MODE, FIELD6_EIGENVALUE)
+      ! ITABLE = -4, -6, ...
+      !NWORDS = NUM * NUM_WIDE
+      !NTOTAL = NBYTES_PER_WORD * NWORDS
+
+! 100  FORMAT("*DEBUG:    ITABLE=",I8, "; NUM=",I8,"; NVALUES=",I8,"; NTOTAL=",I8)
+      NVALUES = NUM * NUM_WIDE
+      NTOTAL = NVALUES * 4
+      !WRITE(ERR,100) ITABLE,NUM,NVALUES,NTOTAL
+      WRITE(OP2) NVALUES
+
+! 102  FORMAT("*DEBUG: OUTPUT2_WRITE_OGF      ITABLE=",I8," (should be -5, -7,...)")
+      !WRITE(ERR,102) ITABLE
+
+      END SUBROUTINE OUTPUT2_WRITE_OGF
+!==================================================================================================
+      SUBROUTINE WRITE_OGF3(ITABLE, ISUBCASE, ANALYSIS_CODE, DEVICE_CODE, NUM_WIDE, &
+                            TITLE, LABEL, SUBTITLE, &
+                            FIELD5_INT_MODE, FIELD6_EIGENVALUE)
+!      Parameters
+!      ==========
+!      analysis_code
+!        the solution type flag
+!      approach_code
+!        ???
+      USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
+      USE IOUNT1, ONLY                :  ERR,OP2
+      IMPLICIT NONE
+      INTEGER(LONG), INTENT(INOUT) :: ITABLE               ! an OP2 subtable counter
+      INTEGER(LONG), INTENT(IN) :: ANALYSIS_CODE           ! static, modal, time, freq, etc. flag
+      INTEGER(LONG), INTENT(IN) :: ISUBCASE                ! the subcase ID
+      INTEGER(LONG), INTENT(IN) :: DEVICE_CODE             ! PLOT, PRINT, PUNCH flag
+      INTEGER(LONG), INTENT(IN) :: NUM_WIDE                ! the number of words per element 
+
+      CHARACTER(LEN=128), INTENT(IN) :: TITLE              ! the model TITLE
+      CHARACTER(LEN=128), INTENT(IN) :: SUBTITLE           ! the subcase SUBTITLE
+      CHARACTER(LEN=128), INTENT(IN) :: LABEL              ! the subcase LABEL
+
+      CHARACTER(LEN=128) :: TITLE2                 ! the subcase TITLE
+      CHARACTER(LEN=128) :: SUBTITLE2              ! the subcase SUBTITLE
+      CHARACTER(LEN=128) :: LABEL2                 ! the subcase LABEL
+
+      INTEGER(LONG), INTENT(IN) :: FIELD5_INT_MODE
+      REAL(DOUBLE), INTENT(IN)  :: FIELD6_EIGENVALUE
+      REAL(DOUBLE)              :: FIELD7
+      INTEGER(LONG)             :: APPROACH_CODE
+      INTEGER(LONG)             :: FORMAT_CODE        ! 1=real, 2=imag, 3=random
+      INTEGER(LONG)             :: TABLE_CODE, LOAD_SET, THERMAL, ACOUSTIC_FLAG, STRESS_CODE
+
+!     static is real
+      FORMAT_CODE = 1
+
+      TITLE2 = TITLE(1:100)
+      SUBTITLE2 = SUBTITLE(1:67)
+      LABEL2 = LABEL(1:100)
+
+      CALL WRITE_ITABLE(ITABLE)  ! write the -3, -5, ... subtable header
+! 1    FORMAT("WRITE_OGF3: ITABLE_START=",I8)
+      !WRITE(ERR,1) ITABLE
+
+      IF ((ANALYSIS_CODE == 1) .OR. (ANALYSIS_CODE == 10)) THEN
+         ! statics
+         FIELD7 = 0.0
+      ELSE
+         ! frequency in radians
+         FIELD7 = SQRT(ABS(FIELD6_EIGENVALUE))
+      ENDIF
+
+      WRITE(OP2) 146
+      ! grid point forces only
+      TABLE_CODE = 19
+      
+      ! ???
+      LOAD_SET = 1
+      
+      ! we're not doing acoustic/stress
+      ACOUSTIC_FLAG = 0
+      STRESS_CODE = 0
+      
+      ! not always 0 for stress, but for now
+      THERMAL = 0
+
+      APPROACH_CODE = ANALYSIS_CODE * 10 + DEVICE_CODE
+!2     FORMAT(" APPROACH_CODE=",I4," TABLE_CODE=",I4," ISUBCASE=",I4)
+      ! 584 bytes
+      !WRITE(ERR,2) APPROACH_CODE, TABLE_CODE, ISUBCASE
+      WRITE(OP2) APPROACH_CODE, TABLE_CODE, 0, ISUBCASE, FIELD5_INT_MODE, &
+            REAL(FIELD6_EIGENVALUE, 4), REAL(FIELD7, 4),                          &
+            LOAD_SET, FORMAT_CODE, NUM_WIDE, &
+            STRESS_CODE, ACOUSTIC_FLAG, 0, 0, 0, &
+            0, 0, 0, 0, 0, &
+            0, 0, THERMAL, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, &
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, &
+            0, 0, 0, 0, &
+            TITLE2, SUBTITLE2, LABEL2
+
+      ITABLE = ITABLE - 1        ! flip it to -4, -6, ... so we don't have to do this later
+! 3    FORMAT("WRITE_OGF3: ITABLE_END=",I8)
+      !WRITE(ERR,3) ITABLE
+      CALL WRITE_ITABLE(ITABLE)
+      ITABLE = ITABLE - 1
+      END SUBROUTINE WRITE_OGF3
 
       END SUBROUTINE GP_FORCE_BALANCE_PROC
