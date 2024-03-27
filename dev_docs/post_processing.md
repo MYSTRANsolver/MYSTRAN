@@ -98,30 +98,30 @@ Static Post-Processing Support
 | Force Result        | F06 | ANS | OP2 | PCH | CSV |  Notes |
 | ------------        | --- | --- | --- | --- | --- |  ----- |
 | CELASx              | Yes | Yes | Yes | ??? | No  |        |
-| CROD                | Yes | Yes | Yes | ??? | No  | OP2 code written; commented out due to bug |
+| CROD                | Yes | Yes | Yes | ??? | No  |        |
 | CBUSH               | Yes | Yes | Yes | ??? | No  |        |
-| CBAR                | Yes | Yes | Yes | ??? | No  | large difference between output structure of Nastran & Mystran  |
-| CBEAM               | No  | No  | No  | No  | No  | card not supported |
-| CSHEAR              | Yes | Yes | No  | ??? | No  | unclear how to form Nastran-style output |
+| CBAR                | Yes | Yes | Yes | ??? | No  |        |
+| CBEAM               | N/A | N/A | N/A | N/A | N/A | card not supported |
+| CSHEAR              | Yes | Yes | No  | ??? | No  | large difference between output structure of Nastran & Mystran |
 | CTRIA3 Iso          | Yes | Yes | Yes | ??? | No  |        |
 | TRIA3K/QUAD4K       | Yes | Yes | No  | ??? | No  |        |
 | CQUAD4 Iso-Center   | Yes | Yes | Yes | ??? | No  |        |
 | CQUAD4 Iso-Corner   | No  | No  | No  | ??? | No  |        |
-| CTRIA3 Comp         | No  | No  | No  | ??? | No  |        |
-| CQUAD4 Comp         | No  | No  | No  | ??? | No  |        |
+| CTRIA3 Comp         | No  | No  | No  | ??? | No  |  [results not calculated](https://github.com/MYSTRANsolver/MYSTRAN/issues/53) |
+| CQUAD4 Comp         | No  | No  | No  | ??? | No  |  [results not calculated](https://github.com/MYSTRANsolver/MYSTRAN/issues/53) |
 | Solid               | N/A | N/A | N/A | N/A | N/A | No outputs (expected) |
 
-| Stress Result       | F06 | ANS | OP2 | PCH | CSV | Notes        |
-| -------------       | --- | --- | --- | --- | --- | -----        |
-| CELASx              | ??? | ??? | ??? | ??? | No  |              |
-| CROD                | No  | No  |  No | ??? | No  | no axial/torsion margin   |
-| CBUSH               | ??? | ??? | ??? | ??? | No  |              |
+| Stress Result       | F06 | ANS | OP2 | PCH | CSV | Notes                     |
+| -------------       | --- | --- | --- | --- | --- | ------------------------- |
+| CELASx              | ??? | ??? | ??? | ??? | No  |                           |
+| CROD                | Yes | Yes | Yes | ??? | No  | no axial/torsion margin   |
+| CBUSH               | ??? | ??? | ??? | ??? | No  |                           |
 | CBAR                | Yes | Yes | Yes | ??? | No  | large difference between output structure of Nastran & Mystran |
-| CBEAM               | No  | No  | No  | No  | No  | card not supported |
-| CSHEAR              | Yes | No  | Yes | ??? | No  |              |
+| CBEAM               | N/A | N/A | N/A | N/A | N/A | card not supported        |
+| CSHEAR              | Yes | No  | Yes | ??? | No  |                           |
 | CTRIA3 Iso          | Yes | Yes | Yes | ??? | No  | OP2 plane1/2 results faked; no FIBER/CURV support (FIBER only); no MAXS/MISES support (MISES only)             |
 | CQUAD4 Iso-Center   | Yes | Yes | Yes | ??? | No  | OP2 plane1/2 results faked; no FIBER/CURV support (FIBER only); no MAXS/MISES support (MISES only)             |
-| CQUAD4 Iso-Corner   | Yes | Yes | ??? | ??? | No	|              |
+| CQUAD4 Iso-Corner   | Yes | Yes | ??? | ??? | No  |              |
 | CTRIA3 Comp         | Yes | Yes | Yes | ??? | No  | no FIBER/CURV support (FIBER only); no MAXS/MISES support (MISES only)             |
 | CQUAD4 Comp         | Yes | Yes | Yes | ??? | No  | no FIBER/CURV support (FIBER only); no MAXS/MISES support (MISES only)             |
 | Solid               | Yes | ??? | Yes | ??? | No  | Center support only (no corner); No directional vectors; No coordinate system support; no transform support         |
@@ -130,10 +130,10 @@ Static Post-Processing Support
 | Strain Result        | F06 | ANS | OP2 | PCH | CSV | Notes                   |
 | -------------        | --- | --- | --- | --- | --- | ----------------------- |
 | CELASx               | ??? | ??? | ??? | ??? | No  |                         |
-| CROD                 | Yes | No  | Yes | ??? | No  | no axial/torsion margin |
+| CROD                 | No  | No  | No  | ??? | No  | [1d results not calculated](https://github.com/MYSTRANsolver/MYSTRAN/issues/46) |
 | CBUSH                | ??? | ??? | ??? | ??? | No  |                         |
-| CBAR                 | No  | No  | No  | ??? | No  | [results not calculated](https://github.com/MYSTRANsolver/MYSTRAN/issues/46)  |
-| CBEAM                | No  | No  | No  | No  | No  | card not supported      |
+| CBAR                 | No  | No  | No  | No  | No  | [1d results not calculated](https://github.com/MYSTRANsolver/MYSTRAN/issues/46) |
+| CBEAM                | N/A | N/A | N/A | N/A | N/A | card not supported      |
 | CSHEAR               | Yes | No  | Yes | ??? | No  |                         |
 | CTRIA3 Iso           | Yes | Yes | ??? | ??? | No  | OP2 plane1/2 results faked; no FIBER/CURV support (FIBER only); no MAXS/MISES support (MISES only)
 | CQUAD4 Iso-Center    | Yes | Yes | Yes | ??? | No  | OP2 plane1/2 results faked; no FIBER/CURV support (FIBER only); no MAXS/MISES support (MISES only)
@@ -148,7 +148,7 @@ Static Post-Processing Support
 | CROD                 | No  | No  | No  | No  | No  |       |
 | CBUSH                | No  | No  | No  | No  | No  |       |
 | CBAR                 | No  | No  | No  | No  | No  |       |
-| CBEAM                | No  | No  | No  | No  | No  | card not supported |
+| CBEAM                | N/A | N/A | N/A | N/A | N/A | card not supported |
 | CSHEAR               | No  | No  | No  | No  | No  |       |
 | CTRIA3 Iso           | No  | No  | No  | No  | No  |       |
 | CQUAD4 Iso-Center    | No  | No  | No  | No  | No  |       |
@@ -185,7 +185,10 @@ Grid Point Weight Limitation
 
 ANS/F06 Limitations
 -------------------
- - ANS doesn't support shear stress/strain
+ - ANS doesn't support:
+   - grid point weight
+   - rod strain
+   - shear stress/strain
 
 OP2 Limitations
 ---------------
