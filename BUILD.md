@@ -67,8 +67,8 @@ straightforward.
      just do a **`cd MYSTRAN`**.
   5. Generate the build scripts by running **`cmake -G "MinGW Makefiles" .`**.
   6. Compile with **`mingw32-make`**. If you have an N-core processor, running
-  **`mingw32-make -jN`** will probably be much faster. A good choice of N is
-  printed in the previous step, right before the end.
+  **`mingw32-make -Oline -jN`** will probably be much faster. A good choice of N is
+  printed in the previous step, right before the end. The `-Oline` argument prevents garbled output when `N` > 1.
   7. The executable will reside at **`Binaries/mystran.exe`**.
 
 ### Steps for Linux (any)
