@@ -104,6 +104,8 @@
       REAL(DOUBLE)                    :: WT                ! Sum of weights on this RBE3
       REAL(DOUBLE)                    :: WT6(6)            ! WT6(i) = Sum of weights in comp i of an indep grid NB *** new 10/03/21
 
+      REAL(DOUBLE)                    :: SXY,SZX,SYZ       ! new Rdd terms according to victor
+
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
          CALL OURTIM
@@ -238,6 +240,8 @@
          DX_BAR = DX_BAR + WTi(J)*DXI(J)/WT6(1)            ! NB *** new 10/03/21. Change WT to WT6(1)
          DY_BAR = DY_BAR + WTi(J)*DYI(J)/WT6(2)            ! NB *** new 10/03/21. Change WT to WT6(2)
          DZ_BAR = DZ_BAR + WTi(J)*DZI(J)/WT6(3)            ! NB *** new 10/03/21. Change WT to WT6(3)
+
+         
       ENDDO
 
 
@@ -255,7 +259,17 @@
 
       ENDDO
 
-   
+! Calc the S-terms
+      SXY = ZERO
+      SZX = ZERO
+      SYZ = ZERO
+
+      DO J=1,IRBE3
+         SXY = SXY + WTi(J) * DXI(J) * DYI(J) / WT
+         SZX = SZX + WTi(J) * DZI(J) * DXI(J) / WT
+         SYZ = SYZ + WTi(J) * DYI(J) * DZI(J) / WT
+      END DO
+
       CALL TDOF_COL_NUM ( 'G ', G_SET_COL_NUM )
       CALL TDOF_COL_NUM ( 'M ', M_SET_COL_NUM )
       CALL RDOF ( COMPS_D, CDOF_D )
@@ -345,6 +359,16 @@ cdof_dep:IF (CDOF_D(I) == '1') THEN                        ! The I-th component 
                      WRITE(L1J) RMG_ROW_NUM, RMG_COL_NUM_D(I), ONE
                      ITERM_RMG = ITERM_RMG + 1
                   ENDIF
+
+                  IF (DABS(SXY) > EPS1) THEN 
+                     WRITE(L1J) RMG_ROW_NUM, RMG_COL_NUM_D(5), -SXY
+                     ITERM_RMG = ITERM_RMG + 1
+                  END IF
+
+                  IF (DABS(SZX) > EPS1) THEN 
+                     WRITE(L1J) RMG_ROW_NUM, RMG_COL_NUM_D(6), -SZX
+                     ITERM_RMG = ITERM_RMG + 1
+                  END IF
                ENDIF
 
                IF (I == 5) THEN 
@@ -355,6 +379,11 @@ cdof_dep:IF (CDOF_D(I) == '1') THEN                        ! The I-th component 
                      WRITE(L1J) RMG_ROW_NUM, RMG_COL_NUM_D(I), ONE
                      ITERM_RMG = ITERM_RMG + 1
                   ENDIF
+
+                  IF (DABS(SYZ) > EPS1) THEN 
+                     WRITE(L1J) RMG_ROW_NUM, RMG_COL_NUM_D(6), -SYZ
+                     ITERM_RMG = ITERM_RMG + 1
+                  END IF
                ENDIF
 
                IF (I == 6) THEN 
