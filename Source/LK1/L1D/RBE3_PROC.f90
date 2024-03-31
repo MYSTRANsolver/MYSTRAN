@@ -360,15 +360,11 @@ cdof_dep:IF (CDOF_D(I) == '1') THEN                        ! The I-th component 
                      ITERM_RMG = ITERM_RMG + 1
                   ENDIF
 
-                  IF (DABS(SXY) > EPS1) THEN 
-                     WRITE(L1J) RMG_ROW_NUM, RMG_COL_NUM_D(5), -SXY
-                     ITERM_RMG = ITERM_RMG + 1
-                  END IF
+                  WRITE(L1J) RMG_ROW_NUM, RMG_COL_NUM_D(5), -SXY
+                  ITERM_RMG = ITERM_RMG + 1
 
-                  IF (DABS(SZX) > EPS1) THEN 
-                     WRITE(L1J) RMG_ROW_NUM, RMG_COL_NUM_D(6), -SZX
-                     ITERM_RMG = ITERM_RMG + 1
-                  END IF
+                  WRITE(L1J) RMG_ROW_NUM, RMG_COL_NUM_D(6), -SZX
+                  ITERM_RMG = ITERM_RMG + 1
                ENDIF
 
                IF (I == 5) THEN 
@@ -380,10 +376,11 @@ cdof_dep:IF (CDOF_D(I) == '1') THEN                        ! The I-th component 
                      ITERM_RMG = ITERM_RMG + 1
                   ENDIF
 
-                  IF (DABS(SYZ) > EPS1) THEN 
-                     WRITE(L1J) RMG_ROW_NUM, RMG_COL_NUM_D(6), -SYZ
-                     ITERM_RMG = ITERM_RMG + 1
-                  END IF
+                  WRITE(L1J) RMG_ROW_NUM, RMG_COL_NUM_D(4), -SXY
+                  ITERM_RMG = ITERM_RMG + 1
+
+                  WRITE(L1J) RMG_ROW_NUM, RMG_COL_NUM_D(6), -SYZ
+                  ITERM_RMG = ITERM_RMG + 1
                ENDIF
 
                IF (I == 6) THEN 
@@ -394,6 +391,12 @@ cdof_dep:IF (CDOF_D(I) == '1') THEN                        ! The I-th component 
                      WRITE(L1J) RMG_ROW_NUM, RMG_COL_NUM_D(I), ONE
                      ITERM_RMG = ITERM_RMG + 1
                   ENDIF
+
+                  WRITE(L1J) RMG_ROW_NUM, RMG_COL_NUM_D(4), -SZX
+                  ITERM_RMG = ITERM_RMG + 1
+                  
+                  WRITE(L1J) RMG_ROW_NUM, RMG_COL_NUM_D(5), -SYZ
+                  ITERM_RMG = ITERM_RMG + 1
                ENDIF
 
                IF (I == 4) THEN
