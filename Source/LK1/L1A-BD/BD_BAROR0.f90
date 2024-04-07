@@ -31,7 +31,7 @@
 ! When this subr finishes, BAROR_VVEC_TYPE will be either:
 !         a) 'VECTOR   ' means this BAROR card had V vector in fields 6-8
 !         b) 'GRID     ' means this BAROR card had an integer in field 6
-!                        and blank fields 7 and 8 (indicating a grid for V vector).           
+!                        and blank fields 7 and 8 (indicating a grid for V vector).
 !         c) 'UNDEFINED' means this BAROR card had blank fields 6, 7 and 8
 !         d) 'ERROR    ' means anything but (a), (b), or (c). Subr BD_BAROR will print error
  
@@ -65,20 +65,21 @@
       ENDIF
 
 ! **********************************************************************************************************************************
-! Make JCARD from CARD
- 
+      ! Make JCARD from CARD
       CALL MKJCARD ( SUBR_NAME, CARD, JCARD )
  
-! Count the number of BAROR cards. The count will be checked to make sure that there is no more than 1 in subr LOADB
-
+      ! Count the number of BAROR cards. The count will be checked to make 
+      ! sure that there is no more than 1 in subr LOADB
       NBAROR = NBAROR + 1
 
-! Only set BAROR values if this is the 1st BAROR card. There should be only 1 BAROR card.
-! Reset IERRFL's to 'N', after testing, since CDRERR is not being called until BD_BAROR is called from LOADB
-
+      ! Only set BAROR values if this is the 1st BAROR card.
+      ! There should be only 1 BAROR card.
+      ! Reset IERRFL's to 'N', after testing, since CDRERR is not being 
+      ! called until BD_BAROR is called from LOADB
       IF (NBAROR == 1) THEN
 
-         DO J=1,10                                         ! Set JBAROR to JCARD. We need JBAROR(3) (the prop ID) in subr ELEPRO
+         ! Set JBAROR to JCARD. We need JBAROR(3) (the prop ID) in subr ELEPRO
+         DO J=1,10
             JBAROR(J) = JCARD(J)
          ENDDO 
 
@@ -92,15 +93,16 @@
             ENDIF
          ENDIF
 
-         DO J=1,JCARD_LEN                                  ! See if there is an actual V vector.
+         ! See if there is an actual V vector.
+         DO J=1,JCARD_LEN
             IF ((JCARD(6)(J:J) == '.') .OR. (JCARD(7)(J:J) == '.') .OR. (JCARD(8)(J:J) == '.')) THEN
                BAROR_VVEC_TYPE = 'VECTOR   '
                EXIT
             ENDIF
          ENDDO
 
-         IF (BAROR_VVEC_TYPE == 'VECTOR   ') THEN          ! If there was an actual V vector, get components.
-
+         IF (BAROR_VVEC_TYPE == 'VECTOR   ') THEN
+            ! If there was an actual V vector, get components.
             LVVEC = LVVEC + 1
             JERR = 0
             DO J=1,3
@@ -109,15 +111,17 @@
                   BAROR_VV(J) = R8INP
                ELSE
                   JERR = JERR + 1
-                  IERRFL(J+5) = 'N'                        ! Reset IERRFL - we don't want card field errors written from this subr
+                  ! Reset IERRFL - we don't want card field errors written from this subr
+                  IERRFL(J+5) = 'N'
                ENDIF
             ENDDO
             IF (JERR /= 0) THEN
-               BAROR_VVEC_TYPE = 'ERROR    '               ! Found err in V vector components, so reset BAROR_VVEC_TYPE to 'ERROR' 
+               ! Found err in V vector components, so reset BAROR_VVEC_TYPE to 'ERROR' 
+               BAROR_VVEC_TYPE = 'ERROR    '
             ENDIF
 
-         ELSE                                              ! Check to see if there is a grid no. for specifying VVEC
-
+         ELSE
+            ! Check to see if there is a grid no. for specifying VVEC
             IF ((JCARD(6)(1:) /= ' ') .AND. (JCARD(7)(1:) == ' ') .AND. (JCARD(8)(1:) == ' ')) THEN
 
                BAROR_VVEC_TYPE = 'GRID     '               ! We will check in subr BD_BAROR for read error
