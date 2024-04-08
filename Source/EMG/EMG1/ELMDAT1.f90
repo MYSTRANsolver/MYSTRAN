@@ -55,7 +55,7 @@
                                          INTL_MID, INTL_PID, ISOLID, MATANGLE, MATL, MTRL_TYPE, NUM_SEi, OFFDIS, OFFDIS_O, OFFSET, &
                                          PBAR, PBEAM, PCOMP, PCOMP_PROPS, PLATEOFF, PLATETHICK, PROD, PSHEAR, PSHEL, PSOLID,       &
                                          PUSER1, PUSERIN, RMATL, RPBAR, RPBEAM, RPBUSH, RPELAS, RPROD, RPSHEAR, RPSHEL, RPUSER1,   &
-                                         TYPE, VVEC, XEB, ZOFFS, OFFT
+                                         TYPE, VVEC, XEB, ZOFFS, OFFT, VV
 
       USE MODEL_STUF, ONLY            :  USERIN_ACT_GRIDS, USERIN_ACT_COMPS, USERIN_CID0, USERIN_IN4_INDEX,                        &
                                          USERIN_MAT_NAMES, USERIN_NUM_BDY_DOF, USERIN_NUM_ACT_GRDS, USERIN_NUM_SPOINTS,            &
@@ -103,7 +103,6 @@
       REAL(DOUBLE)                    :: PHID, THETAD       ! Outputs from subr GEN_T0L
       REAL(DOUBLE)                    :: THICK_AVG          ! Average of all THICK(i)
       REAL(DOUBLE)                    :: T0G(3,3)           ! Matrix to transform V vector from global to basic coords 
-      REAL(DOUBLE)                    :: VV(3)              ! V vector in basic coords for this elem
       INTEGER(LONG)                   :: OFFTI              ! interpretation of V vector
       LOGICAL                         :: IS_OFFT            ! is the offt flag active
       INTEGER(LONG)                   :: IPIN1_EDAT         ! index of PIN1 in EDAT for CBAR/CBEAM; constant
@@ -323,6 +322,7 @@
                   ELSE
                      ! V vector was in basic coords
                      DO J=1,3
+                        VV(J) = VVEC(IVVEC,J)
                         XEB(ELGP+1,J) = XEB(1,J) + VVEC(IVVEC,J)
                      ENDDO
                   ENDIF
@@ -377,12 +377,12 @@
       IF      (TYPE == 'BAR     ') THEN
          DO I=1,MRPBAR
             EPROP(I) = RPBAR(INTL_PID,I)
-         ENDDO 
+         ENDDO
 
       ELSE IF (TYPE == 'BEAM    ') THEN
          DO I=1,MRPBEAM
             EPROP(I) = RPBEAM(INTL_PID,I)
-         ENDDO 
+         ENDDO
 
       ELSE IF (TYPE == 'BUSH    ') THEN
          DO I=1,MRPBUSH
@@ -400,22 +400,22 @@
                   FATAL_ERR = FATAL_ERR + 1
                ENDIF
             ENDIF
-         ENDDO 
+         ENDDO
 
       ELSE IF (TYPE(1:4) == 'ELAS') THEN
          DO I=1,MRPELAS
             EPROP(I) = RPELAS(INTL_PID,I)
-         ENDDO 
+         ENDDO
 
       ELSE IF (TYPE == 'ROD     ') THEN
          DO I=1,MRPROD
             EPROP(I) = RPROD(INTL_PID,I)
-         ENDDO 
+         ENDDO
 
       ELSE IF (TYPE == 'SHEAR   ') THEN
          DO I=1,MRPSHEAR
             EPROP(I) = RPSHEAR(INTL_PID,I)
-         ENDDO 
+         ENDDO
 
       ELSE IF ((TYPE(1:5) == 'TRIA3') .OR. (TYPE(1:5) == 'QUAD4')) THEN
          IF (PCOMP_PROPS == 'N') THEN

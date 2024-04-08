@@ -1123,6 +1123,7 @@
 ! --------------------
 
       CHARACTER(3*BYTE)               :: OFFT                ! the OFFT flag
+      REAL(DOUBLE)                    :: VV(3)               ! V vector in basic coords for this elem
       REAL(DOUBLE), ALLOCATABLE       :: BAROFF(:,:)         ! BAR/BEAM elem offsets (3 offsets at each of 2 grids)
 
       REAL(DOUBLE), ALLOCATABLE       :: VVEC(:,:)           ! BAR elem V vector components for all distinct BAR elem V vecs
