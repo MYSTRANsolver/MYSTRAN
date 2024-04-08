@@ -104,6 +104,9 @@
       REAL(DOUBLE)                    :: WT                ! Sum of weights on this RBE3
       REAL(DOUBLE)                    :: WT6(6)            ! WT6(i) = Sum of weights in comp i of an indep grid NB *** new 10/03/21
 
+      REAL(DOUBLE)                    :: SXY,SZX,SYZ       ! new Rdd terms according to victor
+      REAL(DOUBLE)                    :: WTi6(MRBE3,6)     ! per-DoF grid weights
+
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
          CALL OURTIM
@@ -145,6 +148,9 @@
          WT6(I) = ZERO                                     ! NB *** new 10/03/21
       ENDDO                                                ! NB *** new 10/03/21
 
+      ! zero-init WTi6
+      WTi6 = ZERO
+
 ! Start reading at the 2nd record of L1F for this RBE3 (first record, RYPE, was read above in calling subr, RIGID_ELEM_PROC):
                                                            ! Read 2nd record from L1F for this RBE3
       READ(L1F,IOSTAT=IOCHK) REID, AGRID_D, COMPS_D, IRBE3, WT
@@ -171,14 +177,14 @@
             IERR = IERR + 1
             JERR = JERR + 1
          ENDIF
-         CALL RDOF ( COMPS_I(I), CDOF_I )                  ! NB *** new 10/03/21 + next 6 lines
-         IF (CDOF_I(1) == '1') THEN   ;   WT6(1) = WT6(1) + WTi(I)   ;   ENDIF
-         IF (CDOF_I(2) == '1') THEN   ;   WT6(2) = WT6(2) + WTi(I)   ;   ENDIF
-         IF (CDOF_I(3) == '1') THEN   ;   WT6(3) = WT6(3) + WTi(I)   ;   ENDIF
-         IF (CDOF_I(4) == '1') THEN   ;   WT6(4) = WT6(4) + WTi(I)   ;   ENDIF
-         IF (CDOF_I(5) == '1') THEN   ;   WT6(5) = WT6(5) + WTi(I)   ;   ENDIF
-         IF (CDOF_I(6) == '1') THEN   ;   WT6(6) = WT6(6) + WTi(I)   ;   ENDIF
-         write(f06,*)
+         CALL RDOF ( COMPS_I(I), CDOF_I )
+         DO J=1,6
+            IF (CDOF_I(J) == '1') THEN
+               WTi6(I,J) = WTi(I)
+               WT6(J) = WT6(J) + WTi(I)
+            END IF
+         END DO
+         WRITE(f06,*)
       ENDDO
 
 ! Return if error
@@ -235,9 +241,11 @@
          DYI(J) = DUM3(2)
          DZI(J) = DUM3(3)
 
-         DX_BAR = DX_BAR + WTi(J)*DXI(J)/WT6(1)            ! NB *** new 10/03/21. Change WT to WT6(1)
-         DY_BAR = DY_BAR + WTi(J)*DYI(J)/WT6(2)            ! NB *** new 10/03/21. Change WT to WT6(2)
-         DZ_BAR = DZ_BAR + WTi(J)*DZI(J)/WT6(3)            ! NB *** new 10/03/21. Change WT to WT6(3)
+         DX_BAR = DX_BAR + WTi6(J,1)*DXI(J)
+         DY_BAR = DY_BAR + WTi6(J,2)*DYI(J)
+         DZ_BAR = DZ_BAR + WTi6(J,3)*DZI(J)
+
+         
       ENDDO
 
 
@@ -249,13 +257,23 @@
 
       DO J=1,IRBE3
 
-         EBAR_YZ = EBAR_YZ + WTi(J)*( DYI(J)*DYI(J) + DZI(J)*DZI(J) )/WT
-         EBAR_ZX = EBAR_ZX + WTi(J)*( DZI(J)*DZI(J) + DXI(J)*DXI(J) )/WT
-         EBAR_XY = EBAR_XY + WTi(J)*( DXI(J)*DXI(J) + DYI(J)*DYI(J) )/WT
+         EBAR_YZ = EBAR_YZ + WTi6(J,3)*DYI(J)*DYI(J) + WTi6(J,2)*DZI(J)*DZI(J)
+         EBAR_ZX = EBAR_ZX + WTi6(J,1)*DZI(J)*DZI(J) + WTi6(J,3)*DXI(J)*DXI(J)
+         EBAR_XY = EBAR_XY + WTi6(J,2)*DXI(J)*DXI(J) + WTi6(J,1)*DYI(J)*DYI(J)
 
       ENDDO
 
-   
+! Calc the S-terms
+      SXY = ZERO
+      SZX = ZERO
+      SYZ = ZERO
+
+      DO J=1,IRBE3
+         SXY = SXY + WTi6(J,3) * DXI(J) * DYI(J)
+         SZX = SZX + WTi6(J,2) * DZI(J) * DXI(J)
+         SYZ = SYZ + WTi6(J,1) * DYI(J) * DZI(J)
+      END DO
+
       CALL TDOF_COL_NUM ( 'G ', G_SET_COL_NUM )
       CALL TDOF_COL_NUM ( 'M ', M_SET_COL_NUM )
       CALL RDOF ( COMPS_D, CDOF_D )
@@ -290,10 +308,10 @@ cdof_dep:IF (CDOF_D(I) == '1') THEN                        ! The I-th component 
                                                           ! Write coeff for the T1, T2 or T3 component at the ref pt
                IF ((I == 1) .OR. (I == 2) .OR. (I == 3)) THEN
                   IF (DABS(WT) > EPS1) THEN 
-                     WRITE(L1J) RMG_ROW_NUM, RMG_COL_NUM_D(I), ONE
+                     WRITE(L1J) RMG_ROW_NUM, RMG_COL_NUM_D(I), WT6(I)
                      ITERM_RMG = ITERM_RMG + 1
                   ELSE
-                     WRITE(L1J) RMG_ROW_NUM, RMG_COL_NUM_D(I), ONE
+                     WRITE(L1J) RMG_ROW_NUM, RMG_COL_NUM_D(I), WT6(I)
                      ITERM_RMG = ITERM_RMG + 1
                      CYCLE do_i1
                   ENDIF
@@ -345,6 +363,12 @@ cdof_dep:IF (CDOF_D(I) == '1') THEN                        ! The I-th component 
                      WRITE(L1J) RMG_ROW_NUM, RMG_COL_NUM_D(I), ONE
                      ITERM_RMG = ITERM_RMG + 1
                   ENDIF
+
+                  WRITE(L1J) RMG_ROW_NUM, RMG_COL_NUM_D(5), -SXY
+                  ITERM_RMG = ITERM_RMG + 1
+
+                  WRITE(L1J) RMG_ROW_NUM, RMG_COL_NUM_D(6), -SZX
+                  ITERM_RMG = ITERM_RMG + 1
                ENDIF
 
                IF (I == 5) THEN 
@@ -355,6 +379,12 @@ cdof_dep:IF (CDOF_D(I) == '1') THEN                        ! The I-th component 
                      WRITE(L1J) RMG_ROW_NUM, RMG_COL_NUM_D(I), ONE
                      ITERM_RMG = ITERM_RMG + 1
                   ENDIF
+
+                  WRITE(L1J) RMG_ROW_NUM, RMG_COL_NUM_D(4), -SXY
+                  ITERM_RMG = ITERM_RMG + 1
+
+                  WRITE(L1J) RMG_ROW_NUM, RMG_COL_NUM_D(6), -SYZ
+                  ITERM_RMG = ITERM_RMG + 1
                ENDIF
 
                IF (I == 6) THEN 
@@ -365,6 +395,12 @@ cdof_dep:IF (CDOF_D(I) == '1') THEN                        ! The I-th component 
                      WRITE(L1J) RMG_ROW_NUM, RMG_COL_NUM_D(I), ONE
                      ITERM_RMG = ITERM_RMG + 1
                   ENDIF
+
+                  WRITE(L1J) RMG_ROW_NUM, RMG_COL_NUM_D(4), -SZX
+                  ITERM_RMG = ITERM_RMG + 1
+                  
+                  WRITE(L1J) RMG_ROW_NUM, RMG_COL_NUM_D(5), -SYZ
+                  ITERM_RMG = ITERM_RMG + 1
                ENDIF
 
                IF (I == 4) THEN
@@ -441,9 +477,9 @@ do_j1:      DO J=1,IRBE3                                   ! Cycle over "indep" 
                CALL MATMULT_FFF_T ( T0D, T0I, 3, 3, 3, TDI )
 
                IF ((I == 1) .OR. (I == 2) .OR. (I == 3)) THEN
-                  CALL WRITE_L1J_123 ( I, J, ITERM_RMG, G_SET_COL_NUM, RMG_ROW_NUM, WTi, AGRID_I, CDOF_I, COMPS_I, TDI )
+                  CALL WRITE_L1J_123 ( I, J, ITERM_RMG, G_SET_COL_NUM, RMG_ROW_NUM, WTi6, AGRID_I, CDOF_I, COMPS_I, TDI )
                ELSE
-                  CALL WRITE_L1J_456 ( I, J, ITERM_RMG, G_SET_COL_NUM, RMG_ROW_NUM, WTi, AGRID_I, CDOF_I, DXI, DYI, DZI )
+                  CALL WRITE_L1J_456 ( I, J, ITERM_RMG, G_SET_COL_NUM, RMG_ROW_NUM, WTi6, AGRID_I, CDOF_I, DXI, DYI, DZI )
                ENDIF
 
             ENDDO do_j1
@@ -497,7 +533,7 @@ do_j1:      DO J=1,IRBE3                                   ! Cycle over "indep" 
 
 ! ##################################################################################################################################
 
-      SUBROUTINE WRITE_L1J_123 ( I, J, ITERM_RMG, G_SET_COL_NUM, RMG_ROW_NUM, WTi, AGRID_I, CDOF_I, COMPS_I, TDI )
+      SUBROUTINE WRITE_L1J_123 ( I, J, ITERM_RMG, G_SET_COL_NUM, RMG_ROW_NUM, WTi6, AGRID_I, CDOF_I, COMPS_I, TDI )
 
       USE PENTIUM_II_KIND, ONLY       :  LONG, DOUBLE
       USE IOUNT1, ONLY                :  L1J
@@ -520,7 +556,7 @@ do_j1:      DO J=1,IRBE3                                   ! Cycle over "indep" 
       INTEGER(LONG)                   :: ROW_NUM_START_I   ! DOF number where TDOF data begins for a grid
 
       REAL(DOUBLE) , INTENT(IN)       :: TDI(3,3)          ! TOD'*T0I
-      REAL(DOUBLE) , INTENT(IN)       :: WTi(MRBE3)        ! Weight value for an indep grid
+      REAL(DOUBLE) , INTENT(IN)       :: WTi6(MRBE3,6)     ! Weight value for an indep grid (PER-DOF)
 
 ! **********************************************************************************************************************************
 
@@ -534,7 +570,7 @@ do_j1:      DO J=1,IRBE3                                   ! Cycle over "indep" 
             RMG_COL_NUM_I = TDOF(ROW_NUM,G_SET_COL_NUM)
 
             IF (RMG_COL_NUM_I > 0) THEN                    ! NB *** new 10/03/21 Change WT (below) to WT6(K)
-               WRITE(L1J) RMG_ROW_NUM, RMG_COL_NUM_I, -WTi(J)*TDI(I,K)/WT6(K)
+               WRITE(L1J) RMG_ROW_NUM, RMG_COL_NUM_I, -WTi6(J,K)*TDI(I,K)
                ITERM_RMG = ITERM_RMG + 1
             ELSE
                WRITE(ERR,1513) 'RBE3_PROC', AGRID_I(J) ,COMPS_I(J), RMG_COL_NUM_I
@@ -558,7 +594,7 @@ do_j1:      DO J=1,IRBE3                                   ! Cycle over "indep" 
 
 ! ##################################################################################################################################
 
-      SUBROUTINE WRITE_L1J_456 ( I, J, ITERM_RMG, G_SET_COL_NUM, RMG_ROW_NUM, WTi, AGRID_I, CDOF_I, DXI, DYI, DZI )
+      SUBROUTINE WRITE_L1J_456 ( I, J, ITERM_RMG, G_SET_COL_NUM, RMG_ROW_NUM, WTi6, AGRID_I, CDOF_I, DXI, DYI, DZI )
 
       USE PENTIUM_II_KIND, ONLY       :  LONG, DOUBLE
       USE IOUNT1, ONLY                :  L1J
@@ -581,7 +617,7 @@ do_j1:      DO J=1,IRBE3                                   ! Cycle over "indep" 
       REAL(DOUBLE) , INTENT(IN)       :: DXI(MRBE3)        ! Distances from ref pt to pt i in X global directions at ref pt 
       REAL(DOUBLE) , INTENT(IN)       :: DYI(MRBE3)        ! Distances from ref pt to pt i in Y global directions at ref pt 
       REAL(DOUBLE) , INTENT(IN)       :: DZI(MRBE3)        ! Distances from ref pt to pt i in Z global directions at ref pt 
-      REAL(DOUBLE) , INTENT(IN)       :: WTi(MRBE3)        ! Weight value for an indep grid
+      REAL(DOUBLE) , INTENT(IN)       :: WTi6(MRBE3,6)     ! Weight value for an indep grid (PER-DOF)
 
 ! **********************************************************************************************************************************
 !xx   CALL CALC_TDOF_ROW_NUM ( AGRID_I(J), ROW_NUM_START_I, 'N' )
@@ -599,36 +635,36 @@ do_j1:      DO J=1,IRBE3                                   ! Cycle over "indep" 
       IF      (I == 4) THEN                                ! Rotation about x, i.e. in yz (23) plane
 
          IF (CDOF_I(2) == '1') THEN
-            WRITE(L1J) RMG_ROW_NUM, (RMG_COL_NUM_START-1)+2, +WTi(J)*DZI(J)/WT
+            WRITE(L1J) RMG_ROW_NUM, (RMG_COL_NUM_START-1)+2, +WTi6(J,1)*DZI(J)
             ITERM_RMG = ITERM_RMG +1
          ENDIF
 
          IF (CDOF_I(3) == '1') THEN
-            WRITE(L1J) RMG_ROW_NUM, (RMG_COL_NUM_START-1)+3, -WTi(J)*DYI(J)/WT
+            WRITE(L1J) RMG_ROW_NUM, (RMG_COL_NUM_START-1)+3, -WTi6(J,1)*DYI(J)
             ITERM_RMG = ITERM_RMG +1
          ENDIF
 
       ELSE IF (I == 5) THEN                                ! Rotation about y, i.e. in zx (31) plane      
 
          IF (CDOF_I(1) == '1') THEN
-            WRITE(L1J) RMG_ROW_NUM, (RMG_COL_NUM_START-1)+1, -WTi(J)*DZI(J)/WT
+            WRITE(L1J) RMG_ROW_NUM, (RMG_COL_NUM_START-1)+1, -WTi6(J,2)*DZI(J)
             ITERM_RMG = ITERM_RMG +1
          ENDIF
 
          IF (CDOF_I(3) == '1') THEN
-            WRITE(L1J) RMG_ROW_NUM, (RMG_COL_NUM_START-1)+3, +WTi(J)*DXI(J)/WT
+            WRITE(L1J) RMG_ROW_NUM, (RMG_COL_NUM_START-1)+3, +WTi6(J,2)*DXI(J)
             ITERM_RMG = ITERM_RMG +1
          ENDIF
 
       ELSE IF (I == 6) THEN                                ! Rotation about z, i.e. in xy (12) plane
 
          IF (CDOF_I(1) == '1') THEN
-            WRITE(L1J) RMG_ROW_NUM, (RMG_COL_NUM_START-1)+1, +WTi(J)*DYI(J)/WT
+            WRITE(L1J) RMG_ROW_NUM, (RMG_COL_NUM_START-1)+1, +WTi6(J,3)*DYI(J)
             ITERM_RMG = ITERM_RMG +1
          ENDIF
 
          IF (CDOF_I(2) == '1') THEN
-            WRITE(L1J) RMG_ROW_NUM, (RMG_COL_NUM_START-1)+2, -WTi(J)*DXI(J)/WT
+            WRITE(L1J) RMG_ROW_NUM, (RMG_COL_NUM_START-1)+2, -WTi6(J,3)*DXI(J)
             ITERM_RMG = ITERM_RMG +1
          ENDIF
 
