@@ -5,10 +5,10 @@ There are a few main ways to export data (to verify):
 
 | Location |  Case Control Command  |  Notes       |
 | -------- |  --------------------  |  -----       |
-| F06/ans  |  DISP=ALL              | Defaults to PRINT |
+| F06/ans  |  DISP=ALL              | Defaults to PRINT         |
 | F06/ans  |  DISP(PRINT)=ALL       | Writes to the F06 file (and ANS if DEBUG,200)  |
-| OP2      |  DISP(PLOT)=ALL        | Writes to the OP2 file |
-| PUNCH    |  DISP(PUNCH)=ALL       | Writes to the PCH file |
+| OP2      |  DISP(PLOT)=ALL        | Writes to the OP2 file    |
+| PUNCH    |  DISP(PUNCH)=ALL       | Writes to the PCH file    |
 | CSV      |  DISP(CSV)=ALL         | TODO: Write to a CSV file |
 | NEU      |  DISP(NEU)=ALL         | TODO: Writes to a NEU file (currently generated with PARAM,POST,-1) |
 
@@ -29,7 +29,7 @@ OP2 PLOT Support
 | STRAIN   |         |
 | FORCE    |         |
 | ESE      | N/A     |
-| GPFORCE  | N/A     |
+| GPFORCE  |         |
 
 Using Sets with Output Requests
 ===============================
@@ -46,17 +46,26 @@ which begs the question of is the code compatible with sets, when we do?
 
 FAQ
 ---------
-**What is the difference between F06, OP2, and ANS files?**
+**What is the difference between F06, OP2, NEU, and ANS files?**
 
-F06 is the main human readable Nastran/Mystran output.  It contains error messages, warnings, etc. which can make things harder to parse.  In general, you'd use this for quick checks, but post-processors like FEMAP / PATRAN / pyNastran can't read it.  An F06 result is requested with a PRINT flag.
+**F06** is the main human readable Nastran/Mystran output.  It contains error messages, warnings, etc. which can make things harder to parse.  In general, you'd use this for quick checks, but post-processors like FEMAP / PATRAN / pyNastran can't read it.  An F06 result is requested with a PRINT flag.
 
-THe OP2 is the main binary output file that FEMAP / PATRAN / pyNastran can read.  An OP2 result is requested with a PLOT flag.
+The **ANS** is LINK9 (results) only and requires a debug flag to export.  It is simpler to parse, but basically the same as the F06.  An ANS result is requested with a PRINT flag and a ``DEBUG,200,1`` flag.
 
-The ANS is LINK9 (results) only and requires a debug flag to export.  It is simpler to parse, but basically the same as the F06.  An ANS result is requested with a PRINT flag and a DEBUG, 200 flag.
+THe **OP2** is the main binary output file that FEMAP / PATRAN / pyNastran can read.  An OP2 result is requested with a PLOT flag (e.g., ``DISP(PLOT) = ALL``).
+
+The **NEU** is an ASCII file that is supported by FEMAP.  It's not well tested against though.  NEU is selected with the ``PARAM,POST,-1`` flag.
+
+The **PCH** is an even simpler to parse ASCII file that might have some issues writing out.  It's not well tested against though.  A PCH result is requested with a PUNCH flag (e.g., ``DISP(PUNCH) = ALL``).
+
 
 **Why is my OP2 basically empty (<1 KB)?**
 
 You forgot to request results.  Use DISP(PLOT) = ALL.
+
+**Why is my PCH file not created when I use PUNCH?**
+
+Unlcear.  Seems like a bug.
 
 
 OP2 Params (TODO)
@@ -77,84 +86,87 @@ PARAM,OGEOM,YES
 Static Post-Processing Support
 ==============================
 
-see https://github.com/dr-bill-c/MYSTRAN/pull/24#event-5702809912
+| Result              | F06 | ANS | OP2 | PCH | CSV |  Notes |
+| ------              | --- | --- | --- | --- | --- |  ----- |
+| Displacement        | Yes | Yes | Yes | ??? | No  |        |
+| SPC Force           | Yes | Yes | Yes | ??? | No  |        |
+| MPC Force           | Yes | ??? | Yes | ??? | No  |        |
+| Applied Load Vector | Yes | Yes | Yes | ??? | No  |        |
+| Grid Point Weight   | Yes | No  | Yes | ??? | No  | See Grid Point Weight note |
+| Grid Point Force    | Yes | Yes | Yes | ??? | No  |        |
 
-| Result              |  F06  |  ANS  | OP2  | PCH  | CSV |  Notes |
-| ------              |  ---  |  ---  | ---  | ---  | --- |  ----- |
-| Displacement        |  Yes  |  ???  | Yes  | ???  | No  |        |
-| SPC Force           |  Yes  |  ???  | Yes  | ???  | No  |        |
-| MPC Force           |  Yes  |  ???  | Yes  | ???  | No  |        |
-| Applied Load Vector |  Yes  |  ???  | Yes  | ???  | No  |        |
-| Grid Point Weight   |  Yes  |  ???  | Yes  | ???  | No  | See Grid Point Weight note |
-| Grid Point Force    |  Yes  |  ???  | No   | ???  | No  | F06 writing is coupled with data structure and limits OP2 integration; should be refactored |
+| Force Result        | F06 | ANS | OP2 | PCH | CSV |  Notes |
+| ------------        | --- | --- | --- | --- | --- |  ----- |
+| CELASx              | Yes | Yes | Yes | ??? | No  |        |
+| CROD                | Yes | Yes | Yes | ??? | No  |        |
+| CBUSH               | Yes | Yes | Yes | ??? | No  |        |
+| CBAR                | Yes | Yes | Yes | ??? | No  |        |
+| CBEAM               | N/A | N/A | N/A | N/A | N/A | card not supported |
+| CSHEAR              | Yes | Yes | No  | ??? | No  | large difference between output structure of Nastran & Mystran |
+| CTRIA3 Iso          | Yes | Yes | Yes | ??? | No  |        |
+| TRIA3K/QUAD4K       | Yes | Yes | No  | ??? | No  |        |
+| CQUAD4 Iso-Center   | Yes | Yes | Yes | ??? | No  |        |
+| CQUAD4 Iso-Corner   | No  | No  | No  | ??? | No  |        |
+| CTRIA3 Comp         | No  | No  | No  | ??? | No  |  [results not calculated](https://github.com/MYSTRANsolver/MYSTRAN/issues/53) |
+| CQUAD4 Comp         | No  | No  | No  | ??? | No  |  [results not calculated](https://github.com/MYSTRANsolver/MYSTRAN/issues/53) |
+| Solid               | N/A | N/A | N/A | N/A | N/A | No outputs (expected) |
 
-| Force Result        |  F06 |  ANS |  OP2 |  PCH |  CSV |  Notes |
-| ------------        |  --- |  --- |  --- |  --- |  --- |  ----- |
-| CELASx              |  Yes |  Yes |  Yes |  ??? |  No  |        |
-| CROD                |  Yes |  Yes |  Yes |  ??? |  No  | OP2 code written; commented out due to bug |
-| CBUSH               |  Yes |  Yes |  Yes |  ??? |  No  |        |
-| CBAR                |  Yes |  Yes |  Yes |  ??? |  No  | large difference between output structure of Nastran & Mystran  |
-| CSHEAR              |  Yes |  Yes |  No  |  ??? |  No  |        |
-| CTRIA3              |  Yes |  Yes |  Yes |  ??? |  No  |        |
-| TRIA3K/QUAD4K       |  Yes |  Yes |  No  |  ??? |  No  |        |
-| CQUAD4 Iso-Center   |  Yes |  Yes |  Yes |  ??? |  No  |        |
-| CQUAD4 Iso-Corner   |  No  |  No  |  No  |  ??? |  No  |        |
-| CTRIA3 Comp         |  ??? |  ??? |  No  |  ??? |  No  |        |
-| CQUAD4 Comp         |  ??? |  ??? |  No  |  ??? |  No  |        |
-| Solid               |  N/A |  N/A |  N/A |  N/A |  N/A |  No outputs available; expected | 
-
-| Stress Result       | F06  | ANS  | OP2  | PCH  | CSV  | Notes        |
-| -------------       | ---  | ---  | ---  | ---  | ---  | -----        |
-| CELASx              | ???  | ???  | ???  | ???  | No	  |              |
-| CROD                | Yes  | ???  | Yes  | ???  | No   | no axial/torsion margin   |
-| CBUSH               | ???  | ???  | ???  | ???  | No	  |              |
-| CBAR                | ???  | ???  | ???  | ???  | No	  | large difference between output structure of Nastran & Mystran |
-| CSHEAR              | ???  | ???  | Yes  | ???  | No	  |              |
-| CTRIA3 Iso          | ???  | ???  | ???  | ???  | No   | OP2 plane1/2 results faked; no FIBER/CURV support (FIBER only); no MAXS/MISES support (MISES only)             |
-| CQUAD4 Iso-Center   | ???  | ???  | ???  | ???  | No   | OP2 plane1/2 results faked; no FIBER/CURV support (FIBER only); no MAXS/MISES support (MISES only)             |
-| CQUAD4 Iso-Corner   | ???  | ???  | ???  | ???  | No	  |              |
-| CTRIA3 Comp         | ???  | ???  | ???  | ???  | No   | no FIBER/CURV support (FIBER only); no MAXS/MISES support (MISES only)             |
-| CQUAD4 Comp         | ???  | ???  | ???  | ???  | No   | no FIBER/CURV support (FIBER only); no MAXS/MISES support (MISES only)             |
-| Solid               | Yes  | ???  | Yes  | ???  | No   | No directional vectors; No coordinate system support; no transform support         |
+| Stress Result       | F06 | ANS | OP2 | PCH | CSV | Notes                     |
+| -------------       | --- | --- | --- | --- | --- | ------------------------- |
+| CELASx              | ??? | ??? | ??? | ??? | No  |                           |
+| CROD                | Yes | Yes | Yes | ??? | No  | no axial/torsion margin   |
+| CBUSH               | ??? | ??? | ??? | ??? | No  |                           |
+| CBAR                | Yes | Yes | Yes | ??? | No  | large difference between output structure of Nastran & Mystran |
+| CBEAM               | N/A | N/A | N/A | N/A | N/A | card not supported        |
+| CSHEAR              | Yes | No  | Yes | ??? | No  |                           |
+| CTRIA3 Iso          | Yes | Yes | Yes | ??? | No  | OP2 plane1/2 results faked; no FIBER/CURV support (FIBER only); no MAXS/MISES support (MISES only)             |
+| CQUAD4 Iso-Center   | Yes | Yes | Yes | ??? | No  | OP2 plane1/2 results faked; no FIBER/CURV support (FIBER only); no MAXS/MISES support (MISES only)             |
+| CQUAD4 Iso-Corner   | Yes | Yes | ??? | ??? | No  |              |
+| CTRIA3 Comp         | Yes | Yes | Yes | ??? | No  | no FIBER/CURV support (FIBER only); no MAXS/MISES support (MISES only)             |
+| CQUAD4 Comp         | Yes | Yes | Yes | ??? | No  | no FIBER/CURV support (FIBER only); no MAXS/MISES support (MISES only)             |
+| Solid               | Yes | ??? | Yes | ??? | No  | Center support only (no corner); No directional vectors; No coordinate system support; no transform support         |
 
 
-| Strain Result        | F06  | ANS  | OP2  | PCH | CSV | Notes |
-| -------------        | ---  | ---  | ---  | --- | --- | ----- |
-| CELASx               | ???  | ???  | ???  | ??? | No  |       |
-| CROD                 | Yes  | ???  | Yes  | ??? | No  | no axial/torsion margin |
-| CBUSH                | ???  | ???  | ???  | ??? | No  |       |
-| CBAR                 | ???  | ???  | ???  | ??? | No  |       |
-| CBEAM                | ???  | ???  | ???  | ??? | No  | results not calculated  |
-| CTRIA3 Iso           | ???  | ???  | ???  | ??? | No  | OP2 plane1/2 results faked; no FIBER/CURV support (FIBER only); no MAXS/MISES support (MISES only)
-| CQUAD4 Iso-Center    | ???  | ???  | Yes  | ??? | No  | OP2 plane1/2 results faked; no FIBER/CURV support (FIBER only); no MAXS/MISES support (MISES only)
-| CQUAD4 Iso-Corner    | ???  | ???  | Yes  | ??? | No  | OP2 plane1/2 results faked; no FIBER/CURV support (FIBER only); no MAXS/MISES support (MISES only)
-| CTRIA3 Comp          | ???  | ???  | Yes  | ??? | No  | no FIBER/CURV support (FIBER only); no MAXS/MISES support (MISES only)
-| CQUAD4 Comp          | ???  | ???  | Yes  | ??? | No  | no FIBER/CURV support (FIBER only); no MAXS/MISES support (MISES only)
-| Solid                | Yes  | ???  | Yes  | ??? | No  | No directional vectors; No coordinate system support; no transform support
+| Strain Result        | F06 | ANS | OP2 | PCH | CSV | Notes                   |
+| -------------        | --- | --- | --- | --- | --- | ----------------------- |
+| CELASx               | ??? | ??? | ??? | ??? | No  |                         |
+| CROD                 | No  | No  | No  | ??? | No  | [1d results not calculated](https://github.com/MYSTRANsolver/MYSTRAN/issues/46) |
+| CBUSH                | ??? | ??? | ??? | ??? | No  |                         |
+| CBAR                 | No  | No  | No  | No  | No  | [1d results not calculated](https://github.com/MYSTRANsolver/MYSTRAN/issues/46) |
+| CBEAM                | N/A | N/A | N/A | N/A | N/A | card not supported      |
+| CSHEAR               | Yes | No  | Yes | ??? | No  |                         |
+| CTRIA3 Iso           | Yes | Yes | ??? | ??? | No  | OP2 plane1/2 results faked; no FIBER/CURV support (FIBER only); no MAXS/MISES support (MISES only)
+| CQUAD4 Iso-Center    | Yes | Yes | Yes | ??? | No  | OP2 plane1/2 results faked; no FIBER/CURV support (FIBER only); no MAXS/MISES support (MISES only)
+| CQUAD4 Iso-Corner    | ??? | ??? | Yes | ??? | No  | OP2 plane1/2 results faked; no FIBER/CURV support (FIBER only); no MAXS/MISES support (MISES only)
+| CTRIA3 Comp          | Yes | Yes | Yes | ??? | No  | no FIBER/CURV support (FIBER only); no MAXS/MISES support (MISES only)
+| CQUAD4 Comp          | Yes | Yes | Yes | ??? | No  | no FIBER/CURV support (FIBER only); no MAXS/MISES support (MISES only)
+| Solid                | Yes | ??? | Yes | ??? | No  | Center support only (no corner); No directional vectors; No coordinate system support; no transform support
 
-| Strain Energy Result | F06  | ANS  | OP2  | PCH  | CSV  | Notes |
-| -------------------- | ---  | ---  | ---  | ---  | ---  | ----- |
-| CELASx               | ???  | ???  | No   | ???  | No   |       |
-| CROD                 | ???  | ???  | No   | ???  | No   |       |
-| CBUSH                | ???  | ???  | No   | ???  | No   |       |
-| CBAR                 | ???  | ???  | No   | ???  | No   |       |
-| CTRIA3 Iso           | ???  | ???  | No   | ???  | No   |       |
-| CQUAD4 Iso-Center    | ???  | ???  | No   | ???  | No   |       |
-| CQUAD4 Iso-Corner    | ???  | ???  | No   | ???  | No   |       |
-| CTRIA3 Comp          | ???  | ???  | No   | ???  | No   |       |
-| CQUAD4 Comp          | ???  | ???  | No   | ???  | No   |       |
-| Solid                | ???  | ???  | No   | ???  | No   |       |
+| Strain Energy Result | F06 | ANS | OP2 | PCH | CSV | Notes |
+| -------------------- | --- | --- | --- | --- | --- | ----- |
+| CELASx               | No  | No  | No  | No  | No  |       |
+| CROD                 | No  | No  | No  | No  | No  |       |
+| CBUSH                | No  | No  | No  | No  | No  |       |
+| CBAR                 | No  | No  | No  | No  | No  |       |
+| CBEAM                | N/A | N/A | N/A | N/A | N/A | card not supported |
+| CSHEAR               | No  | No  | No  | No  | No  |       |
+| CTRIA3 Iso           | No  | No  | No  | No  | No  |       |
+| CQUAD4 Iso-Center    | No  | No  | No  | No  | No  |       |
+| CQUAD4 Iso-Corner    | No  | No  | No  | No  | No  |       |
+| CTRIA3 Comp          | No  | No  | No  | No  | No  |       |
+| CQUAD4 Comp          | No  | No  | No  | No  | No  |       |
+| Solid                | No  | No  | No  | No  | No  |       |
 
 
 Eigen Post-Processing Support
 =============================
 
-| Result               | F06 | ANS  | OP2  | PCH  | CSV  | Notes |
-| ------               | --- | ---  | ---  | ---  | ---  | ----- |
-| Grid Point Weight    | Yes | ???  | Yes  | ???  | No   |       |
-| Eigenvector          | Yes | ???  | Yes  | ???  | No   |       |
-| Eigenvalue           | Yes | ???  | No   | ???  | No   |       |
-| MEFFMASS             | ??? | ???  | No   | ???  | No   |       |
+| Result               | F06 | ANS | OP2 | PCH | CSV | Notes |
+| ------               | --- | --- | --- | --- | --- | ----- |
+| Grid Point Weight    | Yes | No  | Yes | No  | No  |       |
+| Eigenvector          | Yes | ??? | Yes | ??? | No  |       |
+| Eigenvalue           | Yes | ??? | Yes | ??? | No  |       |
+| MEFFMASS             | ??? | ??? | No  | ??? | No  |       |
 
 Notes
 =====
@@ -173,7 +185,10 @@ Grid Point Weight Limitation
 
 ANS/F06 Limitations
 -------------------
- - ANS doesn't support shear stress/strain
+ - ANS doesn't support:
+   - grid point weight
+   - rod strain
+   - shear stress/strain
 
 OP2 Limitations
 ---------------
@@ -183,6 +198,7 @@ OP2 Limitations
 
 PCH Limitations
 ---------------
+1. No GPFORCE support
 
 OP2 specific notes
 ------------------
