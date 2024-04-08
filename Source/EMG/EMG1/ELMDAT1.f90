@@ -55,7 +55,7 @@
                                          INTL_MID, INTL_PID, ISOLID, MATANGLE, MATL, MTRL_TYPE, NUM_SEi, OFFDIS, OFFDIS_O, OFFSET, &
                                          PBAR, PBEAM, PCOMP, PCOMP_PROPS, PLATEOFF, PLATETHICK, PROD, PSHEAR, PSHEL, PSOLID,       &
                                          PUSER1, PUSERIN, RMATL, RPBAR, RPBEAM, RPBUSH, RPELAS, RPROD, RPSHEAR, RPSHEL, RPUSER1,   &
-                                         TYPE, VVEC, XEB, ZOFFS
+                                         TYPE, VVEC, XEB, ZOFFS, OFFT
 
       USE MODEL_STUF, ONLY            :  USERIN_ACT_GRIDS, USERIN_ACT_COMPS, USERIN_CID0, USERIN_IN4_INDEX,                        &
                                          USERIN_MAT_NAMES, USERIN_NUM_BDY_DOF, USERIN_NUM_ACT_GRDS, USERIN_NUM_SPOINTS,            &
@@ -105,7 +105,6 @@
       REAL(DOUBLE)                    :: T0G(3,3)           ! Matrix to transform V vector from global to basic coords 
       REAL(DOUBLE)                    :: VV(3)              ! V vector in basic coords for this elem
       INTEGER(LONG)                   :: OFFTI              ! interpretation of V vector
-      CHARACTER(3*BYTE)               :: OFFT               ! interpretation of V vector
       LOGICAL                         :: IS_OFFT            ! is the offt flag active
       INTEGER(LONG)                   :: IPIN1_EDAT         ! index of PIN1 in EDAT for CBAR/CBEAM; constant
  
@@ -236,7 +235,6 @@
       IS_OFFT = .FALSE.
       OFFT = 'NAN'
       IF ((TYPE == 'BAR     ') .OR. (TYPE == 'BEAM    ') .OR. (TYPE == 'BUSH    ') .OR. (TYPE == 'USER1   ')) THEN
- 
          VVEC_FLAG = 0
          IF ((TYPE == 'BAR     ') .OR. (TYPE == 'BEAM    ')) THEN 
             !    6-8    V-Vector       (see VVEC explanation below)
@@ -309,12 +307,8 @@
                   IVVEC = -VVEC_FLAG
                   IF (ACID /= 0) THEN
                      ! ACID global coord system exists. It was checked in CORDP_PROC
-                     DO I=1,NCORD
-                        IF (ACID == CORD(I,2)) THEN
-                           ICID = I
-                           EXIT
-                        ENDIF
-                     ENDDO
+                     ICID = 0 ! initialize
+                     CALL GET_ICD(ACID, ICID)  ! get index of CD
 
                      ! Need to transform V vector to basic coords
                      CALL GEN_T0L ( BGRID(1), ICID, THETAD, PHID, T0G )

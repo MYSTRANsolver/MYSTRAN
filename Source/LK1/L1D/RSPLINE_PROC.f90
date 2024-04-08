@@ -26,8 +26,7 @@
 
       SUBROUTINE RSPLINE_PROC ( RTYPE, REC_NO, IERR )
 
-! Processes a single RSPLINE rigid element, per call, to get terms for the RMG constraint matrix
- 
+      ! Processes a single RSPLINE rigid element, per call, to get terms for the RMG constraint matrix
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
       USE IOUNT1, ONLY                :  WRT_ERR, WRT_LOG, ERR, F04, F06, L1F, L1F_MSG, LINK1F, L1J
       USE SCONTR, ONLY                :  BLNK_SUB_NAM, FATAL_ERR, MRSPLINE, NCORD, NGRID, NTERM_RMG
@@ -111,6 +110,7 @@
       REAL(DOUBLE)                    :: V012(3)           ! Vector in basic coords from AGRID_I1 to AGRID_I2
       REAL(DOUBLE)                    :: V01D(3)           ! Vector in basic coords from AGRID_I1 to AGRID_D
       REAL(DOUBLE)                    :: ZETA              ! Nondimensional distance from AGRID_I1 to AGRID_D
+      LOGICAL                         :: DEBUG_RSPLINE
 
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
@@ -120,20 +120,21 @@
       ENDIF
 
 ! **********************************************************************************************************************************
-! File LINK1F contains data from the logical RSPLINE cards in the input B.D. deck. For each logical RSPLINE card, LINK1F has:
+     ! File LINK1F contains data from the logical RSPLINE cards in the
+     ! input B.D. deck. For each logical RSPLINE card, LINK1F has:
 
-! Make units for writing errors the error file and output file
+     ! Make units for writing errors the error file and output file
  
       OUNT(1) = ERR
       OUNT(2) = F06
  
       JERR = 0 
+      DEBUG_RSPLINE = (DEBUG(111) > 0)
 
-! Make sure that the grids are all 6 components (i.e. no SPOINTS)
+      ! Make sure that the grids are all 6 components (i.e. no SPOINTS)
+      READ(L1F,IOSTAT=IOCHK) REID, INDEX, TOTAL_NUM, AGRID_I1, AGRID_I2, AGRID_D, COMPS_D, DL_RAT
 
-      READ(L1F,IOSTAT=IOCHK) REID, INDEX, TOTAL_NUM, AGRID_I1, AGRID_I2, AGRID_D, COMPS_D, DL_RAT   
-
-      IF (DEBUG(111) > 0) CALL DEB_RSPLINE_PROC ( ' 1' )
+      IF (DEBUG_RSPLINE) CALL DEB_RSPLINE_PROC ( ' 1' )
 
       REC_NO = REC_NO + 1
       IF (IOCHK == 0) THEN
@@ -164,21 +165,19 @@
          JERR = JERR + 1
       ENDIF
 
-! Return if local error count > 0
-
+      ! Return if local error count > 0
       IF (JERR > 0) THEN
          FATAL_ERR = FATAL_ERR + 1
          RETURN
       ENDIF
 
-! Get the internal grid ID's for AGRID I1, AGRID_I2 and AGRID_D. We know they exist 
-
+      ! Get the internal grid ID's for AGRID I1, AGRID_I2 and AGRID_D. We know they exist 
       CALL GET_ARRAY_ROW_NUM ( 'GRID_ID', SUBR_NAME, NGRID, GRID_ID, AGRID_I1, GRID_ID_ROW_NUM_I1 )
       CALL GET_ARRAY_ROW_NUM ( 'GRID_ID', SUBR_NAME, NGRID, GRID_ID, AGRID_I2, GRID_ID_ROW_NUM_I2 )
       CALL GET_ARRAY_ROW_NUM ( 'GRID_ID', SUBR_NAME, NGRID, GRID_ID, AGRID_D , GRID_ID_ROW_NUM_D )
 
-! Get the distances from AGRID_I1 to AGRID_I2 (total length of the RSPLINE) and AGRID_I1 to AGRID_D
-
+      ! Get the distances from AGRID_I1 to AGRID_I2 (total length of the
+      ! RSPLINE) and AGRID_I1 to AGRID_D
       DO I=1,3
          V01(I)  = RGRID(GRID_ID_ROW_NUM_I1,I)
          V02(I)  = RGRID(GRID_ID_ROW_NUM_I2,I)
@@ -187,42 +186,35 @@
          V01D(I) = V0D(I) - V01(I)
       ENDDO
 
-      IF (DEBUG(111) > 0) CALL DEB_RSPLINE_PROC ( ' 2' )
+      IF (DEBUG_RSPLINE) CALL DEB_RSPLINE_PROC ( ' 2' )
 
-! Get the element-to-basic trensformation matrices for AGRID_D and AGRID_I1, AGRID_I2
-
+      ! Get the element-to-basic trensformation matrices for
+      ! AGRID_D and AGRID_I1, AGRID_I2
       CALL RSPLINE_GEOM ( REID, AGRID_I1, AGRID_I2, V012, L12, TRSPLINE )
       IF (IERR > 0) THEN
          RETURN
       ENDIF
-      IF (DEBUG(111) > 0) CALL DEB_RSPLINE_PROC ( ' 3' )
+      IF (DEBUG_RSPLINE) CALL DEB_RSPLINE_PROC ( ' 3' )
 
       L1D  = DSQRT( V01D(1)*V01D(1) + V01D(2)*V01D(2) + V01D(3)*V01D(3) )
       ZETA = L1D/L12
-      IF (DEBUG(111) > 0) CALL DEB_RSPLINE_PROC ( ' 4' )
+      IF (DEBUG_RSPLINE) CALL DEB_RSPLINE_PROC ( ' 4' )
 
-! Get the spline functions in element coords
-
+      ! Get the spline functions in element coords
       CALL RSPLINE_FUNCTIONS ( ZETA, L12, FR11, FR12, FR13, FR14, FR21, FR22, FR23, FR24 )
       CALL ASSEMBLE_FR ( FR11, FR12, FR13, FR14, FR21, FR22, FR23, FR24, FR  )
-      IF (DEBUG(111) > 0) CALL DEB_RSPLINE_PROC ( ' 5' )
+      IF (DEBUG_RSPLINE) CALL DEB_RSPLINE_PROC ( ' 5' )
 
-! Transform FR from element coords (x axis along line between the 2 indep grids) to basic coords
-
+      ! Transform FR from element coords (x axis along line between the 
+      ! 2 indep grids) to basic coords
       CALL TRANSFORM_FR_E0 ( TRSPLINE, FR11, FR12, FR13, FR14, FR21, FR22, FR23, FR24 )
       CALL ASSEMBLE_FR ( FR11, FR12, FR13, FR14, FR21, FR22, FR23, FR24, FR  )
-      IF (DEBUG(111) > 0) CALL DEB_RSPLINE_PROC ( ' 6' )
+      IF (DEBUG_RSPLINE) CALL DEB_RSPLINE_PROC ( ' 6' )
 
-! Get the basic to global transformation matrices for the 2 indep grids and the dep grid
-
+      ! Get the basic to global transformation matrices for the 2 indep grids and the dep grid
       ECORD_I1 = GRID(GRID_ID_ROW_NUM_I1,3)                ! Indep grid, AGRID_I1, basic to global transformation is T0G_I1
       IF (ECORD_I1 /= 0) THEN
-         DO I=1,NCORD
-            IF (ECORD_I1 == CORD(I,2)) THEN
-               ICORD = I
-               EXIT
-            ENDIF
-         ENDDO   
+         CALL GET_ICD(ECORD_I1, ICORD)  ! get index of CD
          CALL GEN_T0L ( GRID_ID_ROW_NUM_I1, ICORD, THETAD, PHID, T0G_I1 )
       ELSE
          DO I=1,3
@@ -235,12 +227,7 @@
  
       ECORD_I2 = GRID(GRID_ID_ROW_NUM_I2,3)                ! Indep grid, AGRID_I2, basic to global transformation is T0G_I2
       IF (ECORD_I2 /= 0) THEN
-         DO I=1,NCORD
-            IF (ECORD_I2 == CORD(I,2)) THEN
-               ICORD = I
-               EXIT
-            ENDIF
-         ENDDO   
+         CALL GET_ICD(ECORD_I2, ICORD)  ! get index of CD
          CALL GEN_T0L ( GRID_ID_ROW_NUM_I2, ICORD, THETAD, PHID, T0G_I2 )
       ELSE
          DO I=1,3
@@ -253,12 +240,7 @@
  
       ECORD_D = GRID(GRID_ID_ROW_NUM_D,3)                  ! Dep grid, AGRID_D, basic to global transformation is T0G_D
       IF (ECORD_D /= 0) THEN
-         DO I=1,NCORD
-            IF (ECORD_D == CORD(I,2)) THEN
-               ICORD = I
-               EXIT
-            ENDIF
-         ENDDO   
+         CALL GET_ICD(ECORD_D, ICORD)  ! get index of CD
          CALL GEN_T0L ( GRID_ID_ROW_NUM_D, ICORD, THETAD, PHID, T0G_D )
       ELSE
          DO I=1,3
@@ -269,13 +251,13 @@
          ENDDO   
       ENDIF
  
-      IF (DEBUG(111) > 0) CALL DEB_RSPLINE_PROC ( ' 7' )
+      IF (DEBUG_RSPLINE) CALL DEB_RSPLINE_PROC ( ' 7' )
 
 ! Transform FR from basic coords to global coords at the 2 indep and 1 dep grid
 
       CALL TRANSFORM_FR_0G ( T0G_I1, T0G_I2, T0G_D, FR11, FR12, FR13, FR14, FR21, FR22, FR23, FR24 )      
       CALL ASSEMBLE_FR ( FR11, FR12, FR13, FR14, FR21, FR22, FR23, FR24, FR  )
-      IF (DEBUG(111) > 0) CALL DEB_RSPLINE_PROC ( ' 8' )
+      IF (DEBUG_RSPLINE) CALL DEB_RSPLINE_PROC ( ' 8' )
 
 ! Write coefficients for the RMG constraint matrix to file L1J
 
@@ -308,7 +290,8 @@
                CALL OUTA_HERE ( 'Y' )
             ENDIF
 
-            DO J=1,6                                       ! Now write FR coefficients for AGRID_I1
+            DO J=1,6
+               ! Now write FR coefficients for AGRID_I1
                CALL GET_ARRAY_ROW_NUM ( 'GRID_ID', SUBR_NAME, NGRID, GRID_ID, AGRID_I1, IGRID )
                ROW_NUM_START = TDOF_ROW_START(IGRID)
                ROW_NUM = ROW_NUM_START + J - 1
@@ -329,7 +312,8 @@
                ENDIF
             ENDDO
 
-            DO J=1,6                                       ! Now write FR coefficients for AGRID_I2
+            DO J=1,6
+               ! Now write FR coefficients for AGRID_I2
                CALL GET_ARRAY_ROW_NUM ( 'GRID_ID', SUBR_NAME, NGRID, GRID_ID, AGRID_I2, IGRID )
                ROW_NUM_START = TDOF_ROW_START(IGRID)
                ROW_NUM = ROW_NUM_START + J - 1
@@ -353,9 +337,8 @@
 
       ENDDO
 
-! Write lines for end of debug output
-
-      IF (DEBUG(111) > 0) CALL DEB_RSPLINE_PROC ( '99' )
+      ! Write lines for end of debug output
+      IF (DEBUG_RSPLINE) CALL DEB_RSPLINE_PROC ( '99' )
 
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN

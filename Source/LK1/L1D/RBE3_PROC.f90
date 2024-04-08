@@ -187,42 +187,33 @@
          WRITE(f06,*)
       ENDDO
 
-! Return if error
-
+      ! Return if error
       IF (JERR /= 0) THEN
          FATAL_ERR = FATAL_ERR + 1
          RETURN
       ENDIF      
 
-! Get T0D (transforms global vector at AGRID_D to basic)
-
+     ! Get T0D (transforms global vector at AGRID_D to basic)
       CALL GET_ARRAY_ROW_NUM ( 'GRID_ID', SUBR_NAME, NGRID, GRID_ID, AGRID_D, GRID_ID_ROW_NUM_D )
       ECORD_D = GRID(GRID_ID_ROW_NUM_D,3)
       IF (ECORD_D /= 0) THEN
-         DO I=1,NCORD
-            IF (ECORD_D == CORD(I,2)) THEN
-               ICORD_D = I
-               EXIT
-            ENDIF
-         ENDDO   
+         CALL GET_ICD(ECORD_D, ICORD_D)  ! get index of CD
          CALL GEN_T0L ( GRID_ID_ROW_NUM_D, ICORD_D, THETAD, PHID, T0D )
       ELSE
          DO I=1,3
             DO J=1,3
                T0D(I,J) = ZERO
-            ENDDO   
+            ENDDO
             T0D(I,I) = ONE
          ENDDO   
       ENDIF
 
-! Get coords of the reference grid (AGRID_D) in basic coord system
-
+      ! Get coords of the reference grid (AGRID_D) in basic coord system
       DO I=1,3
          X0_D(I) = RGRID(GRID_ID_ROW_NUM_D,I)
       ENDDO
 
-! Calc DXI, DYI, DZI, DX_BAR, DY_BAR, DZ_BAR
-
+      ! Calc DXI, DYI, DZI, DX_BAR, DY_BAR, DZ_BAR
       DX_BAR = ZERO
       DY_BAR = ZERO
       DZ_BAR = ZERO
@@ -234,9 +225,10 @@
             X0_I(K) = RGRID(GRID_ID_ROW_NUM_I,K)
             DX0(K)  = X0_I(K) - X0_D(K)
          ENDDO
-                                                           ! Transform rel coords from basic to the coord sys at the ref pt
+         ! Transform rel coords from basic to the coord sys at the ref pt
          CALL MATMULT_FFF_T ( T0D, DX0, 3, 3, 1, DUM3 )
-                                                           ! Calc radius and in-plane angle from ref pt to indep points
+
+         ! Calc radius and in-plane angle from ref pt to indep points
          DXI(J) = DUM3(1)
          DYI(J) = DUM3(2)
          DZI(J) = DUM3(3)
@@ -244,26 +236,21 @@
          DX_BAR = DX_BAR + WTi6(J,1)*DXI(J)
          DY_BAR = DY_BAR + WTi6(J,2)*DYI(J)
          DZ_BAR = DZ_BAR + WTi6(J,3)*DZI(J)
-
-         
       ENDDO
 
 
-! Calc the EBAR's
-
+      ! Calc the EBAR's
       EBAR_YZ = ZERO
       EBAR_ZX = ZERO
       EBAR_XY = ZERO
 
       DO J=1,IRBE3
-
          EBAR_YZ = EBAR_YZ + WTi6(J,3)*DYI(J)*DYI(J) + WTi6(J,2)*DZI(J)*DZI(J)
          EBAR_ZX = EBAR_ZX + WTi6(J,1)*DZI(J)*DZI(J) + WTi6(J,3)*DXI(J)*DXI(J)
          EBAR_XY = EBAR_XY + WTi6(J,2)*DXI(J)*DXI(J) + WTi6(J,1)*DYI(J)*DYI(J)
-
       ENDDO
 
-! Calc the S-terms
+      ! Calc the S-terms
       SXY = ZERO
       SZX = ZERO
       SYZ = ZERO
@@ -290,9 +277,11 @@
          ENDIF
       ENDDO
 
-! Write terms to L1J for the constraint equations. The outer loop is for each of the RBE3 equations and the inner loop cycles over
-! the IRBE3 grids in the "independent" set (the i points). There are up to 6 constraint eqns per RBE3 (1 each for T1, T2, T3,
-! R1, R2 R3 comps in the indep set for the RBE3)
+      ! Write terms to L1J for the constraint equations. The outer loop
+      ! is for each of the RBE3 equations and the inner loop cycles over
+      ! the IRBE3 grids in the "independent" set (the i points). There 
+      ! are up to 6 constraint eqns per RBE3 (1 each for T1, T2, T3,
+      ! R1, R2 R3 comps in the indep set for the RBE3)
 
       ITERM_RMG = 0
 do_i1:DO I=1,6
@@ -317,8 +306,8 @@ cdof_dep:IF (CDOF_D(I) == '1') THEN                        ! The I-th component 
                   ENDIF
                ENDIF
 
-               IF      (I == 1) THEN                       ! Write coeffs for the R2, R3 comps at the ref pt for the 1st eqn
-
+               IF (I == 1) THEN
+                  ! Write coeffs for the R2, R3 comps at the ref pt for the 1st eqn
                   IF (CDOF_D(5) /= '0') THEN
                      WRITE(L1J) RMG_ROW_NUM, RMG_COL_NUM_D(5), +DZ_BAR 
                      ITERM_RMG = ITERM_RMG + 1
@@ -329,8 +318,8 @@ cdof_dep:IF (CDOF_D(I) == '1') THEN                        ! The I-th component 
                      ITERM_RMG = ITERM_RMG + 1
                   ENDIF
 
-               ELSE IF (I == 2) THEN                       ! Write coeffs for the R1, R3 comps at the ref pt for the 2nd eqn
-
+               ELSE IF (I == 2) THEN
+                  ! Write coeffs for the R1, R3 comps at the ref pt for the 2nd eqn
                   IF (CDOF_D(4) /= '0') THEN
                      WRITE(L1J) RMG_ROW_NUM, RMG_COL_NUM_D(4), -DZ_BAR 
                      ITERM_RMG = ITERM_RMG + 1
@@ -341,8 +330,8 @@ cdof_dep:IF (CDOF_D(I) == '1') THEN                        ! The I-th component 
                      ITERM_RMG = ITERM_RMG + 1
                   ENDIF
 
-               ELSE IF (I == 3) THEN                       ! Write coeffs for the R1, R2 comps at the ref pt for the 3rd eqn
-
+               ELSE IF (I == 3) THEN
+                  ! Write coeffs for the R1, R2 comps at the ref pt for the 3rd eqn
                   IF (CDOF_D(4) /= '0') THEN
                      WRITE(L1J) RMG_ROW_NUM, RMG_COL_NUM_D(4), +DY_BAR 
                      ITERM_RMG = ITERM_RMG + 1
@@ -354,7 +343,8 @@ cdof_dep:IF (CDOF_D(I) == '1') THEN                        ! The I-th component 
                   ENDIF
 
                ENDIF
-                                                           ! Write coeffs for the R1, R2 and R3 comps at the ref pt for eqns 4,5,6
+
+               ! Write coeffs for the R1, R2 and R3 comps at the ref pt for eqns 4,5,6
                IF (I == 4) THEN 
                   IF (DABS(EBAR_YZ) > EPS1) THEN 
                      WRITE(L1J) RMG_ROW_NUM, RMG_COL_NUM_D(I), EBAR_YZ
@@ -441,8 +431,9 @@ cdof_dep:IF (CDOF_D(I) == '1') THEN                        ! The I-th component 
                ENDIF
             ENDIF
 
-do_j1:      DO J=1,IRBE3                                   ! Cycle over "indep" terms (some here may actually be dep elsewhere)
-                                                           ! Get T0I (transforms global vector at AGRID_I to basic)
+do_j1:      DO J=1,IRBE3
+               ! Cycle over "indep" terms (some here may actually be dep elsewhere)
+               ! Get T0I (transforms global vector at AGRID_I to basic)
                CALL RDOF ( COMPS_I(J), CDOF_I )
                
                CALL GET_GRID_NUM_COMPS ( AGRID_I(J), NUM_COMPS, SUBR_NAME )
@@ -490,8 +481,7 @@ do_j1:      DO J=1,IRBE3                                   ! Cycle over "indep" 
 
       NTERM_RMG = NTERM_RMG + ITERM_RMG
 
-! Return if JERR > 0
-
+      ! Return if JERR > 0
       IF (JERR > 0) THEN
          RETURN
       ENDIF

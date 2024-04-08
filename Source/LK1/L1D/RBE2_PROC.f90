@@ -131,18 +131,14 @@
          RETURN
       ENDIF      
 
-! We know that the indep and dep grids (AGRID_I and AGRID_D) exist. This was checked in subr DOF_PROC.
-! Get the basic-to-global trensformation matrices for AGRID_D and AGRID_I
+     ! We know that the indep and dep grids (AGRID_I and AGRID_D) exist. 
+     ! This was checked in subr DOF_PROC.
+     ! Get the basic-to-global trensformation matrices for AGRID_D and AGRID_I
 
       CALL GET_ARRAY_ROW_NUM ( 'GRID_ID', SUBR_NAME, NGRID, GRID_ID, AGRID_D, GRID_ID_ROW_NUM_D )
       ECORD_D = GRID(GRID_ID_ROW_NUM_D,3)
       IF (ECORD_D /= 0) THEN
-         DO I=1,NCORD
-            IF (ECORD_D == CORD(I,2)) THEN
-               ICORD_D = I
-               EXIT
-            ENDIF
-         ENDDO   
+         CALL GET_ICD(ECORD_D, ICORD_D)  ! get index of CD
          CALL GEN_T0L ( GRID_ID_ROW_NUM_D, ICORD_D, THETAD, PHID, T0G_D )
       ELSE
          DO I=1,3
@@ -156,12 +152,7 @@
       CALL GET_ARRAY_ROW_NUM ( 'GRID_ID', SUBR_NAME, NGRID, GRID_ID, AGRID_I, GRID_ID_ROW_NUM_I )
       ECORD_I = GRID(GRID_ID_ROW_NUM_I,3)
       IF (ECORD_I /= 0) THEN
-         DO I=1,NCORD
-            IF (ECORD_I == CORD(I,2)) THEN
-               ICORD_I = I
-               EXIT
-            ENDIF
-         ENDDO   
+         CALL GET_ICD(ECORD_I, ICORD_I)  ! get index of CD
          CALL GEN_T0L ( GRID_ID_ROW_NUM_I, ICORD_I, THETAD, PHID, T0G_I )
       ELSE
          DO I=1,3

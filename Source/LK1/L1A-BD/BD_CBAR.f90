@@ -322,6 +322,7 @@
       !
       IF (JCARD(9)(1:1) == ' ') THEN  ! offt is blank
           OFFT = 'GGG'
+          OFFTI = 1
       ELSE
           IF (LEN(TRIM(JCARD(9))) /= 3) THEN
               ! errored because OFFT = JCARD(9) is too long

@@ -93,10 +93,9 @@
       ENDIF
 
 ! **********************************************************************************************************************************
-! Get transformation matrix TS0 from stress coord sys to basic if it exists
-
-      IF (STRESS_CORD_SYS == 0) THEN                       ! STRESS_CORD_SYS was basic so set T0o to the identity matrix
-
+      ! Get transformation matrix TS0 from stress coord sys to basic if it exists
+      IF (STRESS_CORD_SYS == 0) THEN
+         ! STRESS_CORD_SYS was basic so set T0o to the identity matrix
          DO I=1,3
             DO J=1,3
                T0S(I,J) = ZERO
@@ -104,21 +103,19 @@
             T0S(I,I) = ONE
          ENDDO
 
-      ELSE                                                 ! Need to transform ES mat'l matrix to basic coords
-
+      ELSE
+         ! Need to transform ES mat'l matrix to basic coords
+         ! Get the internal coord system ID for STRESS_CORD_SYS
          ICORD = 0
-         DO I=1,NCORD                                      ! Get the internal coord system ID for STRESS_CORD_SYS
-            IF (STRESS_CORD_SYS == CORD(I,2)) THEN
-               ICORD = I
-               EXIT
-            ENDIF
-         ENDDO
+         CALL GET_ICD(STRESS_CORD_SYS, ICORD)  ! get index of CD
 
       ENDIF
 
-      IF (ICORD > 0) THEN                                  ! STRESS_CORD_SYS was found so do transformation
+      IF (ICORD > 0) THEN
+         ! STRESS_CORD_SYS was found so do transformation
 
-         DO I=1,3                                          ! Get TO0 from RCORD array        
+         ! Get TO0 from RCORD array
+         DO I=1,3
             DO J=1,3
                K = 3 + 3*(I-1) + J
                TS0(I,J) = RCORD(ICORD,K)
@@ -132,12 +129,12 @@
                TSE(I,J) = TES(J,I)
             ENDDO
          ENDDO
-                                                           ! Transform input stress tensor from e coords to o coords
+         ! Transform input stress tensor from e coords to o coords
          CALL MATMULT_FFF (STRESS_TENSOR, TES, 3, 3, 3, DUM33 )
          CALL MATMULT_FFF (TSE, DUM33, 3, 3, 3, STRESS_TENSOR )
 
-      ELSE                                                 ! STRESS_CORD_SYS was not found leave tensor in local elem system
-
+      ELSE                                                 
+         ! STRESS_CORD_SYS was not found leave tensor in local elem system
          WRITE(F06,9101) STRESS_CORD_SYS
 
       ENDIF

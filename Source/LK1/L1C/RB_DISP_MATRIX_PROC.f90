@@ -143,12 +143,7 @@
                Z0_R = RGRID(GRID_ID_ROW_NUM_R,3)
                ECORD_R = GRID(GRID_ID_ROW_NUM_R,3)
                IF (ECORD_R /= 0) THEN
-                  DO I=1,NCORD                             ! We know that if ECORD_R > 0, ICORD_R is defined (chk in CORD_PROC)
-                     IF (ECORD_R == CORD(I,2)) THEN
-                        ICORD_R = I
-                        EXIT
-                     ENDIF
-                  ENDDO   
+                  CALL GET_ICD(ECORD_R, ICORD_R)  ! get index of CD
                   CALL GEN_T0L ( GRID_ID_ROW_NUM_R, ICORD_R, THETAD, PHID, T0G_R )
                   DO I=1,3
                      DO J=1,3
@@ -178,24 +173,22 @@
          ENDIF
 
       ELSE IF (REF_PT_TXT == 'BASIC ORIGIN')  THEN
-
          X0_R = ZERO
          Y0_R = ZERO
          Z0_R = ZERO
 
          DO I=1,6
             TTR_R(I,I) = ONE
-         ENDDO   
+         ENDDO
 
       ELSE IF (REF_PT_TXT == 'CG') THEN
-      
          X0_R = MODEL_XCG
          Y0_R = MODEL_YCG
          Z0_R = MODEL_ZCG
 
          DO I=1,6
             TTR_R(I,I) = ONE
-         ENDDO   
+         ENDDO
 
       ELSE
 
@@ -206,15 +199,14 @@
 
       ENDIF
 
-! Get the 6x6 RB matrices for each grid and transform to global
-
+      ! Get the 6x6 RB matrices for each grid and transform to global
       DO K=1,NGRID
 
          AGRID_K = GRID_ID(INV_GRID_SEQ(K))
          CALL GET_GRID_NUM_COMPS ( AGRID_K, NUM_COMPS, SUBR_NAME )
 
-         IF (NUM_COMPS == 6) THEN                          ! Only process physical grids. Let rows of RBGLOBAL = 0 otherwise
-
+         IF (NUM_COMPS == 6) THEN
+            ! Only process physical grids. Let rows of RBGLOBAL = 0 otherwise
             CALL GET_ARRAY_ROW_NUM ( 'GRID_ID', SUBR_NAME, NGRID, GRID_ID, AGRID_K, GRID_ID_ROW_NUM_K )
 
             DO I=1,6
@@ -247,12 +239,7 @@
 
             ECORD_K = GRID(GRID_ID_ROW_NUM_K,3)
             IF (ECORD_K /= 0) THEN
-               DO I=1,NCORD
-                  IF (ECORD_K == CORD(I,2)) THEN
-                     ICORD_K = I
-                     EXIT
-                  ENDIF
-               ENDDO   
+               CALL GET_ICD(ECORD_K, ICORD_K)  ! get index of CD
                CALL GEN_T0L ( GRID_ID_ROW_NUM_K, ICORD_K, THETAD, PHID, T0G_K )
                DO I=1,3
                   DO J=1,3
@@ -263,7 +250,7 @@
             ELSE
                DO I=1,6
                   TTR_K(I,I) = ONE
-               ENDDO   
+               ENDDO
             ENDIF
 
             IF (ECORD_R == 0) THEN
@@ -273,7 +260,7 @@
                   ENDDO
                ENDDO
             ELSE
-               CALL MATMULT_FFF   ( RB_GRID_BASIC, TTR_R, 6, 6, 6, DUM1 )
+               CALL MATMULT_FFF( RB_GRID_BASIC, TTR_R, 6, 6, 6, DUM1 )
             ENDIF
             IF (ECORD_K == 0) THEN
                DO I=1,6

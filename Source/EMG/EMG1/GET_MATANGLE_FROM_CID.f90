@@ -77,13 +77,7 @@
       CORD_FND = 'N'
       ICID     = -1
       IF (ACID /= 0) THEN
-i_do1:   DO I=1,NCORD
-            IF (ACID == CORD(I,2)) THEN
-               CORD_FND = 'Y'
-               ICID = I
-               EXIT i_do1
-            ENDIF
-         ENDDO i_do1
+         CALL GET_ICD(ACID, ICID)  ! get index of CD
          IF (CORD_FND == 'N') THEN
             FATAL_ERR = FATAL_ERR + 1
             NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1

@@ -1122,6 +1122,7 @@
 ! Data for BAR or BEAM
 ! --------------------
 
+      CHARACTER(3*BYTE)               :: OFFT                ! the OFFT flag
       REAL(DOUBLE), ALLOCATABLE       :: BAROFF(:,:)         ! BAR/BEAM elem offsets (3 offsets at each of 2 grids)
 
       REAL(DOUBLE), ALLOCATABLE       :: VVEC(:,:)           ! BAR elem V vector components for all distinct BAR elem V vecs
