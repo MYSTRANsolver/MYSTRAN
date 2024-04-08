@@ -889,15 +889,29 @@
 
 !  EDAT is an array of elem connection data containing the following info for:
 
-!      1-2)   BAR, BEAM  8 words: (1st 4 read by call to subr ELEPO from subr BD_CBAR/BEAM, next 4 read by subr BD_CBAR/BEAM)
+!      1-2)   BAR, BEAM  9 words: (1st 4 read by call to subr ELEPO from subr BD_CBAR/BEAM, next 4 read by subr BD_CBAR/BEAM)
 !                                 1) Elem ID
 !                                 2) Prop ID
 !                                 3) Grid A
 !                                 4) Grid B
 !                                 5) V-vector key
-!                                 6) Pin Flag A
-!                                 7) Pin Flag B
-!                                 8) Offset key
+!                                 6) OFFT flag
+!                                 7) Pin Flag A
+!                                 8) Pin Flag B
+!                                 9) Offset key
+
+!                                 The offt flag defines the interpretation of the V vector
+!
+!                                 OFFT    Orientation Vector  End A Offset  End B Offset flag
+!                                 -----   ------------------  ------------  -----------------
+!                                 0/GGG   Global              Global        Global
+!                                 1/BGG   Basic               Global        Global
+!                                 2/GGO   Global              Global        Offset
+!                                 3/BGO   Basic               Global        Offset
+!                                 4/GOG   Global              Offset        Global
+!                                 5/BOG   Basic               Offset        Global
+!                                 6/GOO   Global              Offset        Offset
+!                                 7/BOO   Basic               Offset        Offset
 
 !                                 The V vector key is either:
 !                                   1) a grid ID if the V vector is defined using a grid, or
@@ -906,7 +920,7 @@
 !                                 The Offset key is either:
 !                                   1) 0 if there are no offsets for this CBAR, or
 !                                   2) Offset key (row in array BAROFF where the 3 components at each of the 2 grids can be found)
- 
+
 !        3)   BUSH       9 words: (1st 5 read by call to subr ELEPRO, next 4 by subr BD_CBUSH)
 !                                 1) Elem ID
 !                                 2) Prop ID

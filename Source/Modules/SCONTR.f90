@@ -435,8 +435,8 @@
       INTEGER(LONG), PARAMETER :: MCMASS              =   7      ! No. cols allowed in dimensioning array CMASS 
       INTEGER(LONG), PARAMETER :: MCONM2              =   3      ! No. cols allowed in dimensioning array CONM2 
       INTEGER(LONG), PARAMETER :: MCORD               =   5      ! No. cols allowed in dimensioning array CORD 
-      INTEGER(LONG), PARAMETER :: MEDAT_CBAR          =   8      ! No. terms that go into EDAT array for CBAR   elems
-      INTEGER(LONG), PARAMETER :: MEDAT_CBEAM         =   8      ! No. terms that go into EDAT array for CBEAM  elems
+      INTEGER(LONG), PARAMETER :: MEDAT_CBAR          =   9      ! No. terms that go into EDAT array for CBAR   elems
+      INTEGER(LONG), PARAMETER :: MEDAT_CBEAM         =   9      ! No. terms that go into EDAT array for CBEAM  elems
       INTEGER(LONG), PARAMETER :: MEDAT_CBUSH         =   9      ! No. terms that go into EDAT array for CBEAM  elems
       INTEGER(LONG), PARAMETER :: MEDAT_CELAS1        =   6      ! No. terms that go into EDAT array for CELAS1 elems
       INTEGER(LONG), PARAMETER :: MEDAT_CELAS2        =   6      ! No. terms that go into EDAT array for CELAS3 elems
