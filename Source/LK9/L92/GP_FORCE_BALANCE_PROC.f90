@@ -812,10 +812,9 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
           IF (IERR /= 0) THEN
               WRITE(ERR,*) 'GPFORCE_FXYZ_MXYZ DEALLOCATE error'
           ENDIF
+          FLUSH(OP2)
       ENDIF
-      FLUSH(OP2)
       FLUSH(F06)
-      FLUSH(ANS)
       FLUSH(ERR)
 
 ! **********************************************************************************************************************************
