@@ -26,12 +26,18 @@
 
       SUBROUTINE ELMGM2 ( WRITE_WARN )
  
-! Calcs and checks elem geometry for quad elems and provides a transformation matrix ( TE ) to transfer the elem stiffness matrix
-! in the elem system to the basic coordinate system. Calculates grid point coords in local coord system.
-! To define the elem coordinate system, a mean plane is defined which lies midway between the grid points (HBAR is mean dist).
-! The elem z direction is in the direction of the cross product of the diagonals (V13 x V24). Initially, the x axis is along
-! side 1-2 of the elem projection onto the mean plane. For elems thet are not rectangular, the x,y axes are rotated such that x
-! splits the angle between the diagonals.
+      ! Calcs and checks elem geometry for quad elems and provides a 
+      ! transformation matrix (TE) to transfer the elem stiffness matrix
+      ! in the elem system to the basic coordinate system.
+      !
+      ! Calculates grid point coords in local coord system.  To define the
+      ! elem coordinate system, a mean plane is defined which lies midway
+      ! between the grid points (HBAR is mean dist).
+      !
+      ! The elem z direction is in the direction of the cross product of the
+      ! diagonals (V13 x V24). Initially, the x axis is along side 1-2 of the
+      ! elem projection onto the mean plane. For elems thet are not rectangular,
+      ! the x,y axes are rotated such that x splits the angle between the diagonals.
  
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
       USE IOUNT1, ONLY                :  BUG, ERR, F04, F06, WRT_BUG, WRT_ERR, WRT_LOG
@@ -109,8 +115,7 @@
       EPS1 = EPSIL(1)
       EPS4 = EPSIL(4)
 
-! Initialize XEL to zero
- 
+      ! Initialize XEL to zero
       DO I=1,MELGP
          DO J=1,3
             XEL(I,J) = ZERO
@@ -118,10 +123,8 @@
       ENDDO 
 
 ! **********************************************************************************************************************************
-! Calculate elem z direction from cross products of diagonals
- 
-! Generate vectors from G.P 1 to G.P 3 and from G.P. 2 to G.P. 4 (diagonals)
- 
+      ! Calculate elem z direction from cross products of diagonals
+      ! Generate vectors from G.P 1 to G.P 3 and from G.P. 2 to G.P. 4 (diagonals)
       DO I=1,3
          V13B(I) = XEB(3,I) - XEB(1,I)
          V24B(I) = XEB(4,I) - XEB(2,I)
@@ -130,8 +133,7 @@
       CALL CROSS ( V13B, V24B, KVEC )
       MAGK = DSQRT(KVEC(1)*KVEC(1) + KVEC(2)*KVEC(2) + KVEC(3)*KVEC(3))
 
-! If MAGK = 0 then diagonals are parallel so write error and quit
-
+      ! If MAGK = 0 then diagonals are parallel so write error and quit
       IF (MAGK <=  EPS1) THEN
          NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
          FATAL_ERR = FATAL_ERR + 1
@@ -147,31 +149,27 @@
          RETURN
       ENDIF
 
-! Unit vector in elem local z direction is 3rd row of TE
- 
+      ! Unit vector in elem local z direction is 3rd row of TE
       DO I=1,3
          KVEC(I)     = KVEC(I)/MAGK
          TE_12(3,I) = KVEC(I)
       ENDDO 
  
 ! **********************************************************************************************************************************
-! Calc initial elem x dir along side 1-2 of the elem projection onto the mean plane.
-
+      ! Calc initial elem x dir along side 1-2 of the elem projection onto the mean plane.
       DO I=1,3
          V12B(I) = XEB(2,I) - XEB(1,I)
       ENDDO 
  
-! HBAR is one half of the projection of V12B in z direction
- 
+      ! HBAR is one half of the projection of V12B in z direction
       HBAR = HALF*((V12B(1)*KVEC(1) + V12B(2)*KVEC(2) + V12B(3)*KVEC(3)))
  
-! Now calculate initial x direction along side 1-2 of the elem projection onto the mean plane.
- 
+      ! Now calculate initial x direction along side 1-2 of the elem projection onto the mean plane.
       DO I=1,3
          IVEC(I) = V12B(I) - TWO*HBAR*KVEC(I)
       ENDDO 
 
-! If initial MAGI = 0 then write error and quit.
+      ! If initial MAGI = 0 then write error and quit.
       MAGI  = DSQRT(IVEC(1)*IVEC(1) + IVEC(2)*IVEC(2) + IVEC(3)*IVEC(3))
       IF (MAGI <= EPS1) THEN
          SIDE_GRID1 = 1
@@ -192,21 +190,18 @@
          RETURN
       ENDIF
 
-! Unit vector in initial elem x direction
-
+      ! Unit vector in initial elem x direction
       DO I=1,3
-         IVEC(I)     = IVEC(I)/MAGI                        ! Unit vector along side 1-2 in the mean plane (NOT from G.P. 1-2)
+         IVEC(I)    = IVEC(I)/MAGI   ! Unit vector along side 1-2 in the mean plane (NOT from G.P. 1-2)
          TE_12(1,I) = IVEC(I)
       ENDDO 
 
 ! **********************************************************************************************************************************
-! Calculate unit vector in initial elem. y direction (from KVEC x IVEC):
-
+      ! Calculate unit vector in initial elem. y direction (from KVEC x IVEC):
       CALL CROSS ( KVEC, IVEC, JVEC )
       MAGJ = DSQRT(JVEC(1)*JVEC(1) + JVEC(2)*JVEC(2) + JVEC(3)*JVEC(3))
 
-! If MAGJ =0 then write error and quit.
-
+      ! If MAGJ =0 then write error and quit.
       IF (MAGJ <= EPS1) THEN
          NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
          FATAL_ERR = FATAL_ERR + 1
@@ -228,20 +223,21 @@
       ENDDO 
 
 ! **********************************************************************************************************************************
-! Perform some geometry checks on the quad element
+      ! Perform some geometry checks on the quad element
 
-! First, calculate XEL coords of grids in local element coord system (relative to node 1) with local x along side 1-2. 
+      ! First, calculate XEL coords of grids in local element coord system 
+      ! (relative to node 1) with local x along side 1-2. 
 
       XEL(1,1) = ZERO
       XEL(1,2) = ZERO
       XEL(1,3) = ZERO
 
-      XEL(2,3) = ZERO                                      ! All z coords in mean plane are zero by definition of mean plane
-      XEL(3,3) = ZERO                                      ! even though using TE to calc them may not yield zero's
+      XEL(2,3) = ZERO  ! All z coords in mean plane are zero by definition of mean plane
+      XEL(3,3) = ZERO  ! even though using TE to calc them may not yield zero's
       XEL(4,3) = ZERO
 
       DO I=2,ELGP
-         DO J=1,2                                          ! Only calc x znd y coords. z coords in mean plane are zero by definition
+         DO J=1,2      ! Only calc x znd y coords. z coords in mean plane are zero by definition
             XEL(I,J) = ZERO
             DO K=1,3
                XEL(I,J) = XEL(I,J) + (XEB(I,K) - XEB(1,K))*TE_12(J,K)
@@ -256,14 +252,20 @@
       ENDIF
  
 ! **********************************************************************************************************************************
-! Now TE_12 is for elem coord system with x along projected side 1-2. We need to rotate x-y (about z) to get x in a
-! direction which splits the angle between the two diagonals. QUAD_THETA is the angle between side 1-2 and diagonal from
-! point 1 to point 3. QUAD_GAMMA is the angle between side 1-2 and the diagonal from point 2 to point 4. The rotation
-! about z is thru an angle of QUAD_DELTA = (QUAD_THETA - QUAD_GAMMA)/2.
- 
-! Find QUAD_THETA from the dot product of vector along side 1-2 and  diagonal from point 1 to point 3 (in the mean plane)
-! Find QUAD_GAMMA from the dot product of vector along side 1-2 and  diagonal from point 2 to point 4 (in the mean plane).
-! Use ABS to get the acute angle
+      ! Now TE_12 is for elem coord system with x along projected side 1-2. 
+      ! We need to rotate x-y (about z) to get x in a direction which splits
+      ! the angle between the two diagonals.
+      
+      ! QUAD_THETA: angle between side 1-2 and diagonal from point 1 to point 3.
+      ! QUAD_GAMMA: angle between side 1-2 and the diagonal from point 2 to point 4. 
+      !             The rotation about z is thru an angle of:
+      !                QUAD_DELTA = (QUAD_THETA - QUAD_GAMMA)/2.
+       
+      ! Find QUAD_THETA from the dot product of vector along side 1-2 and
+      !      diagonal from point 1 to point 3 (in the mean plane)
+      ! Find QUAD_GAMMA from the dot product of vector along side 1-2 and
+      !      diagonal from point 2 to point 4 (in the mean plane).
+      ! Use ABS to get the acute angle
  
       QUAD_THETA = DACOS(( V13B(1)*IVEC(1) + V13B(2)*IVEC(2) + V13B(3)*IVEC(3))/V13BM)
       QUAD_GAMMA = DACOS((-V24B(1)*IVEC(1) - V24B(2)*IVEC(2) - V24B(3)*IVEC(3))/V24BM)
@@ -272,8 +274,7 @@
       CALL PLANE_COORD_TRANS_21 ( QUAD_DELTA, CT_QD, SUBR_NAME )
       CALL MATMULT_FFF ( CT_QD, TE_12, 3, 3, 3, TE_SD )
 
-! Select how the local x axis is to be
-
+      ! Select how the local x axis is to be
       IF (QUADAXIS == 'SPLITD') THEN
 
          DO I=1,3
@@ -292,8 +293,7 @@
 
       ENDIF
 
-! Now TE is final transformation from basic to elem coordinates. That is, UEL = TE*UEB        
- 
+      ! Now TE is final transformation from basic to elem coordinates. That is, UEL = TE*UEB        
       IF ((DEBUG(6) == 1) .AND. (WRT_BUG(0) == 1)) THEN
 
          WRITE(BUG,*) '  Coord transformation matrix that rotates a vector through angle QUAD_DELTA'
@@ -333,8 +333,8 @@
 
 
 ! **********************************************************************************************************************************
-! Now set TE_IDENT to be 'Y' if TE is an identity matrix. TE will be an identity matrix if the diagonal terms are unity.
-
+      ! Now set TE_IDENT to be 'Y' if TE is an identity matrix.
+      ! TE will be an identity matrix if the diagonal terms are unity.
       TE_IDENT = 'N'
       DO I=1,3
          IF (DABS(TE(I,I) - ONE) < EPS1) THEN
@@ -348,18 +348,17 @@
       ENDIF
 
 ! **********************************************************************************************************************************
-! Calculate XEL coords of grids in local element coord system (relative to node 1). 
-
+      ! Calculate XEL coords of grids in local element coord system (relative to node 1). 
       XEL(1,1) = ZERO
       XEL(1,2) = ZERO
       XEL(1,3) = ZERO
 
-      XEL(2,3) = ZERO                                      ! All z coords in mean plane are zero by definition of mean plane
-      XEL(3,3) = ZERO                                      ! even though using TE to calc them may not yield zero's
+      XEL(2,3) = ZERO  ! All z coords in mean plane are zero by definition of mean plane
+      XEL(3,3) = ZERO  ! even though using TE to calc them may not yield zero's
       XEL(4,3) = ZERO
 
       DO I=2,ELGP
-         DO J=1,2                                          ! Only calc x znd y coords. z coords in mean plane are zero by definition
+         DO J=1,2      ! Only calc x znd y coords. z coords in mean plane are zero by definition
             XEL(I,J) = ZERO
             DO K=1,3
                XEL(I,J) = XEL(I,J) + (XEB(I,K) - XEB(1,K))*TE(J,K)
@@ -377,9 +376,10 @@
       ENDIF
 
 ! **********************************************************************************************************************************
-! If HBAR is nonzero, we need to calculate transformation from mean plane to the grid points. This is used only for
-! the membrane element. BMEANT is the transpose of the B matrix for the QDMEM1 elem.
- 
+      ! If HBAR is nonzero, we need to calculate transformation from 
+      ! mean plane to the grid points. This is used only for the 
+      ! membrane element. BMEANT is the transpose of the B matrix 
+      ! for the QDMEM1 elem.
       IF (DABS(HBAR) > MXWARP) THEN
          CALL CALC_BMEANT
       ENDIF
@@ -413,8 +413,7 @@
 
       SUBROUTINE QUAD_GEOM_CHECK
 
-! Checks QUAD geometry. The coords of the 4 points have local x from side 1 to side 2
-
+      ! Checks QUAD geometry. The coords of the 4 points have local x from side 1 to side 2
       IMPLICIT NONE
 
       INTEGER(LONG)                   :: CW_ERR            ! Error indicator for CW/CCW check
@@ -429,8 +428,7 @@
       REAL(DOUBLE)                    :: V41L(3)           ! Vector from G.P. 4 to G.P. 1 in basic coords
 
 ! **********************************************************************************************************************************
-! Variables used in checking geometry
-
+      ! Variables used in checking geometry
       X12 = -(V12B(1)*IVEC(1) + V12B(2)*IVEC(2) + V12B(3)*IVEC(3))
       X13 = -(V13B(1)*IVEC(1) + V13B(2)*IVEC(2) + V13B(3)*IVEC(3))
       X24 = -(V24B(1)*IVEC(1) + V24B(2)*IVEC(2) + V24B(3)*IVEC(3))
@@ -472,8 +470,7 @@
          WRITE(BUG,*)
       ENDIF
 
-! Make sure that all side lengths are finite
-
+      ! Make sure that all side lengths are finite
       IF (DABS(L12) < EPS1) THEN
          QUAD_GEOM_ERR = QUAD_GEOM_ERR + 1
          SIDE_GRID1 = 1
@@ -550,8 +547,8 @@
          ENDIF
       ENDIF
 
-! Check that element is numered clockwise or counter clockwise. This can be skipped if DEBUG(194) = 1 or 3
-
+      ! Check that element is numered clockwise or counter clockwise.
+      ! This can be skipped if DEBUG(194) = 1 or 3
       IF ((DEBUG(194) == 1) .OR. (DEBUG(194) == 3)) THEN
 
          DO I=1,3
@@ -592,8 +589,7 @@
 
       ENDIF
 
-! Calculate and check diagonal lengths
-
+      ! Calculate and check diagonal lengths
       DO I=1,3
          V13B(I) = XEB(3,I) - XEB(1,I)
          V24B(I) = XEB(4,I) - XEB(2,I)
@@ -645,7 +641,8 @@
          ENDIF
       ENDIF
  
-! Print warning if all points not in a plane by more than WARP_WARN. Use average diagonal length times EPS4 as measure.
+      ! Print warning if all points not in a plane by more than WARP_WARN.
+      ! Use average diagonal length times EPS4 as measure.
 
       WARP_WARN = EPS4*(V13BM + V24BM)/TWO
       DHBAR = DABS(HBAR)
@@ -665,8 +662,7 @@
          ENDIF
       ENDIF
 
-! Check interior angles. This can be skipped if DEBUG(194) = 2 or 3
-
+      ! Check interior angles. This can be skipped if DEBUG(194) = 2 or 3
       IF ((DEBUG(194) == 2) .OR. (DEBUG(194) == 3)) THEN
 
          IPNT = 0

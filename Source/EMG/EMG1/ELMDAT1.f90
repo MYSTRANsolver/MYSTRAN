@@ -26,15 +26,16 @@
 
       SUBROUTINE ELMDAT1 ( INT_ELEM_ID, WRITE_WARN )
 
-! Generates small arrays of elem data, for use by subroutine EMG, one elem at a time for all elems. Arrays generated are:
-
-!   XEB      : basic coords of grids for 1 elem
-!   V VECTOR : for some 1-D elems 
-!   EPROP    : array of elem geometric properties
-!   ISOLID   : data for 3-D elems defining options from the PSOLID Bulk Data entry
-!   EMAT     : material property data
-!   PIN FLAG : Pin flag data for some elems
-!   OFFSETS  : offsets for some elems
+      ! Generates small arrays of elem data, for use by subroutine EMG,
+      ! one elem at a time for all elems. Arrays generated are:
+      
+      !   XEB      : basic coords of grids for 1 elem
+      !   V VECTOR : for some 1-D elems 
+      !   EPROP    : array of elem geometric properties
+      !   ISOLID   : data for 3-D elems defining options from the PSOLID Bulk Data entry
+      !   EMAT     : material property data
+      !   PIN FLAG : Pin flag data for some elems
+      !   OFFSETS  : offsets for some elems
  
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
       USE IOUNT1, ONLY                :  WRT_ERR, WRT_LOG, ERR, F04, F06
@@ -66,7 +67,7 @@
 
       CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: SUBR_NAME = 'ELMDAT1'
       CHARACTER(LEN=*), INTENT(IN)    :: WRITE_WARN         ! If 'Y' write warning messages, otherwise do not
-      CHARACTER( 1*BYTE)              :: GET_VVEC           ! If 'Y' run code to get VVEC 
+      CHARACTER( 1*BYTE)              :: GET_VVEC           ! If 'Y' run code to get VVEC
       CHARACTER( 1*BYTE)              :: VVEC_DEFINED       ! If 'Y' then a VVEC was found for elements that require one
 
       INTEGER(LONG), INTENT(IN)       :: INT_ELEM_ID        ! Internal element ID
@@ -103,17 +104,21 @@
       REAL(DOUBLE)                    :: THICK_AVG          ! Average of all THICK(i)
       REAL(DOUBLE)                    :: T0G(3,3)           ! Matrix to transform V vector from global to basic coords 
       REAL(DOUBLE)                    :: VV(3)              ! V vector in basic coords for this elem
+      INTEGER(LONG)                   :: OFFTI              ! interpretation of V vector
+      CHARACTER(3*BYTE)               :: OFFT               ! interpretation of V vector
+      LOGICAL                         :: IS_OFFT            ! is the offt flag active
+      INTEGER(LONG)                   :: IPIN1_EDAT         ! index of PIN1 in EDAT for CBAR/CBEAM; constant
  
       INTRINSIC                       :: MOD, FLOOR
 
-! **********************************************************************************************************************************
+! ********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
          CALL OURTIM
          WRITE(F04,9001) SUBR_NAME,TSEC
  9001    FORMAT(1X,A,' BEGN ',F10.3)
       ENDIF
 
-! **********************************************************************************************************************************
+! ********************************************************************************************************************************
       EPS1 = EPSIL(1)
 
       EPNTK     = EPNT(INT_ELEM_ID)
@@ -121,13 +126,13 @@
       EID       = EDAT(EPNTK)
       INTL_PID  = EDAT(EPNTK+1)
 
-! ELGP is the number of G.P.'s for this elem. Call GET_ELGP to find out how many grids there are for elem type TYPE
-
+      ! ELGP is the number of G.P.'s for this elem. Call GET_ELGP to find out
+      ! how many grids there are for elem type TYPE
       CALL GET_ELGP ( INT_ELEM_ID )
 
 
-! Make sure that NUM_SEi < ELGP+1 (for all but USERIN). This required in LINK9 where stresses are output with element corner values
-
+      ! Make sure that NUM_SEi < ELGP+1 (for all but USERIN).  This
+      ! required in LINK9 where stresses are output with element corner values
       IF (TYPE(1:6) /= 'USERIN') THEN
          DO J=1,METYPE
             IF (ELMTYP(J) == TYPE) THEN
@@ -141,9 +146,11 @@
          ENDDO
       ENDIF
 
-! Set CAN_ELEM_TYPE_OFFSET and test to make sure we have dimensioned OFFDIS, OFFSET properly
+      ! Set CAN_ELEM_TYPE_OFFSET and test to make sure we have
+      ! dimensioned OFFDIS, OFFSET properly
 
-      ! *** NOTE: CHECK CODE FOR 3D ELEMS IF THEY ARE TO HAVE OFFSET. GRID ORDER MAY GET CHANGED IN SUBR EDAT_FIXUP (SEE EMG)
+      ! *** NOTE: CHECK CODE FOR 3D ELEMS IF THEY ARE TO HAVE OFFSET.
+      !           GRID ORDER MAY GET CHANGED IN SUBR EDAT_FIXUP (SEE EMG)
       IF ((TYPE == 'BAR     ') .OR. (TYPE == 'BEAM    ') .OR. (TYPE == 'BUSH    ') .OR. (TYPE(1:5) == 'TRIA3'   ) .OR.             &
           (TYPE(1:5) == 'QUAD4'   )) THEN
          CAN_ELEM_TYPE_OFFSET = 'Y'
@@ -159,20 +166,18 @@
       ENDIF
 
 ! **********************************************************************************************************************************
-! AGRID/BGRID contain the G.P. no's (actual/internal) for points that the elem connects to (not for the v vector)
- 
-      CALL GET_ELEM_AGRID_BGRID ( INT_ELEM_ID, 'Y' )
+      ! AGRID/BGRID contain the G.P. no's (actual/internal) for points
+      ! that the elem connects to (not for the v vector)
+       CALL GET_ELEM_AGRID_BGRID ( INT_ELEM_ID, 'Y' )
 
-! ELDOF are the number of DOF's for this elem
-
+      ! ELDOF are the number of DOF's for this elem
       ELDOF = 0
       DO I=1,ELGP
          CALL GET_GRID_NUM_COMPS ( AGRID(I), NUM_COMPS, SUBR_NAME )
          ELDOF = ELDOF + NUM_COMPS
       ENDDO
 
-! Obtain the coordinates of the G.P.'s for this element
-
+      ! Obtain the coordinates of the G.P.'s for this element
       DO I=1,MELGP+1
          DO J=1,3
             XEB(I,J) = ZERO
@@ -184,15 +189,15 @@
          XEB(I,3) = RGRID(BGRID(I),3)
       ENDDO
 
-! For BUSH, make sure CID (field 9 of CBUSH) was specified if the 2 grids are coincident
-
+      ! For BUSH, make sure CID (field 9 of CBUSH) was specified if the
+      ! 2 grids are coincident
       IF (TYPE == 'BUSH    ') THEN
          BUSH_CID = EDAT(EPNTK+6)
          IF (ELGP > 1) THEN
             DXI = XEB(2,1) - XEB(1,1)
             DYI = XEB(2,2) - XEB(1,2)
             DZI = XEB(2,3) - XEB(1,3)
-!xx         IF (DXI*DXI + DYI*DYI + DZI*DZI < ONEPM6) THEN
+            ! IF (DXI*DXI + DYI*DYI + DZI*DZI < ONEPM6) THEN
             IF ((DABS(DXI) < ONEPM4) .AND. (DABS(DYI) < ONEPM4) .AND. (DABS(DZI) < ONEPM4)) THEN
                IF (BUSH_CID < 0) THEN
                   FATAL_ERR = FATAL_ERR + 1
@@ -204,39 +209,66 @@
          ENDIF
       ENDIF
 
-! Obtain the V vector if this is BAR, BEAM, BUSH or USER1 elem. The V vector specification is in EDAT just after the elem G.P.'s.
-! If this is a positive number, then it is the G.P. no. from the connection card giving a point on the V vector.
-! If it is a neg number it is in VVEC at the row equal to the positive value of the neg number in EDAT. However we
-! will have to transform V to basic coords if AGRID(I) global system is not basic. The V vector in basic coord dirs
-! is put into XEB after the grid point locations of the elem grid points. Thus, the last row in XEB is a vector,
-! measured from grid a, in the basic coord directions along the v vector.
-! NOTE: For BUSH elements with a CID (field 9 on CBUSH) > 0, the element coord system is defined by CID and no V vector is required
-
+      ! Obtain the V vector if this is BAR, BEAM, BUSH or USER1 elem.
+      !
+      ! VVEC_FLAG (V vector specification) is in EDAT just after the
+      ! elem G.P.'s.
+      !  - >0: GRID id from the connection card giving a point on the
+      !        V vector.
+      !  - <0: -VVEC is row ID. However we will have to transform V 
+      !        to basic coords if AGRID(I) global system is not basic.
+      !        The V vector in basic coord dirs is put into XEB after
+      !        the grid point locations of the elem grid points. Thus,
+      !        the last row in XEB is a vector, measured from grid A, 
+      !        in the basic coord directions along the v vector.
+      !
+      ! NOTE: For BUSH elements with a CID (field 9 on CBUSH) > 0, the element
+      !       coord system is defined by CID and no V vector is required
       GET_VVEC         = 'Y'
       VVEC_DEFINED     = 'N'
       BUSH_VVEC_OR_CID = 'Y'
-      DO J=1,3                                             ! Initialize V vector
+      
+      ! ! Initialize V vector
+      DO J=1,3
          VV(J) = ZERO
       ENDDO
+      OFFTI = -2
+      IS_OFFT = .FALSE.
+      OFFT = 'NAN'
       IF ((TYPE == 'BAR     ') .OR. (TYPE == 'BEAM    ') .OR. (TYPE == 'BUSH    ') .OR. (TYPE == 'USER1   ')) THEN
  
          VVEC_FLAG = 0
-         IF     ((TYPE == 'BAR     ') .OR. (TYPE == 'BEAM    ')) THEN 
+         IF ((TYPE == 'BAR     ') .OR. (TYPE == 'BEAM    ')) THEN 
+            !    6-8    V-Vector       (see VVEC explanation below)
+            !                          V vector key goes in EDAT(nedat+5)
+            !    9      OFFT           EDAT(nedat+6)
+            ! on optional second card:
+            !    2      Pin Flag A     EDAT(nedat+7)
+            !    3      Pin Flag B     EDAT(nedat+8)
+            !    4-9    Offsets        (see BAROFF explanation below)
+            !                          Offset key goes in EDAT(nedat+9)
             VVEC_FLAG = EDAT(EPNTK+4)
+            OFFTI = EDAT(EPNTK+5)
+            IS_OFFT = .TRUE.
+            CALL GET_OFFT_STR(OFFTI, OFFT)
          ELSE IF (TYPE == 'USER1   ') THEN
             VVEC_FLAG = EDAT(EPNTK+6)
          ELSE IF (TYPE == 'BUSH    ') THEN
             VVEC_FLAG = EDAT(EPNTK+5)
-            BUSH_VVEC = VVEC_FLAG                          ! BUSH_VVEC is in module MODEL_STUF and is used in subr ELMGM1_BUSH
-!xx         ACID = BUSH_CID
-            IF (BUSH_CID >= 0) THEN                        ! CID >= 0 for BUSH means VVEC is defined by coord sys in BUSH_CID 
+
+            ! BUSH_VVEC is in module MODEL_STUF and is used in subr ELMGM1_BUSH
+            BUSH_VVEC = VVEC_FLAG
+            !ACID = BUSH_CID
+            IF (BUSH_CID >= 0) THEN
+               ! CID >= 0 for BUSH means VVEC is defined by coord sys in BUSH_CID 
                GET_VVEC = 'N'
             ENDIF
          ENDIF
+
          IF (GET_VVEC == 'Y') THEN
 
-            IF (VVEC_FLAG > 0) THEN                        ! V vector is defined by a grid point
-
+            IF (VVEC_FLAG > 0) THEN
+               ! V vector is defined by a grid point
                CALL GET_ARRAY_ROW_NUM ( 'GRID_ID', SUBR_NAME, NGRID, GRID_ID, VVEC_FLAG, IGID_V )
                IF (IGID_V == -1) THEN
                   WRITE(ERR,1900) AGRID(I),EID,TYPE
@@ -250,44 +282,64 @@
                   XEB(ELGP+1,3) = RGRID(IGID_V,3)
                ENDIF
 
-            ELSE IF (VVEC_FLAG < 0) THEN                   ! V vector is an actual vector
+            ELSE IF (VVEC_FLAG < 0) THEN
+               ! V vector is an actual vector
+               WRITE(ERR,*) 'etype=',TYPE, 'VVEC_FLAG=', VVEC_FLAG, ' OFFT=',OFFT, ' IS_OFFT=', IS_OFFT
+               !, ' BGRID(1)=',BGRID(1)
+               IF (VVEC_FLAG < 0) THEN
+                   IVVEC = -VVEC_FLAG
+                   WRITE(ERR,*) ' VVEC=[', VVEC(IVVEC,1), ', ', VVEC(IVVEC,2), ', ', VVEC(IVVEC,3), ']'
+                   FLUSH(ERR)
+               ENDIF
+               FLUSH(ERR)
 
-               IF (BGRID(1) /= -1) THEN                    ! If grid not defined an error was set in subr GET_ELEM_AGRID_BGRID
-
-                  ACID = GRID(BGRID(1),3)                  ! Global coord sys ID
-                  IVVEC = -VVEC_FLAG                  
-                  IF (ACID /= 0) THEN                      ! Need to transform V vector to basic coords
+               IF (BGRID(1) /= -1) THEN
+                  ! transform VVEC to the basic frame
+                  !
+                  ! If grid not defined an error was set in subr GET_ELEM_AGRID_BGRID
+                  
+                  ! Global coord sys ID
+                  ACID = GRID(BGRID(1),3)
+                  IF(IS_OFFT .AND. (OFFT(1:1) == 'B')) THEN
+                     ! CBAR/CBEAM OFFT=Bxx, shortcut the loop
+                     ACID = 0
+                  ENDIF
+                  
+                  ! CBAR, CBEAM, CBUSH
+                  IVVEC = -VVEC_FLAG
+                  IF (ACID /= 0) THEN
+                     ! ACID global coord system exists. It was checked in CORDP_PROC
                      DO I=1,NCORD
-                        IF (ACID == CORD(I,2)) THEN        ! ACID global coord system exists. It was checked in CORDP_PROC
+                        IF (ACID == CORD(I,2)) THEN
                            ICID = I
                            EXIT
                         ENDIF
-                     ENDDO   
+                     ENDDO
 
+                     ! Need to transform V vector to basic coords
                      CALL GEN_T0L ( BGRID(1), ICID, THETAD, PHID, T0G )
                      DO J=1,3
                         VV(J) = T0G(J,1)*VVEC(IVVEC,1) + T0G(J,2)*VVEC(IVVEC,2) + T0G(J,3)*VVEC(IVVEC,3) 
-                     ENDDO   
-                     DO J=1,3
-                        XEB(ELGP+1,J) = XEB(1,J) + VV(J)   ! Basic coords at end of V vector
                      ENDDO
-
-                  ELSE                                     ! V vector was in basic coords
-
+                     
+                     ! Basic coords at end of V vector
+                     DO J=1,3
+                        XEB(ELGP+1,J) = XEB(1,J) + VV(J)
+                     ENDDO
+                  ELSE
+                     ! V vector was in basic coords
                      DO J=1,3
                         XEB(ELGP+1,J) = XEB(1,J) + VVEC(IVVEC,J)
-                     ENDDO   
-
+                     ENDDO
                   ENDIF
 
                ENDIF
-
                VVEC_DEFINED = 'Y'
 
             ELSE IF (VVEC_FLAG == 0)  THEN
 
-               IF (TYPE == 'BUSH    ') THEN                ! vvec and CID not spec for BUSH so need to test EPROP later
-                  BUSH_VVEC_OR_CID = 'N'                   ! (NOTE: already made sure CID was defined if GA, GB coincident)
+               IF (TYPE == 'BUSH    ') THEN  ! vvec and CID not spec for BUSH so need to test EPROP later
+                  BUSH_VVEC_OR_CID = 'N'     ! (NOTE: already made sure CID was defined if GA, GB coincident)
                ENDIF 
 
             ENDIF
@@ -303,8 +355,7 @@
          CALL DEBUG_ELMDAT1_FOR_BUSH
       ENDIF
 
-! If BAR, BEAM elem, make sure a V vector was specified.
-
+      ! If BAR/BEAM elem, make sure a V vector was specified.
       IF ((TYPE == 'BAR     ') .OR. (TYPE == 'BEAM    ') .AND. (GET_VVEC == 'Y')) THEN
          IF (VVEC_DEFINED /= 'Y') THEN
             WRITE(ERR,1902) TYPE, EID
@@ -314,18 +365,17 @@
          ENDIF
       ENDIF
  
-! **********************************************************************************************************************************
-! For BUSH, get coord systems
-
+! ********************************************************************************************************************************
+      ! For BUSH, get coord systems
       IF (TYPE == 'BUSH    ') THEN
          BUSH_CID  = EDAT(EPNTK+6)
          BUSH_OCID = EDAT(EPNTK+7)
       ENDIF
 
-! **********************************************************************************************************************************
-! Generate EPROP elem properties for this element. Shell elems with PCOMP props are handled in subr SHELL_ABD_MATRICES.
-! Note solid elements have no real property data
-
+! ********************************************************************************************************************************
+      ! Generate EPROP elem properties for this element.
+      ! Shell elems with PCOMP props are handled in subr SHELL_ABD_MATRICES.
+      ! Note solid elements have no real property data
       DO I=1,MEPROP
          EPROP(I) = ZERO
       ENDDO 
@@ -343,8 +393,8 @@
       ELSE IF (TYPE == 'BUSH    ') THEN
          DO I=1,MRPBUSH
             EPROP(I) = RPBUSH(INTL_PID,I)
-            IF (BUSH_VVEC_OR_CID == 'N') THEN              ! Check K2,3,5,6 and B2,3,5,6 = zero when no vvec or CID on BUSH
-               DO J=1,6                                    ! (NOTE: already made sure CID was defined if GA, GB coincident)
+            IF (BUSH_VVEC_OR_CID == 'N') THEN   ! Check K2,3,5,6 and B2,3,5,6 = zero when no vvec or CID on BUSH
+               DO J=1,6                         ! (NOTE: already made sure CID was defined if GA, GB coincident)
                   K_BUSH(J) = EPROP(J)
                   B_BUSH(J) = EPROP(J+6)
                ENDDO
@@ -374,29 +424,31 @@
          ENDDO 
 
       ELSE IF ((TYPE(1:5) == 'TRIA3') .OR. (TYPE(1:5) == 'QUAD4')) THEN
-                                                           ! For elems that not composites do EPROP in subr SHELL_ABD_MATRICES)
-         IF (PCOMP_PROPS == 'N') THEN                      ! Shell properties are in array PSHELL (except maybe membrane thickness)
+         IF (PCOMP_PROPS == 'N') THEN
+            ! For elems that not composites do EPROP in subr SHELL_ABD_MATRICES)
+            ! Shell properties are in array PSHELL (except maybe membrane thickness)
 
-            EPROP( 2) = RPSHEL(INTL_PID, 2)                ! 12*IB/(TM^3)
+            EPROP( 2) = RPSHEL(INTL_PID, 2)  ! 12*IB/(TM^3)
 
-            IF (PSHEL(INTL_PID,6) == 0) THEN               ! Use TS/TM from PSHEL card for EPROP( 3)
+            IF (PSHEL(INTL_PID,6) == 0) THEN     ! Use TS/TM from PSHEL card for EPROP(3)
                EPROP( 3) = RPSHEL(INTL_PID, 3)
-            ELSE                                           ! Use default TS/TM (=5/6 unless PARAM TSTM card reset this)
+            ELSE                                 ! Use default TS/TM (=5/6 unless PARAM TSTM card reset this)
                EPROP( 3) = TSTM_DEF
             ENDIF
 
-            EPROP( 4) = RPSHEL(INTL_PID, 4)                ! NSM
-            EPROP( 5) = RPSHEL(INTL_PID, 5)                ! ZS(1)
-            EPROP( 6) = RPSHEL(INTL_PID, 6)                ! ZS(2)
+            EPROP( 4) = RPSHEL(INTL_PID, 4)  ! NSM
+            EPROP( 5) = RPSHEL(INTL_PID, 5)  ! ZS(1)
+            EPROP( 6) = RPSHEL(INTL_PID, 6)  ! ZS(2)
 
-            THICK_AVG = ZERO                               ! DELTA locates where thickness key is in EDAT (rel to EID) for plates
+            THICK_AVG = ZERO                 ! DELTA locates where thickness key is in EDAT (rel to EID) for plates
             IF (TYPE(1:5) == 'QUAD4') THEN
                DELTA = DEDAT_Q4_THICK_KEY
             ELSE
                DELTA = DEDAT_T3_THICK_KEY
             ENDIF
             
-            IF (EDAT(EPNTK+DELTA) > 0) THEN                ! Membrane thickness was defined as grid thicknesses on connection entry
+            IF (EDAT(EPNTK+DELTA) > 0) THEN
+               ! Membrane thickness was defined as grid thicknesses on connection entry
                IF      (TYPE(1:5) == 'QUAD4') THEN
                   IPNTR = EDAT(EPNTK+DELTA)
                ELSE IF (TYPE(1:5) == 'TRIA3') THEN
@@ -406,25 +458,27 @@
                   EPROP(6+I) = PLATETHICK(IPNTR+I-1)
                   THICK_AVG  = THICK_AVG + PLATETHICK(IPNTR+I-1)/ELGP
                ENDDO
-               IF (DABS(EPROP(5)) == ZERO) THEN            ! Since thick was defined on conn entry, reset Z1,2 if they were zero
+               IF (DABS(EPROP(5)) == ZERO) THEN   ! Since thick was defined on conn entry, reset Z1,2 if they were zero
                   EPROP(5) = -THICK_AVG/TWO
                ENDIF
                IF (DABS(EPROP(6)) == ZERO) THEN
                   EPROP(6) =  THICK_AVG/TWO
                ENDIF
-            ELSE                                           ! Membrane thickness was defined on PSHELL
+            ELSE
+               ! Membrane thickness was defined on PSHELL
                THICK_AVG = RPSHEL(INTL_PID,1)
             ENDIF
 
             EPROP(1) = THICK_AVG
-            IF (DABS(THICK_AVG) < DABS(EPS1)) THEN         ! Membrane thickness cannot be zero
+            IF (DABS(THICK_AVG) < DABS(EPS1)) THEN
+               ! Membrane thickness cannot be zero
                WRITE(ERR,1949) TYPE, EID, THICK_AVG
                WRITE(F06,1949) TYPE, EID, THICK_AVG
                NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
                FATAL_ERR          = FATAL_ERR + 1
             ENDIF
 
-         ELSE                                              ! EPROP will be set in subr SHELL_ABD_MATRICES for PCOMP's
+         ELSE  ! EPROP will be set in subr SHELL_ABD_MATRICES for PCOMP's
 
          ENDIF
 
@@ -435,16 +489,15 @@
 
       ENDIF
 
-! Generate ISOLID array of solid element integer data (matl coord system, integration order, stress location, scheme)
-
+      ! Generate ISOLID array of solid element integer data
+      ! (matl coord system, integration order, stress location, scheme)
       IF ((TYPE(1:4) == 'HEXA') .OR. (TYPE(1:5) == 'PENTA') .OR. (TYPE(1:5) == 'TETRA')) THEN
          DO I=1,MPSOLID
             ISOLID(I) = PSOLID(INTL_PID,I)
          ENDDO
       ENDIF
 
-! Check solid element integration order for validity for this element type
-
+      ! Check solid element integration order for validity for this element type
       IF (TYPE == 'HEXA8'  ) THEN
          IF (ISOLID(4) == 0) THEN
             ISOLID(4) = 2
@@ -481,10 +534,10 @@
          ENDIF
       ENDIF
 
-! **********************************************************************************************************************************
-! Generate EMAT matl props for this elem.  Shell elems with PCOMP_PROPS are handled in subr SHELL_ABD_MATRICES.
-! The internal matl ID is in the PROD, PBAR, PBEAM, PSHEL, etc, data sets. There are no matl props for BUSH
-
+! ********************************************************************************************************************************
+      ! Generate EMAT matl props for this elem.  Shell elems with PCOMP_PROPS
+      ! are handled in subr SHELL_ABD_MATRICES.  The internal matl ID is in the
+      ! PROD, PBAR, PBEAM, PSHEL, etc, data sets. There are no matl props for BUSH
       DO I=1,MEMATR
          DO J=1,MEMATC
             EMAT(I,J) = ZERO
@@ -496,7 +549,6 @@
       ENDDO 
 
       IF      (TYPE == 'BAR     ') THEN
-
          INTL_MID(1)  = PBAR(INTL_PID,2)
          MTRL_TYPE(1) = MATL(INTL_MID(1),2)
          IF (MTRL_TYPE(1) /= 1) THEN                       ! Must be MAT1 for BAR
@@ -508,7 +560,6 @@
          NUMMAT = 1
 
       ELSE IF (TYPE == 'BEAM    ') THEN
-
          INTL_MID(1)  = PBEAM(INTL_PID,2)
          MTRL_TYPE(1) = MATL(INTL_MID(1),2)
          IF (MTRL_TYPE(1) /= 1) THEN                       ! Must be MAT1 for BEAM
@@ -520,10 +571,10 @@
          NUMMAT = 1
 
       ELSE IF ((TYPE(1:4) == 'HEXA') .OR. (TYPE(1:5) == 'PENTA') .OR. (TYPE(1:5) == 'TETRA')) THEN
-
          INTL_MID(1) = PSOLID(INTL_PID,2)
-         MTRL_TYPE(1) = MATL(INTL_MID(1),2)                ! Must be MAT1 or MAT9 for solids
+         MTRL_TYPE(1) = MATL(INTL_MID(1),2)
          IF ((MTRL_TYPE(1) /= 1) .AND. (MTRL_TYPE(1) /= 9)) THEN
+            ! Must be MAT1 or MAT9 for solids
             WRITE(ERR,1958) TYPE, EID
             WRITE(F06,1958) TYPE, EID
             NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
@@ -532,10 +583,10 @@
          NUMMAT = 1
 
       ELSE IF (TYPE == 'ROD     ') THEN
-
          INTL_MID(1) = PROD(INTL_PID,2)
          MTRL_TYPE(1) = MATL(INTL_MID(1),2)
-         IF (MTRL_TYPE(1) /= 1) THEN                       ! Must be MAT1 for ROD
+         IF (MTRL_TYPE(1) /= 1) THEN
+            ! Must be MAT1 for ROD
             WRITE(ERR,1915) TYPE, EID
             WRITE(F06,1915) TYPE, EID
             NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
@@ -544,10 +595,10 @@
          NUMMAT = 1
 
       ELSE IF (TYPE == 'SHEAR   ') THEN
-
          INTL_MID(1)  = PSHEAR(INTL_PID,2)
          MTRL_TYPE(1) = MATL(INTL_MID(1),2)
-         IF (MTRL_TYPE(1) /= 1) THEN                       ! Must be MAT1 for SHEAR
+         IF (MTRL_TYPE(1) /= 1) THEN
+            ! Must be MAT1 for SHEAR
             WRITE(ERR,1915) TYPE, EID
             WRITE(F06,1915) TYPE, EID
             NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
@@ -556,7 +607,7 @@
          NUMMAT = 1
 
       ELSE IF ((TYPE(1:5) == 'TRIA3') .OR. (TYPE(1:5) == 'QUAD4')) THEN
-                                                           ! For elems that are not composites do EMAT in subr SHELL_ABD_MATRICES)
+         ! For elems that are not composites do EMAT in subr SHELL_ABD_MATRICES)
          IF (PCOMP_PROPS == 'N') THEN
 
             INTL_MID(1) = PSHEL(INTL_PID,2)
@@ -607,8 +658,9 @@
 
          NUMMAT = 3
 
-         DO I=1,NUMMAT                                     ! Must be MAT1 or MAT8 for USER1 elements
+         DO I=1,NUMMAT
             IF ((MTRL_TYPE(I) /= 1) .AND. (MTRL_TYPE(I) /= 8)) THEN
+               ! Must be MAT1 or MAT8 for USER1 elements
                WRITE(ERR,1920) TYPE, EID
                WRITE(F06,1920) TYPE, EID
                NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
@@ -621,7 +673,8 @@
       IF ((TYPE /= 'BUSH    ') .AND. (TYPE(1:4) /= 'ELAS') .AND. (TYPE /= 'PLOTEL  ') .AND.                                        &
           (TYPE /= 'USERIN  ') .AND. (PCOMP_PROPS == 'N')) THEN
          DO I=1,MRMATLC
-            DO J=1,NUMMAT                                  ! NUMMAT are num of matls for this elem type (e.g. 4 for TRIA's & QUAD's)
+            ! NUMMAT are num of matls for this elem type (e.g. 4 for TRIA's & QUAD's)
+            DO J=1,NUMMAT
                IF (INTL_MID(J) /= 0) THEN
                   EMAT(I,J) = RMATL(INTL_MID(J),I)
                ENDIF
@@ -629,9 +682,9 @@
          ENDDO
       ENDIF
 
-! Set transverse shear alloawbles to same as in-plane shear allowables for non PCOMP shells. The transverse shear allowables go
-! in rows 19 and 20 of EMAT
-
+      ! Set transverse shear alloawbles to same as in-plane shear allowables
+      ! for non PCOMP shells. The transverse shear allowables go in 
+      ! rows 19 and 20 of EMAT
       IF ((TYPE(1:5) == 'TRIA3') .OR. (TYPE(1:5) == 'QUAD4')) THEN
          if (PCOMP_PROPS == 'N') THEN
             DO I=1,NUMMAT
@@ -649,32 +702,44 @@
          ENDIF
       ENDIF
 
-! **********************************************************************************************************************************
-! Process pin flag data and create array of elem DOF numbers for the DOF's that are pinned. The input pin flag data
-! is integer for each G.P. and is stored in EDAT. Call this IPIN(I) for each G.P. and convert this to a list of (up
-! to 6 times the no.of elem G.P.'s) DOF numbers for the pinned DOF's. Call this list, DOFPIN.
-
+! ********************************************************************************************************************************
+      ! Process pin flag data and create array of elem DOF numbers for the
+      ! DOF's that are pinned. The input pin flag data is integer for each
+      ! G.P. and is stored in EDAT. Call this IPIN(I) for each G.P. and
+      ! convert this to a list of (up to 6 times the no.of elem G.P.'s)
+      ! DOF numbers for the pinned DOF's. Call this list, DOFPIN.
+      !
       DO I=1,ELDOF
          DOFPIN(I) = 0
       ENDDO 
 
-! Process pin flag data in EDAT
-
+      ! Process pin flag data in EDAT
       IF ((TYPE == 'BAR     ') .OR. (TYPE == 'BEAM    ')) THEN
 
          NFLAG = 0
-
-         IF (ELGP > 2) THEN                                ! IPIN is only dimensioned to 2 so set error
-
+         !WRITE(ERR,*) 'NUMGRIDS FOR CBAR/CBEAM=', ELGP
+         !FLUSH(ERR)
+         IF (ELGP > 2) THEN  ! number of grid points for this element
+            ! IPIN is only dimensioned to 2 so set error
             WRITE(ERR,1953) SUBR_NAME, ELGP,TYPE
             WRITE(F06,1953) SUBR_NAME, ELGP,TYPE
             NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
             FATAL_ERR = FATAL_ERR + 1
 
          ELSE
-
-            DO I=1,ELGP
-               IPIN(I) = EDAT(EPNTK+4+I)
+            !    6-8    V-Vector       (see VVEC explanation below)
+            !                          V vector key goes in EDAT(nedat+5)
+            !    9      OFFT           EDAT(nedat+6)
+            ! on optional second card:
+            !    2      Pin Flag A     EDAT(nedat+7)
+            !    3      Pin Flag B     EDAT(nedat+8)
+            !    4-9    Offsets        (see BAROFF explanation below)
+            !                          Offset key goes in EDAT(nedat+9); was 8
+            IPIN1_EDAT = 6 ! was 5
+            DO I=1,ELGP  ! 2
+               IPIN(I) = EDAT(EPNTK+IPIN1_EDAT+I-1)  ! EPNTK+6 to EPNTK+7
+               WRITE(ERR,*) 'IPIN(', I, ')=', IPIN(I)
+               FLUSH(ERR)
                DO J=1,6
                   IREM    = MOD(IPIN(I),10)                ! e.g., if IPIN(I) = 136 then IREM = 6
                   IPIN(I) = FLOOR(DBLE(IPIN(I)/10))        ! e.g., if IPIN(I) = 136 then IPIN(I) is changed to 13
@@ -699,12 +764,15 @@
 
       ENDIF
 
-! **********************************************************************************************************************************
-! Get offset data for this elem. This data is in the BAROFF array for BAR, BEAM elems and in BUSHOFF for BUSH elements
-! and in RPSHEL array for shell elems. For BUSH, we need ELEM_LEN_12 since the offsets are fractions of this length
-
-! Distance between grids 1 and 2 is:
-
+! ********************************************************************************************************************************
+      ! Get offset data for this elem.  This data is in:
+      ! - BAROFF array for BAR, BEAM elems
+      ! - BUSHOFF for BUSH elements
+      ! and in RPSHEL array for shell elems.
+      !
+      ! For BUSH, we need ELEM_LEN_12 since the offsets are fractions of this length
+      
+      ! Distance between grids 1 and 2 is:
       ELEM_LEN_12 = DSQRT( (XEB(2,1) - XEB(1,1))*(XEB(2,1) - XEB(1,1))                                                             &
                          + (XEB(2,2) - XEB(1,2))*(XEB(2,2) - XEB(1,2))                                                             &
                          + (XEB(2,3) - XEB(1,3))*(XEB(2,3) - XEB(1,3)) )
@@ -716,10 +784,21 @@
             ENDDO 
          ENDDO 
 
-         IF      ((TYPE == 'BAR     ') .OR. (TYPE == 'BEAM    ')) THEN
+         IF ((TYPE == 'BAR     ') .OR. (TYPE == 'BEAM    ')) THEN
+            !    6-8    V-Vector       (see VVEC explanation below)
+            !                          V vector key goes in EDAT(nedat+5)
+            !    9      OFFT           EDAT(nedat+6)
+            ! on optional second card:
+            !    2      Pin Flag A     EDAT(nedat+7)
+            !    3      Pin Flag B     EDAT(nedat+8)
+            !    4-9    Offsets        (see BAROFF explanation below)
+            !                          Offset key goes in EDAT(nedat+9); was 8
 
-            IROW = EDAT(EPNTK + 7)
+            IROW = EDAT(EPNTK + 8)
+            WRITE(ERR,*) 'IROW =', IROW
             IF (IROW > 0) THEN
+               ! TODO: seems to be defined only in the basic frame
+               !       the default OFFT is GGG and this is not consistent
                EOFF(INT_ELEM_ID) = 'Y'
                OFFDIS(1,1) = BAROFF(IROW,1)
                OFFDIS(1,2) = BAROFF(IROW,2)
@@ -727,6 +806,10 @@
                OFFDIS(2,1) = BAROFF(IROW,4)
                OFFDIS(2,2) = BAROFF(IROW,5)
                OFFDIS(2,3) = BAROFF(IROW,6)
+               WRITE(ERR,*) 'ELEMDAT1/BAR:'
+               WRITE(ERR,*) '  WA=[', BAROFF(IROW,1), BAROFF(IROW,2), BAROFF(IROW,3), ']'
+               WRITE(ERR,*) '  WB=[', BAROFF(IROW,4), BAROFF(IROW,5), BAROFF(IROW,6), ']'
+               FLUSH(ERR)
             ELSE
                EOFF(INT_ELEM_ID) = 'N'
             ENDIF
@@ -734,10 +817,12 @@
          ELSE IF (TYPE(1:4) == 'BUSH') THEN
             IROW = EDAT(EPNTK + 8)
             IF (IROW > 0) THEN
-                  IF(BUSH_OCID == -1) THEN                 ! Offsets are along line GA-GB and use only S
+                  IF(BUSH_OCID == -1) THEN
+                     ! Offsets are along line GA-GB and use only S
                      IF (ELEM_LEN_12 >= .0001) THEN
-                                                           ! Offsets require an axis, so nonzero length
-                        EOFF(INT_ELEM_ID) = 'Y'            ! is needed since we can't use GA-GB when OCID=-1
+                        ! Offsets require an axis, so nonzero length
+                        ! is needed since we can't use GA-GB when OCID=-1
+                        EOFF(INT_ELEM_ID) = 'Y'
                         OFFDIS(1,1) = ELEM_LEN_12*BUSHOFF(IROW,1)
                         OFFDIS(1,2) = ELEM_LEN_12*BUSHOFF(IROW,2)
                         OFFDIS(1,3) = ELEM_LEN_12*BUSHOFF(IROW,3)
@@ -746,25 +831,29 @@
                         OFFDIS(2,2) = ELEM_LEN_12*BUSHOFF(IROW,2)
                         OFFDIS(2,3) = ELEM_LEN_12*BUSHOFF(IROW,3)
                      ELSE
-                        EOFF(INT_ELEM_ID) = 'N'           ! No axis, no OCID, no offset.
+                        ! No axis, no OCID, no offset.
+                        EOFF(INT_ELEM_ID) = 'N'
                      END IF
-                  ELSE           
-                                               ! Offsets are 3 dimensional and we can't get OFFDIS for grid GB yet
-                     EOFF(INT_ELEM_ID) = 'Y'            ! is required since we can't use GA-GB (OCID=-1)
+                  ELSE
+                     ! Offsets are 3 dimensional and we can't get OFFDIS for grid GB yet
+                     ! is required since we can't use GA-GB (OCID=-1)
+                     EOFF(INT_ELEM_ID) = 'Y'
 
                      OFFDIS(1,1) = BUSHOFF(IROW,1)
                      OFFDIS(1,2) = BUSHOFF(IROW,2)
                      OFFDIS(1,3) = BUSHOFF(IROW,3)
-                                                           ! We can't calc OFFDIS for grid GB if OCID >= 0 until subr ELMGM1_BUSH
-                     OFFDIS(2,1) = OFFDIS(1,1)             ! So just load grid GA values into OFFDIS for grid GB temporarily
+
+                     ! We can't calc OFFDIS for grid GB if OCID >= 0 until subr ELMGM1_BUSH
+                     ! So just load grid GA values into OFFDIS for grid GB temporarily
+                     OFFDIS(2,1) = OFFDIS(1,1)
                      OFFDIS(2,2) = OFFDIS(1,2)
                      OFFDIS(2,3) = OFFDIS(1,3)
-
                   ENDIF
 
-
-               DO I=1,MOFFSET                              ! Now set OFFDIS_O to be these original OFFDIS values so we can preserve
-                  DO J=1,3                                 ! the original values based on input
+               ! Set OFFDIS_O to be these original OFFDIS values so we can preserve
+               ! the original values based on input
+               DO I=1,MOFFSET
+                  DO J=1,3
                      OFFDIS_O(I,J) = OFFDIS(I,J)
                   ENDDO
                ENDDO
@@ -776,14 +865,17 @@
          ELSE IF (TYPE(1:5) == 'TRIA3') THEN
 
             IROW = EDAT(EPNTK + DEDAT_T3_POFFS_KEY)
-            IF (IROW > 0) THEN                             ! Elem has offset. IROW > 0 is the row in PLATEOFF where ZOFFS is
+            IF (IROW > 0) THEN
+               ! Elem has offset. IROW > 0 is the row in PLATEOFF where ZOFFS is
                EOFF(INT_ELEM_ID) = 'Y'
                ZOFFS = PLATEOFF(IROW)
-               IF (PCOMP_PROPS == 'N') THEN                ! This elem has PSHELL props so OK to have offset
+               IF (PCOMP_PROPS == 'N') THEN
+                  ! This elem has PSHELL props so OK to have offset
                   OFFDIS(1,3) = ZOFFS
                   OFFDIS(2,3) = ZOFFS
                   OFFDIS(3,3) = ZOFFS
-               ELSE                                        ! This elem has PCOMP props so not OK to have offset
+               ELSE
+                  ! This elem has PCOMP props so not OK to have offset
                   IF (DABS(ZOFFS) > 0.D0) THEN
                      WRITE(ERR,1945) TYPE, EID, ZOFFS, PCOMP(INTL_PID,1)
                      WRITE(F06,1945) TYPE, EID, ZOFFS, PCOMP(INTL_PID,1)
@@ -799,15 +891,18 @@
          ELSE IF (TYPE(1:5) == 'QUAD4') THEN
 
             IROW = EDAT(EPNTK + DEDAT_Q4_POFFS_KEY)
-            IF (IROW > 0) THEN                             ! Elem has offset. IROW > 0 is the row in PLATEOFF where ZOFFS is
+            IF (IROW > 0) THEN
+               ! Elem has offset. IROW > 0 is the row in PLATEOFF where ZOFFS is
                EOFF(INT_ELEM_ID) = 'Y'
                ZOFFS = PLATEOFF(IROW)
-               IF (PCOMP_PROPS == 'N') THEN                ! This elem has PSHELL props so OK to have offset
+               IF (PCOMP_PROPS == 'N') THEN
+                  ! This elem has PSHELL props so OK to have offset
                   OFFDIS(1,3) = ZOFFS
                   OFFDIS(2,3) = ZOFFS
                   OFFDIS(3,3) = ZOFFS
                   OFFDIS(4,3) = ZOFFS
-               ELSE                                        ! This elem has PCOMP props so not OK to have offset
+               ELSE
+                  ! This elem has PCOMP props so not OK to have offset
                   IF (DABS(ZOFFS) > 0.D0) THEN
                      WRITE(ERR,1945) TYPE, EID, ZOFFS, PCOMP(INTL_PID,1)
                      WRITE(F06,1945) TYPE, EID, ZOFFS, PCOMP(INTL_PID,1)
@@ -822,8 +917,7 @@
 
          ENDIF
 
-! Determine which grids have finite offsets for this element
-
+         ! Determine which grids have finite offsets for this element
          DO I=1,ELGP
             OFFSET(I) = 'N'
          ENDDO 
@@ -839,8 +933,9 @@
 
       ENDIF
 
-! **********************************************************************************************************************************
-! For ELAS elems form the list of G.P. DOF no's that the elem connects to. This is data from the CELAS card and is stored in EDAT
+! ********************************************************************************************************************************
+      ! For ELAS elems form the list of G.P. DOF no's that the elem connects
+      ! to. This is data from the CELAS card and is stored in EDAT
 
       IF ((TYPE == 'ELAS1   ') .OR. (TYPE == 'ELAS2   ')) THEN
 
@@ -849,8 +944,8 @@
          ENDDO 
 
          IERROR = 0
-         DO I=1,2                                          ! If displ comps on CELAS1,2 entry were blank or 0, change to 1,2
-            ELAS_COMP(I) = EDAT(EPNTK+3+I)                 ! (i.e. ELAS has 2 components of displ)
+         DO I=1,2                           ! If displ comps on CELAS1,2 entry were blank or 0, change to 1,2
+            ELAS_COMP(I) = EDAT(EPNTK+3+I)  ! (i.e. ELAS has 2 components of displ)
             IF (ELAS_COMP(I) == 0) THEN
                CALL GET_GRID_NUM_COMPS ( AGRID(I), NUM_COMPS, SUBR_NAME )
                IF (NUM_COMPS > 1) THEN
@@ -870,14 +965,13 @@
 
       ELSE IF ((TYPE == 'ELAS3   ') .OR. (TYPE == 'ELAS4   ')) THEN
 
-         ELAS_COMP(1) = 1                                  ! These are the components at the SPOINT, not the cols of the KE matrix
-         ELAS_COMP(2) = 1                                  ! (for cols of the KE matrix, see subr ELAS1, they depend on ELAS_COMP)
+         ELAS_COMP(1) = 1  ! These are the components at the SPOINT, not the cols of the KE matrix
+         ELAS_COMP(2) = 1  ! (for cols of the KE matrix, see subr ELAS1, they depend on ELAS_COMP)
 
       ENDIF
 
 ! **********************************************************************************************************************************
-! Generate USERIN specific data
-
+      ! Generate USERIN specific data
       IF (TYPE == 'USERIN') THEN
 
          USERIN_NUM_ACT_GRDS  = EDAT(EPNTK+2)
@@ -894,7 +988,8 @@
          USERIN_MASS_MAT_NAME = USERIN_MAT_NAMES(INTL_PID,2)
          USERIN_LOAD_MAT_NAME = USERIN_MAT_NAMES(INTL_PID,3)
          USERIN_RBM0_MAT_NAME = USERIN_MAT_NAMES(INTL_PID,4)
-                                                           ! Calc array of grid num, comp num for the DOF's that elem connects to   
+
+         ! Calc array of grid num, comp num for the DOF's that elem connects to   
          CALL DEALLOCATE_MODEL_STUF ( 'USERIN_ACT_GRDS, USERIN_ACT_COMPS' )
          CALL ALLOCATE_MODEL_STUF   ( 'USERIN_ACT_GRDS, USERIN_ACT_COMPS', SUBR_NAME )
          DO I=1,USERIN_NUM_ACT_GRDS
@@ -904,7 +999,7 @@
 
       ENDIF
 
-! **********************************************************************************************************************************
+! ********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
          CALL OURTIM
          WRITE(F04,9002) SUBR_NAME,TSEC
@@ -913,7 +1008,7 @@
 
       RETURN
 
-! **********************************************************************************************************************************
+! ********************************************************************************************************************************
  1822 FORMAT(' *ERROR  1822: ',A,I8,' ON ',A,I8,' IS UNDEFINED')
 
  1900 FORMAT(' *ERROR  1900: GRID ',I8,' ON ELEMENT ',I8,' TYPE ',A,' NOT  DEFINED') 
@@ -1029,3 +1124,35 @@
       END SUBROUTINE DEBUG_ELMDAT1_FOR_BUSH
 
       END SUBROUTINE ELMDAT1
+
+
+     SUBROUTINE GET_OFFT_STR(OFFTI, OFFT)
+     USE PENTIUM_II_KIND, ONLY  :  BYTE, LONG
+     IMPLICIT NONE
+     INTEGER(LONG),INTENT(IN)    :: OFFTI
+     CHARACTER(3),INTENT(INOUT)  :: OFFT
+
+     OFFT = 'NAN'
+     !IF (OFFTI == -2) THEN
+     !    OFFT = 'NA2'
+     IF (OFFTI == -1) THEN
+         OFFT = 'NA1'
+     ELSEIF (OFFTI == 1) THEN
+         OFFT = 'GGG'
+     ELSEIF (OFFTI == 2) THEN
+         OFFT = 'BGG'
+     !ELSEIF (OFFTI == 3) THEN
+     !    OFFT = 'GGO'
+     !ELSEIF (OFFTI == 4) THEN
+     !    OFFT = 'BGO'
+     !ELSEIF (OFFTI == 5) THEN
+     !    OFFT = 'GOG'
+     !ELSEIF (OFFTI == 6) THEN
+     !    OFFT = 'BOG'
+     !ELSEIF (OFFTI == 7) THEN
+     !    OFFT = 'GOO'
+     !ELSEIF (OFFTI == 8) THEN
+     !    OFFT = 'BOO'
+     ENDIF
+
+     END SUBROUTINE GET_OFFT_STR

@@ -83,23 +83,6 @@
 ! **********************************************************************************************************************************
       ! CBAR element Bulk Data Card routine
 
-      ! Current:
-      !   FIELD   ITEM           ARRAY ELEMENT
-      !   -----   ------------   -------------
-      !    1      Element type   ETYPE(nele)  =B1 for CBAR
-      !    2      Element ID     EDAT(nedat+1)
-      !    3      Property ID    EDAT(nedat+2)
-      !    4      Grid A         EDAT(nedat+3)
-      !    5      Grid B         EDAT(nedat+4)
-      !    6-8    V-Vector       (see VVEC explanation below)
-      !                          V vector key goes in EDAT(nedat+5)
-      ! on optional second card:
-      !    2      Pin Flag A     EDAT(nedat+6)
-      !    3      Pin Flag B     EDAT(nedat+7)
-      !    4-9    Offsets        (see BAROFF explanation below)
-      !                          Offset key goes in EDAT(nedat+8)
-
-      ! Future:
       !   FIELD   ITEM           ARRAY ELEMENT
       !   -----   ------------   -------------
       !    1      Element type   ETYPE(nele)  =B1 for CBAR
@@ -324,16 +307,16 @@
 
       ! offt doesn't have a BAROR/BEAMOR default
       !
-      ! Flag    Orientation Vector  End A Offset  End B Offset flag
+      ! OFFT    Orientation Vector  End A Offset  End B Offset flag
       ! -----   ------------------  ------------  -----------------
-      ! 0/GGG   Global              Global        Global
-      ! 1/BGG   Basic               Global        Global
-      ! 2/GGO   Global              Global        Offset
-      ! 3/BGO   Basic               Global        Offset
-      ! 4/GOG   Global              Offset        Global
-      ! 5/BOG   Basic               Offset        Global
-      ! 6/GOO   Global              Offset        Offset
-      ! 7/BOO   Basic               Offset        Offset
+      ! 1/GGG   Global              Global        Global
+      ! 2/BGG   Basic               Global        Global
+      ! 3/GGO   Global              Global        Offset
+      ! 4/BGO   Basic               Global        Offset
+      ! 5/GOG   Global              Offset        Global
+      ! 6/BOG   Basic               Offset        Global
+      ! 7/GOO   Global              Offset        Offset
+      ! 8/BOO   Basic               Offset        Offset
       !
       ! TODO: change flags to be clearer?
       !
@@ -365,25 +348,25 @@
           
           OFFTI = -1
           IF (OFFT == 'GGG') THEN
-              OFFTI = 0
-          ELSEIF(OFFT == 'BGG') THEN
               OFFTI = 1
-          ELSEIF(OFFT == 'GGO') THEN
+          ELSEIF(OFFT == 'BGG') THEN
               OFFTI = 2
-          ELSEIF(OFFT == 'BGO') THEN
+          ELSEIF(OFFT == 'GGO') THEN
               OFFTI = 3
-          ELSEIF(OFFT == 'GOG') THEN
+          ELSEIF(OFFT == 'BGO') THEN
               OFFTI = 4
-          ELSEIF(OFFT == 'BOG') THEN
+          ELSEIF(OFFT == 'GOG') THEN
               OFFTI = 5
-          ELSEIF(OFFT == 'GOO') THEN
+          ELSEIF(OFFT == 'BOG') THEN
               OFFTI = 6
-          ELSEIF(OFFT == 'BOO') THEN
+          ELSEIF(OFFT == 'GOO') THEN
               OFFTI = 7
+          ELSEIF(OFFT == 'BOO') THEN
+              OFFTI = 8
           ENDIF
       ENDIF
-      !NEDAT = NEDAT + 1
-      !EDAT(NEDAT) = OFFTI
+      NEDAT = NEDAT + 1
+      EDAT(NEDAT) = OFFTI
       !OFFTS(NEDAT) = OFFT
 
 
