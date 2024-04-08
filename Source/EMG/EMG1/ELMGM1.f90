@@ -28,10 +28,10 @@
 
       ! Calculates and checks some elem geometry for:
       ! - ROD, BAR, BEAM
-      ! - USER1
-      ! - triangles (verify; no reference to triangles)
-      ! - CBUSH???  (comment is unclear)
-
+      ! - USER1 (verify; not referenced in EMG.f90)
+      ! - TRIA3 (verify; no reference to triangles)
+      ! - TETRA4, TETRA10, PENTA6, PENTA15 (wut???!!!)
+      !
       ! and provides a transformation matrix (TE) to transform the
       ! element stiffness matrix in the element system to the basic
       ! coordinate system. Calculates grid point coords in local coord system.
@@ -122,7 +122,9 @@
       ENDIF
 
       ! Init OFFDIS_B. Some elements will not require the offsets transformed to basic
-      IF ((TYPE == 'BAR     ') .OR. (TYPE == 'BEAM    ') .OR. (TYPE == 'ROD     ')) THEN
+      ! NOTE: removed ROD from BAR/BEAM block because it'd better be 0
+      !
+      IF ((TYPE == 'BAR     ') .OR. (TYPE == 'BEAM    ')) THEN
          DO I=1,ELGP
             DO J=1,3
                OFFDIS_B(I,J) = ZERO
@@ -134,8 +136,10 @@
       ! If there are offsets that are specified in global coords, calculate
       ! the value of the offsets in basic coords so that they can be used
       ! below to find the element axes in basic coords
-
-      IF ((TYPE == 'BAR     ') .OR. (TYPE == 'BEAM    ') .OR. (TYPE == 'ROD     ')) THEN
+      !
+      ! NOTE: removed ROD from BAR/BEAM block because it'd better be 0
+      !
+      IF ((TYPE == 'BAR     ') .OR. (TYPE == 'BEAM    ')) THEN
 
          IF (EOFF(INT_ELEM_ID) == 'Y') THEN
             DO I=1,ELGP
@@ -171,9 +175,9 @@
       ! Calculate a vector between ends of the element in basic coords
       ! (not between grids if there are offsets).
       !
-      ! TODO: why is ROD in this list?
-      ! TODO: what about CBUSH?
-      IF ((TYPE == 'BAR     ') .OR. (TYPE == 'BEAM    ') .OR. (TYPE == 'ROD     ')) THEN
+      ! NOTE: removed ROD from BAR/BEAM block because it'd better be 0
+      !
+      IF ((TYPE == 'BAR     ') .OR. (TYPE == 'BEAM    ')) THEN
          VX(1) = ( XEB(2,1) + OFFDIS_B(2,1) ) - ( XEB(1,1) + OFFDIS_B(1,1) )
          VX(2) = ( XEB(2,2) + OFFDIS_B(2,2) ) - ( XEB(1,2) + OFFDIS_B(1,2) )
          VX(3) = ( XEB(2,3) + OFFDIS_B(2,3) ) - ( XEB(1,3) + OFFDIS_B(1,3) )
@@ -208,15 +212,18 @@
       ! Calculate y and z axes for ROD (since it has no v-vector to help).
       ! The y-elem and z-elem axes will be calculated based on the procedure
       ! referenced below from the internet ("Some Basic Vector Operations In IDL")
-
+      !
       IF (TYPE == 'ROD     ') THEN                         ! NB *** new 09/13/21
 
          DO I=1,3
-            I3_IN(I)   = I
-            I3_OUT(I)  = I3_IN(I)
+            I3_IN(I)  = I
+            I3_OUT(I) = I3_IN(I)
          ENDDO
-         CALL CALC_VEC_SORT_ORDER ( VX, SORT_ORDER, I3_OUT)! Use this rather than SORT_INT1_REAL1 - didn't work for vec 10., 0., 0.
-         IF (SORT_ORDER == '     ') THEN                   ! Subr CALC_VEC_SORT_ORDER did not find a sort order
+         
+         ! Use this rather than SORT_INT1_REAL1 - didn't work for vec 10., 0., 0.
+         CALL CALC_VEC_SORT_ORDER ( VX, SORT_ORDER, I3_OUT)
+         IF (SORT_ORDER == '     ') THEN
+            ! Subr CALC_VEC_SORT_ORDER did not find a sort order
             FATAL_ERR = FATAL_ERR + 1
             NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
             WRITE(ERR,1944) SUBR_NAME, TYPE, EID

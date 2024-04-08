@@ -27,10 +27,7 @@
       SUBROUTINE ELMGM1_BUSH ( INT_ELEM_ID, WRITE_WARN )
 
       ! Calculates and checks some elem geometry for:
-      ! - ROD, BAR, BEAM
-      ! - USER1
-      ! - triangles (verify; no reference to triangles)
-      ! - CBUSH???  (comment is unclear)
+      ! - BUSH
 
       ! and provides a transformation matrix (TE) to transform the
       ! element stiffness matrix in the element system to the basic

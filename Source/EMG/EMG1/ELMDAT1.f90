@@ -548,21 +548,11 @@
          MTRL_TYPE(I) = 0
       ENDDO 
 
-      IF      (TYPE == 'BAR     ') THEN
+      IF ((TYPE == 'BAR     ') .OR. (TYPE == 'BEAM    ') .OR. (TYPE == 'ROD     ') .OR. (TYPE == 'SHEAR   ')) THEN
          INTL_MID(1)  = PBAR(INTL_PID,2)
          MTRL_TYPE(1) = MATL(INTL_MID(1),2)
-         IF (MTRL_TYPE(1) /= 1) THEN                       ! Must be MAT1 for BAR
-            WRITE(ERR,1915) TYPE, EID
-            WRITE(F06,1915) TYPE, EID
-            NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
-            FATAL_ERR = FATAL_ERR + 1
-         ENDIF
-         NUMMAT = 1
-
-      ELSE IF (TYPE == 'BEAM    ') THEN
-         INTL_MID(1)  = PBEAM(INTL_PID,2)
-         MTRL_TYPE(1) = MATL(INTL_MID(1),2)
-         IF (MTRL_TYPE(1) /= 1) THEN                       ! Must be MAT1 for BEAM
+         IF (MTRL_TYPE(1) /= 1) THEN
+            ! Must be MAT1 for BAR/BEAM/ROD/SHEAR
             WRITE(ERR,1915) TYPE, EID
             WRITE(F06,1915) TYPE, EID
             NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
@@ -577,30 +567,6 @@
             ! Must be MAT1 or MAT9 for solids
             WRITE(ERR,1958) TYPE, EID
             WRITE(F06,1958) TYPE, EID
-            NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
-            FATAL_ERR = FATAL_ERR + 1
-         ENDIF
-         NUMMAT = 1
-
-      ELSE IF (TYPE == 'ROD     ') THEN
-         INTL_MID(1) = PROD(INTL_PID,2)
-         MTRL_TYPE(1) = MATL(INTL_MID(1),2)
-         IF (MTRL_TYPE(1) /= 1) THEN
-            ! Must be MAT1 for ROD
-            WRITE(ERR,1915) TYPE, EID
-            WRITE(F06,1915) TYPE, EID
-            NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
-            FATAL_ERR = FATAL_ERR + 1
-         ENDIF
-         NUMMAT = 1
-
-      ELSE IF (TYPE == 'SHEAR   ') THEN
-         INTL_MID(1)  = PSHEAR(INTL_PID,2)
-         MTRL_TYPE(1) = MATL(INTL_MID(1),2)
-         IF (MTRL_TYPE(1) /= 1) THEN
-            ! Must be MAT1 for SHEAR
-            WRITE(ERR,1915) TYPE, EID
-            WRITE(F06,1915) TYPE, EID
             NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
             FATAL_ERR = FATAL_ERR + 1
          ENDIF
@@ -632,9 +598,10 @@
 
             NUMMAT = 4
 
-            DO I=1,NUMMAT                                  ! Must be MAT1 or MAT8 for plate elems
-               IF (MTRL_TYPE(I) /= 0) THEN                 ! as long as a material was defined
+            DO I=1,NUMMAT
+               IF (MTRL_TYPE(I) /= 0) THEN
                   IF ((MTRL_TYPE(I) /= 1) .AND. (MTRL_TYPE(I) /= 2) .AND. (MTRL_TYPE(I) /= 8)) THEN
+                     ! Must be MAT1 or MAT8 for plate elems as long as a material was defined
                      WRITE(ERR,1920) TYPE, EID
                      WRITE(F06,1920) TYPE, EID
                      NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
@@ -646,7 +613,6 @@
          ENDIF
 
       ELSE IF (TYPE == 'USER1   ') THEN
-
          INTL_MID(1)  = PUSER1(INTL_PID,2)
          MTRL_TYPE(1) = MATL(INTL_MID(1),2)
 
@@ -657,7 +623,6 @@
          MTRL_TYPE(3) = MATL(INTL_MID(3),2)
 
          NUMMAT = 3
-
          DO I=1,NUMMAT
             IF ((MTRL_TYPE(I) /= 1) .AND. (MTRL_TYPE(I) /= 8)) THEN
                ! Must be MAT1 or MAT8 for USER1 elements
@@ -864,7 +829,6 @@
             ENDIF
 
          ELSE IF (TYPE(1:5) == 'TRIA3') THEN
-
             IROW = EDAT(EPNTK + DEDAT_T3_POFFS_KEY)
             IF (IROW > 0) THEN
                ! Elem has offset. IROW > 0 is the row in PLATEOFF where ZOFFS is
@@ -974,7 +938,6 @@
 ! **********************************************************************************************************************************
       ! Generate USERIN specific data
       IF (TYPE == 'USERIN') THEN
-
          USERIN_NUM_ACT_GRDS  = EDAT(EPNTK+2)
          USERIN_NUM_SPOINTS   = EDAT(EPNTK+3)
          USERIN_CID0          = EDAT(EPNTK+4)
