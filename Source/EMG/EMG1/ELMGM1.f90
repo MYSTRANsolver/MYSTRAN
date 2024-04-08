@@ -23,12 +23,19 @@
 ! _______________________________________________________________________________________________________
                                                                                                       
 ! End MIT license text.                                                                                      
- 
+
       SUBROUTINE ELMGM1 ( INT_ELEM_ID, WRITE_WARN )
- 
-! Calculates and checks some elem geometry for ROD, BAR, BEAM, triangles and provides a transformation matrix (TE) to transform the
-! element stiffness matrix in the element system to the basic coordinate system. Calculates grid point coords in local coord system.
-  
+
+      ! Calculates and checks some elem geometry for:
+      ! - ROD, BAR, BEAM
+      ! - USER1
+      ! - triangles (verify; no reference to triangles)
+      ! - CBUSH???  (comment is unclear)
+
+      ! and provides a transformation matrix (TE) to transform the
+      ! element stiffness matrix in the element system to the basic
+      ! coordinate system. Calculates grid point coords in local coord system.
+
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
       USE IOUNT1, ONLY                :  WRT_ERR, WRT_LOG, ERR, F04, F06
       USE SCONTR, ONLY                :  BLNK_SUB_NAM, MELGP, MOFFSET, NCORD, FATAL_ERR
@@ -39,11 +46,11 @@
       USE PARAMS, ONLY                :  EPSIL
       USE MODEL_STUF, ONLY            :  BGRID, CAN_ELEM_TYPE_OFFSET, CORD, EID, ELEM_LEN_12, ELEM_LEN_AB, ELGP,NUM_EMG_FATAL_ERRS,&
                                          EOFF, GRID, OFFDIS, OFFDIS_O, OFFDIS_B, OFFDIS_G, RCORD, TE, TE_IDENT, TYPE, XEB, XEL
- 
+
       USE ELMGM1_USE_IFs
 
       IMPLICIT NONE
- 
+
       CHARACTER( 1*BYTE)              :: ID(3)              ! Used in deciding whether TE_IDENT = 'Y' or 'N'
       CHARACTER( 5*BYTE)              :: SORT_ORDER         ! Order in which the VX(i) have been sorted in subr CALC_VEC_SORT_ORDER
       CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: SUBR_NAME = 'ELMGM1'
@@ -77,7 +84,7 @@
       REAL(DOUBLE)                    :: VY(3)              ! A vector in the elem y dir
       REAL(DOUBLE)                    :: VZ(3)              ! A vector in the elem z dir
       REAL(DOUBLE)                    :: V13(3)             ! A vector from grid 1 to grid 3 (for BAR, BEAM or USER1 it is V vector)
-  
+
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
          CALL OURTIM
@@ -87,28 +94,26 @@
 
 ! **********************************************************************************************************************************
       EPS1 = EPSIL(1)
- 
-! Initialize
-  
+
+      ! Initialize
       DO I=1,MELGP
         DO J=1,3
            XEL(I,J) = ZERO
         ENDDO 
       ENDDO 
- 
+
       DO I=1,3
         DO J=1,3
            TE(I,J) = ZERO
         ENDDO 
       ENDDO 
- 
+
       DO I=1,3
          VX(I) = ZERO
       ENDDO
 
 ! ----------------------------------------------------------------------------------------------------------------------------------
-! Make sure the number of elem grids is not larger than OFFDIS is dimensioned for
-
+      ! Make sure the number of elem grids is not larger than OFFDIS is dimensioned for
       IF ((CAN_ELEM_TYPE_OFFSET == 'Y') .AND. (ELGP > MOFFSET)) THEN
          WRITE(ERR,1954) SUBR_NAME, MOFFSET, ELGP, TYPE
          WRITE(F06,1954) SUBR_NAME, MOFFSET, ELGP, TYPE
@@ -116,8 +121,7 @@
          FATAL_ERR = FATAL_ERR + 1
       ENDIF
 
-! Init OFFDIS_B. Some elements will not require the offsets transformed to basic
-
+      ! Init OFFDIS_B. Some elements will not require the offsets transformed to basic
       IF ((TYPE == 'BAR     ') .OR. (TYPE == 'BEAM    ') .OR. (TYPE == 'ROD     ')) THEN
          DO I=1,ELGP
             DO J=1,3
@@ -127,46 +131,48 @@
       ENDIF
 
 ! ----------------------------------------------------------------------------------------------------------------------------------
-! If there are offsets that are specified in global coords, calculate the value of the offsets in basic
-! coords so that they can be used below to find the element axes in basic coords
+      ! If there are offsets that are specified in global coords, calculate
+      ! the value of the offsets in basic coords so that they can be used
+      ! below to find the element axes in basic coords
 
       IF ((TYPE == 'BAR     ') .OR. (TYPE == 'BEAM    ') .OR. (TYPE == 'ROD     ')) THEN
 
          IF (EOFF(INT_ELEM_ID) == 'Y') THEN
             DO I=1,ELGP
-               ACID_G = GRID(BGRID(I),3)                   ! Get global coord sys for this grid
-               IF (ACID_G /= 0) THEN                       ! Need to transform offset vector from global to basic coords
+               ! Get global coord sys for this grid
+               ACID_G = GRID(BGRID(I),3)
+               IF (ACID_G /= 0) THEN
+                  ! Need to transform offset vector from global to basic coords
                   ICID = 0
-                  DO J=1,NCORD
-                     IF (ACID_G == CORD(J,2)) THEN         ! ACID_G global coord system exists. It was checked in CORDP_PROC
-                        ICID = J
-                        EXIT
-                     ENDIF
-                  ENDDO   
+                  CALL GET_ICD(ACID_G, ICID)  ! get index of CD
 
                   CALL GEN_T0L ( BGRID(I), ICID, THETAD, PHID, T0G )
                   DO J=1,3
                      OFFDIS_B(I,J) = T0G(J,1)*OFFDIS(I,1) + T0G(J,2)*OFFDIS(I,2) + T0G(J,3)*OFFDIS(I,3) 
                   ENDDO   
-               ELSE                                        ! Offset was in basic coords
+               ELSE
+                  ! Offset was in basic coords
                   DO J=1,3
                      OFFDIS_B(I,J) = OFFDIS(I,J)
                   ENDDO   
                ENDIF
             ENDDO
-         ELSE                                              ! There are no offsets so set OFFDIS_B to zero
+         ELSE
+            ! There are no offsets so set OFFDIS_B to zero
             DO I=1,ELGP
                DO J=1,3
                   OFFDIS_B(I,J) = ZERO
                ENDDO
             ENDDO
          ENDIF 
-         
       ENDIF
 
 ! ----------------------------------------------------------------------------------------------------------------------------------
-! Calculate a vector between ends of the element in basic coords (not between grids if there are offsets). 
-
+      ! Calculate a vector between ends of the element in basic coords
+      ! (not between grids if there are offsets).
+      !
+      ! TODO: why is ROD in this list?
+      ! TODO: what about CBUSH?
       IF ((TYPE == 'BAR     ') .OR. (TYPE == 'BEAM    ') .OR. (TYPE == 'ROD     ')) THEN
          VX(1) = ( XEB(2,1) + OFFDIS_B(2,1) ) - ( XEB(1,1) + OFFDIS_B(1,1) )
          VX(2) = ( XEB(2,2) + OFFDIS_B(2,2) ) - ( XEB(1,2) + OFFDIS_B(1,2) )
@@ -180,12 +186,10 @@
       LX(2) = VX(2)
       LX(3) = VX(3)
 
-! Length of element between ends is:
-
+      ! Length of element between ends is:
       ELEM_LEN_AB = DSQRT( LX(1)*LX(1) + LX(2)*LX(2) + LX(3)*LX(3) )
 
-! If ELEM_LEN_AB is equal to zero write error and return.
-
+      ! If ELEM_LEN_AB is equal to zero write error and return.
       IF (ELEM_LEN_AB <= EPS1) THEN
          WRITE(ERR,1904) TYPE, EID, ELEM_LEN_AB
          WRITE(F06,1904) TYPE, EID, ELEM_LEN_AB
@@ -195,15 +199,15 @@
       ENDIF
 
 ! ----------------------------------------------------------------------------------------------------------------------------------
-! Unit vector in element X direction
-
+      ! Unit vector in element X direction
       DO I=1,3
          TE(1,I) = VX(I)/ELEM_LEN_AB
       ENDDO
 
 ! ----------------------------------------------------------------------------------------------------------------------------------
-! Calculate y and z axes for ROD (since it has no v-vector to help). The y-elem and z-elem axes will be calculated based on the
-! procedure referenced below from the internet ("Some Basic Vector Operations In IDL")
+      ! Calculate y and z axes for ROD (since it has no v-vector to help).
+      ! The y-elem and z-elem axes will be calculated based on the procedure
+      ! referenced below from the internet ("Some Basic Vector Operations In IDL")
 
       IF (TYPE == 'ROD     ') THEN                         ! NB *** new 09/13/21
 
@@ -219,10 +223,13 @@
             WRITE(F06,1944) SUBR_NAME, TYPE, EID
             RETURN
          ENDIF
-                                                           ! See notes on "Some Basic Vector Operations In IDL" on web site:
-                                                           ! http://fermi.jhuapl.edu/s1r/idl/s1rlib/vectors/v_basic.html
-         VY(I3_OUT(1)) =  ZERO                             !  (a) Component of VY in direction of min VX is set to zero
-         VY(I3_OUT(2)) =  VX(I3_OUT(3))                    !  (b) Other 2 VY(i) are corresponding VX(i) switched with one x(-1)
+                                                            
+         ! See notes on "Some Basic Vector Operations In IDL" on web site:
+         ! http://fermi.jhuapl.edu/s1r/idl/s1rlib/vectors/v_basic.html
+         !  (a) Component of VY in direction of min VX is set to zero
+         !  (b) Other 2 VY(i) are corresponding VX(i) switched with one x(-1)
+         VY(I3_OUT(1)) =  ZERO
+         VY(I3_OUT(2)) =  VX(I3_OUT(3))
          VY(I3_OUT(3)) = -VX(I3_OUT(2))
          MAGY  = DSQRT(VY(1)*VY(1) + VY(2)*VY(2) + VY(3)*VY(3))
 
@@ -241,8 +248,7 @@
 
          CALL CROSS ( VX, VY, VZ )
 
-         MAGZ  = DSQRT(VZ(1)*VZ(1) + VZ(2)*VZ(2) + VZ(3)*VZ(3))
-
+         MAGZ = DSQRT(VZ(1)*VZ(1) + VZ(2)*VZ(2) + VZ(3)*VZ(3))
          IF (DABS(MAGZ) < EPS1) THEN
             FATAL_ERR = FATAL_ERR + 1
             NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
@@ -255,8 +261,7 @@
             TE(3,I) = VZ(I)/MAGZ
          ENDDO
 
-! Check if TE is the identity matrix and set a flag
-
+         ! Check if TE is the identity matrix and set a flag
          TE_IDENT = 'N'
          DO I=1,3
             ID(I) = 'N'
@@ -275,24 +280,29 @@
       ENDIF
 
 ! ----------------------------------------------------------------------------------------------------------------------------------
-! Calculate remainder of TE for elements other than ROD
- 
-! Calculate V13, vector from G.P.-1 to G.P.-3. For BAR, BEAM, BUDH, USER1 the V13 vector is the v vector = XEB(ELGP+1,i)
- 
+      ! Calculate remainder of TE for elements other than ROD
+      ! Calculate V13, vector from G.P.-1 to G.P.-3.
+      !
+      ! For BAR, BEAM, BUDH, USER1:
+      ! - the V13 vector is the v vector = XEB(ELGP+1,i)
+      ! 
+      ! TODO: BUDH???  is that BUSH?
+
 begn: IF (TYPE /= 'ROD     ') THEN
-    
+
          IF ((TYPE == 'BAR     ') .OR. (TYPE == 'BEAM    ') .OR. (TYPE == 'USER1   ')) THEN
             ROWNUM = ELGP + 1
          ELSE      
             ROWNUM = 3
          ENDIF
-         DO I=1,3  
+         DO I=1,3
             V13(I) = XEB(ROWNUM,I) - XEB(1,I)
          ENDDO 
- 
-! Calculate VX x V13 and unit vector in elem z dir. (Col. 3 of TE). If MAGZ is equal to zero, then vector from G.P. 1
-! to G.P. 3 is parallel to vector from G.P.-1 to G.P.-2 so write error and quit.
- 
+
+         ! Calculate VX x V13 and unit vector in elem z dir. (Col. 3 of TE).
+         ! If MAGZ is equal to zero, then vector from G.P. 1 to G.P. 3 is
+         ! parallel to vector from G.P.-1 to G.P.-2 so write error and quit.
+
          CALL CROSS ( VX, V13, VZ )
          MAGZ = DSQRT(VZ(1)*VZ(1) + VZ(2)*VZ(2) + VZ(3)*VZ(3))
          IF (MAGZ <=  EPS1) THEN
@@ -314,7 +324,8 @@ begn: IF (TYPE /= 'ROD     ') THEN
             TE(3,I) = VZ(I)/MAGZ
          ENDDO
 
-         CALL CROSS ( VZ, VX, VY )                      ! Calc unit vector in Ye dir. (from VZ (cross) VX): If MAGY = 0 quit
+         ! Calc unit vector in Ye dir. (from VZ (cross) VX): If MAGY = 0 quit
+         CALL CROSS ( VZ, VX, VY )
          MAGY = DSQRT(VY(1)*VY(1) + VY(2)*VY(2) + VY(3)*VY(3))
          IF(MAGY <= EPS1) THEN
             WRITE(ERR,1912) EID,TYPE
@@ -326,7 +337,8 @@ begn: IF (TYPE /= 'ROD     ') THEN
          DO I=1,3
             TE(2,I) = VY(I)/MAGY
          ENDDO 
-                                                       ! Now set TE_IDENT to be 'Y' if TE is an identity matrix. 
+         
+         ! Now set TE_IDENT to be 'Y' if TE is an identity matrix. 
          TE_IDENT = 'N'
          DO I=1,3
             ID(I) = 'N'
@@ -341,17 +353,16 @@ begn: IF (TYPE /= 'ROD     ') THEN
          IF ((ID(1) == 'Y') .AND. (ID(2) == 'Y') .AND. (ID(3) == 'Y')) THEN
             TE_IDENT = 'Y'
          ENDIF
- 
+
       ENDIF begn
 
 
 ! ----------------------------------------------------------------------------------------------------------------------------------
-! Use TE to get array of elem coords in local system.
- 
+      ! Use TE to get array of elem coords in local system.
       XEL(1,1) = ZERO
       XEL(1,2) = ZERO
       XEL(1,3) = ZERO
-  
+
       DO I=2,ELGP
          DO J=1,3
             XEL(I,J) = ZERO
@@ -360,7 +371,7 @@ begn: IF (TYPE /= 'ROD     ') THEN
             ENDDO 
          ENDDO 
       ENDDO 
-  
+
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
          CALL OURTIM
@@ -395,14 +406,36 @@ begn: IF (TYPE /= 'ROD     ') THEN
                     ,/,15X,A,I8,' HAS LENGTH (INCL EFFECTS OF OFFSETS) = ',1ES9.2,'. SHOULD BE ZERO')
 
 
-
-
-
-
-
-
-
-
 ! **********************************************************************************************************************************
 
       END SUBROUTINE ELMGM1
+
+
+!---------------------------------------------------------------------------------
+      SUBROUTINE GET_ICD(CID, ICD)
+      ! CD is the output coordinate system
+      ! ICD is the index of the output coordinate system
+      !
+      ! TODO: ie CORD array sorted?  If it is, we can do a binary search
+      !
+      USE PENTIUM_II_KIND, ONLY       :  LONG
+      USE IOUNT1, ONLY                :  ERR
+      USE SCONTR, ONLY                :  NCORD
+      USE MODEL_STUF, ONLY            :  CORD
+
+      IMPLICIT NONE
+
+      INTEGER(LONG), INTENT(IN)       :: CID   ! coordinate system ID
+      INTEGER(LONG), INTENT(INOUT)    :: ICD   ! index of coord id 
+      INTEGER(LONG)                   :: I     ! counter
+
+      DO I=1,NCORD
+         IF (CID == CORD(I,2)) THEN
+            ! CID global coord system exists. It was checked in CORDP_PROC
+            ICD = I
+            EXIT
+         ENDIF
+      ENDDO
+      
+      !WHILE (I<NCORD)
+      END SUBROUTINE GET_ICD

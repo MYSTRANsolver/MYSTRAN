@@ -118,8 +118,8 @@
       REAL(DOUBLE)                    :: S22(3,6)          ! Intermediate matrix used in calculating SE2 stress matrix
       REAL(DOUBLE)                    :: TBAR              ! Average elem temperature 
 
-! The following are used for the differential stiffness matrix calc. See NASTRAN Prog's Manual (COSMIC 1972) page 4.87.30
-
+      ! The following are used for the differential stiffness matrix calc.
+      ! See NASTRAN Prog's Manual (COSMIC 1972) page 4.87.30
       REAL(DOUBLE)                    :: M1a               ! Bend mom, plane 1, end a (also Maz, in NASTRAN Prog Man differ stiff)
       REAL(DOUBLE)                    :: M2a               ! Bend mom, plane 2, end a (also May, in NASTRAN Prog Man differ stiff)
       REAL(DOUBLE)                    :: M1b               ! Bend mom, plane 1, end b (also Mbz, in NASTRAN Prog Man differ stiff)
@@ -127,6 +127,7 @@
       REAL(DOUBLE)                    :: V1                ! Plane 1 shear (also Vy, in NASTRAN Prog Man differ stiff)
       REAL(DOUBLE)                    :: V2                ! Plane 2 shear (also Vz, in NASTRAN Prog Man differ stiff)
       REAL(DOUBLE)                    :: Fx                ! Axial force (also Fx, in NASTRAN Prog Man differ stiff)
+      LOGICAL                         :: USE_AREA_SHEAR_FACTOR
 
       INTRINSIC DABS
  
@@ -142,29 +143,33 @@
 ! **********************************************************************************************************************************
       EPS1 = EPSIL(1)
 
-! Calculate element stiffness matrix KE(12,12), regardless of OPT(4) since the calculation of PTE and/or SEi, STEi
-! uses values from KE. Initialize KE here to make sure it starts as zero for the BAR element
-
+     ! Calculate element stiffness matrix KE(12,12), regardless of OPT(4)
+     ! since the calculation of PTE and/or SEi, STEi uses values from KE.
+     ! Initialize KE here to make sure it starts as zero for the BAR element
       DO I=1,12
          DO J=1,12
             KE(I,J) = ZERO
          ENDDO
       ENDDO
- 
+
       G1   = K1*AREA*G
       G2   = K2*AREA*G
       R0   = TWELVE*E/(L*L*L)
       R1   = R0*I1
       R2   = R0*I2
       BETA = R0*I12
-      DEN  = I1*I2 - I12*I12                               !    I1*I2 > I12^2 was checked when PBAR's were read in subr LOADB
+      DEN  = I1*I2 - I12*I12  ! I1*I2 > I12^2 was checked when PBAR's were read in subr LOADB
       IF (DEBUG(203) > 0) CALL DEBUG_BAR1 ( 1 )
 
-! If I12 > 0 then R1, R2 remain as is. If I12 = 0 then R1, R2 depend on G1 and G2. Quit if R1D or R2D = 0.
-! If DEBUG(12) = 1, then use R1 and R2 from below even when I12 = 0
-  
+      ! If I12 > 0 then R1, R2 remain as is. If I12 = 0 then R1, R2 depend on
+      !   G1 and G2. Quit if R1D or R2D = 0.
+      ! If DEBUG(12) = 1, then use R1 and R2 from below even when I12 = 0
       IERROR = 0
-      IF ((DABS(I12) <= EPS1) .OR. (DEBUG(12) == 1)) THEN
+      
+      ! Use area shear factors in computing BAR stiffness matrix regardless of I12 value
+      USE_AREA_SHEAR_FACTOR = (DEBUG(12) == 1)
+      !DEBUG_BAR1 = (DEBUG(203) == 1)
+      IF ((DABS(I12) <= EPS1) .OR. USE_AREA_SHEAR_FACTOR) THEN
          IF (DABS(G1) >= EPS1) THEN
             R1D = ONE + R1*L/G1
             IF (R1D <= EPS1) THEN
@@ -191,12 +196,10 @@
          ENDIF
       ENDIF
 
-! Return if IERROR > 0
-
+      ! Return if IERROR > 0
       IF (IERROR > 0) RETURN
-  
-! Calc intermediate variables
 
+      ! Calc intermediate variables
       DELTA1 = I2/DEN
       DELTA2 = I1/DEN
       DELTA12= I12/DEN
@@ -215,9 +218,8 @@
       C03    = C02/TWO
       IF (DEBUG(203) > 0) CALL DEBUG_BAR1 ( 2 )
   
-! Generate KE 
-
-      KE( 1, 1) = RA                                       ! A-A partition of KE 
+      ! Generate KE 
+      KE( 1, 1) = RA        ! A-A partition of KE 
       KE( 2, 2) = R1
       KE( 2, 3) = BETA
       KE( 2, 5) =-C01*BETA
@@ -230,7 +232,7 @@
       KE( 5, 6) =-C02*BETA
       KE( 6, 6) = K1T
 
-      KE( 1, 7) =-RA                                       ! A-B partition of KE
+      KE( 1, 7) =-RA         ! A-B partition of KE
       KE( 2, 8) =-R1
       KE( 2, 9) =-BETA
       KE( 2,11) =-C01*BETA
@@ -249,7 +251,7 @@
       KE( 6,11) =-C03*BETA
       KE( 6,12) = K3T
 
-      KE( 7, 7) = RA                                       ! B-B partition of KE 
+      KE( 7, 7) = RA         ! B-B partition of KE 
       KE( 8, 8) = R1
       KE( 8, 9) = BETA
       KE( 8,11) = C01*BETA
@@ -262,15 +264,15 @@
       KE(11,12) =-C02*BETA
       KE(12,12) = K1T
  
-      DO I=2,12                                            ! Set lower triangular partition of KE using symmetry
+      DO I=2,12              ! Set lower triangular partition of KE using symmetry
          DO J=1,I-1
             KE(I,J) = KE(J,I)
          ENDDO
       ENDDO
 
-! Process Pin Flags. NUM_PFLAG_DOFS is a count of the total number of DOF pin flagged. DOFPIN(i) generated in ELMDAT is an
-! integer array of the DOF numbers of the pin flagged DOF.
-  
+      ! Process Pin Flags. NUM_PFLAG_DOFS is a count of the total number of
+      ! DOF pin flagged. DOFPIN(i) generated in ELMDAT is an integer array of
+      ! the DOF numbers of the pin flagged DOF.
       NUM_PFLAG_DOFS = 0
       DO I=1,12
          IF (DOFPIN(I) > 0) THEN
@@ -281,26 +283,25 @@
          CALL PINFLG ( NUM_PFLAG_DOFS )
       ENDIF
  
-      DO I=1,6                                             ! Upper left partition of KE is KAA. Need this for calc'ing PTE, SEi
+      DO I=1,6                    ! Upper left partition of KE is KAA. Need this for calc'ing PTE, SEi
          DO J=1,6
             KAA(I,J) = KE(I,J)
          ENDDO 
       ENDDO 
 
-      DO I=1,6                                             ! Upper right partition of KE is KAB. Need this for calculating SEi
+      DO I=1,6                    ! Upper right partition of KE is KAB. Need this for calculating SEi
          DO J=7,12
             KAB(I,J-6) = KE(I,J)
          ENDDO 
       ENDDO 
 
-      DO I=7,12                                            ! Lower left partition of KE is KBA. Need this for calculating PTE
+      DO I=7,12                   ! Lower left partition of KE is KBA. Need this for calculating PTE
          DO J=1,6
             KBA(I-6,J) = KE(I,J)
          ENDDO 
       ENDDO 
 
-! The following matrices are needed if either OPT(2) or OPT(3) or OPT(6) is called for
-
+      ! The following matrices are needed if either OPT(2) or OPT(3) or OPT(6) is called for
       IF ((OPT(2) == 'Y') .OR. (OPT(3) == 'Y') .OR. (OPT(6) == 'Y')) THEN
          IF (NTSUB > 0) THEN                          
 
@@ -318,8 +319,7 @@
       ENDIF
 
 ! **********************************************************************************************************************************
-! Determine element thermal loads. 
- 
+         ! Determine element thermal loads. 
 !     IF ((OPT(2) == 'Y') .OR. (OPT(6) == 'Y')) THEN
 
          IF (NTSUB > 0) THEN
@@ -371,8 +371,7 @@
 !     ENDIF
   
 ! **********************************************************************************************************************************
-! Calculate SE matrices for stress data recovery.
- 
+         ! Calculate SE matrices for stress data recovery.
 !     IF ((OPT(3) == 'Y') .OR. (OPT(6) == 'Y')) THEN
 
          DO I=1,3
@@ -382,7 +381,7 @@
             ENDDO
          ENDDO
 
-         IF (DABS(AREA) > EPS1) THEN                       ! Can't calculate axial stress if the area = 0
+         IF (DABS(AREA) > EPS1) THEN  ! Can't calculate axial stress if the area = 0
             B1(1,1) = -ONE/AREA
          ENDIF
 
@@ -402,7 +401,7 @@
          B2(2,5) =  DELTA2
          B2(2,6) =  DELTA12
 
-         IF (DABS(JTOR) > EPS1) THEN                       ! Can't calc torsional stress if torsional constant = 0
+         IF (DABS(JTOR) > EPS1) THEN  ! Can't calc torsional stress if torsional constant = 0
             B2(3,4) = -SCOEFF/JTOR
          ENDIF
 
@@ -422,7 +421,7 @@
             ENDDO
          ENDDO
 
-         IF (NTSUB > 0) THEN                               ! Calculate STEi for thermal stress data recovery
+         IF (NTSUB > 0) THEN  ! Calculate STEi for thermal stress data recovery
 
             DO I=1,3
                DO J=1,5
@@ -448,8 +447,7 @@
 !     ENDIF
 
 ! **********************************************************************************************************************************
-! Calculate linear differential stiffness matrix
-
+      ! Calculate linear differential stiffness matrix
       IF ((OPT(6) == 'Y') .AND. (LOAD_ISTEP > 1)) THEN
 
          CALL ELMDIS
@@ -538,8 +536,7 @@
 
       ENDIF
 
-! If this is DIFFEREN or NLSTATIC, add linear and differential stiffness matrices
-
+      ! If this is DIFFEREN or NLSTATIC, add linear and differential stiffness matrices
       IF ((SOL_NAME(1:8) == 'DIFFEREN') .OR. (SOL_NAME(1:8) == 'NLSTATIC')) THEN
 
          DO I=1,ELDOF

@@ -800,6 +800,7 @@
                ! TODO: seems to be defined only in the basic frame
                !       the default OFFT is GGG and this is not consistent
                EOFF(INT_ELEM_ID) = 'Y'
+               ! file/variable: BD_CBAR/BAROFF -> ELEMDAT1/OFFDIS -> ELMGM1/VX
                OFFDIS(1,1) = BAROFF(IROW,1)
                OFFDIS(1,2) = BAROFF(IROW,2)
                OFFDIS(1,3) = BAROFF(IROW,3)

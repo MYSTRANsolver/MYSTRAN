@@ -23,12 +23,19 @@
 ! _______________________________________________________________________________________________________
                                                                                                       
 ! End MIT license text.                                                                                      
- 
+
       SUBROUTINE ELMGM1_BUSH ( INT_ELEM_ID, WRITE_WARN )
- 
-! Calculates and checks some elem geometry for ROD, BAR, BEAM, triangles and provides a transformation matrix (TE) to transform the
-! element stiffness matrix in the element system to the basic coordinate system. Calculates grid point coords in local coord system.
-  
+
+      ! Calculates and checks some elem geometry for:
+      ! - ROD, BAR, BEAM
+      ! - USER1
+      ! - triangles (verify; no reference to triangles)
+      ! - CBUSH???  (comment is unclear)
+
+      ! and provides a transformation matrix (TE) to transform the
+      ! element stiffness matrix in the element system to the basic
+      ! coordinate system. Calculates grid point coords in local coord system.
+
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
       USE IOUNT1, ONLY                :  WRT_ERR, WRT_LOG, ERR, F04, F06
       USE SCONTR, ONLY                :  BLNK_SUB_NAM, MELGP, MOFFSET, NCORD, FATAL_ERR
@@ -44,7 +51,7 @@
       USE ELMGM1_BUSH_USE_IFs
 
       IMPLICIT NONE
- 
+
       CHARACTER( 1*BYTE)              :: ID(3)              ! Used in deciding whether TE_IDENT = 'Y' or 'N'
       CHARACTER( 5*BYTE)              :: SORT_ORDER         ! Order in which the VX(i) have been sorted in subr CALC_VEC_SORT_ORDER
       CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: SUBR_NAME = 'ELMGM1_BUSH'
@@ -91,28 +98,26 @@
 
 ! **********************************************************************************************************************************
       EPS1 = EPSIL(1)
- 
-! Initialize
-  
+
+      ! Initialize
       DO I=1,MELGP
         DO J=1,3
            XEL(I,J) = ZERO
         ENDDO 
       ENDDO 
- 
+
       DO I=1,3
         DO J=1,3
            TE(I,J) = ZERO
         ENDDO 
       ENDDO 
- 
+
       DO I=1,3
          VX(I) = ZERO
       ENDDO
 
 ! ----------------------------------------------------------------------------------------------------------------------------------
-! Make sure the number of elem grids is not larger than OFFDIS is dimensioned for
-
+      ! Make sure the number of elem grids is not larger than OFFDIS is dimensioned for
       IF ((CAN_ELEM_TYPE_OFFSET == 'Y') .AND. (ELGP > MOFFSET)) THEN
          WRITE(ERR,1954) SUBR_NAME, MOFFSET, ELGP, TYPE
          WRITE(F06,1954) SUBR_NAME, MOFFSET, ELGP, TYPE
@@ -121,7 +126,7 @@
       ENDIF
 
 ! ----------------------------------------------------------------------------------------------------------------------------------
-! Calculate the TE coord transformation matrix
+      ! Calculate the TE coord transformation matrix
 
       IF (ELEM_LEN_12 < .0001) THEN
          IF (BUSH_CID < 0) THEN                               ! Elem len < .0001 so CID must be > 0
@@ -135,16 +140,11 @@
 bcid: IF (BUSH_CID > 0) THEN                               ! Get transformation of BUSH_CID to basic and put it into TE
 
          CORD_FND = 'N'
-         ICID = 0
-         DO J=1,NCORD
-            IF (BUSH_CID == CORD(J,2)) THEN
-               CORD_FND = 'Y'
-               ICID = J
-               EXIT
-            ENDIF
-         ENDDO   
+         ICID = 0  ! index of CD
+         CALL GET_ICD(BUSH_CID, ICID)
 
-         IF (CORD_FND == 'Y') THEN                         ! NOTE: This BUSH TE transforms a vector in BUSH_CID to basic
+         IF (CORD_FND == 'Y') THEN
+            ! NOTE: This BUSH TE transforms a vector in BUSH_CID to basic
             TET(1,1) = RCORD(ICID, 4)   ;   TET(1,2) = RCORD(ICID, 5)   ;   TET(1,3) = RCORD(ICID, 6)
             TET(2,1) = RCORD(ICID, 7)   ;   TET(2,2) = RCORD(ICID, 8)   ;   TET(2,3) = RCORD(ICID, 9)
             TET(3,1) = RCORD(ICID,10)   ;   TET(3,2) = RCORD(ICID,11)   ;   TET(3,3) = RCORD(ICID,12)
@@ -154,15 +154,16 @@ bcid: IF (BUSH_CID > 0) THEN                               ! Get transformation 
                ENDDO
             ENDDO
             write(f06,*)
-         ELSE                                              ! Error, could not find BUSH_CID coord system in RCORD
+         ELSE
+            ! Error, could not find BUSH_CID coord system in RCORD
             NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
             FATAL_ERR = FATAL_ERR + 1
             WRITE(ERR,1822) 'COORD SYSTEM ', BUSH_CID, TYPE, EID
             WRITE(F06,1822) 'COORD SYSTEM ', BUSH_CID, TYPE, EID
          ENDIF
 
-      ELSE IF (BUSH_CID == 0) THEN                         ! BUSH_CID is basic so TE is the identity matrix
-
+      ELSE IF (BUSH_CID == 0) THEN
+         ! BUSH_CID is basic so TE is the identity matrix
          DO I=1,3
             DO J=1,3
                TE(I,J) = ZERO
@@ -170,15 +171,20 @@ bcid: IF (BUSH_CID > 0) THEN                               ! Get transformation 
             TE(I,I) = ONE
          ENDDO
 
-      ELSE IF (BUSH_CID < 0) THEN                          ! This means no BUSH_CID was found so we look for the v vector
+      ELSE IF (BUSH_CID < 0) THEN
+         ! This means no BUSH_CID was found so we look for the v vector
 
-         IF (BUSH_VVEC /= 0) THEN                          ! A v-vector was specified for this bUSH element
+         IF (BUSH_VVEC /= 0) THEN
+            ! A v-vector was specified for this bUSH element
 
-            VX(1) = XEB(2,1) - XEB(1,1)                    ! When no BUSH_CID the x axis is along line between the 2 grids
+            ! When no BUSH_CID the x axis is along line between the 2 grids
+            VX(1) = XEB(2,1) - XEB(1,1)
             VX(2) = XEB(2,2) - XEB(1,2)
             VX(3) = XEB(2,3) - XEB(1,3)
+            
+            ! For BUSH use length between 2 grids since length bet elem ends is zero
             DO I=1,3
-               TE(1,I) = VX(I)/ELEM_LEN_12                 ! For BUSH use length bet 2 grids since length bet elem ends is zero
+               TE(1,I) = VX(I)/ELEM_LEN_12
             ENDDO
             DO I=1,3  
                V13(I) = XEB(ELGP+1,I) - XEB(1,I)
@@ -196,7 +202,8 @@ bcid: IF (BUSH_CID > 0) THEN                               ! Get transformation 
                TE(3,I) = VZ(I)/MAGZ
             ENDDO
 
-            CALL CROSS ( VZ, VX, VY )                      ! Calc unit vector in Ye dir.from VZ (cross) VX: If MAGY = 0 quit
+            ! Calc unit vector in Ye dir.from VZ (cross) VX: If MAGY = 0 quit
+            CALL CROSS ( VZ, VX, VY )
             MAGY = DSQRT(VY(1)*VY(1) + VY(2)*VY(2) + VY(3)*VY(3))
             IF(MAGY <= EPS1) THEN
                WRITE(ERR,1912) EID,TYPE
@@ -209,8 +216,8 @@ bcid: IF (BUSH_CID > 0) THEN                               ! Get transformation 
                TE(2,I) = VY(I)/MAGY
             ENDDO 
 
-         ELSE IF (BUSH_VVEC == 0) THEN                     ! No v-vec or CID specified for BUSH elem so elem x axis is GA->GB 
-!                                                                  --
+         ELSE IF (BUSH_VVEC == 0) THEN
+            ! No v-vec or CID specified for BUSH elem so elem x axis is GA->GB 
             VX(1) = XEB(2,1) - XEB(1,1)
             VX(2) = XEB(2,2) - XEB(1,2)
             VX(3) = XEB(2,3) - XEB(1,3)
@@ -224,17 +231,22 @@ bcid: IF (BUSH_CID > 0) THEN                               ! Get transformation 
                I3_OUT(I)  = I3_IN(I)
             ENDDO
             CALL CALC_VEC_SORT_ORDER (VX,SORT_ORDER,I3_OUT)! Use this rather than SORT_INT1_REAL1 - didn't work for vec 10.,0.,0.
-            IF (SORT_ORDER == '     ') THEN                ! Subr CALC_VEC_SORT_ORDER did not find a sort order
+            IF (SORT_ORDER == '     ') THEN
+               ! Subr CALC_VEC_SORT_ORDER did not find a sort order
                FATAL_ERR = FATAL_ERR + 1
                NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
                WRITE(ERR,1944) SUBR_NAME, TYPE, EID
                WRITE(F06,1944) SUBR_NAME, TYPE, EID
                RETURN
             ENDIF
-                                                           ! See notes on "Some Basic Vector Operations In IDL" on web site:
-                                                           ! http://fermi.jhuapl.edu/s1r/idl/s1rlib/vectors/v_basic.html
-            VY(I3_OUT(1)) =  ZERO                          !  (a) Component of VY in direction of min VX is set to zero
-            VY(I3_OUT(2)) =  VX(I3_OUT(3))                 !  (b) Other 2 VY(i) are corresponding VX(i) switched with one x(-1)
+
+
+            ! See notes on "Some Basic Vector Operations In IDL" on web site:
+            ! http://fermi.jhuapl.edu/s1r/idl/s1rlib/vectors/v_basic.html
+            !  (a) Component of VY in direction of min VX is set to zero
+            !  (b) Other 2 VY(i) are corresponding VX(i) switched with one x(-1)
+            VY(I3_OUT(1)) =  ZERO
+            VY(I3_OUT(2)) =  VX(I3_OUT(3))
             VY(I3_OUT(3)) = -VX(I3_OUT(2))
             MAGY  = DSQRT(VY(1)*VY(1) + VY(2)*VY(2) + VY(3)*VY(3))
 
@@ -254,7 +266,6 @@ bcid: IF (BUSH_CID > 0) THEN                               ! Get transformation 
             CALL CROSS ( VX, VY, VZ )
 
             MAGZ  = DSQRT(VZ(1)*VZ(1) + VZ(2)*VZ(2) + VZ(3)*VZ(3))
-
             IF (DABS(MAGZ) < EPS1) THEN
                FATAL_ERR = FATAL_ERR + 1
                NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
@@ -271,7 +282,8 @@ bcid: IF (BUSH_CID > 0) THEN                               ! Get transformation 
 
       ENDIF bcid
 
-      TE_IDENT = 'N'                                       ! Now set TE_IDENT to be 'Y' if TE is an identity matrix.
+      ! Now set TE_IDENT to be 'Y' if TE is an identity matrix.
+      TE_IDENT = 'N'
       DO I=1,3
          ID(I) = 'N'
       ENDDO
@@ -288,8 +300,7 @@ bcid: IF (BUSH_CID > 0) THEN                               ! Get transformation 
 
 
 ! ----------------------------------------------------------------------------------------------------------------------------------
-! Use TE to get array of elem coords in local system.
- 
+      ! Use TE to get array of elem coords in local system.
       XEL(1,1) = ZERO
       XEL(1,2) = ZERO
       XEL(1,3) = ZERO
@@ -310,8 +321,7 @@ bcid: IF (BUSH_CID > 0) THEN                               ! Get transformation 
       ENDDO
 
 ! ----------------------------------------------------------------------------------------------------------------------------------
-! Use TE to get array of elem coords in local system.
- 
+      ! Use TE to get array of elem coords in local system.
       XEL(1,1) = ZERO
       XEL(1,2) = ZERO
       XEL(1,3) = ZERO
@@ -326,13 +336,20 @@ bcid: IF (BUSH_CID > 0) THEN                               ! Get transformation 
       ENDDO 
   
 ! ----------------------------------------------------------------------------------------------------------------------------------
-! Calculate a coord transformation matrix, TE_GA_GB, that will transform a vector whose x axis is along the GA-GB axis to basic:
-! This will be used for only the x axis when the BUSH offset is along the line GA-GB in order to specify the offsets whenever
-! BUSH_OCID is -1 (default) or blank. The other y and z aves of TE_GA_GB don't matter except thet they be normal to x. So use the
-! procedure outlined in "Some Basic Vector Operations In IDL" (below) to find the y and z axes of TE_GA_GB 
-! This needs to be done if GA and GB are not coincident but also this coord transformation is used in calculating element forces
-! from nodal loads (i.e. in subr OFP3_ELFE_1D)
-
+      ! Calculate a coord transformation matrix, TE_GA_GB, that will transform
+      ! a vector whose x axis is along the GA-GB axis to basic:
+      !   This will be used for only the x axis when the BUSH offset is
+      ! along the line GA-GB in order to specify the offsets whenever
+      ! BUSH_OCID is -1 (default) or blank.
+      !
+      ! The other y and z aves of TE_GA_GB don't matter except thet they
+      ! be normal to x. So use the procedure outlined in "Some Basic
+      ! Vector Operations In IDL" (below) to find the y and z axes of
+      ! TE_GA_GB.
+      !
+      ! This needs to be done if GA and GB are not coincident but also
+      ! this coord transformation is used in calculating element forces
+      ! from nodal loads (i.e. in subr OFP3_ELFE_1D)
       IF (ELEM_LEN_12 > .0001D0) THEN
 
          VX(1) = XEB(2,1) - XEB(1,1)                          ! Unit vector in element X direction 
@@ -347,18 +364,21 @@ bcid: IF (BUSH_CID > 0) THEN                               ! Get transformation 
             I3_IN(I)   = I
             I3_OUT(I)  = I3_IN(I)
          ENDDO
-         CALL CALC_VEC_SORT_ORDER ( VX, SORT_ORDER, I3_OUT)   ! Use this rather than SORT_INT1_REAL1 - didn't work for vec 10., 0., 0.
-         IF (SORT_ORDER == '     ') THEN                      ! Subr CALC_VEC_SORT_ORDER did not find a sort order so fatal error
+         CALL CALC_VEC_SORT_ORDER ( VX, SORT_ORDER, I3_OUT)  ! Use this rather than SORT_INT1_REAL1 - didn't work for vec 10., 0., 0.
+         IF (SORT_ORDER == '     ') THEN                     ! Subr CALC_VEC_SORT_ORDER did not find a sort order so fatal error
             FATAL_ERR = FATAL_ERR + 1
             NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
             WRITE(ERR,1944) SUBR_NAME, TYPE, EID
             WRITE(F06,1944) SUBR_NAME, TYPE, EID
             RETURN
          ENDIF
-                                                              ! See notes on "Some Basic Vector Operations In IDL" on web site:
-                                                              ! http://fermi.jhuapl.edu/s1r/idl/s1rlib/vectors/v_basic.html
-         VY(I3_OUT(1)) =  ZERO                                !  (a) Component of VY in direction of min VX is set to zero
-         VY(I3_OUT(2)) =  VX(I3_OUT(3))                       !  (b) Other 2 VY(i) are corresponding VX(i) switched with one x(-1)
+
+         ! See notes on "Some Basic Vector Operations In IDL" on web site:
+         ! http://fermi.jhuapl.edu/s1r/idl/s1rlib/vectors/v_basic.html
+         !  (a) Component of VY in direction of min VX is set to zero
+         !  (b) Other 2 VY(i) are corresponding VX(i) switched with one x(-1)
+         VY(I3_OUT(1)) =  ZERO
+         VY(I3_OUT(2)) =  VX(I3_OUT(3))
          VY(I3_OUT(3)) = -VX(I3_OUT(2))
          MAGY  = DSQRT(VY(1)*VY(1) + VY(2)*VY(2) + VY(3)*VY(3))
 
@@ -378,7 +398,6 @@ bcid: IF (BUSH_CID > 0) THEN                               ! Get transformation 
          CALL CROSS ( VX, VY, VZ )
 
          MAGZ  = DSQRT(VZ(1)*VZ(1) + VZ(2)*VZ(2) + VZ(3)*VZ(3))
-
          IF (DABS(MAGZ) < EPS1) THEN
             FATAL_ERR = FATAL_ERR + 1
             NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
@@ -387,11 +406,13 @@ bcid: IF (BUSH_CID > 0) THEN                               ! Get transformation 
             RETURN
          ENDIF
 
+         ! Row 3 of TE_GA_GB
          DO I=1,3
-            TE_GA_GB(3,I) = VZ(I)/MAGZ                        ! Row 3 of TE_GA_GB
+            TE_GA_GB(3,I) = VZ(I)/MAGZ                        
          ENDDO                                                ! ----------------- 
 
-         DO I=1,3                                             ! Transpose of TE_GA_GB
+         ! Transpose of TE_GA_GB
+         DO I=1,3
             DO J=1,3
                TET_GA_GB(I,J) = TE_GA_GB(J,I)
             ENDDO
@@ -401,13 +422,16 @@ bcid: IF (BUSH_CID > 0) THEN                               ! Get transformation 
       ENDIF
 
 ! ----------------------------------------------------------------------------------------------------------------------------------
-! Offsets for BUSH are specified in a unique coord system. It may or may not be basic or global. So we first transform the input
-! offset values to basic and then transform them to global. This way, when we process the offsets in subr ELEM_TRANSFORM_LBG, 
-! we can treat the final offset values for the BUSH the same as we do for BAR, BEAM or ROD.
-! The coord system for BUSH offsets is BUSH_OCID which can be:
-!  (1) -1 means offset lies on the line between GA and GB, or
-!  (2)  a positive number indicating a coord system number
-
+      ! Offsets for BUSH are specified in a unique coord system.
+      ! It may or may not be basic or global. So we first transform the
+      ! input offset values to basic and then transform them to global.
+      ! This way, when we process the offsets in subr ELEM_TRANSFORM_LBG,
+      ! we can treat the final offset values for the BUSH the same as we
+      ! do for BAR, BEAM or ROD.
+      !
+      ! The coord system for BUSH offsets is BUSH_OCID which can be:
+      !  (1) -1 means offset lies on the line between GA and GB, or
+      !  (2)  a positive number indicating a coord system number
       DO I=1,ELGP
          DO J=1,3                                          ! Initialize
             OFFDIS_B(I,J) = ZERO
@@ -418,7 +442,8 @@ bcid: IF (BUSH_CID > 0) THEN                               ! Get transformation 
       IF (EOFF(INT_ELEM_ID) == 'Y') THEN
 
          IF (BUSH_OCID >= 0) THEN
-            IF (BUSH_OCID > 0) THEN                        ! BUSH offsets are defined in coord system BUSH_OCID
+            IF (BUSH_OCID > 0) THEN
+               ! BUSH offsets are defined in coord system BUSH_OCID
                CORD_FND = 'N'
                ICID = 0
                DO J=1,NCORD
@@ -448,9 +473,11 @@ bcid: IF (BUSH_CID > 0) THEN                               ! Get transformation 
 
             ENDIF
 
-         ELSE IF (BUSH_OCID < 0) THEN                      ! Offsets are along the line between GA and GB
+         ELSE IF (BUSH_OCID < 0) THEN
+            ! Offsets are along the line between GA and GB
 
-            DX1(1) = OFFDIS_O(1,1)                         ! Transform GA offsets (at 1st grid point relative to GA-GB axis) to basic
+            ! Transform GA offsets (at 1st grid point relative to GA-GB axis) to basic
+            DX1(1) = OFFDIS_O(1,1)
             DX1(2) = OFFDIS_O(1,2)
             DX1(3) = OFFDIS_O(1,3)
             CALL MATMULT_FFF (TET_GA_GB, DX1, 3, 3, 1, DX2 )
@@ -458,19 +485,20 @@ bcid: IF (BUSH_CID > 0) THEN                               ! Get transformation 
             OFFDIS_B(1,2) = DX2(2)
             OFFDIS_B(1,3) = DX2(3)
 
-            DX1(1) = OFFDIS_O(2,1)                         ! Transform GA offsets (at 2nd grid point relative to GA-GB axis) to basic
+            ! Transform GA offsets (at 2nd grid point relative to GA-GB axis) to basic
+            DX1(1) = OFFDIS_O(2,1)
             DX1(2) = OFFDIS_O(2,2)
             DX1(3) = OFFDIS_O(2,3)
             CALL MATMULT_FFF (TET_GA_GB, DX1, 3, 3, 1, DX2 )
             OFFDIS_B(2,1) = DX2(1)
             OFFDIS_B(2,2) = DX2(2)
             OFFDIS_B(2,3) = DX2(3)
-
          ENDIF
 
       ENDIF
 
-! Now that we have the offsets at grid 1 in basic coords we can calc offset values for grid 2 and then transform offsets to global. 
+      ! Now that we have the offsets at grid 1 in basic coords we can calculate
+      ! offset values for grid 2 and then transform offsets to global. 
 
       IF (EOFF(INT_ELEM_ID) == 'Y') THEN
 
@@ -487,14 +515,17 @@ bcid: IF (BUSH_CID > 0) THEN                               ! Get transformation 
             ACID_G = GRID(BGRID(I),3)                      ! Get global coord sys for this grid
             IF (ACID_G /= 0) THEN                          ! Global is not basic so need to transform offset from basic to global
                ICID = 0
-               DO J=1,NCORD
-                  IF (ACID_G == CORD(J,2)) THEN
-                     ICID = J
-                     EXIT
-                  ENDIF
-               ENDDO   
+               CALL GET_ICD(ACID_G, ICID)  ! get index of CD
+               !DO J=1,NCORD
+               !   IF (ACID_G == CORD(J,2)) THEN
+               !      ICID = J
+               !      EXIT
+               !   ENDIF
+               !ENDDO
                CALL GEN_T0L ( BGRID(I), ICID, THETAD, PHID, T0G )
-               DO J=1,3                                    ! We want transpose of T0G since we are transforming from basic to global
+               
+               ! We want transpose of T0G since we are transforming from basic to global
+               DO J=1,3
                   DO K=1,3
                      TG0(J,K) = T0G(K,J)
                   ENDDO
@@ -515,8 +546,8 @@ bcid: IF (BUSH_CID > 0) THEN                               ! Get transformation 
             ENDDO
          ENDDO
 
-      ELSE                                                 ! There are no offsets so set OFFDIS_B to zero for both grids
-
+      ELSE
+         ! There are no offsets so set OFFDIS_B to zero for both grids
          DO I=1,2
             DO J=1,3
                OFFDIS_B(I,J) = ZERO
@@ -525,8 +556,7 @@ bcid: IF (BUSH_CID > 0) THEN                               ! Get transformation 
 
       ENDIF 
 
-! Calculate offsets in local, CID, axes
-
+      ! Calculate offsets in local, CID, axes
       DO I=1,3
          DX1(I) = OFFDIS_B(1,I)
       ENDDO
@@ -542,9 +572,10 @@ bcid: IF (BUSH_CID > 0) THEN                               ! Get transformation 
          OFFDIS_L(2,I) = DX2(I)
       ENDDO
 
-! Calculate offsets in axes along and normal to BUSH axes (i.e. axes that have x along line between GA-GB)
-! This will be needed in subr OFP3_ELFE_1D when BUSH element forces are calculated from node forces
-
+      ! Calculate offsets in axes along and normal to BUSH axes
+      ! (i.e. axes that have x along line between GA-GB).
+      ! This will be needed in subr OFP3_ELFE_1D when BUSH element
+      ! forces are calculated from node forces
       DO I=1,3
          DX1(I) = OFFDIS_B(1,I)
       ENDDO
@@ -562,15 +593,14 @@ bcid: IF (BUSH_CID > 0) THEN                               ! Get transformation 
 
 
 
-      
 
-      
 ! ----------------------------------------------------------------------------------------------------------------------------------
       LX(1) = ( XEB(2,1) + OFFDIS_B(2,1) ) - ( XEB(1,1) + OFFDIS_B(1,1) )
       LX(2) = ( XEB(2,2) + OFFDIS_B(2,2) ) - ( XEB(1,2) + OFFDIS_B(1,2) )
       LX(3) = ( XEB(2,3) + OFFDIS_B(2,3) ) - ( XEB(1,3) + OFFDIS_B(1,3) )
       ELEM_LEN_AB = DSQRT( LX(1)*LX(1) + LX(2)*LX(2) + LX(3)*LX(3) )
-                                                           ! If ELEM_LEN_AB is not equal to zero then write error and return.
+
+      ! If ELEM_LEN_AB is not equal to zero then write error and return.
       IF (ELEM_LEN_AB > .0001D0) THEN
          WRITE(ERR,1959) SUBR_NAME, TYPE, EID, ELEM_LEN_AB
          WRITE(F06,1959) SUBR_NAME, TYPE, EID, ELEM_LEN_AB

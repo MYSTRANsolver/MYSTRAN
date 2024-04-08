@@ -422,6 +422,7 @@
             DO J=1,6
                CALL R8FLD ( JCARD(J+3), JF(J+3), R8INP )
                IF (IERRFL(J+3) == 'N') THEN
+                  ! file/variable: BD_CBAR/BAROFF -> ELEMDAT1/OFFDIS -> ELMGM1/VX
                   BAROFF(NBAROFF,J) = R8INP
                ENDIF
             ENDDO
