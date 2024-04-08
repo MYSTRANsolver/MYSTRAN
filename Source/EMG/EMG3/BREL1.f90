@@ -28,11 +28,11 @@
  
 ! Calculates, or calls subr's to calculate, quadrilateral element matrices:
 
-!  1) ME        = element mass matrix                  , if OPT(1) = 'Y'
-!  2) PTE       = element thermal load vectors         , if OPT(2) = 'Y'
-!  3) SEi, STEi = element stress data recovery matrices, if OPT(3) = 'Y'
-!  4) KE        = element linea stiffness matrix       , if OPT(4) = 'Y'
-!  5) KED       = element differen stiff matrix calc   , if OPT(6) = 'Y' = 'Y'
+      !  1) ME        = element mass matrix                  , if OPT(1) = 'Y'
+      !  2) PTE       = element thermal load vectors         , if OPT(2) = 'Y'
+      !  3) SEi, STEi = element stress data recovery matrices, if OPT(3) = 'Y'
+      !  4) KE        = element linea stiffness matrix       , if OPT(4) = 'Y'
+      !  5) KED       = element differen stiff matrix calc   , if OPT(6) = 'Y' = 'Y'
   
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
       USE IOUNT1, ONLY                :  WRT_ERR, WRT_LOG, ERR, F04, F06
@@ -82,10 +82,8 @@
 ! **********************************************************************************************************************************
       EPS1 = EPSIL(1)
 
-! Set element property and material constants
- 
+      ! Set element property and material constants
       IF (TYPE == 'ROD     ') THEN
-
          AREA     = EPROP(1)                               ! Cross-sectional area
          JTOR     = EPROP(2)                               ! Torsional constant
          ZS(1)    = EPROP(3)                               ! C (Tors. stress recovery coeff) on PROD
@@ -93,7 +91,6 @@
          FCONV(1) = AREA
 
       ELSE IF ((TYPE == 'BAR     ') .OR. (TYPE == 'BART    ')) THEN
-
          AREA     = EPROP( 1)                              ! Cross-sectional area
          I1       = EPROP( 2)                              ! Plane 1 moment of inertia
          I2       = EPROP( 3)                              ! Plane 2 moment of inertia
@@ -117,8 +114,8 @@
 
       ENDIF
 
-! Need to set some values for materials here since subr for material properties not called for these 1D elements
- 
+      ! Need to set some values for materials here since subr for 
+      ! material properties not called for these 1D elements
       E             = EMAT( 1,1)                           ! Young's modulus
       G             = EMAT( 2,1)                           ! Shear modulus
       RHO           = EMAT( 4,1)                           ! Mass density
@@ -130,8 +127,7 @@
       ULT_STRE(3,1) = EMAT(10,1)                           ! Max allowable stress in shear
  
 ! **********************************************************************************************************************************
-! Generate the mass matrix for this element (array was initialized in subr EMG). 
- 
+      ! Generate the mass matrix for this element (array was initialized in subr EMG). 
       IF (OPT(1) == 'Y') THEN
          M0 = (RHO*AREA + NSM)*(ELEM_LEN_AB)/TWO
          ME(1,1) = M0
@@ -143,20 +139,17 @@
       ENDIF
  
 ! **********************************************************************************************************************************
-! Call routines to calc element matrices (stiffness, etc.)
+      ! Call routines to calc element matrices (stiffness, etc.)
  
       IF ((OPT(2) == 'Y') .OR. (OPT(3) == 'Y') .OR. (OPT(4) == 'Y') .OR. (OPT(5) == 'Y') .OR. (OPT(6) == 'Y')) THEN
  
          IF      (TYPE == 'ROD     ') THEN
-
             CALL ROD1 ( OPT, ELEM_LEN_AB, AREA, JTOR, ZS(1), E, G, ALPHA, TREF )
  
-         ELSE IF (TYPE == 'BAR     ') THEN                 ! Bernoulli-Euler prismatic beam
-         
+         ELSE IF (TYPE == 'BAR     ') THEN
+            ! Bernoulli-Euler prismatic beam
             IF (DEBUG(249) == 0) THEN
-
                CALL BAR1 ( OPT, ELEM_LEN_AB, AREA, I1, I2, JTOR, ZS(9), K1, K2, I12, E, G, ALPHA, TREF )
-
             ELSE
                IF (DABS(I12) < EPS1) THEN
                   CALL BART ( OPT, ELEM_LEN_AB, AREA, I1, I2, JTOR, ZS(9), K1, K2, I12, E, G, ALPHA, TREF )
@@ -165,13 +158,10 @@
                   WRITE(F06,1963) EID
                   RETURN
                ENDIF
-               
             ENDIF
 
          ELSE IF (TYPE == 'BEAM    ') THEN                 ! General beam
-
             CALL BEAM
-
          ENDIF
  
       ENDIF

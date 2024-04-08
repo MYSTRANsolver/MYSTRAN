@@ -58,12 +58,10 @@
       ENDIF
 
 ! **********************************************************************************************************************************
-! Make JCARD from CARD
- 
+      ! Make JCARD from CARD
       CALL MKJCARD ( SUBR_NAME, CARD, JCARD )
- 
-! See if there is an actual V vector (not a grid point). If so, increment LVVEC
- 
+
+      ! See if there is an actual V vector (not a grid point). If so, increment LVVEC
       FND_VVEC = 'N' 
       DO J=1,JCARD_LEN
          IF ((JCARD(6)(J:J) == '.') .OR. (JCARD(7)(J:J) == '.') .OR. (JCARD(8)(J:J) == '.')) THEN
@@ -74,9 +72,8 @@
       IF (FND_VVEC == 'Y') THEN
          LVVEC = LVVEC + 1
       ENDIF
- 
-! Optional Second Card - see if there are any offsets. If so, increment LBAROFF
- 
+
+      ! Optional Second Card - see if there are any offsets. If so, increment LBAROFF
       IF (LARGE_FLD_INP == 'N') THEN
          CALL NEXTC0  ( CARD, ICONT, IERR )
       ELSE
@@ -90,7 +87,7 @@
             LBAROFF = LBAROFF + 1
          ENDIF
       ENDIF
- 
+
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
          CALL OURTIM

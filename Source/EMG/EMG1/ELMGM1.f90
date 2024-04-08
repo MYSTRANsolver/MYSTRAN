@@ -45,7 +45,8 @@
       USE DEBUG_PARAMETERS, ONLY      :  DEBUG
       USE PARAMS, ONLY                :  EPSIL
       USE MODEL_STUF, ONLY            :  BGRID, CAN_ELEM_TYPE_OFFSET, CORD, EID, ELEM_LEN_12, ELEM_LEN_AB, ELGP,NUM_EMG_FATAL_ERRS,&
-                                         EOFF, GRID, OFFDIS, OFFDIS_O, OFFDIS_B, OFFDIS_G, OFFT, RCORD, TE, TE_IDENT, TYPE, XEB, XEL
+                                         EOFF, GRID, OFFDIS, OFFDIS_O, OFFDIS_B, OFFDIS_G, OFFT, RCORD, TE, TE_IDENT,              &
+                                         TYPE, XEB, XEL, VV
 
       USE ELMGM1_USE_IFs
 
@@ -84,6 +85,16 @@
       REAL(DOUBLE)                    :: VY(3)              ! A vector in the elem y dir
       REAL(DOUBLE)                    :: VZ(3)              ! A vector in the elem z dir
       REAL(DOUBLE)                    :: V13(3)             ! A vector from grid 1 to grid 3 (for BAR, BEAM or USER1 it is V vector)
+
+      ! stuff for orientation flag
+      CHARACTER(1*BYTE)               :: OFFTS              ! single character that represents the active CBAR/CBEAM WA/WB flag
+      REAL(DOUBLE)                    :: XFORM_OFFSET(3,3)  ! orientation matrix
+      REAL(DOUBLE)                    :: IHAT(3)            ! directional vector
+      REAL(DOUBLE)                    :: VHAT(3)            ! normalized projection vector
+      REAL(DOUBLE)                    :: ZHAT(3)            ! z = i x v
+      REAL(DOUBLE)                    :: YHAT(3)            ! y = z x i
+      REAL(DOUBLE)                    :: NORM_IHAT, NORM_VHAT, NORM_ZHAT ! norm of vectors
+
 
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
@@ -131,38 +142,147 @@
                OFFDIS_B(I,J) = ZERO
             ENDDO
          ENDDO
-      ENDIF
 
-! ----------------------------------------------------------------------------------------------------------------------------------
-      ! If there are offsets that are specified in global coords, calculate
-      ! the value of the offsets in basic coords so that they can be used
-      ! below to find the element axes in basic coords
-      !
-      ! NOTE: removed ROD from BAR/BEAM block because it'd better be 0
-      !
-      IF ((TYPE == 'BAR     ') .OR. (TYPE == 'BEAM    ')) THEN
+         ! -------------------------------------------------------------------
+         ! If there are offsets that are specified in global coords, calculate
+         ! the value of the offsets in basic coords so that they can be used
+         ! below to find the element axes in basic coords
+         !
+         ! NOTE: removed ROD from BAR/BEAM block because it'd better be 0
+         !
+         WRITE(ERR,*) 'ELMGM1:'
+         WRITE(ERR,*) '  VV=', VV(1), VV(2), VV(3)
+         IF ((OFFT(2:2) == 'O') .OR. (OFFT(3:3) == 'O')) THEN
+            IHAT(1) = XEB(2,1) - XEB(1,1)
+            IHAT(2) = XEB(2,2) - XEB(1,2)
+            IHAT(3) = XEB(2,3) - XEB(1,3)
+            NORM_IHAT = DSQRT(IHAT(1)*IHAT(1) + IHAT(2)*IHAT(2) + IHAT(3)*IHAT(3))
+            IF (DABS(NORM_IHAT) < EPS1) THEN
+               FATAL_ERR = FATAL_ERR + 1
+               NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
+               WRITE(ERR,1938) SUBR_NAME, 'IHAT (XYZB-XYZA)', TYPE, EID, (IHAT(I),I=1,3)
+               WRITE(F06,1938) SUBR_NAME, 'IHAT (XYZB-XYZA)', TYPE, EID, (IHAT(I),I=1,3)
+               RETURN
+            ENDIF
+
+            ! should have already been check...verify; should also be normalized...
+            NORM_VHAT = DSQRT(VV(1)*VV(1) + VV(2)*VV(2) + VV(3)*VV(3))
+            DO I=1,3
+               IHAT(I) = IHAT(I)/NORM_IHAT
+               VHAT(I) = VV(I)/NORM_VHAT
+            ENDDO
+            
+            CALL CROSS(IHAT, VHAT, ZHAT)  ! z = i x v
+            NORM_ZHAT = DSQRT(ZHAT(1)*ZHAT(1) + ZHAT(2)*ZHAT(2) + ZHAT(3)*ZHAT(3))
+            IF (DABS(NORM_ZHAT) < EPS1) THEN
+               FATAL_ERR = FATAL_ERR + 1
+               NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
+               WRITE(ERR,1938) SUBR_NAME, 'ZHAT', TYPE, EID, (ZHAT(I),I=1,3)
+               WRITE(F06,1938) SUBR_NAME, 'ZHAT', TYPE, EID, (ZHAT(I),I=1,3)
+               RETURN
+            ENDIF
+            DO I=1,3
+               ZHAT(I) = ZHAT(I)/NORM_ZHAT
+            ENDDO
+
+            CALL CROSS(ZHAT, IHAT, YHAT)  ! y = z x i
+            
+            ! fill xform
+            ! xform_offset = np.vstack([ihat_offset, yhat_offset, zhat_offset]) # 3x3 unit matrix
+            WRITE(ERR,*) '  NORM_VHAT=', NORM_VHAT
+            WRITE(ERR,*) '  NORM_ZHAT=', NORM_ZHAT
+
+            WRITE(ERR,*) '  IHAT=', IHAT(1), IHAT(2), IHAT(3)
+            WRITE(ERR,*) '  VHAT=', VHAT(1), VHAT(2), VHAT(3)
+            WRITE(ERR,*) '  YHAT=', YHAT(1), YHAT(2), YHAT(3)
+            WRITE(ERR,*) '  ZHAT=', ZHAT(1), ZHAT(2), ZHAT(3)
+
+            WRITE(ERR,*) '  XFORM_OFFSET:'
+            DO I=1,3
+               XFORM_OFFSET(1,I) = IHAT(I)
+               XFORM_OFFSET(2,I) = YHAT(I)
+               XFORM_OFFSET(3,I) = ZHAT(I)  ! 3rd row 
+            ENDDO
+            DO I=1,3
+               WRITE(ERR,*) XFORM_OFFSET(I,1), XFORM_OFFSET(I,2), XFORM_OFFSET(I,3)
+            ENDDO
+            WRITE(ERR,*) '  YHAT2=', YHAT(1), YHAT(2), YHAT(3)
+         ENDIF
 
          IF (EOFF(INT_ELEM_ID) == 'Y') THEN  ! if(is_offset)
-            WRITE(ERR,*) 'ELMGM1/BAR: OFFT=', OFFT
+            ! transform wa/wb if there's an offset
+            WRITE(ERR,*) '  BAR: OFFT=', OFFT
             FLUSH(ERR)
             DO I=1,ELGP
-               ! Get global coord sys for this grid
-               ACID_G = GRID(BGRID(I),3)
-               IF (ACID_G /= 0) THEN
-                  ! Need to transform offset vector from global to basic coords
-                  ! separate transform (TOG) for each GRID
-                  ICID = 0
-                  CALL GET_ICD(ACID_G, ICID)  ! get index of CD
-
-                  CALL GEN_T0L ( BGRID(I), ICID, THETAD, PHID, T0G )
-                  DO J=1,3
-                     OFFDIS_B(I,J) = T0G(J,1)*OFFDIS(I,1) + T0G(J,2)*OFFDIS(I,2) + T0G(J,3)*OFFDIS(I,3) 
-                  ENDDO   
+               ! get 2nd/3rd index of OFFT (for WA/WB); single character
+               OFFTS = OFFT(1+I:1+I)
+               IF (OFFTS == 'G') THEN
+                  ! Get global coord sys for this grid
+                  ACID_G = GRID(BGRID(I),3)
+                  IF (ACID_G /= 0) THEN
+                     ! Need to transform offset vector from global to basic coords
+                     ! separate transform (TOG) for each GRID
+                     ICID = 0
+                     CALL GET_ICD(ACID_G, ICID)  ! get index of CD
+                  
+                     CALL GEN_T0L ( BGRID(I), ICID, THETAD, PHID, T0G )
+                     DO J=1,3
+                        OFFDIS_B(I,J) = T0G(J,1)*OFFDIS(I,1) + T0G(J,2)*OFFDIS(I,2) + T0G(J,3)*OFFDIS(I,3) 
+                     ENDDO
+                  ELSE
+                     ! Offset was in basic coords
+                     DO J=1,3
+                        OFFDIS_B(I,J) = OFFDIS(I,J)
+                     ENDDO
+                  ENDIF
+               ELSEIF (OFFTS == 'O') THEN  ! orientation
+                     ! matrix multiply (python code below)
+                     ! OFFDIS_B[i,:] = XFORM_OFFSET @ OFFDIS[i,:]
+                     ! wa = wa @ xform_offset
+                     ! wb = wb @ xform_offset
+                     !
+                     ! TODO: verify that I did this matrix multiply
+                     DO J=1,3
+                        ! should be one of the two
+                        OFFDIS_B(I,J) = XFORM_OFFSET(1,J)*OFFDIS(I,1) + &
+                                        XFORM_OFFSET(2,J)*OFFDIS(I,2) + &
+                                        XFORM_OFFSET(3,J)*OFFDIS(I,3)
+                        !OFFDIS_B(I,J) = XFORM_OFFSET(J,1)*OFFDIS(I,1) + &
+                        !                XFORM_OFFSET(J,2)*OFFDIS(I,2) + &
+                        !                XFORM_OFFSET(J,3)*OFFDIS(I,3)
+                     ENDDO
+                     IF (I == 1) THEN
+                        WRITE(ERR,*) '  WA_offset=[', OFFDIS(I,1), OFFDIS(I,2), OFFDIS(I,3), ']'
+                        WRITE(ERR,*) '  WA_basic =[', OFFDIS_B(I,1), OFFDIS_B(I,2), OFFDIS_B(I,3), ']'
+                     ELSE
+                        WRITE(ERR,*) '  WB_offset=[', OFFDIS(I,1), OFFDIS(I,2), OFFDIS(I,3), ']'
+                        WRITE(ERR,*) '  WB_basic =[', OFFDIS_B(I,1), OFFDIS_B(I,2), OFFDIS_B(I,3), ']'
+                     ENDIF
+                     ! GRID    101             0.      0.      0.              123456
+                     ! GRID    201             10.     0.      0.
+                     !
+                     ! $        pid     mid     n1      n2      v1      v2      v3      offt
+                     ! $        P1      P2      W11     W12     W13     W21     W22     W23
+                     ! CBAR     11      10      101     201     0.      2.      1.      ggo
+                     !          41      2       0.1     1.2     0.3     0.4     1.5     0.6
+                     !
+                     ! per pynastran
+                     ! ihat = [1. 0. 0.]
+                     ! yhat = [-0.          0.89442719  0.4472136 ]
+                     ! zhat = [ 0.         -0.4472136   0.89442719]
+                     ! xform:
+                     ! [[ 1.          0.          0.        ]
+                     !  [-0.          0.89442719  0.4472136 ]
+                     !  [ 0.         -0.4472136   0.89442719]]
+                     ! wa = [0.1 1.2 0.3]
+                     ! wb = [0.4        1.07331263 1.20747671]
                ELSE
-                  ! Offset was in basic coords
-                  DO J=1,3
-                     OFFDIS_B(I,J) = OFFDIS(I,J)
-                  ENDDO   
+                  ! invalid OFFT FLAG
+                  FATAL_ERR = FATAL_ERR + 1
+                  NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
+                  WRITE(ERR,*) SUBR_NAME, TYPE, EID, OFFTS
+                  WRITE(F06,*) SUBR_NAME, TYPE, EID, OFFTS
+                  RETURN
                ENDIF
             ENDDO
          ELSE
@@ -173,19 +293,14 @@
                ENDDO
             ENDDO
          ENDIF 
-      ENDIF
-
-! ----------------------------------------------------------------------------------------------------------------------------------
-      ! Calculate a vector between ends of the element in basic coords
-      ! (not between grids if there are offsets).
-      !
-      ! NOTE: removed ROD from BAR/BEAM block because it'd better be 0
-      !
-      IF ((TYPE == 'BAR     ') .OR. (TYPE == 'BEAM    ')) THEN
+         ! --------------------------------------------------------------
+         ! Calculate a vector between ends of the element in basic coords
+         !
          VX(1) = ( XEB(2,1) + OFFDIS_B(2,1) ) - ( XEB(1,1) + OFFDIS_B(1,1) )
          VX(2) = ( XEB(2,2) + OFFDIS_B(2,2) ) - ( XEB(1,2) + OFFDIS_B(1,2) )
          VX(3) = ( XEB(2,3) + OFFDIS_B(2,3) ) - ( XEB(1,3) + OFFDIS_B(1,3) )
       ELSE
+         ! IHAT
          VX(1) = XEB(2,1) - XEB(1,1)
          VX(2) = XEB(2,2) - XEB(1,2)
          VX(3) = XEB(2,3) - XEB(1,3)
@@ -242,8 +357,6 @@
          VY(I3_OUT(2)) =  VX(I3_OUT(3))
          VY(I3_OUT(3)) = -VX(I3_OUT(2))
          MAGY  = DSQRT(VY(1)*VY(1) + VY(2)*VY(2) + VY(3)*VY(3))
-
-
          IF (DABS(MAGY) < EPS1) THEN
             FATAL_ERR = FATAL_ERR + 1
             NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
@@ -256,7 +369,7 @@
             TE(2,I) = VY(I)/MAGY
          ENDDO
 
-         CALL CROSS ( VX, VY, VZ )
+         CALL CROSS ( VX, VY, VZ )  ! z = i x j
 
          MAGZ = DSQRT(VZ(1)*VZ(1) + VZ(2)*VZ(2) + VZ(3)*VZ(3))
          IF (DABS(MAGZ) < EPS1) THEN
@@ -307,11 +420,12 @@
          DO I=1,3
             V13(I) = XEB(ROWNUM,I) - XEB(1,I)
          ENDDO 
+         WRITE(ERR,*) 'ELMGM1/V13=', V13(1), V13(2), V13(3)
 
          ! Calculate VX x V13 and unit vector in elem z dir. (Col. 3 of TE).
          ! If MAGZ is equal to zero, then vector from G.P. 1 to G.P. 3 is
          ! parallel to vector from G.P.-1 to G.P.-2 so write error and quit.
-         CALL CROSS ( VX, V13, VZ )
+         CALL CROSS ( VX, V13, VZ )  ! z = i x v
          MAGZ = DSQRT(VZ(1)*VZ(1) + VZ(2)*VZ(2) + VZ(3)*VZ(3))
          IF (MAGZ <=  EPS1) THEN
             IF ((TYPE == 'BAR     ')  .OR. (TYPE == 'BEAM    ')) THEN
@@ -333,7 +447,7 @@
          ENDDO
 
          ! Calc unit vector in Ye dir. (from VZ (cross) VX): If MAGY = 0 quit
-         CALL CROSS ( VZ, VX, VY )
+         CALL CROSS ( VZ, VX, VY )  ! y = z x i
          MAGY = DSQRT(VY(1)*VY(1) + VY(2)*VY(2) + VY(3)*VY(3))
          IF(MAGY <= EPS1) THEN
             WRITE(ERR,1912) EID,TYPE

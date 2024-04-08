@@ -55,7 +55,7 @@
                                          INTL_MID, INTL_PID, ISOLID, MATANGLE, MATL, MTRL_TYPE, NUM_SEi, OFFDIS, OFFDIS_O, OFFSET, &
                                          PBAR, PBEAM, PCOMP, PCOMP_PROPS, PLATEOFF, PLATETHICK, PROD, PSHEAR, PSHEL, PSOLID,       &
                                          PUSER1, PUSERIN, RMATL, RPBAR, RPBEAM, RPBUSH, RPELAS, RPROD, RPSHEAR, RPSHEL, RPUSER1,   &
-                                         TYPE, VVEC, XEB, ZOFFS, OFFT
+                                         TYPE, VVEC, XEB, ZOFFS, OFFT, VV
 
       USE MODEL_STUF, ONLY            :  USERIN_ACT_GRIDS, USERIN_ACT_COMPS, USERIN_CID0, USERIN_IN4_INDEX,                        &
                                          USERIN_MAT_NAMES, USERIN_NUM_BDY_DOF, USERIN_NUM_ACT_GRDS, USERIN_NUM_SPOINTS,            &
@@ -103,7 +103,6 @@
       REAL(DOUBLE)                    :: PHID, THETAD       ! Outputs from subr GEN_T0L
       REAL(DOUBLE)                    :: THICK_AVG          ! Average of all THICK(i)
       REAL(DOUBLE)                    :: T0G(3,3)           ! Matrix to transform V vector from global to basic coords 
-      REAL(DOUBLE)                    :: VV(3)              ! V vector in basic coords for this elem
       INTEGER(LONG)                   :: OFFTI              ! interpretation of V vector
       LOGICAL                         :: IS_OFFT            ! is the offt flag active
       INTEGER(LONG)                   :: IPIN1_EDAT         ! index of PIN1 in EDAT for CBAR/CBEAM; constant
@@ -282,11 +281,11 @@
 
             ELSE IF (VVEC_FLAG < 0) THEN
                ! V vector is an actual vector
-               WRITE(ERR,*) 'etype=',TYPE, 'VVEC_FLAG=', VVEC_FLAG, ' OFFT=',OFFT, ' IS_OFFT=', IS_OFFT
+               WRITE(ERR,*) 'ELMDAT1/etype=',TYPE, 'VVEC_FLAG=', VVEC_FLAG, ' OFFT=',OFFT, ' IS_OFFT=', IS_OFFT
                !, ' BGRID(1)=',BGRID(1)
                IF (VVEC_FLAG < 0) THEN
                    IVVEC = -VVEC_FLAG
-                   WRITE(ERR,*) ' VVEC=[', VVEC(IVVEC,1), ', ', VVEC(IVVEC,2), ', ', VVEC(IVVEC,3), ']'
+                   WRITE(ERR,*) ' ELEMDAT1/VVEC=[', VVEC(IVVEC,1), ', ', VVEC(IVVEC,2), ', ', VVEC(IVVEC,3), ']'
                    FLUSH(ERR)
                ENDIF
                FLUSH(ERR)
@@ -323,6 +322,7 @@
                   ELSE
                      ! V vector was in basic coords
                      DO J=1,3
+                        VV(J) = VVEC(IVVEC,J)
                         XEB(ELGP+1,J) = XEB(1,J) + VVEC(IVVEC,J)
                      ENDDO
                   ENDIF
@@ -377,12 +377,12 @@
       IF      (TYPE == 'BAR     ') THEN
          DO I=1,MRPBAR
             EPROP(I) = RPBAR(INTL_PID,I)
-         ENDDO 
+         ENDDO
 
       ELSE IF (TYPE == 'BEAM    ') THEN
          DO I=1,MRPBEAM
             EPROP(I) = RPBEAM(INTL_PID,I)
-         ENDDO 
+         ENDDO
 
       ELSE IF (TYPE == 'BUSH    ') THEN
          DO I=1,MRPBUSH
@@ -400,22 +400,22 @@
                   FATAL_ERR = FATAL_ERR + 1
                ENDIF
             ENDIF
-         ENDDO 
+         ENDDO
 
       ELSE IF (TYPE(1:4) == 'ELAS') THEN
          DO I=1,MRPELAS
             EPROP(I) = RPELAS(INTL_PID,I)
-         ENDDO 
+         ENDDO
 
       ELSE IF (TYPE == 'ROD     ') THEN
          DO I=1,MRPROD
             EPROP(I) = RPROD(INTL_PID,I)
-         ENDDO 
+         ENDDO
 
       ELSE IF (TYPE == 'SHEAR   ') THEN
          DO I=1,MRPSHEAR
             EPROP(I) = RPSHEAR(INTL_PID,I)
-         ENDDO 
+         ENDDO
 
       ELSE IF ((TYPE(1:5) == 'TRIA3') .OR. (TYPE(1:5) == 'QUAD4')) THEN
          IF (PCOMP_PROPS == 'N') THEN
@@ -676,7 +676,7 @@
       IF ((TYPE == 'BAR     ') .OR. (TYPE == 'BEAM    ')) THEN
 
          NFLAG = 0
-         !WRITE(ERR,*) 'NUMGRIDS FOR CBAR/CBEAM=', ELGP
+         !WRITE(ERR,*) 'ELEMDAT1/NUMGRIDS FOR CBAR/CBEAM=', ELGP
          !FLUSH(ERR)
          IF (ELGP > 2) THEN  ! number of grid points for this element
             ! IPIN is only dimensioned to 2 so set error
@@ -697,7 +697,7 @@
             IPIN1_EDAT = 6 ! was 5
             DO I=1,ELGP  ! 2
                IPIN(I) = EDAT(EPNTK+IPIN1_EDAT+I-1)  ! EPNTK+6 to EPNTK+7
-               WRITE(ERR,*) 'IPIN(', I, ')=', IPIN(I)
+               WRITE(ERR,*) '  IPIN(', I, ')=', IPIN(I)
                FLUSH(ERR)
                DO J=1,6
                   IREM    = MOD(IPIN(I),10)                ! e.g., if IPIN(I) = 136 then IREM = 6
@@ -754,10 +754,10 @@
             !                          Offset key goes in EDAT(nedat+9); was 8
 
             IROW = EDAT(EPNTK + 8)
-            WRITE(ERR,*) 'IROW =', IROW
+            WRITE(ERR,*) 'ELEMDAT1/IROW =', IROW
             IF (IROW > 0) THEN
-               ! TODO: seems to be defined only in the basic frame
-               !       the default OFFT is GGG and this is not consistent
+               ! defined in global or orientation frame
+               ! ELMGM1 handles the conversion to the basic frane
                EOFF(INT_ELEM_ID) = 'Y'
                ! file/variable: BD_CBAR/BAROFF -> ELEMDAT1/OFFDIS -> ELMGM1/VX
                OFFDIS(1,1) = BAROFF(IROW,1)
@@ -766,7 +766,7 @@
                OFFDIS(2,1) = BAROFF(IROW,4)
                OFFDIS(2,2) = BAROFF(IROW,5)
                OFFDIS(2,3) = BAROFF(IROW,6)
-               WRITE(ERR,*) 'ELEMDAT1/BAR:'
+               WRITE(ERR,*) 'ELEMDAT1/BAR (OFFDIS):'
                WRITE(ERR,*) '  WA=[', BAROFF(IROW,1), BAROFF(IROW,2), BAROFF(IROW,3), ']'
                WRITE(ERR,*) '  WB=[', BAROFF(IROW,4), BAROFF(IROW,5), BAROFF(IROW,6), ']'
                FLUSH(ERR)
@@ -923,7 +923,6 @@
          ENDIF
 
       ELSE IF ((TYPE == 'ELAS3   ') .OR. (TYPE == 'ELAS4   ')) THEN
-
          ELAS_COMP(1) = 1  ! These are the components at the SPOINT, not the cols of the KE matrix
          ELAS_COMP(2) = 1  ! (for cols of the KE matrix, see subr ELAS1, they depend on ELAS_COMP)
 
@@ -1099,18 +1098,18 @@
          OFFT = 'GGG'
      ELSEIF (OFFTI == 2) THEN
          OFFT = 'BGG'
-     !ELSEIF (OFFTI == 3) THEN
-     !    OFFT = 'GGO'
-     !ELSEIF (OFFTI == 4) THEN
-     !    OFFT = 'BGO'
-     !ELSEIF (OFFTI == 5) THEN
-     !    OFFT = 'GOG'
-     !ELSEIF (OFFTI == 6) THEN
-     !    OFFT = 'BOG'
-     !ELSEIF (OFFTI == 7) THEN
-     !    OFFT = 'GOO'
-     !ELSEIF (OFFTI == 8) THEN
-     !    OFFT = 'BOO'
+     ELSEIF (OFFTI == 3) THEN
+         OFFT = 'GGO'
+     ELSEIF (OFFTI == 4) THEN
+         OFFT = 'BGO'
+     ELSEIF (OFFTI == 5) THEN
+         OFFT = 'GOG'
+     ELSEIF (OFFTI == 6) THEN
+         OFFT = 'BOG'
+     ELSEIF (OFFTI == 7) THEN
+         OFFT = 'GOO'
+     ELSEIF (OFFTI == 8) THEN
+         OFFT = 'BOO'
      ENDIF
 
      END SUBROUTINE GET_OFFT_STR
