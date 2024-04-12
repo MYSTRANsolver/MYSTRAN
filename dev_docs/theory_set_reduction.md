@@ -155,11 +155,11 @@ $$ M_{NN} \ddot U_N + K_{NN} U_N = P_N +
 
 where:
 
-$$ \overbar K_{NN} = K_{NN} + K_{NM} G_{MN} + (K_{NM} G_{MN})^T + G_{MN}^T K_{MM} G_{MN} $$
+$$ \xoverline K_{NN} = K_{NN} + K_{NM} G_{MN} + (K_{NM} G_{MN})^T + G_{MN}^T K_{MM} G_{MN} $$
 
-$$ \overbar M_{NN} = M_{NN} + M_{NM} G_{MN} + (M_{NM} G_{MN})^T + G_{MN}^T M_{MM} G_{MN} $$
+$$ \xoverline M_{NN} = M_{NN} + M_{NM} G_{MN} + (M_{NM} G_{MN})^T + G_{MN}^T M_{MM} G_{MN} $$
 
-$$ P_N = \overbar P_N + G_{MN}^T P_M $$
+$$ P_N = \xoverline P_N + G_{MN}^T P_M $$
 
 $M_{NN}$, $K_{NN}$ and $P_N$ are the reduced N-set mass stiffness and loads. Note that $P_N$ is not the set of
 applied loads on the N-set if there are applied loads on the M-set as expressed by the second of
@@ -168,7 +168,7 @@ equations 8.11 ($P_N$ are the applied loads on the N set).
 In addition, the second term in the square brackets in 8.10 is zero by the definition of $G_{MN}$ in 8.8 so
 that 8.10 and 8.5 can be written as:
 
-M_{NN} \ddot U_N + K_{NN} U_N = P_N + R_{SN}^T q_S
+$$ M_{NN} \ddot U_N + K_{NN} U_N = P_N + R_{SN}^T q_S $$
 
 ## 8.3 Reduction of the N-set to the F-set
 
@@ -177,8 +177,8 @@ the single point constraints identified by the user in the input data deck. The 
 of the DOF’s in the N-set and are known as the "free" DOF's (i.e. those that have no constraints
 imposed on them). Thus, partition UN into UF and US:
 
-U_N = \begin{Bmatrix}    U_F \\ 
-                         U_S \end{Bmatrix}
+$$ U_N = \begin{Bmatrix}    U_F \\ 
+                            U_S \end{Bmatrix} $$
 
 Rewrite equation 8.5 in terms of the F, S and M-sets with the restriction that the single point
 constraints are of the form $u_i = Y_i$ where $Y_i$ is a constant (zero or some enforced displacement value),
