@@ -1,0 +1,22 @@
+$pyNastran: version=mystran
+SOL 101
+CEND
+SUBCASE 1
+    DISPLACEMENT(PLOT,PRINT) = ALL
+    LOAD = 1
+    SPC = 2
+BEGIN BULK
+$PARAM       POST      -1
+GRID           1              0.      0.      0.
+GRID           2              1.      0.      0.
+$   1  ..   2  ..   3  ..   4  ..   5  ..   6  ..   7  ..   8  ..   9  ..  10  .
+$	pid	mid	A	b	c	d	e	f	g
+CBAR           1       1       1       2      0.      1.      0.          +C1
++C1                         -0.5      0.      0.     0.5      0.      0.
+PBARL          1       1             BAR
+              .1      .1      0.
+MAT1           1   1.+11              0.
+FORCE          1       2              1.  30000.      0.      0.
+SPC            2       1  123456
+DEBUG   178     1   
+ENDDATA

@@ -24,10 +24,9 @@
                                                                                                         
 ! End MIT license text.                                                                                      
  
-      SUBROUTINE NEXTC ( CARD, ICONT, IERR )
+      SUBROUTINE NEXTC ( CARD, ICONTINUE, IERR )
  
-! Looks for a Bulk Data continuation card belonging to a parent card.
- 
+      ! Looks for a Bulk Data continuation card belonging to a parent card.
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
       USE IOUNT1, ONLY                :  WRT_LOG, ERR, F04, F06, IN1, INFILE
       USE SCONTR, ONLY                :  BD_ENTRY_LEN, BLNK_SUB_NAM, ECHO, FATAL_ERR, JCARD_LEN
@@ -41,13 +40,13 @@
       CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: SUBR_NAME = 'NEXTC'
       CHARACTER(LEN=*), INTENT(INOUT) :: CARD              ! A MYSTRAN data card
       CHARACTER(LEN=LEN(CARD))        :: CARD_IN           ! Version of CARD read here
-      CHARACTER(LEN=JCARD_LEN)        :: JCARD(10)         ! 10 fields of 8 characters of CARD
+      CHARACTER(LEN=JCARD_LEN)        :: JCARD(10), JCARD0(10) ! 10 fields of 8 characters of CARD
       CHARACTER(24*BYTE)              :: MESSAG            ! Message for output error purposes
       CHARACTER(LEN(JCARD))           :: NEWTAG            ! Field 1  of cont   card
       CHARACTER(LEN(JCARD))           :: OLDTAG            ! Field 10 of parent card
       CHARACTER(LEN=LEN(CARD))        :: TCARD             ! Temporary version of CARD
  
-      INTEGER(LONG), INTENT(OUT)      :: ICONT             ! =1 if next card is current card's continuation or =0 if not
+      INTEGER(LONG), INTENT(OUT)      :: ICONTINUE         ! =1 if next card is current card's continuation or =0 if not
       INTEGER(LONG), INTENT(OUT)      :: IERR              ! Error indicator from subr FFIELD, called herein
       INTEGER(LONG)                   :: COMMENT_COL       ! Col on CARD where a comment begins (if one exists)
       INTEGER(LONG)                   :: I                 ! DO loop index
@@ -64,25 +63,32 @@
       ENDIF
 
 ! **********************************************************************************************************************************
-! Initialize error indicator and ICONT
+      ! Initialize error indicator and ICONTINUE
+      IERR = 0
+      ICONTINUE = 0
 
-      IERR  = 0
-      ICONT = 0
-
-! Make units for writing errors the error file and output file
-
+      ! Make units for writing errors the error file and output file
       OUNT(1) = ERR
       OUNT(2) = F06
 
-! Make JCARD for parent CARD
-
+      ! Make JCARD for parent CARD
+      ! split the line (CARD) into fields (JCARD)
       CALL MKJCARD ( SUBR_NAME, CARD, JCARD )
+      
+      ! copy jcard to jcard0 in case we have an error
+      DO I=1,10
+          JCARD0(I) = JCARD(I)
+      ENDDO
 
-! Read next card.
+      !------------------------
+      ! Read next card.
 
-      OLDTAG = JCARD(10)                                   ! OLDTAG is field 10 of the current card coming into this subr
+      ! OLDTAG is field 10 of the current card coming into this subr
+      OLDTAG = JCARD(10)
       MESSAG = 'BULK DATA CARD          '
-      READ(IN1,101,IOSTAT=IOCHK) TCARD                     ! Read next card
+
+      ! Read next card
+      READ(IN1,101,IOSTAT=IOCHK) TCARD
       CARD_IN = TCARD
       IF (IOCHK /= 0) THEN
          REC_NO = -99
@@ -106,8 +112,8 @@
          ENDIF
       ENDDO
 
-! Remove any comments within the CARD by deleting everything from $ on (after col 1)
-
+      ! Remove any comments within the CARD by deleting everything 
+      ! from $ on (after col 1)
       COMMENT_COL = 1
       DO I=2,BD_ENTRY_LEN
          IF (TCARD(I:I) == '$') THEN
@@ -120,27 +126,49 @@
          TCARD(COMMENT_COL:) = ' '
       ENDIF
 
-! Make JCARD for TCARD above and get FFIELD to left adjust and fix-field it (if necessary).
-
+      ! Make JCARD for TCARD above and get FFIELD to left adjust and
+      ! fix-field it (if necessary).
+      !
+      ! get a flag (ICONTINUE) that defines if we need to read the next line
+      ! we do because we have OLDTAG
       IF (TCARD(1:1) /= '$') THEN
          CALL FFIELD ( TCARD, IERR )
+
+         ! split the continuation line (TCARD) into fields (JCARD)
          CALL MKJCARD ( SUBR_NAME, TCARD, JCARD )
          NEWTAG = JCARD(1)
          IF (NEWTAG == OLDTAG) THEN
-            ICONT = 1
+            ICONTINUE = 1
          ELSE IF ((OLDTAG(1:1) == '+') .AND. (NEWTAG(1:1) == ' ') .AND. (OLDTAG(2:8) == NEWTAG(2:8))) THEN
-            ICONT = 1
+            ICONTINUE = 1
          ELSE IF ((OLDTAG(1:1) == ' ') .AND. (NEWTAG(1:1) == '+') .AND. (OLDTAG(2:8) == NEWTAG(2:8))) THEN
-            ICONT = 1
+            ICONTINUE = 1
          ELSE
+            ! can\t find the continuation marker.  FATAL :)
             BACKSPACE(IN1)
+            WRITE(F06,102) OLDTAG
+            WRITE(ERR,102) OLDTAG
+            WRITE(F06,103)
+            WRITE(ERR,103)
+            WRITE(F06,104) 'FIELDS1:', JCARD0
+            WRITE(ERR,104) 'FIELDS1:', JCARD0
+            WRITE(F06,104) 'FIELDS2:', JCARD
+            WRITE(ERR,104) 'FIELDS2:', JCARD
+            FLUSH(F06)
+            FLUSH(ERR)
+            FATAL_ERR = FATAL_ERR + 1
+            CALL OUTA_HERE('Y')  ! FATAL error
             RETURN
-         ENDIF 
+         ENDIF
+         !WRITE(ERR,*) 'OLDTAG="', OLDTAG, '"'
+         !WRITE(ERR,*) 'NEWTAG="', NEWTAG, '"'
+         !WRITE(ERR,*) 'ICONTINUE=', ICONTINUE
          CARD = TCARD
          IF (ECHO(1:4) /= 'NONE') THEN
              WRITE(F06,'(A)') CARD_IN
          ENDIF
       ELSE
+         ! comment line
          BACKSPACE(IN1)
       ENDIF
 
@@ -156,6 +184,13 @@
 ! **********************************************************************************************************************************
   101 FORMAT(A)
 
+  ! missing continuation fatal
+  102 FORMAT(' *FATAL: COULD NOT FIND A CONTINUATION MARKER FOR ', A)
+  103 FORMAT('         CHECK THAT THE CONTINUATION STARTS AT THE BEGINNING OF FIELD 10')
+
+  ! missing continuation; name and 10 fields
+  104 FORMAT('         ', A, ' 1: ', A, ' 2:', A, ' 3:', A, ' 4:', A, &
+             ' 5:', A, ' 6:', A, ' 7:', A, ' 8:', A, ' 9:', A, ' 10:', A)
 ! **********************************************************************************************************************************
 
       END SUBROUTINE NEXTC
