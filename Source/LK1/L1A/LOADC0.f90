@@ -26,12 +26,14 @@
  
       SUBROUTINE LOADC0
  
-! Preliminary reading of the Case Control to count several data sizes so that arrays may be allocated prior to the final reading
-! of the Case Control.
-
-! LOADC0 reads in the CASE CONTROL DECK and:
-!   1) Counts the number of subcases and increments LSUB
-!   2) Counts the number of SET cards and calls CC_SET0 to count the number of characters in SET's to determine LSETLN
+      ! Preliminary reading of the Case Control to count several data sizes
+      ! so that arrays may be allocated prior to the final reading of the
+      ! Case Control.
+      !
+      ! LOADC0 reads in the CASE CONTROL DECK and:
+      !   1) Counts the number of subcases and increments LSUB
+      !   2) Counts the number of SET cards and calls CC_SET0 to count the
+      !      number of characters in SET's to determine LSETLN
  
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
       USE IOUNT1, ONLY                :  WRT_LOG, ERR, F04, F06, IN1
@@ -63,20 +65,18 @@
       ENDIF
 
 ! **********************************************************************************************************************************
-! Initialize
-
+      ! Initialize
       JERR     = 0
       END_CARD = 'CEND      '
 
-! Process CASE CONTROL DECK
- 
+      ! Process CASE CONTROL DECK
       JERR = 0
       END_CARD = 'BEGIN BULK'
 
       DO
+         ! Read an input deck card
+         CALL READ_BDF_LINE(IN1, IOCHK, CARD)
 
-         READ(IN1,101,IOSTAT=IOCHK) CARD                   ! Read an input deck card
- 
          IF (IOCHK < 0) THEN                               ! Quit if EOF/EOR occurs during read
             WRITE(ERR,1011) END_CARD  
             WRITE(F06,1011) END_CARD  
@@ -96,8 +96,7 @@
 
          CALL CSHIFT ( CARD, ' ', CARD1, CHAR_COL, IERR )  ! Shift CARD so it begins in col 1
 
-! Check for Case Control cards. Exit loop on 'BEGIN BULK'
- 
+         ! Check for Case Control cards. Exit loop on 'BEGIN BULK'
          IF      (CARD1(1: 4) == 'SUBC'      ) THEN
             LSUB = LSUB + 1
 
@@ -108,11 +107,10 @@
          ELSE IF (CARD1(1:10) == 'BEGIN BULK') THEN
             EXIT
          ENDIF
- 
+
       ENDDO
- 
-! If there were no explicit subcases, then default LSUB to 1
- 
+
+      ! If there were no explicit subcases, then default LSUB to 1
       IF (LSUB == 0) THEN
          LSUB = 1
       ENDIF
@@ -122,7 +120,7 @@
          WRITE(F06,10141)
          CALL OUTA_HERE ( 'Y' )
       ENDIF
- 
+
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
          CALL OURTIM

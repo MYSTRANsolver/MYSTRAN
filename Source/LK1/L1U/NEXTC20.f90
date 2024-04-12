@@ -26,8 +26,8 @@
  
       SUBROUTINE NEXTC20 ( PARENT, ICONT, IERR, CHILD )
  
-! Looks for 2 physical Bulk Data large field format continuation entries belonging to a large field parent.
-
+      ! Looks for 2 physical Bulk Data large field format continuation
+      ! entries belonging to a large field parent.
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
       USE IOUNT1, ONLY                :  WRT_LOG, ERR, F04, F06, IN1, INFILE
       USE SCONTR, ONLY                :  BD_ENTRY_LEN, BLNK_SUB_NAM, ECHO, FATAL_ERR, JCARD_LEN
@@ -59,27 +59,24 @@
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = NEXTC20_BEGEND
  
 ! **********************************************************************************************************************************
-! Initialize
-
+      ! Initialize
       CHILD(1:) = 'z'
       OLDTAG(1:) = ' '
 
       IERR  = 0
       ICONT = 0
 
-! Make units for writing errors the error file and output file
-
+      ! Make units for writing errors the error file and output file
       OUNT(1) = ERR
       OUNT(2) = F06
 
-! Make JCARD for PARENT and get the 1st 8 chars of field 10 (cont mnemonic)
-
+      ! Make JCARD for PARENT and get the 1st 8 chars of field 10 (cont mnemonic)
       CALL MKJCARD ( SUBR_NAME, PARENT, JCARD )
       OLDTAG(1:8) = JCARD(10)(1:8)
 
-! Read next card. If it is a continuation to the parent it will be the 1st half of the whole continuation
-
-      READ(IN1,101,IOSTAT=IOCHK) CHILD1
+      ! Read next card. If it is a continuation to the parent it will be
+      ! the 1st half of the whole continuation
+      CALL READ_BDF_LINE(IN1, IOCHK, CHILD1)
       IF (IOCHK /= 0) THEN
          REC_NO = -99
          CALL READERR ( IOCHK, INFILE, 'BULK DATA CARD', REC_NO, OUNT, 'Y' )
@@ -111,9 +108,8 @@
          RETURN
       ENDIF 
 
-! Read 2nd half of continuation entry, if it exists
-
-      READ(IN1,101,IOSTAT=IOCHK) CHILD2
+      ! Read 2nd half of continuation entry, if it exists
+      CALL READ_BDF_LINE(IN1, IOCHK, CHILD2)
       IF (IOCHK /= 0) THEN
          REC_NO = -99
          CALL READERR ( IOCHK, INFILE, 'BULK DATA CARD', REC_NO, OUNT, 'Y' )
@@ -138,9 +134,11 @@
       ENDIF 
 
 
-! Remove any comments within CHILD2 by deleting everything from $ on (after col 1). NOTE: CHILD1 cannot have  comments since the
-! last field is used for NEWTAG above
-
+      ! Remove any comments within CHILD2 by deleting everything from $ on
+      ! (after col 1).
+      !
+      ! NOTE: CHILD1 cannot have  comments since the last field is used for
+      ! NEWTAG above
       COMMENT_COL = 1
       DO I=2,BD_ENTRY_LEN
          IF (CHILD2(I:I) == '$') THEN
@@ -153,8 +151,7 @@
          CHILD2(COMMENT_COL:) = ' '
       ENDIF
 
-! Call FFIELD2 to put the 2 CHILDi's together and left justify
-
+      ! Call FFIELD2 to put the 2 CHILDi's together and left justify
       CALL FFIELD2 ( CHILD1, CHILD2, CHILD, IERR )
       ICONT = 1
 

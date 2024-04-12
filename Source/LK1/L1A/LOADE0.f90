@@ -26,8 +26,8 @@
  
       SUBROUTINE LOADE0
  
-! LOADE0 does a preliminary read of the EXEC CONTROL DECK to find if there is a RESTART entry
- 
+      ! LOADE0 does a preliminary read of the EXEC CONTROL DECK to find
+      ! if there is a RESTART entry
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
       USE IOUNT1, ONLY                :  ERR, F04, F06, FILE_NAM_MAXLEN, IN0, IN1, INC, LEN_INPUT_FNAME, INFILE,           &
                                          LEN_RESTART_FNAME, LNUM_IN4_FILES, RESTART_FILNAM, SCR, WRT_LOG
@@ -62,15 +62,13 @@
       ENDIF
 
 ! **********************************************************************************************************************************
-! Initialize
-
+      ! Initialize
       LNUM_IN4_FILES = 0
-		RESTART        = 'N'
+      RESTART        = 'N'
 
 !xx   REWIND (IN1)
 main: DO
-
-         READ(IN1,101,IOSTAT=IOCHK) CARD
+         CALL READ_BDF_LINE(IN1, IOCHK, CARD)
 
          IF (IOCHK < 0) THEN                               ! Quit if EOF/EOR occurs during read
             WRITE(ERR,1011) END_CARD

@@ -26,8 +26,7 @@
  
       SUBROUTINE LOADB
  
-! LOADB reads in the Bulk Data deck.
- 
+      ! LOADB reads in the Bulk Data deck.
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
       USE IOUNT1, ONLY                :  WRT_ERR, WRT_LOG, ERR, F04, F06, IN1
       USE SCONTR, ONLY                :  BD_ENTRY_LEN, BLNK_SUB_NAM, ECHO, FATAL_ERR, IMB_BLANK, JF, LIND_GRDS_MPCS,               &
@@ -99,8 +98,7 @@
       ENDIF
 
 ! **********************************************************************************************************************************
-! Initialize
-
+      ! Initialize
       IOR3D_MAX = 0
 
       IF (SPCSET == 0) THEN
@@ -115,22 +113,20 @@
          CC_MPC_FND = 'N'
       ENDIF
 
-! Initialize CC_LOAD_FND
-
-!  CC_LOAD_FND = Character array containing 'Y' or 'N' indicating whether the load
-!           or temperature load requested in Case Control was found in B.D.deck.
-!           Each row has the following indicators for 1 subcase 
-!            (1) Col 1: indicators for Case Control LOAD
-!            (2) Col 2: indicators for Case Control TEMP
-!            (a) CC_LOAD_FND(I,1) = '0' if there were no LOAD requests in Case Control
-!                            = 'N' if there were LOAD requests in Case Control
-!            (b) CC_LOAD_FND(I,2) = '0' if there were no TEMP requests in Case Control  
-!                            = 'N' if there were TEMP requests in Case Control
-!           Subroutines BD_FORMOM, BD_GRAV, BD_LOAD, BD_PLOAD2, BD_TEMP, BD_TEMPD, BD_TEMPRP
-!           reset CC_LOAD_FND to 'Y' if a load (or temp) with set ID matching one in a
-!           Case Control request is found.
-
-  
+      ! Initialize CC_LOAD_FND
+      
+      !  CC_LOAD_FND = Character array containing 'Y' or 'N' indicating whether the load
+      !           or temperature load requested in Case Control was found in B.D.deck.
+      !           Each row has the following indicators for 1 subcase 
+      !            (1) Col 1: indicators for Case Control LOAD
+      !            (2) Col 2: indicators for Case Control TEMP
+      !            (a) CC_LOAD_FND(I,1) = '0' if there were no LOAD requests in Case Control
+      !                            = 'N' if there were LOAD requests in Case Control
+      !            (b) CC_LOAD_FND(I,2) = '0' if there were no TEMP requests in Case Control  
+      !                            = 'N' if there were TEMP requests in Case Control
+      !           Subroutines BD_FORMOM, BD_GRAV, BD_LOAD, BD_PLOAD2, BD_TEMP, BD_TEMPD, BD_TEMPRP
+      !           reset CC_LOAD_FND to 'Y' if a load (or temp) with set ID matching one in a
+      !           Case Control request is found.
       DO I=1,NSUB
          IF (SUBLOD(I,1) == 0) THEN
             CC_LOAD_FND(I,1) = '0'
@@ -154,25 +150,25 @@
       MELGP         = 2                                    ! This max num grids/elem DOF's covers all 2 node/6 comp per node elems
       MELDOF        = 12                                   ! (other elems will be checked and MELGP, MELDOF reset if necessary)
 
-! Process Bulk Data cards in a large loop that runs until either an ENDDATA card is found or when an error or EOF/EOR occurs
-
+      ! Process Bulk Data cards in a large loop that runs until either an 
+      ! ENDDATA card is found or when an error or EOF/EOR occurs
 bdf:  DO
 
-         READ(IN1,101,IOSTAT=IOCHK) CARD1
-         CARD(1:) = CARD1(1:)                              ! Must have this since CARD goes to BD_xxxx, not CARD1.
-!                                                            This will get reset if CARD1 is a large field format
+         CALL READ_BDF_LINE(IN1, IOCHK, CARD1)
+
+         ! Must have this since CARD goes to BD_xxxx, not CARD1.
+         ! This will get reset if CARD1 is a large field format
+         CARD(1:) = CARD1(1:)
  
-! Quit if EOF/EOR occurs.
- 
+         ! Quit if EOF/EOR occurs.
          IF (IOCHK < 0) THEN
             WRITE(ERR,1011) END_CARD
             WRITE(F06,1011) END_CARD
             FATAL_ERR = FATAL_ERR + 1
             CALL OUTA_HERE ( 'Y' )
          ENDIF
- 
-! Check if error occurs.
- 
+
+         ! Check if error occurs.
          IF (IOCHK > 0) THEN
             WRITE(ERR,1010) DECK_NAME
             WRITE(F06,1010) DECK_NAME
@@ -180,15 +176,13 @@ bdf:  DO
             FATAL_ERR = FATAL_ERR + 1
             CYCLE
          ENDIF
- 
-! Write out BULK DATA card.
- 
+
+         ! Write out BULK DATA card.
          IF (ECHO /= 'NONE  ') THEN
             WRITE(F06,101) CARD1
          ENDIF
  
-! Remove any comments within the card by deleting everything from $ on (after col 1)
-
+         ! Remove any comments within the card by deleting everything from $ on (after col 1)
          COMMENT_COL = 1
          DO I=2,BD_ENTRY_LEN
             IF (CARD1(I:I) == '$') THEN
@@ -201,8 +195,7 @@ bdf:  DO
             CARD1(COMMENT_COL:) = ' '
          ENDIF
 
-! Determine if the card is large or small format
-
+         ! Determine if the card is large or small format
          LARGE_FLD_INP = 'N'
          DO I=1,8
             IF (CARD1(I:I) == '*') THEN
@@ -210,18 +203,17 @@ bdf:  DO
             ENDIF
          ENDDO
 
-! FFIELD converts free-field card to fixed field and left justifies the data in fields 2-9 and outputs a 10 field, 16 col/field CARD
- 
+         ! FFIELD converts free-field card to fixed field and left justifies
+         ! the data in fields 2-9 and outputs a 10 field, 16 col/field CARD
          IF ((CARD1(1:1) /= '$') .AND. (CARD1(1:) /= ' ')) THEN
 
             IF (LARGE_FLD_INP == 'N') THEN
-
                CALL FFIELD ( CARD1, IERR )
                CARD(1:) = CARD1(1:)
 
             ELSE
-
-               READ(IN1,101,IOSTAT=IOCHK) CARD2            ! Read 2nd physical entry for a large field parent B.D. entry
+               ! Read 2nd physical entry for a large field parent B.D. entry
+               CALL READ_BDF_LINE(IN1, IOCHK, CARD1)
  
                IF (IOCHK < 0) THEN
                   WRITE(ERR,1011) END_CARD
@@ -289,8 +281,7 @@ bdf:  DO
 
          ENDIF
  
-! Process Bulk Data card
-
+         ! Process Bulk Data card
          IF((     CARD(1:5) == 'ASET '   ) .OR. (CARD(1:5) == 'ASET*'   ) .OR.                                                     &
                  (CARD(1:5) == 'OMIT '   ) .OR. (CARD(1:5) == 'OMIT*'   )) THEN 
             CALL BD_ASET    ( CARD )
@@ -924,10 +915,12 @@ j_do2:            DO J=2,LMPCADDC
             ENDDO
 
 
-! (d) Check for duplicate MPC set ID's on MPCADD. There was a check on each MPCADD entry read in subr BD_MPCADD but no check was
-!     made across duplicate MPCADD entries (i.e. there may be more than 1 MPCADD entry with the same set ID and we need to make
-!     sure that an MPC set ID on the 2nd, etc, is not the same as one on the 1st, etc)
-
+            ! (d) Check for duplicate MPC set ID's on MPCADD. There was a
+            !     check on each MPCADD entry read in subr BD_MPCADD but no
+            !     check was made across duplicate MPCADD entries (i.e. 
+            !     there may be more than 1 MPCADD entry with the same set ID
+            !     and we need to make sure that an MPC set ID on the 2nd, etc.,
+            !     is not the same as one on the 1st, etc)
             CALL SORT_INT1 ( SUBR_NAME, 'MPCSIDS', NUM_MPCSIDS, MPCSIDS )
             DO I=2,NUM_MPCSIDS
                IF (MPCSIDS(I) == MPCSIDS(I-1)) THEN
@@ -941,8 +934,8 @@ j_do2:            DO J=2,LMPCADDC
 
       ENDIF
 
-! Check if load (LOAD, FORCE, MOMENT, GRAV, TEMP, etc.) Bulk Data cards with SID matching Case Control were found
-  
+      ! Check if load (LOAD, FORCE, MOMENT, GRAV, TEMP, etc.) Bulk Data cards
+      ! with SID matching Case Control were found
       DO I=1,NSUB
         IF (CC_LOAD_FND(I,1) == 'N') THEN
            WRITE(ERR,1007) SUBLOD(I,1)
@@ -955,9 +948,9 @@ j_do2:            DO J=2,LMPCADDC
            FATAL_ERR = FATAL_ERR + 1
         ENDIF
       ENDDO   
-  
-! Check to make sure that all forces, moments and GRAV cards requested on LOAD Bulk Data cards are in the deck
-  
+
+      ! Check to make sure that all forces, moments and GRAV cards requested
+      ! on LOAD Bulk Data cards are in the deck
       DO I=1,NLOAD
          DO J=1,NSUB
             IF (LOAD_SIDS(I,1) == SUBLOD(J,1)) THEN
@@ -994,15 +987,12 @@ j_do2:            DO J=2,LMPCADDC
                      WRITE(F06,1009) LOAD_SIDS(I,K),LOAD_SIDS(I,1),SCNUM(J)
                      FATAL_ERR = FATAL_ERR + 1
                   ENDIF
-               ENDDO   
+               ENDDO
             ENDIF
          ENDDO
-      ENDDO   
+      ENDDO
 
-
-
-! Write message regarding max number of elem grids/DOF's
-
+      ! Write message regarding max number of elem grids/DOF's
       MDT = MAX(MTDAT_TEMPP1, MTDAT_TEMPRB, MELGP+3, 5)    
       WRITE(F06,*)
       WRITE(ERR,1197) MELGP, MELDOF
@@ -1149,3 +1139,43 @@ j_do2:            DO J=2,LMPCADDC
       END SUBROUTINE CALC_MAX_GAUSS_POINTS
 
       END SUBROUTINE LOADB
+
+
+      !function to_upper(in) result (out)
+      SUBROUTINE TO_UPPER_LINE(LINE)
+      ! it seems like there should be a better way to write an upper function...
+      ! https://en.wikibooks.org/wiki/Fortran/strings
+      implicit none
+      CHARACTER(256), intent (inout) :: LINE
+      integer                    :: I, J
+      CHARACTER(26), parameter   :: UPP = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+      CHARACTER(26), parameter   :: LOW = 'abcdefghijklmnopqrstuvwxyz'
+      
+      DO I = 1,256
+          J = index(LOW, LINE(I:I))      ! Is ith character in LOW
+          IF (J>0) LINE(I:I) = UPP(J:J)  ! Yes, then subst with UPP
+      ENDDO
+      END SUBROUTINE TO_UPPER_LINE
+      !end function to_upper
+
+      !---------------------------------------------------------
+      SUBROUTINE READ_BDF_LINE(IN1, IOCHK, LINE)
+      
+      ! it seems like there should be a better way to write an upper function...
+      ! https://en.wikibooks.org/wiki/Fortran/strings
+      USE IOUNT1, ONLY                :  ERR !, F04, F06, IN1
+      implicit none
+      CHARACTER(256), intent (inout) :: LINE
+      integer, intent (in)       :: IN1
+      integer, intent (inout)    :: IOCHK
+      integer                    :: I, J
+      CHARACTER(26), parameter   :: UPP = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+      CHARACTER(26), parameter   :: LOW = 'abcdefghijklmnopqrstuvwxyz'
+      READ(IN1,101,IOSTAT=IOCHK) LINE
+      DO I = 1,256
+          J = index(LOW, LINE(I:I))      ! Is ith character in LOW
+          IF (J>0) LINE(I:I) = UPP(J:J)  ! Yes, then subst with UPP
+      ENDDO
+
+  101 FORMAT(A)
+      END SUBROUTINE READ_BDF_LINE

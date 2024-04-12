@@ -23,12 +23,11 @@
 ! _______________________________________________________________________________________________________
                                                                                                         
 ! End MIT license text.                                                                                      
- 
+
       SUBROUTINE LOADB0
- 
-! Preliminary reading of the Bulk Data to count several data sizes so that arrays may be allocated prior to the final reading
-! of the Bulk Data.
- 
+
+      ! Preliminary reading of the Bulk Data to count several data sizes so
+      ! that arrays may be allocated prior to the final reading of the Bulk Data.
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
       USE IOUNT1, ONLY                :  WRT_ERR, WRT_LOG, ERR, F04, F06, IN1                
       USE SCONTR, ONLY                :  BD_ENTRY_LEN, BLNK_SUB_NAM, FATAL_ERR, LCMASS, LDOFG, LELE,                               &
@@ -104,20 +103,18 @@
       DO
 
          ICNT = ICNT + 1
-         READ(IN1,101,IOSTAT=IOCHK) CARD1
+         CALL READ_BDF_LINE(IN1, IOCHK, CARD1)
          CARD(1:)  = CARD1(1:)
- 
-! Quit if EOF/EOR occurs.
- 
+
+         ! Quit if EOF/EOR occurs.
          IF (IOCHK < 0) THEN
             WRITE(ERR,1011) END_CARD
             WRITE(F06,1011) END_CARD
             FATAL_ERR = FATAL_ERR + 1
             CALL OUTA_HERE ( 'Y' )
          ENDIF
- 
-! Check if error occurs.
- 
+
+         ! Check if error occurs.
          IF (IOCHK > 0) THEN
             WRITE(ERR,1010) DECK_NAME
             WRITE(F06,1010) DECK_NAME
@@ -125,9 +122,9 @@
             FATAL_ERR = FATAL_ERR + 1
             CYCLE
          ENDIF
- 
-! Remove any comments within the CARD1 by deleting everything from $ on (after col 1)
 
+         ! Remove any comments within the CARD1 by deleting everything
+         ! from $ on (after col 1)
          COMMENT_COL = 1
          DO I=2,BD_ENTRY_LEN
             IF (CARD1(I:I) == '$') THEN
@@ -140,8 +137,7 @@
             CARD1(COMMENT_COL:) = ' '
          ENDIF
 
-! Determine if the card is large or small format
-
+         ! Determine if the card is large or small format
          LARGE_FLD_INP = 'N'
          DO I=1,8
             IF (CARD1(I:I) == '*') THEN
@@ -149,9 +145,9 @@
             ENDIF
          ENDDO
 
-! FFIELD converts free-field card to fixed field and left justifies data in fields 2-9 and outputs a 10 field, 16 col/field CARD1
- 
-         IF ((CARD1(1:1) /= '$')  .AND. (CARD1(1:) /= ' ')) THEN
+         ! FFIELD converts free-field card to fixed field and left justifies
+         ! data in fields 2-9 and outputs a 10 field, 16 col/field CARD1
+          IF ((CARD1(1:1) /= '$')  .AND. (CARD1(1:) /= ' ')) THEN
 
             IF (LARGE_FLD_INP == 'N') THEN
 
@@ -160,8 +156,9 @@
 
             ELSE
 
-               READ(IN1,101,IOSTAT=IOCHK) CARD2            ! Read 2nd physical entry for a large field parent B.D. entry
- 
+               ! Read 2nd physical entry for a large field parent B.D. entry
+               CALL READ_BDF_LINE(IN1, IOCHK, CARD2)
+
                IF (IOCHK < 0) THEN
                   WRITE(ERR,1011) END_CARD
                   WRITE(F06,1011) END_CARD
@@ -217,9 +214,9 @@
 
          ENDIF
  
-! No errors, so process Bulk Data card. No need to check for imbedded blanks found when FFIELD was run - this will be
-! checked when LOADB reads the bulk data
-
+          ! No errors, so process Bulk Data card. No need to check for
+          ! imbedded blanks found when FFIELD was run - this will be
+          ! checked when LOADB reads the bulk data
           IF      (CARD(1:5) == 'BAROR'   )  THEN
             CALL BD_BAROR0 ( CARD )
 
