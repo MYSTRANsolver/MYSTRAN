@@ -19,6 +19,7 @@ Requests output of nodal or engineering forces for selected elements.
 ## Examples:
 
 ELFORCE = ALL (requests output of element engineering forces for all elements)
+
 ELFO(NODE) = 125 (requests output of element nodal forces for elements included in SET 125)
 
 ## Options:
