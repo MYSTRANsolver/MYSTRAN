@@ -142,8 +142,6 @@
       CALL MKJCARD ( SUBR_NAME, TCARD, JCARD )
       NEWTAG = JCARD(1)
       
-      !WRITE(ERR,*) 'tags',OLDTAG,NEWTAG
-      
       IF (NEWTAG == OLDTAG) THEN
          ICONTINUE = 1
       ELSE IF ((OLDTAG(1:1) == '+') .AND. (NEWTAG(1:1) == ' ') .AND. (OLDTAG(2:8) == NEWTAG(2:8))) THEN
