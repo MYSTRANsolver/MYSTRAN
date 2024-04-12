@@ -6,7 +6,7 @@ Added:
 - asdf
 
 Fixed:
-- asdf
+- [fixed segfault caused by closed ANS file](https://github.com/MYSTRANsolver/MYSTRAN/pull/64)
 
 ## 15.2.0 (2024/4/7)
 
