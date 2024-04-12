@@ -1,7 +1,12 @@
-
-
 ## Dev (2024/x/x)
 
+lorem ipsum
+
+Added:
+- asdf
+
+Fixed:
+- asdf
 
 ## 15.2.0 (2024/4/7)
 
