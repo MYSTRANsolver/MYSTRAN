@@ -9,7 +9,7 @@ Requests output of nodal or engineering forces for selected elements.
 
  $$ ELFO[RCE]
  \begin{bmatrix}
-   <ins>ENGR</ins> \\
+   \underline{ENGR} \\
    (NODE) \\
    (BOTH) 
    \end{bmatrix} = \begin{bmatrix}
