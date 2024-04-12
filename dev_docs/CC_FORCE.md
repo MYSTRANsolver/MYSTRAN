@@ -4,13 +4,12 @@
 
 Requests output of nodal or engineering forces for selected elements.
 
-<ins>testing</ins>
 
 ## Format:
 
  $$ ELFO[RCE]
  \begin{bmatrix}
-   **ENGR** \\
+   <ins>ENGR</ins> \\
    (NODE) \\
    (BOTH) 
    \end{bmatrix} = \begin{bmatrix}
