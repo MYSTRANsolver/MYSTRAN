@@ -89,6 +89,22 @@
          CALL READERR ( IOCHK, INFILE, MESSAG, REC_NO, OUNT, 'Y' )
          FATAL_ERR = FATAL_ERR + 1
       ENDIF
+      
+      ! we (maybe) found a comment line inside the card
+      ! loop until we find a non-comment line using the same
+      ! block as above
+      !
+      ! NOTE: comment lines must start with a $, so a space is
+      !       not considered a comment
+      DO WHILE (TCARD(1:1) == '$') 
+         READ(IN1,101,IOSTAT=IOCHK) TCARD  ! Read next card
+         CARD_IN = TCARD
+         IF (IOCHK /= 0) THEN
+            REC_NO = -99
+            CALL READERR ( IOCHK, INFILE, MESSAG, REC_NO, OUNT, 'Y' )
+            FATAL_ERR = FATAL_ERR + 1
+         ENDIF
+      ENDDO
 
 ! Remove any comments within the CARD by deleting everything from $ on (after col 1)
 
