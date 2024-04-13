@@ -99,7 +99,7 @@ $$ \begin{bmatrix} M_{SN} & M_{SM} \\
  \begin{bmatrix} R_{SN}^T & 0_{MN}^T \\
                  0_{SM}^T & R_{MM}^T \end{bmatrix} 
                    \begin{Bmatrix}    q_S \\ 
-                                      q_M \end{Bmatrix}
+                                      q_M \end{Bmatrix} $$
 
 $$ \textsf{\color{red} start} $$
 
@@ -107,7 +107,7 @@ $$ R_{MN} U_N + R_{MM} U_M $$
 
 $$ R_{MM} U_M = -R_{MN} U_N $$
 
-$$ U_M =  \underbrace{ -R_{MM}^{-1} R_{MN} }_\text{G_{MN}} U_N $$
+$$ U_M =   \underbrace{ -R_{MM}^{-1} R_{MN} }_\text{GMN} U_N $$
 
 $$ U_M =  -R_{MM}^{-1} R_{MN} U_N $$
 
@@ -118,10 +118,6 @@ $$ U_M = G_{MN} U_N $$
 where:
 
 $$ G_{MN} = -R_{MM}^{-1} R_{MN} $$
-
-use underbrace for GMN...
-
-$$  \underbrace{(x + 2)^3}_\text{text 1} $$
 
 $$ \textsf{\color{red} end} $$
 
