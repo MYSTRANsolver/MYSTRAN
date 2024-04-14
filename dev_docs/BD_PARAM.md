@@ -24,8 +24,10 @@ in what fields the Vi go.
 manual errors:
  - CUSERIN spacing
 
-| Parameter Name                                       | Data Type | Function of Parameter NOTE: Default values of parameters are: N for Char, 0 for Int and 0.0 for real | 
-| ---------------                                      | --------- | ---------------------------------------------------------------------------------------------------- |
+NOTE: Default values of parameters are: N for Char, 0 for Int and 0.0 for real 
+
+| Parameter Name                                       | Data Type | Function of Parameter | 
+| ---------------                                      | --------- | ---------------------- |
 | ARP_TOL                                              | Real | Default = 1x10-6 |
 |                                                      |      | Tolerance to use in Lanczos eigenvalue extraction method for convergence |
 | ART_KED (for diff stiffness – not fully implemented) | Char | Field 3: ART_KED, default = N. If Y add artificial stiff to diag of KED stiff matrix |
