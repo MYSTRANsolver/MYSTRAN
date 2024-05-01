@@ -1,0 +1,84 @@
+ID PLATE,STATICS                                                                
+SOL 1
+CEND                                                                            
+TITLE = CQUAD4 test
+ECHO = UNSORT
+$
+$DISP(    PRINT,PLOT,PUNCH,NEU,CSV) = ALL
+$ELFORCE( PRINT,PLOT,PUNCH,NEU,CSV) = ALL
+$GPFORCE( PRINT,PLOT,PUNCH,NEU,CSV) = ALL
+$MPCFORCE(PRINT,PLOT,PUNCH,NEU,CSV) = ALL
+$OLOAD(   PRINT,PLOT,PUNCH,NEU,CSV) = ALL
+$SPCFORCE(PRINT,PLOT,PUNCH,NEU,CSV) = ALL
+$STRESS(  PRINT,PLOT,PUNCH,NEU,CSV) = ALL
+$STRAIN(  PRINT,PLOT,PUNCH,NEU,CSV) = ALL
+$
+$ current support
+DISP(    PRINT,PLOT,PUNCH) = ALL
+ELFORCE( PRINT,PLOT,PUNCH) = ALL
+GPFORCE( PRINT,PLOT) = ALL
+MPCFORCE(PRINT,PLOT,PUNCH) = ALL
+OLOAD(   PRINT,PLOT,PUNCH) = ALL
+SPCFORCE(PRINT,PLOT,PUNCH) = ALL
+STRESS(  PRINT,PLOT,PUNCH) = ALL
+STRAIN(  PRINT,PLOT,PUNCH) = ALL
+SET 1 = 11
+ELDATA(0,PRINT) = ALL
+ELDATA(1,PRINT) = ALL
+ELDATA(2,PRINT) = ALL
+ELDATA(3,PRINT) = ALL
+ELDATA(4,PRINT) = ALL
+ELDATA(5,PRINT) = ALL
+$
+SPC   = 101
+SUBCASE 1
+  LABEL = FORCE load
+  LOAD  = 1992
+SUBCASE 2
+  LABEL = PLOAD2 load
+  LOAD  = 1993
+SUBCASE 3
+  LABEL = PLOAD4 load
+  LOAD  = 1994
+BEGIN BULK                                                                      
+$
+GRID    1011              0.      0.      0.   $ fixed
+GRID    1012             50.      0.      0.   $ fixed
+GRID    1013             50.     50.      0.   $ free
+GRID    1014              0.     50.      0.   $ free
+$
+CQUAD4  11      91      1011    1012    1013    1014
+$
+$
+$ PCOMP PID  Z0  NSM    SB    FT   TREF GE     LAM
+$       MID1 T1  THETA1 SOUT1 MID2 T2   THETA2 SOUT2
+$       MID3 T3  THETA3 SOUT3 ...
+PCOMP, 91, ,     0.1
+,      20, 0.1,  0.0
+,      20, 0.2,  0.0
+,      20, 0.3,  0.0
+$
+$       mid     E       G       NU      RHO
+MAT1    20      10.+6   4.+6    .25     .1                              +MAT1
++MAT1   20000.  20000.  20000.
+$
+FORCE   1992    1011            1000.   1.      1.       0.
+FORCE   1992    1012            1000.   1.      1.       0.
+FORCE   1992    1013            1000.   1.      1.       0.
+$
+$PLOAD2 SID, P,    EID1
+PLOAD2, 1993, 1.1, 11
+$
+$PLOAD4 SID   EID P1 P2 P3 P4
+PLOAD4, 1994, 11, 1.1
+$
+SPC1, 101, 123456, 1011, 1012
+$
+PARAM   SOLLIB   IntMKL
+PARAM   GRDPNT   0
+PARAM   POST     -1
+$
+DEBUG   192     2                                                       GPFO summary
+DEBUG   200     1                                                       ANS
+$
+ENDDATA
