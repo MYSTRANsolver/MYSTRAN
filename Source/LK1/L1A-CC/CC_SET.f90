@@ -133,9 +133,8 @@
             READ(TOKEN(1),'(I8)') SETID
          ENDIF
       ENDIF
-  
-! Update NSETS and check that other sets with same ID not already defined
- 
+
+      ! Update NSETS and check that other sets with same ID not already defined
       NSETS = NSETS + 1
       IF (NSETS > LSETS) THEN
          FATAL_ERR = FATAL_ERR + 1
@@ -220,11 +219,10 @@ i_do_4:  DO I=CC_ENTRY_LEN,1,-1
                EXIT i_do_4
             ENDIF
          ENDDO i_do_4
- 
-! If there is a continuation card, read it
- 
+
+         ! If there is a continuation card, read it
          IF (ICONT == 1) THEN
-            READ(IN1,101,IOSTAT=IOCHK1) CARD1
+            CALL READ_BDF_LINE(IN1, IOCHK1, CARD1)
             WRITE(F06,'(A)') CARD1
             IF (IOCHK1 > 0) THEN
                FATAL_ERR = FATAL_ERR + 1
@@ -236,11 +234,13 @@ i_do_4:  DO I=CC_ENTRY_LEN,1,-1
          ELSE
             EXIT main
          ENDIF
- 
+
       ENDDO main
- 
-! Now check that we do not have a situation where a comment was entered on a card that was not the last card of the set.
-! If the last character in ALL_SETS_ARRAY is a comma, then we give fatal error
+
+      ! Now check that we do not have a situation where a comment was
+      ! entered on a card that was not the last card of the set.
+      ! If the last character in ALL_SETS_ARRAY is a comma, then we
+      ! give fatal error
 
 i_do5:DO I=SETLEN,1,-1
          IF      (ALL_SETS_ARRAY(I) == ' ') THEN
@@ -277,21 +277,19 @@ i_do5:DO I=SETLEN,1,-1
       TOKSTR_PART(1:TOKLEN) = TOKSTR_WHOLE(DATA_BEG:DATA_END)
  
 ! **********************************************************************************************************************************
-! Check syntax of this set data
- 
+      ! Check syntax of this set data
       ISTART = 1
       THRU   = 'OFF'
       EXCEPT = 'OFF'
       DO
  
-! Call STOKEN in a DO loop until we run out of tokens in TOKSTR_PART. We run out of data in the set when ISTART > TOKLEN
+         ! Call STOKEN in a DO loop until we run out of tokens in TOKSTR_PART.
+         ! We run out of data in the set when ISTART > TOKLEN
  
          CALL STOKEN ( SUBR_NAME, TOKSTR_PART, ISTART, TOKLEN, NTOKEN, IERROR, TOKTYP, TOKEN, ERRTOK, THRU, EXCEPT )
- 
-! Error: too long a token in the set definition
- 
-         IF (IERROR == 1) THEN
 
+         ! Error: too long a token in the set definition
+         IF (IERROR == 1) THEN
             FATAL_ERR = FATAL_ERR + 1
 
             WRITE(ERR,1252) SETID
@@ -330,9 +328,8 @@ i_do5:DO I=SETLEN,1,-1
             WRITE(F06,*)
 
             EXIT
- 
-! Error: found "EXCEPT" but EXCEPT has already been turned "ON "
- 
+
+         ! Error: found "EXCEPT" but EXCEPT has already been turned "ON "
          ELSE IF (IERROR == 3) THEN
 
             FATAL_ERR = FATAL_ERR + 1

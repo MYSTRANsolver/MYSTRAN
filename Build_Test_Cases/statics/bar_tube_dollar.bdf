@@ -3,23 +3,24 @@ SOL 1
 CEND
 TITLE = 1 BAR WITH END LOADS AND WITH NONZERO I12
 LOAD  = 1
-DISP          = ALL
+DISP(plot)    = ALL
 ECHO          = UNSORT
-ELFORCE(BOTH) = ALL
-GPFORCE       = ALL
+ELFORCE(plot) = ALL
+GPFORCE(plot) = ALL
 MPCFORCE      = ALL
-OLOAD         = ALL
-SPCFORCE      = ALL
-STRESS        = ALL
+OLOAD(plot)   = ALL
+SPCFORCE(plot)  = ALL
+STRESS(plot)    = ALL
 ELDATA(4,PRINT) = ALL
 ELDATA(5,PRINT) = ALL
 BEGIN BULK
 $
-GRID    101             0.      0.      0.              123456
-GRID    201             10.     0.      0.              14
+grid    101             0.      0.      0.              123456
+$
+grid    201             10.     0.      0.              14
 $
 CBAR    11      10      101     201     0.      1.      0.
-$
+
 $      pid, mid, group, type
 PBARL, 10, 20, , TUBE
 $cat
@@ -29,6 +30,7 @@ MAT1    20      1.E+7   4.+6            .1      1.
 $
 LOAD    1        1.0     2.0     11      3.0     12
 FORCE   11       201             1.      0.      3.     -6. 
+
 MOMENT  12       201             1.      0.      2.      3.  
 $
 PARAM   SOLLIB   IntMKL

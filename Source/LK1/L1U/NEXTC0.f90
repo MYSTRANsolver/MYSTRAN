@@ -64,33 +64,29 @@
       ENDIF
 
 ! **********************************************************************************************************************************
-! Initialize error indicator and ICONT
-
+      ! Initialize error indicator and ICONT
       IERR  = 0
       ICONT = 0
 
-! Make units for writing errors the error file and output file
-
+      ! Make units for writing errors the error file and output file
       OUNT(1) = ERR
       OUNT(2) = F06
 
-! Make JCARD for parent CARD
-
+      ! Make JCARD for parent CARD
       CALL MKJCARD ( SUBR_NAME, CARD, JCARD )
 
-! Read next card. If it is the cont card for this parent, keep it. Otherwise backspace the input file.
-
+      ! Read next card. If it is the cont card for this parent, keep it.
+      ! Otherwise backspace the input file.
       OLDTAG = JCARD(10)
       MESSAG = 'BULK DATA CARD          '
-      READ(IN1,101,IOSTAT=IOCHK) TCARD
+      CALL READ_BDF_LINE(IN1, IOCHK, TCARD)
       IF (IOCHK /= 0) THEN
          REC_NO = -99
          CALL READERR ( IOCHK, INFILE, MESSAG, REC_NO, OUNT, 'Y' )
          FATAL_ERR = FATAL_ERR + 1
       ENDIF
 
-! Remove any comments within the CARD by deleting everything fro $ on (after col 1)
-
+      ! Remove any comments within the CARD by deleting everything fro $ on (after col 1)
       COMMENT_COL = 1
       DO I=2,BD_ENTRY_LEN
          IF (TCARD(I:I) == '$') THEN

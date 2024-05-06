@@ -9,6 +9,7 @@ Fixed:
 - [fixed segfault caused by closed ANS file](https://github.com/MYSTRANsolver/MYSTRAN/pull/64)
 - [Cards may now have comments in them](https://github.com/MYSTRANsolver/MYSTRAN/pull/68)
 - [continuation & stress note bug fix](https://github.com/MYSTRANsolver/MYSTRAN/pull/58)
+- [added common READ_BDF_LINE subroutine](https://github.com/MYSTRANsolver/MYSTRAN/pull/71)
 
 ## 15.2.0 (2024/4/7)
 

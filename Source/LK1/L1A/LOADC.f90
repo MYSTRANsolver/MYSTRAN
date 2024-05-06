@@ -65,22 +65,22 @@
 
 ! **********************************************************************************************************************************
 
-! Process CASE CONTROL DECK
+      ! Process CASE CONTROL DECK
 
 outer:DO
          DOLLAR_WARN = 'N'
-         READ(IN1,101,IOSTAT=IOCHK) CARD
+         CALL READ_BDF_LINE(IN1, IOCHK, CARD)
 
          ! Quit if EOF/EOR occurs during read
- 
          IF (IOCHK < 0) THEN
             WRITE(ERR,1011) END_CARD
             WRITE(F06,1011) END_CARD
             FATAL_ERR = FATAL_ERR + 1
             CALL OUTA_HERE ( 'Y' )
          ENDIF
- 
-         IF (IOCHK > 0) THEN                               ! Check if error occurs during read.
+
+         ! Check if error occurs during read.
+         IF (IOCHK > 0) THEN
             WRITE(ERR,1010) DECK_NAME
             WRITE(F06,1010) DECK_NAME
             WRITE(F06,'(A)') CARD 
@@ -90,12 +90,13 @@ outer:DO
  
          WRITE(F06,101) CARD
 
-         CALL REPLACE_TABS_W_BLANKS ( CARD )               ! Replace all tab characters with a white space
+         ! Replace all tab characters with a white space
+         CALL REPLACE_TABS_W_BLANKS ( CARD )
 
-         CALL CSHIFT ( CARD, ' ', CARD1, CHAR_COL, IERR )  ! Shift card so that it begins in col 1
+         ! Shift card so that it begins in col 1
+         CALL CSHIFT ( CARD, ' ', CARD1, CHAR_COL, IERR )
 
-! Check for CASE CONTROL cards. Exit loop on 'BEGIN BULK'
-
+         ! Check for CASE CONTROL cards. Exit loop on 'BEGIN BULK'
          IF      (CARD1(1:4) == 'ACCE'    ) THEN
             CALL CC_ACCE ( CARD1 )
  
@@ -165,8 +166,11 @@ outer:DO
                WARN_ERR = WARN_ERR + 1
                WRITE(ERR,902) CARD
                WRITE(F06,902) CARD
-inner:         DO                                          ! so read all entries up to BEGIN BULK and then exit loop for CC entries 
+
+               ! so read all entries up to BEGIN BULK and then exit loop for CC entries
+inner:         DO
                   READ(IN1,101) CARD
+                  CALL TO_UPPER_LINE(CARD)
                   IF (CARD(1:10) == 'BEGIN BULK') THEN
                      WRITE(F06,101) CARD
                      EXIT outer
