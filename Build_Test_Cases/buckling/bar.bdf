@@ -1,0 +1,45 @@
+ID BAR BUCKLING
+SOL 5
+CEND
+$TITLE = EULER BUCKLING OF A CANTILEVERED-FREE BEAM
+$SUBTI = 10 CBAR ELEMENTS ALONG X AXIS, END LOAD
+ECHO          = UNSORT
+DISP          = ALL
+$ELFORCE(BOTH) = ALL
+$GPFORCE       = ALL
+$MPCFORCE      = ALL
+$OLOAD         = ALL
+$SPCFORCE      = ALL
+$STRESS        = ALL
+$ELDATA(0,PRINT) = ALL
+$ELDATA(1,PRINT) = ALL
+$ELDATA(2,PRINT) = ALL
+$ELDATA(3,PRINT) = ALL
+$ELDATA(4,PRINT) = ALL
+$ELDATA(5,PRINT) = ALL
+SUBCASE 1
+  LOAD = 10
+SUBCASE 2
+  METHOD = 20
+BEGIN BULK
+$
+FORCE   10       2              -1.     1.      0.      0.
+$
+EIGRL   20                      2                       10.     MAX     +E1
++E1             DGB
+$
+GRID     1               90.     0.      0.             123456
+GRID     2              100.     0.      0.
+$
+CBAR    10      1        1       2      0.      1.      0.
+$
+PBAR*   1               1               .500            .041666666666667*
+*       104.16666666667
+$
+MAT1    1       10.+6           .33     0.1     20.-6   0.
+$
+PARAM   SOLLIB   BANDED
+PARAM   POST     -1
+DEBUG   200     1
+$
+ENDDATA
