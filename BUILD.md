@@ -49,7 +49,17 @@ If your distribution doesn't ship CMake 3.18+ yet, check if your distro has a
 some sort of testing/unstable channel before attempting to
 [install it manually](https://cmake.org/install/).
 
-For Ubuntu
+For WSL (Linux for Windows)
+===========================
+Mystran won't work with Ubuntu 20.04, hasn't been tested on 22.04 and should work on 24.04 (what we're testing).
+
+If you're upgrading your WSL, open PowerShell as Administrator and run:
+```
+wsl --update
+wsl --install --distribution Ubuntu-24.04
+```
+
+Now that you've got into a modern version of Ubuntu
 ```
 sudo apt update
 sudo apt upgrade
