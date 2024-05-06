@@ -594,7 +594,7 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
                   DO J=1,6
                      IF(FG1(J) == ZERO) THEN;  FG1(J) = -ZERO;  ENDIF  ! Avoids writing -0.0 for -FG1(J) below
                   ENDDO
-                  WRITE(F06,9207) ACHAR(Udd), (-FG1(J),J=1,6)  ! inertia force
+                  WRITE(F06,9207) (-FG1(J),J=1,6)  ! inertia force
                ENDIF
                IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
                   WRITE(F06,9208) (QGr1(J),J=1,6)
@@ -609,7 +609,7 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
                IF(IS_SPC) WRITE(ANS,9205) (QGs1(J),J=1,6)  ! spc force
                IF(IS_MPC) WRITE(ANS,9206) (QGm1(J),J=1,6)  ! mpc force
                IF ((SOL_NAME(1:5) == 'MODES') .OR. (SOL_NAME(1:12) == 'GEN CB MODEL')) THEN
-                  WRITE(ANS,9207) ACHAR(Udd), (-FG1(J),J=1,6)  ! inertia force
+                  WRITE(ANS,9207) (-FG1(J),J=1,6)  ! inertia force
                ENDIF
             ENDIF
 
@@ -686,7 +686,7 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
                  IF (NDOFO == 0) THEN
                     WRITE(F06,9211) (TOTALS(J),J=1,6)
                  ELSE
-                    WRITE(F06,9310) (TOTALS(J),J=1,6), ACHAR(Udd)
+                    WRITE(F06,9310) (TOTALS(J),J=1,6)
                  ENDIF
               ELSE
                  WRITE(F06,9211) (TOTALS(J),J=1,6)     ! KEEP THIS
@@ -708,7 +708,7 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
                   IF (NDOFO == 0) THEN
                      WRITE(ANS,9211) (TOTALS(J),J=1,6)
                   ELSE
-                     WRITE(ANS,9310) (TOTALS(J),J=1,6), CHAR(128)
+                     WRITE(ANS,9310) (TOTALS(J),J=1,6)
                   ENDIF
                ELSE
                   WRITE(ANS,9211) (TOTALS(J),J=1,6)  ! KEEP THIS
@@ -812,9 +812,10 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
           IF (IERR /= 0) THEN
               WRITE(ERR,*) 'GPFORCE_FXYZ_MXYZ DEALLOCATE error'
           ENDIF
-          FLUSH(OP2)
       ENDIF
+      FLUSH(OP2)
       FLUSH(F06)
+      !FLUSH(ANS)
       FLUSH(ERR)
 
 ! **********************************************************************************************************************************
@@ -853,7 +854,7 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
 
  9206 FORMAT(1X,   'MPC FORCE              ',6(1ES14.6))
 
- 9207 FORMAT(1X,   'INERTIA FORCE (-Mgg*',A1,'g)',6(1ES14.6))
+ 9207 FORMAT(1X,   'INERTIA FORCE (-Mgg*Üg)',6(1ES14.6))
 
  9208 FORMAT(1X,   'SUBSTRUCTURE I/F FORCE ',6(1ES14.6))
 
@@ -866,7 +867,7 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
 
  9310 FORMAT(1X,   'TOTALS                :',6(1ES14.6),13X,/,                                                                     &
              1X,   '(may not be zero since there were OMIT''d DOF''s which can mean that the correct inertia forces at the G-set', &
-                   ' are not -Mgg*',A1,'g)',//)
+                   ' are not -Mgg*Üg)',//)
 
  9799 FORMAT(1X,A)
 
