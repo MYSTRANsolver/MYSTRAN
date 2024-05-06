@@ -88,7 +88,7 @@
       MESSAG = 'BULK DATA CARD          '
 
       ! Read next card
-      READ(IN1,101,IOSTAT=IOCHK) TCARD
+      CALL READ_BDF_LINE(IN1, IOCHK, TCARD)
       CARD_IN = TCARD
       IF (IOCHK /= 0) THEN
          REC_NO = -99
@@ -103,7 +103,8 @@
       ! NOTE: comment lines must start with a $, so a space is
       !       not considered a comment
       DO WHILE (TCARD(1:1) == '$') 
-         READ(IN1,101,IOSTAT=IOCHK) TCARD  ! Read next card
+         ! Read next card line
+         CALL READ_BDF_LINE(IN1, IOCHK, TCARD)
          CARD_IN = TCARD
          IF (IOCHK /= 0) THEN
             REC_NO = -99
@@ -131,45 +132,45 @@
       !
       ! get a flag (ICONTINUE) that defines if we need to read the next line
       ! we do because we have OLDTAG
-      IF (TCARD(1:1) /= '$') THEN
-         CALL FFIELD ( TCARD, IERR )
 
-         ! split the continuation line (TCARD) into fields (JCARD)
-         CALL MKJCARD ( SUBR_NAME, TCARD, JCARD )
-         NEWTAG = JCARD(1)
-         IF (NEWTAG == OLDTAG) THEN
-            ICONTINUE = 1
-         ELSE IF ((OLDTAG(1:1) == '+') .AND. (NEWTAG(1:1) == ' ') .AND. (OLDTAG(2:8) == NEWTAG(2:8))) THEN
-            ICONTINUE = 1
-         ELSE IF ((OLDTAG(1:1) == ' ') .AND. (NEWTAG(1:1) == '+') .AND. (OLDTAG(2:8) == NEWTAG(2:8))) THEN
-            ICONTINUE = 1
-         ELSE
-            ! can\t find the continuation marker.  FATAL :)
-            BACKSPACE(IN1)
-            WRITE(F06,102) OLDTAG
-            WRITE(ERR,102) OLDTAG
-            WRITE(F06,103)
-            WRITE(ERR,103)
-            WRITE(F06,104) 'FIELDS1:', JCARD0
-            WRITE(ERR,104) 'FIELDS1:', JCARD0
-            WRITE(F06,104) 'FIELDS2:', JCARD
-            WRITE(ERR,104) 'FIELDS2:', JCARD
-            FLUSH(F06)
-            FLUSH(ERR)
-            FATAL_ERR = FATAL_ERR + 1
-            CALL OUTA_HERE('Y')  ! FATAL error
-            RETURN
-         ENDIF
-         !WRITE(ERR,*) 'OLDTAG="', OLDTAG, '"'
-         !WRITE(ERR,*) 'NEWTAG="', NEWTAG, '"'
-         !WRITE(ERR,*) 'ICONTINUE=', ICONTINUE
-         CARD = TCARD
-         IF (ECHO(1:4) /= 'NONE') THEN
-             WRITE(F06,'(A)') CARD_IN
-         ENDIF
-      ELSE
-         ! comment line
+      ! we know know that the line doesn't start with a $, but it
+      ! can be a different card (OLDTAG /= NEWTAG)
+      !
+      CALL FFIELD ( TCARD, IERR )
+
+      ! split the continuation line (TCARD) into fields (JCARD)
+      CALL MKJCARD ( SUBR_NAME, TCARD, JCARD )
+      NEWTAG = JCARD(1)
+      
+      IF (NEWTAG == OLDTAG) THEN
+         ICONTINUE = 1
+      ELSE IF ((OLDTAG(1:1) == '+') .AND. (NEWTAG(1:1) == ' ') .AND. (OLDTAG(2:8) == NEWTAG(2:8))) THEN
+         ICONTINUE = 1
+      ELSE IF ((OLDTAG(1:1) == ' ') .AND. (NEWTAG(1:1) == '+') .AND. (OLDTAG(2:8) == NEWTAG(2:8))) THEN
+         ICONTINUE = 1
+      ELSE IF ((NEWTAG(1:1) /= ' ') .AND. (NEWTAG(1:1) /= '+') .AND. (NEWTAG(1:1) /= '$')) THEN
+         ! different card type (e.g., LOAD -> FORCE
          BACKSPACE(IN1)
+      ELSE
+         ! can\t find the continuation marker.  FATAL :)
+         BACKSPACE(IN1)
+         WRITE(F06,102) OLDTAG
+         WRITE(ERR,102) OLDTAG
+         WRITE(F06,103)
+         WRITE(ERR,103)
+         WRITE(F06,104) 'FIELDS1:', JCARD0
+         WRITE(ERR,104) 'FIELDS1:', JCARD0
+         WRITE(F06,104) 'FIELDS2:', JCARD
+         WRITE(ERR,104) 'FIELDS2:', JCARD
+         FLUSH(F06)
+         FLUSH(ERR)
+         FATAL_ERR = FATAL_ERR + 1
+         CALL OUTA_HERE('Y')  ! FATAL error
+         RETURN
+      ENDIF
+      CARD = TCARD
+      IF (ECHO(1:4) /= 'NONE') THEN
+          WRITE(F06,'(A)') CARD_IN
       ENDIF
 
 ! **********************************************************************************************************************************

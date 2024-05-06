@@ -106,9 +106,8 @@
 ! Process EXECUTIVE CONTROL DECK
  
       DO
- 
-         READ(IN1,101,IOSTAT=IOCHK) CARD
- 
+         CALL READ_BDF_LINE(IN1, IOCHK, CARD)
+
          IF (IOCHK < 0) THEN                               ! Quit if EOF/EOR occurs during read
             WRITE(ERR,1011) END_CARD
             WRITE(F06,1011) END_CARD

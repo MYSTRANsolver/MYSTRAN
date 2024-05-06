@@ -135,7 +135,7 @@
          ENDDO 
  
          IF (ICONT == 1) THEN
-            READ(IN1,101,IOSTAT=IOCHK) CARD1
+            CALL READ_BDF_LINE(IN1, IOCHK, CARD1)
             IF (IOCHK > 0) THEN
                RETURN
             ENDIF

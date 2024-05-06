@@ -77,9 +77,9 @@
       CALL MKJCARD ( SUBR_NAME, PARENT, JCARD )
       OLDTAG(1:8) = JCARD(10)(1:8)
 
-! Read next card. If it is a continuation to the parent it will be the 1st half of the whole continuation
-
-      READ(IN1,101,IOSTAT=IOCHK) CHILD1
+      ! Read next card. If it is a continuation to the parent it will
+      ! be the 1st half of the whole continuation
+      CALL READ_BDF_LINE(IN1, IOCHK, CHILD1)
       IF (IOCHK /= 0) THEN
          REC_NO = -99
          CALL READERR ( IOCHK, INFILE, 'BULK DATA CARD', REC_NO, OUNT, 'Y' )
@@ -99,9 +99,8 @@
          RETURN
       ENDIF 
 
-! Read 2nd half of continuation entry, if it exists
-
-      READ(IN1,101,IOSTAT=IOCHK) CHILD2
+      ! Read 2nd half of continuation entry, if it exists
+      CALL READ_BDF_LINE(IN1, IOCHK, CHILD2)
       IF (IOCHK /= 0) THEN
          REC_NO = -99
          CALL READERR ( IOCHK, INFILE, 'BULK DATA CARD', REC_NO, OUNT, 'Y' )
