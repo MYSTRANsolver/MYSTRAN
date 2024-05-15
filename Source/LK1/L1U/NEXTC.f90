@@ -36,12 +36,12 @@
       USE NEXTC_USE_IFs
 
       IMPLICIT NONE
- 
       CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: SUBR_NAME = 'NEXTC'
       CHARACTER(LEN=*), INTENT(INOUT) :: CARD              ! A MYSTRAN data card
       CHARACTER(LEN=LEN(CARD))        :: CARD_IN           ! Version of CARD read here
       CHARACTER(LEN=JCARD_LEN)        :: JCARD(10), JCARD0(10) ! 10 fields of 8 characters of CARD
       CHARACTER(24*BYTE)              :: MESSAG            ! Message for output error purposes
+      CHARACTER(1*BYTE)               :: NEWCHAR           ! first character of new line
       CHARACTER(LEN(JCARD))           :: NEWTAG            ! Field 1  of cont   card
       CHARACTER(LEN(JCARD))           :: OLDTAG            ! Field 10 of parent card
       CHARACTER(LEN=LEN(CARD))        :: TCARD             ! Temporary version of CARD
@@ -49,9 +49,10 @@
       INTEGER(LONG), INTENT(OUT)      :: ICONTINUE         ! =1 if next card is current card's continuation or =0 if not
       INTEGER(LONG), INTENT(OUT)      :: IERR              ! Error indicator from subr FFIELD, called herein
       INTEGER(LONG)                   :: COMMENT_COL       ! Col on CARD where a comment begins (if one exists)
+      INTEGER(LONG)                   :: NREADS            ! number of lines read
       INTEGER(LONG)                   :: I                 ! DO loop index
       INTEGER(LONG)                   :: IOCHK             ! IOSTAT error value from READ
-      INTEGER(LONG)                   :: OUNT(2)           ! File units to write messages to. Input to subr READERR  
+      INTEGER(LONG)                   :: OUNT(2)           ! File units to write messages to. Input to subr READERR
       INTEGER(LONG)                   :: REC_NO            ! Record number when reading a file. Input to subr READERR
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = NEXTC_BEGEND
  
@@ -63,9 +64,10 @@
       ENDIF
 
 ! **********************************************************************************************************************************
-      ! Initialize error indicator and ICONTINUE
+      ! Initialize error indicator
       IERR = 0
       ICONTINUE = 0
+      NEWCHAR = ' '
 
       ! Make units for writing errors the error file and output file
       OUNT(1) = ERR
@@ -76,8 +78,10 @@
       CALL MKJCARD ( SUBR_NAME, CARD, JCARD )
       
       ! copy jcard to jcard0 in case we have an error
+      !write(err,*) 'nextc: jcard0:'
       DO I=1,10
           JCARD0(I) = JCARD(I)
+          !write(err,*) '  i=', i, jcard(i)
       ENDDO
 
       !------------------------
@@ -85,16 +89,16 @@
 
       ! OLDTAG is field 10 of the current card coming into this subr
       OLDTAG = JCARD(10)
-      MESSAG = 'BULK DATA CARD          '
+      !MESSAG = 'BULK DATA CARD          '
 
       ! Read next card
       CALL READ_BDF_LINE(IN1, IOCHK, TCARD)
       CARD_IN = TCARD
-      IF (IOCHK /= 0) THEN
-         REC_NO = -99
-         CALL READERR ( IOCHK, INFILE, MESSAG, REC_NO, OUNT, 'Y' )
-         FATAL_ERR = FATAL_ERR + 1
-      ENDIF
+      !IF (IOCHK /= 0) THEN
+      !   REC_NO = -99
+      !   CALL READERR ( IOCHK, INFILE, MESSAG, REC_NO, OUNT, 'Y' )
+      !   FATAL_ERR = FATAL_ERR + 1
+      !ENDIF
       
       ! we (maybe) found a comment line inside the card
       ! loop until we find a non-comment line using the same
@@ -102,31 +106,49 @@
       !
       ! NOTE: comment lines must start with a $, so a space is
       !       not considered a comment
-      DO WHILE (TCARD(1:1) == '$') 
-         ! Read next card line
-         CALL READ_BDF_LINE(IN1, IOCHK, TCARD)
-         CARD_IN = TCARD
-         IF (IOCHK /= 0) THEN
-            REC_NO = -99
-            CALL READERR ( IOCHK, INFILE, MESSAG, REC_NO, OUNT, 'Y' )
-            FATAL_ERR = FATAL_ERR + 1
-         ENDIF
-      ENDDO
+      !write(err,*) 'nextc: flag0=',TCARD(1:1)
+!     NREADS = 1
+!      DO WHILE (TCARD(1:1) == '$')
+!         ! Read next card line
+!         
+!         CALL READ_BDF_LINE(IN1, IOCHK, TCARD)
+!         CARD_IN = TCARD
+!         IF (IOCHK /= 0) THEN
+!            REC_NO = -99
+!            CALL READERR ( IOCHK, INFILE, MESSAG, REC_NO, OUNT, 'Y' )
+!            FATAL_ERR = FATAL_ERR + 1
+!         ENDIF
+!         write(err,*) 'nextc flag=',TCARD(1:1)
+!         NREADS = NREADS + 1
+!      ENDDO
+!
+!      ! Remove any comments within the CARD by deleting everything 
+!      ! from $ on (after col 1)
+!      COMMENT_COL = 1
+!      DO I=2,BD_ENTRY_LEN
+!         IF (TCARD(I:I) == '$') THEN
+!            COMMENT_COL = I
+!            EXIT
+!         ENDIF
+!      ENDDO
 
-      ! Remove any comments within the CARD by deleting everything 
-      ! from $ on (after col 1)
-      COMMENT_COL = 1
-      DO I=2,BD_ENTRY_LEN
-         IF (TCARD(I:I) == '$') THEN
-            COMMENT_COL = I
-            EXIT
-         ENDIF
-      ENDDO
-
-      IF (COMMENT_COL > 1) THEN
-         TCARD(COMMENT_COL:) = ' '
-      ENDIF
-
+!      IF (COMMENT_COL > 1) THEN
+!         TCARD(COMMENT_COL:) = ' '
+!      ENDIF
+      
+      !write(err,*) 'nextc: tcard=',TCARD
+      !write(err,*) 'nextc: nReads=',NREADS
+      NEWCHAR = TCARD(1:1)
+!     IF ((NEWCHAR /= ' ') .AND. (NEWCHAR /= '+') .AND. (NEWCHAR /= '$')) THEN  ! CBAR, PBAR, LOAD...
+!        ! different card type (e.g., LOAD -> FORCE
+!        CARD = CARD_IN
+!        write(err,*) 'nextc: backspace 1 line...'
+!        !DO I=1,NREADS-1
+!        BACKSPACE(IN1)
+!        !ENDDO
+!        return
+!     ENDIF
+      !
       ! Make JCARD for TCARD above and get FFIELD to left adjust and
       ! fix-field it (if necessary).
       !
@@ -141,18 +163,41 @@
       ! split the continuation line (TCARD) into fields (JCARD)
       CALL MKJCARD ( SUBR_NAME, TCARD, JCARD )
       NEWTAG = JCARD(1)
-      
-      IF (NEWTAG == OLDTAG) THEN
+
+      !write(err,*) 'nextc newtag=',NEWTAG
+      !write(err,*) 'nextc oldtag=',OLDTAG
+      ! do i need to flag this?
+      ! (NEWTAG(1:1) /= '*')
+      IF ((NEWTAG(1:1) /= ' ') .AND. (NEWTAG(1:1) /= '+') .AND. (NEWTAG(1:1) /= '$')) THEN
+         ! different card type (e.g., LOAD -> FORCE
+         !write(err,*) 'nextc out A: different card type'
+         CARD = CARD_IN
+         BACKSPACE(IN1)
+         !write(err,*) 'CARD=',CARD
+         !write(err,*) 'returning nextc='
+         !flush(err)
+         return
+
+      ELSE IF (NEWTAG == OLDTAG) THEN
+         !write(err,*) 'nextc out B'
          ICONTINUE = 1
       ELSE IF ((OLDTAG(1:1) == '+') .AND. (NEWTAG(1:1) == ' ') .AND. (OLDTAG(2:8) == NEWTAG(2:8))) THEN
+         ! small field
+         !write(err,*) 'nextc out C'
          ICONTINUE = 1
       ELSE IF ((OLDTAG(1:1) == ' ') .AND. (NEWTAG(1:1) == '+') .AND. (OLDTAG(2:8) == NEWTAG(2:8))) THEN
+         ! small field
+         !write(err,*) 'nextc out D'
          ICONTINUE = 1
       ELSE IF ((NEWTAG(1:1) /= ' ') .AND. (NEWTAG(1:1) /= '+') .AND. (NEWTAG(1:1) /= '$')) THEN
          ! different card type (e.g., LOAD -> FORCE
+         !write(err,*) 'nextc out E'
          BACKSPACE(IN1)
+         CARD = TCARD
+         RETURN
       ELSE
-         ! can\t find the continuation marker.  FATAL :)
+         ! can't find the continuation marker.  FATAL :)
+         !write(err,*) 'nextc out F'
          BACKSPACE(IN1)
          WRITE(F06,102) OLDTAG
          WRITE(ERR,102) OLDTAG
@@ -170,8 +215,12 @@
       ENDIF
       CARD = TCARD
       IF (ECHO(1:4) /= 'NONE') THEN
-          WRITE(F06,'(A)') CARD_IN
+          WRITE(F06, 101) CARD_IN
       ENDIF
+      !write(err,*) 'nextc: CARD=',CARD
+      !write(err,*) 'nextc: ICONTINUE=',ICONTINUE
+      !write(err,*) 'nextc: end'
+      FLUSH(ERR)
 
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
@@ -183,7 +232,7 @@
       RETURN
 
 ! **********************************************************************************************************************************
-  101 FORMAT(A)
+  101 FORMAT('ECHO:  nextc ', A)
 
   ! missing continuation fatal
   102 FORMAT(' *FATAL: COULD NOT FIND A CONTINUATION MARKER FOR ', A)

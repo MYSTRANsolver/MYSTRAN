@@ -24,10 +24,10 @@
                                                                                                         
 ! End MIT license text.                                                                                      
  
-      SUBROUTINE NEXTC2 ( PARENT, ICONT, IERR, CHILD )
- 
-! Looks for 2 physical Bulk Data large field format continuation entries belonging to a large field parent.
- 
+      SUBROUTINE NEXTC2 ( PARENT, ICONTINUE, IERR, CHILD )
+
+      ! Looks for 2 physical Bulk Data large field format continuation
+      ! entries belonging to a large field parent.
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
       USE IOUNT1, ONLY                :  WRT_LOG, ERR, F04, F06, IN1, INFILE
       USE SCONTR, ONLY                :  BD_ENTRY_LEN, BLNK_SUB_NAM, ECHO, FATAL_ERR, JCARD_LEN
@@ -49,7 +49,7 @@
       CHARACTER(LEN(JCARD))           :: NEWTAG            ! Field 1  of cont   card
       CHARACTER(LEN(JCARD))           :: OLDTAG            ! Field 10 of parent card
  
-      INTEGER(LONG), INTENT(OUT)      :: ICONT             ! =1 if next card is current card's continuation or =0 if not
+      INTEGER(LONG), INTENT(OUT)      :: ICONTINUE         ! =1 if next card is current card's continuation or =0 if not
       INTEGER(LONG), INTENT(OUT)      :: IERR              ! Error indicator from subr FFIELD, called herein
       INTEGER(LONG)                   :: COMMENT_COL       ! Col on PARENT where a comment begins (if one exists)
       INTEGER(LONG)                   :: I                 ! DO loop index
@@ -59,99 +59,139 @@
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = NEXTC2_BEGEND
  
 ! **********************************************************************************************************************************
-! Initialize
-
+      ! Initialize
+      IERR = 0
+      ICONTINUE = 0
+!      NEWCHAR = ' '
       CHILD(1:) = 'z'
       OLDTAG(1:) = ' '
+      !write(err,*) 'nextc2: starting'
 
       IERR  = 0
-      ICONT = 0
 
-! Make units for writing errors the error file and output file
-
+      ! Make units for writing errors the error file and output file
       OUNT(1) = ERR
       OUNT(2) = F06
 
-! Make JCARD for PARENT and get the 1st 8 chars of field 10 (cont mnemonic)
-
+      ! Make JCARD for PARENT and get the 1st 8 chars of field 10 (cont mnemonic)
       CALL MKJCARD ( SUBR_NAME, PARENT, JCARD )
       OLDTAG(1:8) = JCARD(10)(1:8)
 
       ! Read next card. If it is a continuation to the parent it will
       ! be the 1st half of the whole continuation
       CALL READ_BDF_LINE(IN1, IOCHK, CHILD1)
-      IF (IOCHK /= 0) THEN
-         REC_NO = -99
-         CALL READERR ( IOCHK, INFILE, 'BULK DATA CARD', REC_NO, OUNT, 'Y' )
-         FATAL_ERR = FATAL_ERR + 1
-         RETURN
-      ENDIF
+      !write(err,*) 'nextc2: child1=',child1
+!     IF (IOCHK /= 0) THEN
+!        REC_NO = -99
+!        CALL READERR ( IOCHK, INFILE, 'BULK DATA CARD', REC_NO, OUNT, 'Y' )
+!        FATAL_ERR = FATAL_ERR + 1
+!        RETURN
+!     ENDIF
       NEWTAG = CHILD1(1:8)
+      !write(err,*) 'nextc2: OLDTAG=',OLDTAG
+      !write(err,*) 'nextc2: NEWTAG=',NEWTAG
 
       IF (NEWTAG == OLDTAG) THEN
-         ICONT = 1
+         ICONTINUE = 1
       ELSE IF ((OLDTAG(1:1) == '*') .AND. (NEWTAG(1:1) == ' ') .AND. (OLDTAG(2:8) == NEWTAG(2:8))) THEN
-         ICONT = 1
+         ICONTINUE = 1
       ELSE IF ((OLDTAG(1:1) == ' ') .AND. (NEWTAG(1:1) == '*') .AND. (OLDTAG(2:8) == NEWTAG(2:8))) THEN
-         ICONT = 1
+         ICONTINUE = 1
       ELSE
+         !write(err,*) 'nextc2: A: backspace 1 line...'
          BACKSPACE(IN1)
          RETURN
       ENDIF 
 
       ! Read 2nd half of continuation entry, if it exists
       CALL READ_BDF_LINE(IN1, IOCHK, CHILD2)
-      IF (IOCHK /= 0) THEN
-         REC_NO = -99
-         CALL READERR ( IOCHK, INFILE, 'BULK DATA CARD', REC_NO, OUNT, 'Y' )
-         FATAL_ERR = FATAL_ERR + 1
-         RETURN
-      ENDIF
+      !write(err,*) 'nextc2: child2=',child2
+!     IF (IOCHK /= 0) THEN
+!        REC_NO = -99
+!        CALL READERR ( IOCHK, INFILE, 'BULK DATA CARD', REC_NO, OUNT, 'Y' )
+!        FATAL_ERR = FATAL_ERR + 1
+!        RETURN
+!     ENDIF
       OLDTAG = CHILD1(73:80)
       NEWTAG = CHILD2( 1: 8)
 
-      ICONT = 0
-      IF (NEWTAG == OLDTAG) THEN
-         ICONT = 1
-!xx   ELSE IF ((OLDTAG(1:8) == '*       ') .AND. (NEWTAG(1:8) == '       ')) THEN
-      ELSE IF ((OLDTAG(1:1) == '*') .AND. (NEWTAG(1:1) == ' ') .AND. (OLDTAG(2:8) == NEWTAG(2:8))) THEN
-         ICONT = 1
-!xx   ELSE IF ((OLDTAG(1:8) == '        ') .AND. (NEWTAG(1:8) == '*      ')) THEN
-      ELSE IF ((OLDTAG(1:1) == ' ') .AND. (NEWTAG(1:1) == '*') .AND. (OLDTAG(2:8) == NEWTAG(2:8))) THEN
-         ICONT = 1
-      ELSE
-         BACKSPACE(IN1)
-         CHILD2(1:) = ' '
-         ICONT = 1
-         CALL FFIELD2 ( CHILD1, CHILD2, CHILD, IERR )
-         RETURN
-      ENDIF 
+      ICONTINUE = 0
+      
+!     IF ((NEWTAG(1:1) /= ' ') .AND. (NEWTAG(1:1) /= '+') .AND. (NEWTAG(1:1) /= '$')) THEN
+!        ! different card type (e.g., LOAD -> FORCE
+!        BACKSPACE(IN1)
+!        !write(err,*) 'CARD=',CARD
+!        !write(err,*) 'returning nextc='
+!        !flush(err)
+!        !return
+!     ELSE IF (NEWTAG == OLDTAG) THEN
+!        ICONTINUE = 1
+!     ELSE IF ((OLDTAG(1:1) == '*') .AND. (NEWTAG(1:1) == ' ') .AND. (OLDTAG(2:8) == NEWTAG(2:8))) THEN
+!        ! small field
+!        ICONTINUE = 1
+!     ELSE IF ((OLDTAG(1:1) == ' ') .AND. (NEWTAG(1:1) == '*') .AND. (OLDTAG(2:8) == NEWTAG(2:8))) THEN
+!        ! small field
+!        ICONTINUE = 1
+!     !ELSE IF ((NEWTAG(1:1) /= ' ') .AND. (NEWTAG(1:1) /= '+') .AND. (NEWTAG(1:1) /= '$')) THEN
+!     !   ! different card type (e.g., LOAD -> FORCE
+!     !   BACKSPACE(IN1)
+!     ELSE
+!        ! can't find the continuation marker.  FATAL :)
+!        BACKSPACE(IN1)
+!        WRITE(F06,102) OLDTAG
+!        WRITE(ERR,102) OLDTAG
+!        WRITE(F06,103)
+!        WRITE(ERR,103)
+!        WRITE(F06,104) 'FIELDS1:', JCARD0
+!        WRITE(ERR,104) 'FIELDS1:', JCARD0
+!        WRITE(F06,104) 'FIELDS2:', JCARD
+!        WRITE(ERR,104) 'FIELDS2:', JCARD
+!        FLUSH(F06)
+!        FLUSH(ERR)
+!        FATAL_ERR = FATAL_ERR + 1
+!        CALL OUTA_HERE('Y')  ! FATAL error
+!        RETURN
+!     ENDIF
 
-! Remove any comments within CHILD2 by deleting everything from $ on (after col 1). NOTE: CHILD1 cannot have  comments since the
-! last field is used for NEWTAG above
 
-      COMMENT_COL = 1
-      DO I=2,BD_ENTRY_LEN
-         IF (CHILD2(I:I) == '$') THEN
-            COMMENT_COL = I
-            EXIT
-         ENDIF
-      ENDDO
+     IF (NEWTAG == OLDTAG) THEN
+        ICONTINUE = 1
+     ELSE IF ((OLDTAG(1:1) == '*') .AND. (NEWTAG(1:1) == ' ') .AND. (OLDTAG(2:8) == NEWTAG(2:8))) THEN
+        ICONTINUE = 1
+     ELSE IF ((OLDTAG(1:1) == ' ') .AND. (NEWTAG(1:1) == '*') .AND. (OLDTAG(2:8) == NEWTAG(2:8))) THEN
+        ICONTINUE = 1
+     ELSE
+        !write(err,*) 'nextc2: B: backspace 1 line...'
+        BACKSPACE(IN1)
+        CHILD2(1:) = ' '
+        ICONTINUE = 1
+        CALL FFIELD2 ( CHILD1, CHILD2, CHILD, IERR )
+        RETURN
+     ENDIF
 
-      IF (COMMENT_COL > 1) THEN
-         CHILD2(COMMENT_COL:) = ' '
-      ENDIF
+!     ! Remove any comments within CHILD2 by deleting everything from $ on (after col 1).
+!     ! NOTE: CHILD1 cannot have  comments since the last field is used for NEWTAG above
+!     COMMENT_COL = 1
+!     DO I=2,BD_ENTRY_LEN
+!        IF (CHILD2(I:I) == '$') THEN
+!           COMMENT_COL = I
+!           EXIT
+!        ENDIF
+!     ENDDO
+!
+!     IF (COMMENT_COL > 1) THEN
+!        CHILD2(COMMENT_COL:) = ' '
+!     ENDIF
 
-! Call FFIELD2 to put the 2 CHILDi's together and left justify
-
-      CALL FFIELD2 ( CHILD1, CHILD2, CHILD, IERR )
-      ICONT = 1
+      ! Call FFIELD2 to put the 2 CHILDi's together and left justify
+      CALL FFIELD2(CHILD1, CHILD2, CHILD, IERR)
+      ICONTINUE = 1
       IF (ECHO /= 'NONE  ') THEN
          WRITE(F06,101) CHILD1
          WRITE(F06,101) CHILD2
       ENDIF
 ! **********************************************************************************************************************************
-  101 FORMAT(A)
+  101 FORMAT('ECHO nextc2: ', A)
 
 ! **********************************************************************************************************************************
 

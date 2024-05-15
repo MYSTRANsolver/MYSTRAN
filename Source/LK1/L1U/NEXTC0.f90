@@ -26,9 +26,9 @@
 
       SUBROUTINE NEXTC0 ( CARD, ICONT, IERR )
 
-! This version of NEXTC is used in BD_xxxx0 routines called by LOADB0 and is the same as NEXTC except that it does
-! not write CARD to F06 under any circumstances
-
+      ! This version of NEXTC is used in BD_xxxx0 routines called by LOADB0
+      ! and is the same as NEXTC except that it does not write CARD to F06
+      ! under any circumstances
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
       USE IOUNT1, ONLY                :  WRT_LOG, ERR, F04, F06, IN1, INFILE
       USE SCONTR, ONLY                :  BD_ENTRY_LEN, BLNK_SUB_NAM, FATAL_ERR, JCARD_LEN
@@ -49,7 +49,7 @@
 
       INTEGER(LONG), INTENT(OUT)      :: ICONT             ! =1 if next card is current card's continuation or =0 if not
       INTEGER(LONG), INTENT(OUT)      :: IERR              ! Error indicator from subr FFIELD, called herein
-      INTEGER(LONG)                   :: COMMENT_COL       ! Col on CARD where a comment begins (if one exists)
+      !INTEGER(LONG)                   :: COMMENT_COL       ! Col on CARD where a comment begins (if one exists)
       INTEGER(LONG)                   :: I                 ! DO loop index
       INTEGER(LONG)                   :: IOCHK             ! IOSTAT error value from READ
       INTEGER(LONG)                   :: OUNT(2)           ! File units to write messages to. Input to subr READERR  
@@ -80,24 +80,25 @@
       OLDTAG = JCARD(10)
       MESSAG = 'BULK DATA CARD          '
       CALL READ_BDF_LINE(IN1, IOCHK, TCARD)
-      IF (IOCHK /= 0) THEN
-         REC_NO = -99
-         CALL READERR ( IOCHK, INFILE, MESSAG, REC_NO, OUNT, 'Y' )
-         FATAL_ERR = FATAL_ERR + 1
-      ENDIF
+!      IF (IOCHK /= 0) THEN
+!         REC_NO = -99
+!         CALL READERR ( IOCHK, INFILE, MESSAG, REC_NO, OUNT, 'Y' )
+!         FATAL_ERR = FATAL_ERR + 1
+!      ENDIF
+!
+!      ! Remove any comments within the CARD by deleting everything fro $ on (after col 1)
+!      COMMENT_COL = 1
+!      DO I=2,BD_ENTRY_LEN
+!         IF (TCARD(I:I) == '$') THEN
+!            COMMENT_COL = I
+!            EXIT
+!         ENDIF
+!      ENDDO
+!
+!      IF (COMMENT_COL > 1) THEN
+!         TCARD(COMMENT_COL:) = ' '
+!      ENDIF
 
-      ! Remove any comments within the CARD by deleting everything fro $ on (after col 1)
-      COMMENT_COL = 1
-      DO I=2,BD_ENTRY_LEN
-         IF (TCARD(I:I) == '$') THEN
-            COMMENT_COL = I
-            EXIT
-         ENDIF
-      ENDDO
-
-      IF (COMMENT_COL > 1) THEN
-         TCARD(COMMENT_COL:) = ' '
-      ENDIF
 
 ! Make JCARD for TCARD above and get FFIELD to left adjust and fix-field it (if necessary).
 !xx CODE COMMENTED OUT IS REPLACED WITH CODE BELOW IT
@@ -131,6 +132,9 @@
          CARD = TCARD
       ELSE
          BACKSPACE(IN1)
+         REC_NO = -99
+         CALL READERR (IOCHK, INFILE, MESSAG, REC_NO, OUNT, 'Y')
+         FATAL_ERR = FATAL_ERR + 1
       ENDIF
 
 
@@ -144,7 +148,7 @@
       RETURN
 
 ! **********************************************************************************************************************************
-  101 FORMAT(A)
+!  101 FORMAT(A)
 
 ! **********************************************************************************************************************************
 
