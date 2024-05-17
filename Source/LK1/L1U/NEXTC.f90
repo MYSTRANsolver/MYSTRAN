@@ -78,10 +78,8 @@
       CALL MKJCARD ( SUBR_NAME, CARD, JCARD )
       
       ! copy jcard to jcard0 in case we have an error
-      !write(err,*) 'nextc: jcard0:'
       DO I=1,10
           JCARD0(I) = JCARD(I)
-          !write(err,*) '  i=', i, jcard(i)
       ENDDO
 
       !------------------------
@@ -89,65 +87,11 @@
 
       ! OLDTAG is field 10 of the current card coming into this subr
       OLDTAG = JCARD(10)
-      !MESSAG = 'BULK DATA CARD          '
 
       ! Read next card
       CALL READ_BDF_LINE(IN1, IOCHK, TCARD)
       CARD_IN = TCARD
-      !IF (IOCHK /= 0) THEN
-      !   REC_NO = -99
-      !   CALL READERR ( IOCHK, INFILE, MESSAG, REC_NO, OUNT, 'Y' )
-      !   FATAL_ERR = FATAL_ERR + 1
-      !ENDIF
-      
-      ! we (maybe) found a comment line inside the card
-      ! loop until we find a non-comment line using the same
-      ! block as above
-      !
-      ! NOTE: comment lines must start with a $, so a space is
-      !       not considered a comment
-      !write(err,*) 'nextc: flag0=',TCARD(1:1)
-!     NREADS = 1
-!      DO WHILE (TCARD(1:1) == '$')
-!         ! Read next card line
-!         
-!         CALL READ_BDF_LINE(IN1, IOCHK, TCARD)
-!         CARD_IN = TCARD
-!         IF (IOCHK /= 0) THEN
-!            REC_NO = -99
-!            CALL READERR ( IOCHK, INFILE, MESSAG, REC_NO, OUNT, 'Y' )
-!            FATAL_ERR = FATAL_ERR + 1
-!         ENDIF
-!         write(err,*) 'nextc flag=',TCARD(1:1)
-!         NREADS = NREADS + 1
-!      ENDDO
-!
-!      ! Remove any comments within the CARD by deleting everything 
-!      ! from $ on (after col 1)
-!      COMMENT_COL = 1
-!      DO I=2,BD_ENTRY_LEN
-!         IF (TCARD(I:I) == '$') THEN
-!            COMMENT_COL = I
-!            EXIT
-!         ENDIF
-!      ENDDO
-
-!      IF (COMMENT_COL > 1) THEN
-!         TCARD(COMMENT_COL:) = ' '
-!      ENDIF
-      
-      !write(err,*) 'nextc: tcard=',TCARD
-      !write(err,*) 'nextc: nReads=',NREADS
       NEWCHAR = TCARD(1:1)
-!     IF ((NEWCHAR /= ' ') .AND. (NEWCHAR /= '+') .AND. (NEWCHAR /= '$')) THEN  ! CBAR, PBAR, LOAD...
-!        ! different card type (e.g., LOAD -> FORCE
-!        CARD = CARD_IN
-!        write(err,*) 'nextc: backspace 1 line...'
-!        !DO I=1,NREADS-1
-!        BACKSPACE(IN1)
-!        !ENDDO
-!        return
-!     ENDIF
       !
       ! Make JCARD for TCARD above and get FFIELD to left adjust and
       ! fix-field it (if necessary).
@@ -164,40 +108,29 @@
       CALL MKJCARD ( SUBR_NAME, TCARD, JCARD )
       NEWTAG = JCARD(1)
 
-      !write(err,*) 'nextc newtag=',NEWTAG
-      !write(err,*) 'nextc oldtag=',OLDTAG
       ! do i need to flag this?
       ! (NEWTAG(1:1) /= '*')
       IF ((NEWTAG(1:1) /= ' ') .AND. (NEWTAG(1:1) /= '+') .AND. (NEWTAG(1:1) /= '$')) THEN
          ! different card type (e.g., LOAD -> FORCE
-         !write(err,*) 'nextc out A: different card type'
          CARD = CARD_IN
          BACKSPACE(IN1)
-         !write(err,*) 'CARD=',CARD
-         !write(err,*) 'returning nextc='
-         !flush(err)
          return
 
       ELSE IF (NEWTAG == OLDTAG) THEN
-         !write(err,*) 'nextc out B'
          ICONTINUE = 1
       ELSE IF ((OLDTAG(1:1) == '+') .AND. (NEWTAG(1:1) == ' ') .AND. (OLDTAG(2:8) == NEWTAG(2:8))) THEN
          ! small field
-         !write(err,*) 'nextc out C'
          ICONTINUE = 1
       ELSE IF ((OLDTAG(1:1) == ' ') .AND. (NEWTAG(1:1) == '+') .AND. (OLDTAG(2:8) == NEWTAG(2:8))) THEN
          ! small field
-         !write(err,*) 'nextc out D'
          ICONTINUE = 1
       ELSE IF ((NEWTAG(1:1) /= ' ') .AND. (NEWTAG(1:1) /= '+') .AND. (NEWTAG(1:1) /= '$')) THEN
          ! different card type (e.g., LOAD -> FORCE
-         !write(err,*) 'nextc out E'
          BACKSPACE(IN1)
          CARD = TCARD
          RETURN
       ELSE
          ! can't find the continuation marker.  FATAL :)
-         !write(err,*) 'nextc out F'
          BACKSPACE(IN1)
          WRITE(F06,102) OLDTAG
          WRITE(ERR,102) OLDTAG
@@ -217,9 +150,6 @@
       IF (ECHO(1:4) /= 'NONE') THEN
           WRITE(F06, 101) CARD_IN
       ENDIF
-      !write(err,*) 'nextc: CARD=',CARD
-      !write(err,*) 'nextc: ICONTINUE=',ICONTINUE
-      !write(err,*) 'nextc: end'
       FLUSH(ERR)
 
 ! **********************************************************************************************************************************

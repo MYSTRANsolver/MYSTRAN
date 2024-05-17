@@ -72,42 +72,37 @@
       ENDIF
 
 ! **********************************************************************************************************************************
-! PBAR Bulk Data Card routine
- 
-!   FIELD   ITEM                                            ARRAY ELEMENT
-!   -----   ----                                            -------------
-!    2      Property ID                                     PBAR(npbar, 1)
-!    3      Material ID                                     PBAR(npbar, 2)
-!    4      Area                                           RPBAR(npbar, 1)
-!    5      Inertia 1, I1                                  RPBAR(npbar, 2)
-!    6      Inertia 2, I2                                  RPBAR(npbar, 3)
-!    7      Torsional constant, J                          RPBAR(npbar, 4)
-!    8      Non-structural mass                            RPBAR(npbar, 5)
-
-! on optional second card:
-!    2      Y1 y coord of 1st point for stress recovery)   RPBAR(npbar, 6)
-!    3      Z1 z coord of 1st point for stress recovery)   RPBAR(npbar, 7)
-!    4      Y2 y coord of 2nd point for stress recovery)   RPBAR(npbar, 8)
-!    5      Z2 z coord of 2nd point for stress recovery)   RPBAR(npbar, 9)
-!    6      Y3 y coord of 3rd point for stress recovery)   RPBAR(npbar,10)
-!    7      Z3 z coord of 3rd point for stress recovery)   RPBAR(npbar,11)
-!    8      Y4 y coord of 4th point for stress recovery)   RPBAR(npbar,12)
-!    9      Z4 z coord of 4th point for stress recovery)   RPBAR(npbar,13)
-! on optional third card:
-!    2      K1, Plane 1 shear factor                       RPBAR(npbar,14)
-!    3      K2, Plane 2 shear factor                       RPBAR(npbar,15)
-!    4      I12, Product of inertia                        RPBAR(npbar,16)
-!    5      C Torsional stress recovery coefficient        RPBAR(npbar,17)
-
-
+      ! PBAR Bulk Data Card routine
+      !
+      !   FIELD   ITEM                                            ARRAY ELEMENT
+      !   -----   ----                                            -------------
+      !    2      Property ID                                     PBAR(npbar, 1)
+      !    3      Material ID                                     PBAR(npbar, 2)
+      !    4      Area                                           RPBAR(npbar, 1)
+      !    5      Inertia 1, I1                                  RPBAR(npbar, 2)
+      !    6      Inertia 2, I2                                  RPBAR(npbar, 3)
+      !    7      Torsional constant, J                          RPBAR(npbar, 4)
+      !    8      Non-structural mass                            RPBAR(npbar, 5)
+      !
+      ! on optional second card:
+      !    2      Y1 y coord of 1st point for stress recovery)   RPBAR(npbar, 6)
+      !    3      Z1 z coord of 1st point for stress recovery)   RPBAR(npbar, 7)
+      !    4      Y2 y coord of 2nd point for stress recovery)   RPBAR(npbar, 8)
+      !    5      Z2 z coord of 2nd point for stress recovery)   RPBAR(npbar, 9)
+      !    6      Y3 y coord of 3rd point for stress recovery)   RPBAR(npbar,10)
+      !    7      Z3 z coord of 3rd point for stress recovery)   RPBAR(npbar,11)
+      !    8      Y4 y coord of 4th point for stress recovery)   RPBAR(npbar,12)
+      !    9      Z4 z coord of 4th point for stress recovery)   RPBAR(npbar,13)
+      ! on optional third card:
+      !    2      K1, Plane 1 shear factor                       RPBAR(npbar,14)
+      !    3      K2, Plane 2 shear factor                       RPBAR(npbar,15)
+      !    4      I12, Product of inertia                        RPBAR(npbar,16)
+      !    5      C Torsional stress recovery coefficient        RPBAR(npbar,17)
       EPS1 = EPSIL(1)
       CHILD(1:) = ' '
 
       ! Make JCARD from CARD
       CALL MKJCARD ( SUBR_NAME, CARD, JCARD )
-      
-      !write(err,*) 'BD_PBAR A'
-      !flush(err)
 
       ! Check for overflow
       NPBAR = NPBAR+1
@@ -158,17 +153,11 @@
       I12 = ZERO
 
       IF (LARGE_FLD_INP == 'N') THEN
-         !write(err,*) 'bd_pbar A: nextc'
-         !flush(err)
          CALL NEXTC  ( CARD, ICONT, IERR )                 ! Read 2nd card
       ELSE
-         !write(err,*) 'bd_pbar B: nextc2'
-         !flush(err)
          CALL NEXTC2 ( CARD, ICONT, IERR, CHILD )
          CARD = CHILD
       ENDIF
-      !write(err,*) 'bd_pbar  CARD=',CARD
-      !write(err,*) 'bd_pbar  ICONT=',ICONT
       CALL MKJCARD ( SUBR_NAME, CARD, JCARD )
 
       IF (ICONT == 1) THEN
@@ -179,10 +168,8 @@
          CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
 
          IF (LARGE_FLD_INP == 'N') THEN
-            write(err,*) 'nextc'
             CALL NEXTC  ( CARD, ICONT, IERR )              ! Read 3rd card
          ELSE
-            write(err,*) 'nextc2'
             CALL NEXTC2 ( CARD, ICONT, IERR, CHILD )
             CARD = CHILD
          ENDIF

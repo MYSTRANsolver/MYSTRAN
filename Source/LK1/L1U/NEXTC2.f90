@@ -62,10 +62,8 @@
       ! Initialize
       IERR = 0
       ICONTINUE = 0
-!      NEWCHAR = ' '
       CHILD(1:) = 'z'
       OLDTAG(1:) = ' '
-      !write(err,*) 'nextc2: starting'
 
       IERR  = 0
 
@@ -80,17 +78,8 @@
       ! Read next card. If it is a continuation to the parent it will
       ! be the 1st half of the whole continuation
       CALL READ_BDF_LINE(IN1, IOCHK, CHILD1)
-      !write(err,*) 'nextc2: child1=',child1
-!     IF (IOCHK /= 0) THEN
-!        REC_NO = -99
-!        CALL READERR ( IOCHK, INFILE, 'BULK DATA CARD', REC_NO, OUNT, 'Y' )
-!        FATAL_ERR = FATAL_ERR + 1
-!        RETURN
-!     ENDIF
-      NEWTAG = CHILD1(1:8)
-      !write(err,*) 'nextc2: OLDTAG=',OLDTAG
-      !write(err,*) 'nextc2: NEWTAG=',NEWTAG
 
+      NEWTAG = CHILD1(1:8)
       IF (NEWTAG == OLDTAG) THEN
          ICONTINUE = 1
       ELSE IF ((OLDTAG(1:1) == '*') .AND. (NEWTAG(1:1) == ' ') .AND. (OLDTAG(2:8) == NEWTAG(2:8))) THEN
@@ -98,60 +87,16 @@
       ELSE IF ((OLDTAG(1:1) == ' ') .AND. (NEWTAG(1:1) == '*') .AND. (OLDTAG(2:8) == NEWTAG(2:8))) THEN
          ICONTINUE = 1
       ELSE
-         !write(err,*) 'nextc2: A: backspace 1 line...'
          BACKSPACE(IN1)
          RETURN
       ENDIF 
 
       ! Read 2nd half of continuation entry, if it exists
       CALL READ_BDF_LINE(IN1, IOCHK, CHILD2)
-      !write(err,*) 'nextc2: child2=',child2
-!     IF (IOCHK /= 0) THEN
-!        REC_NO = -99
-!        CALL READERR ( IOCHK, INFILE, 'BULK DATA CARD', REC_NO, OUNT, 'Y' )
-!        FATAL_ERR = FATAL_ERR + 1
-!        RETURN
-!     ENDIF
+
       OLDTAG = CHILD1(73:80)
       NEWTAG = CHILD2( 1: 8)
-
       ICONTINUE = 0
-      
-!     IF ((NEWTAG(1:1) /= ' ') .AND. (NEWTAG(1:1) /= '+') .AND. (NEWTAG(1:1) /= '$')) THEN
-!        ! different card type (e.g., LOAD -> FORCE
-!        BACKSPACE(IN1)
-!        !write(err,*) 'CARD=',CARD
-!        !write(err,*) 'returning nextc='
-!        !flush(err)
-!        !return
-!     ELSE IF (NEWTAG == OLDTAG) THEN
-!        ICONTINUE = 1
-!     ELSE IF ((OLDTAG(1:1) == '*') .AND. (NEWTAG(1:1) == ' ') .AND. (OLDTAG(2:8) == NEWTAG(2:8))) THEN
-!        ! small field
-!        ICONTINUE = 1
-!     ELSE IF ((OLDTAG(1:1) == ' ') .AND. (NEWTAG(1:1) == '*') .AND. (OLDTAG(2:8) == NEWTAG(2:8))) THEN
-!        ! small field
-!        ICONTINUE = 1
-!     !ELSE IF ((NEWTAG(1:1) /= ' ') .AND. (NEWTAG(1:1) /= '+') .AND. (NEWTAG(1:1) /= '$')) THEN
-!     !   ! different card type (e.g., LOAD -> FORCE
-!     !   BACKSPACE(IN1)
-!     ELSE
-!        ! can't find the continuation marker.  FATAL :)
-!        BACKSPACE(IN1)
-!        WRITE(F06,102) OLDTAG
-!        WRITE(ERR,102) OLDTAG
-!        WRITE(F06,103)
-!        WRITE(ERR,103)
-!        WRITE(F06,104) 'FIELDS1:', JCARD0
-!        WRITE(ERR,104) 'FIELDS1:', JCARD0
-!        WRITE(F06,104) 'FIELDS2:', JCARD
-!        WRITE(ERR,104) 'FIELDS2:', JCARD
-!        FLUSH(F06)
-!        FLUSH(ERR)
-!        FATAL_ERR = FATAL_ERR + 1
-!        CALL OUTA_HERE('Y')  ! FATAL error
-!        RETURN
-!     ENDIF
 
 
      IF (NEWTAG == OLDTAG) THEN
@@ -161,27 +106,12 @@
      ELSE IF ((OLDTAG(1:1) == ' ') .AND. (NEWTAG(1:1) == '*') .AND. (OLDTAG(2:8) == NEWTAG(2:8))) THEN
         ICONTINUE = 1
      ELSE
-        !write(err,*) 'nextc2: B: backspace 1 line...'
         BACKSPACE(IN1)
         CHILD2(1:) = ' '
         ICONTINUE = 1
         CALL FFIELD2 ( CHILD1, CHILD2, CHILD, IERR )
         RETURN
      ENDIF
-
-!     ! Remove any comments within CHILD2 by deleting everything from $ on (after col 1).
-!     ! NOTE: CHILD1 cannot have  comments since the last field is used for NEWTAG above
-!     COMMENT_COL = 1
-!     DO I=2,BD_ENTRY_LEN
-!        IF (CHILD2(I:I) == '$') THEN
-!           COMMENT_COL = I
-!           EXIT
-!        ENDIF
-!     ENDDO
-!
-!     IF (COMMENT_COL > 1) THEN
-!        CHILD2(COMMENT_COL:) = ' '
-!     ENDIF
 
       ! Call FFIELD2 to put the 2 CHILDi's together and left justify
       CALL FFIELD2(CHILD1, CHILD2, CHILD, IERR)

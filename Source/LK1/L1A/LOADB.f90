@@ -155,7 +155,6 @@
 bdf:  DO
 
          CALL READ_BDF_LINE(IN1, IOCHK, CARD1)
-         !write(err,*) 'load_bulk: ', card1
 
          ! Must have this since CARD goes to BD_xxxx, not CARD1.
          ! This will get reset if CARD1 is a large field format
@@ -182,18 +181,6 @@ bdf:  DO
          IF (ECHO /= 'NONE  ') THEN
             WRITE(F06,101) CARD1
          ENDIF
- 
-         ! Remove any comments within the card by deleting everything from $ on (after col 1)
-         !COMMENT_COL = 1
-         !DO I=2,BD_ENTRY_LEN
-         !   IF (CARD1(I:I) == '$') THEN
-         !      COMMENT_COL = I
-         !      EXIT
-         !   ENDIF
-         !ENDDO
-         !IF (COMMENT_COL > 1) THEN
-         !   CARD1(COMMENT_COL:) = ' '
-         !ENDIF
 
          ! Determine if the card is large or small format
          LARGE_FLD_INP = 'N'
@@ -213,9 +200,6 @@ bdf:  DO
             ELSE
                ! Read 2nd physical entry for a large field parent B.D. entry
                CALL READ_BDF_LINE(IN1, IOCHK, CARD2)
-               !write(err,*) 'load_bulk A1: card =', card
-               !write(err,*) 'load_bulk A2: card1=', card1
-               !write(err,*) 'load_bulk A2: card2=', card2
 
                IF (IOCHK < 0) THEN
                   WRITE(ERR,1011) END_CARD
@@ -235,47 +219,21 @@ bdf:  DO
                IF (ECHO /= 'NONE  ') THEN
                   WRITE(F06,101) CARD2
                ENDIF
- 
-               !COMMENT_COL = 1
-               !DO I=2,BD_ENTRY_LEN
-               !   IF (CARD2(I:I) == '$') THEN
-               !      COMMENT_COL = I
-               !      EXIT
-               !   ENDIF
-               !ENDDO
-               !
-               !IF (COMMENT_COL > 1) THEN
-               !   CARD2(COMMENT_COL:) = ' '
-               !ENDIF
-
-!xx            IF (CARD2(1:8) /= CARD1(73:80)) THEN
-!xx               BACKSPACE(IN1)
-!xx               CARD2(1:) = ' '
-!xx               CARD2(1:8) = CARD1(73:80)
-!xx            ENDIF
 
                IF      (CARD2( 1: 8) == CARD1(73:80)) THEN
-                  !write(err,*) 'load_bulk: continue A'
                   CONTINUE
                ELSE IF ((CARD2( 1: 1) == '*') .AND. (CARD1(73:73) == ' ') .AND. (CARD2(2:8) == CARD1(74:80))) THEN
-                  !write(err,*) 'load_bulk: continue B'
                   CONTINUE
                ELSE IF ((CARD2( 1: 1) == ' ') .AND. (CARD1(73:73) == '*') .AND. (CARD2(2:8) == CARD1(74:80))) THEN
-                  !write(err,*) 'load_bulk: continue C'
                   CONTINUE
                ELSE
                   ! CARD2 is not a continuation of CARD1 so backspace IN1
-                  !write(err,*) 'load_bulk: continue D'
                   BACKSPACE(IN1)
                   CARD2(1:) = ' '
                   CARD2(1:8) = CARD1(73:80)
                ENDIF
 
                CALL FFIELD2 ( CARD1, CARD2, CARD, IERR )
-               !write(err,*) 'load_bulk B1: card =', card
-               !write(err,*) 'load_bulk B2: card1=', card1
-               !write(err,*) 'load_bulk B3: card2=', card2
-
             ENDIF
 
             IF (IERR /= 0) THEN

@@ -281,17 +281,11 @@
  
       ! Optional Second Card:
       IF (LARGE_FLD_INP == 'N') THEN
-         !write(err,*) 'bd_cbar A: nextc'
-         flush(err)
          CALL NEXTC  ( CARD, ICONT, IERR )
       ELSE
-         !write(err,*) 'bd_cbar B: nextc2'
-         flush(err)
          CALL NEXTC2 ( CARD, ICONT, IERR, CHILD )
          CARD = CHILD
       ENDIF
-      !write(err,*) 'bd_cbar  CARD=',CARD
-      !write(err,*) 'bd_cbar  ICONT=',ICONT
       CALL MKJCARD ( SUBR_NAME, CARD, JCARD )
 
       IF (ICONT == 1) THEN
