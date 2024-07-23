@@ -1,0 +1,18 @@
+[project]
+name = "MYSTRAN"
+version = "0.1.0"
+description = "Add a short description here"
+authors = ["looooo <sppedflyer@gmail.com>"]
+channels = ["conda-forge", "freecad/label/dev"]
+platforms = ["osx-arm64"]
+
+[tasks]
+initialize = { cmd = ["git", "submodule", "update", "--init", "--recursive"]}
+configure = { cmd = ["cmake", "-B", "build", "-S", ".",
+     						  "-D", "CMAKE_BUILD_TYPE=Release",
+      						  "-D", "CMAKE_INSTALL_PREFIX:FILEPATH=$CONDA_PREFIX"], depends-on = ["initialize"]}
+build = { cmd = ["make", "-C", "build", "-j", "2", "install"], depends-on = ["configure"]}
+
+[dependencies]
+compilers = ">=1.8.0,<2"
+cmake = ">=3.31.2,<4"
