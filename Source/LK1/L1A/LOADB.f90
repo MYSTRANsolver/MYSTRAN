@@ -1123,9 +1123,15 @@ j_do2:            DO J=2,LMPCADDC
       CHARACTER(26), parameter   :: LOW = 'abcdefghijklmnopqrstuvwxyz'
       
       DO I = 1,256
+          ! remove $
+          IF (LINE(I:I) == '$') THEN
+              LINE(I:) = ' '
+              GOTO 100 ! break
+          ENDIF
+
           J = index(LOW, LINE(I:I))      ! Is ith character in LOW
           IF (J>0) LINE(I:I) = UPP(J:J)  ! Yes, then subst with UPP
-      ENDDO
+  100 ENDDO
       END SUBROUTINE TO_UPPER_LINE
       !end function to_upper
 
@@ -1179,5 +1185,4 @@ j_do2:            DO J=2,LMPCADDC
   100 ENDDO
 
   101 FORMAT(A)
-      !write(err,*) 'returning:', LINE
       END SUBROUTINE READ_BDF_LINE

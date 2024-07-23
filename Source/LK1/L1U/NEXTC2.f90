@@ -65,7 +65,7 @@
       CHILD(1:) = 'z'
       OLDTAG(1:) = ' '
 
-      IERR  = 0
+      IERR = 0
 
       ! Make units for writing errors the error file and output file
       OUNT(1) = ERR
@@ -83,11 +83,30 @@
       IF (NEWTAG == OLDTAG) THEN
          ICONTINUE = 1
       ELSE IF ((OLDTAG(1:1) == '*') .AND. (NEWTAG(1:1) == ' ') .AND. (OLDTAG(2:8) == NEWTAG(2:8))) THEN
+         ! large field
          ICONTINUE = 1
       ELSE IF ((OLDTAG(1:1) == ' ') .AND. (NEWTAG(1:1) == '*') .AND. (OLDTAG(2:8) == NEWTAG(2:8))) THEN
+         ! large field
          ICONTINUE = 1
-      ELSE
+      ELSE IF ((NEWTAG(1:1) /= '*') .AND. (NEWTAG(1:1) /= '$')) THEN
+         ! different card type (e.g., LOAD -> FORCE
          BACKSPACE(IN1)
+         CARD = TCARD
+         RETURN
+      ELSE
+         ! can't find the continuation marker.  FATAL :)
+         BACKSPACE(IN1)
+         WRITE(F06,102) OLDTAG
+         WRITE(ERR,102) OLDTAG
+         WRITE(F06,103)
+         WRITE(ERR,103)
+         WRITE(F06,104) 'CHILD1:', CHILD1
+         WRITE(ERR,104) 'CHILD1:', CHILD1
+         FLUSH(F06)
+         FLUSH(ERR)
+         FATAL_ERR = FATAL_ERR + 1
+         CALL OUTA_HERE('Y')  ! FATAL error
+         RETURN
          RETURN
       ENDIF 
 
