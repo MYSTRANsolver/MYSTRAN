@@ -82,6 +82,9 @@
       INTEGER(LONG)                   :: IORD_K             ! Integration order in Z direction for PENTA elements
       INTEGER(LONG)                   :: INT41,INT42        ! An integer used in getting MATANGLE
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = EMG_BEGEND
+      
+      LOGICAL       :: DEBUG_PLATE_THETA  ! print the debug message
+      INTEGER(LONG) :: MAT_ANGLE_OFFSET   ! common variable name for quad/tri shell rotation
  
 ! **********************************************************************************************************************************
       EPNTK = EPNT(INT_ELEM_ID)
@@ -181,46 +184,50 @@
       IF (NUM_EMG_FATAL_ERRS > 0)   CALL EMG_QUIT
 
 ! **********************************************************************************************************************************
-! Generate element material matrices. Material matrices for shell elements with PCOMP props are generated elsewhere.
-! Matrices of material props are not generated for 1-D elements
+      ! Generate element material matrices.
+      ! Material matrices for shell elements with PCOMP props are generated elsewhere.
+      ! Matrices of material props are not generated for 1-D elements
 ! --------
 
       IF ((TYPE(1:5) == 'TRIA3') .OR. (TYPE(1:5) == 'QUAD4') .OR. (TYPE == 'SHEAR   ')) THEN
 
-         IF (PCOMP_PROPS == 'N') THEN                      ! SHEAR elem does not use PCOMP props
+         IF (PCOMP_PROPS == 'N') THEN
+            ! PSHELL/PSHEAR block (SHEAR elem does not use PCOMP props)
 
             THETAM = ZERO
-
-            IF      (TYPE(1:5) == 'QUAD4') THEN
-               INT41 = EDAT(EPNTK+DEDAT_Q4_MATANG_KEY)     ! Key to say whether matl angle is an actual angle or a coord ID
-               INT42 = EDAT(EPNTK+DEDAT_Q4_MATANG_KEY+1)   ! Key to say (if INT41 is neg) whether coord ID is basic or otherwise
-               IF      (INT41 >  0) THEN                   ! Angle is defined in array MATANGLE at row INT41
-                  LOC = '#1'
-                  THETAM = CONV_DEG_RAD*MATANGLE( INT41 )
-               ELSE IF (INT41 <  0) THEN                   ! Angle is defined by a coord sys ID whose value is -INT41
-                  LOC = '#2'
-                  CALL GET_MATANGLE_FROM_CID ( -INT41 )
-               ELSE IF (INT41 ==  0) THEN                  ! Angle is either specified as defined by basic coord sys or angle is 0.
-                  IF      (INT42 == 1) THEN
-                     LOC = '#3'
-                     CALL GET_MATANGLE_FROM_CID ( 0 )
-                  ELSE IF (INT42 == 0) THEN
-                     LOC = '#4'
-                     THETAM = ZERO
-                  ENDIF
+            IF (TYPE(1:5) == 'SHEAR') THEN
+               MAT_ANGLE_OFFSET = 0
+               INT41 = 0
+               INT42 = 0
+            ELSE
+               IF (TYPE(1:5) == 'QUAD4') THEN
+                  MAT_ANGLE_OFFSET = DEDAT_Q4_MATANG_KEY
+               ELSE IF (TYPE(1:5) == 'TRIA3') THEN
+                  MAT_ANGLE_OFFSET = DEDAT_T3_MATANG_KEY
+               ELSE
+                  WRITE(ERR,*) 'UNSUPPORTED EID=',EID,' ELEMENT_TYPE=',TYPE,' IN ',SUBR_NAME
+                  WRITE(F06,*) 'UNSUPPORTED EID=',EID,' ELEMENT_TYPE=',TYPE,' IN ',SUBR_NAME
+                  FATAL_ERR = FATAL_ERR + 1
+                  CALL OUTA_HERE ('Y')
                ENDIF
 
-            ELSE IF (TYPE(1:5) == 'TRIA3') THEN
-               INT41 = EDAT(EPNTK+DEDAT_T3_MATANG_KEY)     ! Key to say whether matl angle is an actual angle or a coord ID
-               INT42 = EDAT(EPNTK+DEDAT_T3_MATANG_KEY+1)   ! Key to say (if INT41 is neg) whether coord ID is basic or otherwise
-               IF      (INT41 >  0) THEN                   ! Angle is defined in array MATANGLE at row INT41
+               ! Key to say whether matl angle is an actual angle or a coord ID
+               INT41 = EDAT(EPNTK+MAT_ANGLE_OFFSET)
+               
+               ! Key to say (if INT41 is neg) whether coord ID is basic or otherwise
+               INT42 = EDAT(EPNTK+MAT_ANGLE_OFFSET+1)
+               
+               IF (INT41 >  0) THEN
+                  ! Angle is defined in array MATANGLE at row INT41
                   LOC = '#1'
                   THETAM = CONV_DEG_RAD*MATANGLE( INT41 )
-               ELSE IF (INT41 <  0) THEN                   ! Angle is defined by a coord sys ID whose value is -INT41
+               ELSE IF (INT41 <  0) THEN
+                  ! Angle is defined by a coord sys ID whose value is -INT41
                   LOC = '#2'
                   CALL GET_MATANGLE_FROM_CID ( -INT41 )
-               ELSE IF (INT41 ==  0) THEN                  ! Angle is either specified as defined by basic coord sys or angle is 0.
-                  IF      (INT42 == 1) THEN
+               ELSE IF (INT41 ==  0) THEN
+                  ! Angle is either specified as defined by basic coord sys or angle is 0.
+                  IF (INT42 == 1) THEN
                      LOC = '#3'
                      CALL GET_MATANGLE_FROM_CID ( 0 )
                   ELSE IF (INT42 == 0) THEN
@@ -230,9 +237,10 @@
                ENDIF
 
             ENDIF
-                                                           ! Use WRITE_WARN even though the following is not a warning message
-!                                                            this will allow THETAM to be printed out in only 1 call to EMG
-            IF ((DEBUG(112) > 0) .AND. (WRITE_WARN == 'Y')) THEN
+            ! Use WRITE_WARN even though the following is not a warning message
+            ! this will allow THETAM to be printed out in only 1 call to EMG
+            DEBUG_PLATE_THETA = (DEBUG(112) > 0)
+            IF (DEBUG_PLATE_THETA .AND. (WRITE_WARN == 'Y')) THEN
                IF (INT41 > 0) THEN
                   WRITE(F06,1001) TYPE, EID, CONV_RAD_DEG*THETAM, LOC, INT41, INT42
                ELSE
@@ -240,11 +248,11 @@
                ENDIF
             ENDIF
 
-            CALL MATERIAL_PROPS_2D ( WRITE_WARN )
-            CALL ROT_AXES_MATL_TO_LOC ( WRITE_WARN )
+            CALL MATERIAL_PROPS_2D (WRITE_WARN)
+            CALL ROT_AXES_MATL_TO_LOC (WRITE_WARN)
 
          ELSE
-
+            ! PCOMP block
             IF (TYPE(1:5) == 'QUAD4') THEN
                INT41 = EDAT(EPNTK+DEDAT_Q4_MATANG_KEY)
                INT42 = EDAT(EPNTK+DEDAT_Q4_MATANG_KEY+1)
@@ -277,8 +285,7 @@
          CALL ROT_AXES_MATL_TO_LOC ( WRITE_WARN )
       ENDIF
 
-! Call ELMOUT to output element data for item 0, 1
-
+      ! Call ELMOUT to output element data for item 0, 1
       IF (WRT_BUG(0) > 0) THEN
          CASE_NUM = 0
          DO I=0,MBUG-1
@@ -301,8 +308,8 @@
          CALL ELMOUT ( INT_ELEM_ID, DUM_BUG, CASE_NUM, OPT )
       ENDIF
 
-! Quick return if all OPT are 'N' (if we only need ELMDAT, ELMGMi called, and not all the other subr's which generate elem matrices
-
+      ! Quick return if all OPT are 'N' (if we only need ELMDAT, ELMGMi called,
+      ! and not all the other subr's which generate elem matrices
       IF ((OPT(1) == 'N') .AND. (OPT(2) == 'N') .AND. (OPT(3) == 'N') .AND. (OPT(4) == 'N') .AND. (OPT(5) == 'N') .AND.            &
           (OPT(6) == 'N')) THEN
          CALL OURTIM
@@ -311,21 +318,23 @@
       ENDIF 
 
 ! **********************************************************************************************************************************
-! For all but USERIN elem, call ELMDAT2 subr to get the rest of the data needed to calculate the matrices for this element. 
- 
-      IF ((TYPE(1:4) == 'ELAS'    ) .OR. (TYPE      == 'ROD     ') .OR. (TYPE == 'BAR     ') .OR. (TYPE == 'BEAM    ') .OR.        &
-          (TYPE(1:5) == 'TRIA3'   ) .OR. (TYPE(1:5) == 'QUAD4'   ) .OR. (TYPE == 'SHEAR   ') .OR. (TYPE == 'USER1   ') .OR.        &
-          (TYPE      == 'HEXA8   ') .OR. (TYPE      == 'HEXA20  ') .OR.                                                            &
-          (TYPE      == 'PENTA6  ') .OR. (TYPE      == 'PENTA15 ') .OR.                                                            &
-          (TYPE      == 'TETRA4  ') .OR. (TYPE      == 'TETRA10 ')) THEN
+       ! For all but USERIN elem, call ELMDAT2 subr to get the rest of the data
+       ! needed to calculate the matrices for this element.
+       IF ((TYPE(1:4) == 'ELAS'    ) .OR. (TYPE      == 'ROD     ') .OR.  &
+          (TYPE       == 'BAR     ') .OR. (TYPE      == 'BEAM    ') .OR.  &
+          (TYPE(1:5)  == 'TRIA3'   ) .OR. (TYPE(1:5) == 'QUAD4'   ) .OR.  & 
+          (TYPE       == 'SHEAR   ') .OR. (TYPE      == 'USER1   ') .OR.  &
+          (TYPE       == 'HEXA8   ') .OR. (TYPE      == 'HEXA20  ') .OR.  &
+          (TYPE       == 'PENTA6  ') .OR. (TYPE      == 'PENTA15 ') .OR.  &
+          (TYPE       == 'TETRA4  ') .OR. (TYPE      == 'TETRA10 ')) THEN
          CALL ELMDAT2 ( INT_ELEM_ID, OPT, WRITE_WARN )
       ENDIF
  
       IF (NUM_EMG_FATAL_ERRS > 0)   CALL EMG_QUIT
 
 ! **********************************************************************************************************************************
-! Now get the individual elem routines to calc the required elem matrices: ME and/or PTE and/or (SE1, SE2, STE1,STE2)
-! and/or KE).
+      ! Now get the individual elem routines to calc the required elem matrices:
+      ! ME and/or PTE and/or (SE1, SE2, STE1,STE2) and/or KE).
  
       IF (TYPE(1:4) == 'ELAS') THEN
          CALL ELAS1 ( OPT, WRITE_WARN )

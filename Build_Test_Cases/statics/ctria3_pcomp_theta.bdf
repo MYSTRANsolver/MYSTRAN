@@ -1,0 +1,53 @@
+$pyNastran: version=msc
+$pyNastran: punch=False
+$pyNastran: encoding=utf-8
+$pyNastran: nnodes=8
+$pyNastran: nelements=8
+$EXECUTIVE CONTROL DECK
+SOL 101
+CEND
+$CASE CONTROL DECK
+ECHO = NONE
+TITLE = pyNastran for generating solverinput for for Mystran
+SUBCASE 1
+    DISPLACEMENT(SORT1,REAL) = ALL
+    LOAD = 1
+    SPC = 1
+    SPCFORCES(SORT1,REAL) = ALL
+    STRESS(SORT1,REAL,VONMISES,BILIN) = ALL
+    SUBTITLE = Default
+BEGIN BULK
+$PARAMS
+PARAM       POST      -1
+$NODES
+GRID           1              0.      0.      0.
+GRID           2            100.      0.      0.
+GRID           3            100.     50.      0.
+GRID           4              0.     50.      0.
+GRID           5             50.      0.      0.
+GRID           6             50.     50.      0.
+GRID           7             25.     25.      0.
+GRID           8             75.     25.      0.
+$ELEMENTS
+CTRIA3         7       1       1       4       7     90.
+CTRIA3         8       1       5       1       7    180.
+CTRIA3         9       1       3       2       8     90.
+CTRIA3        10       1       2       5       8    180.
+CTRIA3        11       1       6       3       8
+CTRIA3        12       1       4       6       7
+CTRIA3        13       1       6       5       7     90.
+CTRIA3        14       1       5       6       8     90.
+$PROPERTIES
+PCOMP          1
+               1     .33     45.               1     .33     45.
+               1     .33     45.
+$MATERIALS
+MAT8           1 181000.  10300.     .28   7170.   7170.   5000.   1.6-9
+$LOADS
+LOAD           1      1.      1.       2
+FORCE          2       2              5.      0.      0.      1.
+FORCE          2       3              5.      0.      0.      1.
+$SPCs
+SPCADD         1       2
+SPC1           2  123456       1       4
+ENDDATA
