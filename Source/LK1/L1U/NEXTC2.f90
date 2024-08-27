@@ -91,17 +91,17 @@
       ELSE IF ((NEWTAG(1:1) /= '*') .AND. (NEWTAG(1:1) /= '$')) THEN
          ! different card type (e.g., LOAD -> FORCE
          BACKSPACE(IN1)
-         CARD = TCARD
+         CHILD = CHILD1
          RETURN
       ELSE
          ! can't find the continuation marker.  FATAL :)
          BACKSPACE(IN1)
-         WRITE(F06,102) OLDTAG
-         WRITE(ERR,102) OLDTAG
-         WRITE(F06,103)
-         WRITE(ERR,103)
-         WRITE(F06,104) 'CHILD1:', CHILD1
-         WRITE(ERR,104) 'CHILD1:', CHILD1
+         !WRITE(F06,102) OLDTAG
+         !WRITE(ERR,102) OLDTAG
+         !WRITE(F06,103)
+         !WRITE(ERR,103)
+         !WRITE(F06,104) 'CHILD1:', CHILD1
+         !WRITE(ERR,104) 'CHILD1:', CHILD1
          FLUSH(F06)
          FLUSH(ERR)
          FATAL_ERR = FATAL_ERR + 1
