@@ -10,6 +10,7 @@ Fixed:
 - [Cards may now have comments in them](https://github.com/MYSTRANsolver/MYSTRAN/pull/68)
 - [continuation & stress note bug fix](https://github.com/MYSTRANsolver/MYSTRAN/pull/58)
 - [added common READ_BDF_LINE subroutine](https://github.com/MYSTRANsolver/MYSTRAN/pull/71)
+- [Fix broken UTF-8 in some output files](https://github.com/MYSTRANsolver/MYSTRAN/pull/79)
 
 ## 15.2.0 (2024/4/7)
 
