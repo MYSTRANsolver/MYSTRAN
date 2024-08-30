@@ -26,8 +26,7 @@
  
       SUBROUTINE LOADE
  
-! LOADE reads in the EXEC CONTROL DECK
- 
+      ! LOADE reads in the EXEC CONTROL DECK
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
       USE IOUNT1, ONLY                :  WRT_ERR, WRT_LOG, ERR, F04, F06, IN1
       USE SCONTR, ONLY                :  BLNK_SUB_NAM, EC_ENTRY_LEN, CHKPNT, FATAL_ERR, WARN_ERR, JCARD_LEN, JF,     &
