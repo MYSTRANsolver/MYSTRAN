@@ -225,8 +225,10 @@
          CARD = CHILD
       ENDIF
       CALL MKJCARD ( SUBR_NAME, CARD, JCARD )
-      IF (ICONT == 1) THEN                                ! Since there is a cont entry we assume Ti are here
 
+      ! differential thickness is not supported
+      IF (.FALSE. .AND. (ICONT == 1)) THEN
+         ! Since there is a cont entry we assume Ti are here
          EDAT(NEDAT) = NPLATETHICK + 1
 
          DO J=4,6                                         ! Read 3 thicknesses
