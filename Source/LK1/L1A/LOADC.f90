@@ -25,9 +25,8 @@
 ! End MIT license text.                                                                                      
  
       SUBROUTINE LOADC
- 
-! LOADC reads in the CASE CONTROL DECK
- 
+
+      ! LOADC reads in the CASE CONTROL DECK
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
       USE IOUNT1, ONLY                :  BUGOUT, ERR, F04, F06, IN1, WRT_ERR, WRT_LOG
       USE SCONTR, ONLY                :  BLNK_SUB_NAM, CC_ENTRY_LEN, ENFORCED, FATAL_ERR, WARN_ERR, NSUB, NTSUB, PROG_NAME,        &
@@ -248,9 +247,8 @@ inner:         DO
          NSUB     = 1
          SCNUM(1) = 1
       ENDIF
- 
-! If SOL is modes or CB or buckilng, then a METH card should have been found in Case Control
- 
+
+      ! If SOL is modes or CB or buckilng, then a METH card should have been found in Case Control
       IF ((SOL_NAME(1:5) == 'MODES') .OR. (SOL_NAME(1:12) == 'GEN_CB_MODEL') .OR. (SOL_NAME(1:8) == 'BUCKLING')) THEN
          IF (CC_EIGR_SID == 0) THEN
              WRITE(ERR,1004)
@@ -259,23 +257,25 @@ inner:         DO
          ENDIF
       ENDIF
  
-! If SOL is buckling there should be 2 subcases; the first with a load and the second with a METH (METH checked above)
-! If any load, SPC or MPC is found in the 2nd subcase, make sure it is the same as in subcase 1
-
+     ! If SOL is buckling there should be 2 subcases; the first with a load 
+     ! and the second with a METH (METH checked above)
+     ! If any load, SPC or MPC is found in the 2nd subcase, make sure it is 
+     ! the same as in subcase 1
       IF (SOL_NAME == 'BUCKLING') THEN
          IF (NSUB /= 2) THEN                               ! Check for 2 subcases
             WRITE(ERR,1101) NSUB
             WRITE(F06,1101) NSUB
             FATAL_ERR = FATAL_ERR + 1
          ENDIF
-                                                           ! Check that subcase 1 has a mechanical or thermal load
+         ! Check that subcase 1 has a mechanical or thermal load
          IF ((SUBLOD(1,1) == 0) .AND. (SUBLOD(1,2) == 0)) THEN
             WRITE(ERR,1101)
             WRITE(F06,1101)
             FATAL_ERR = FATAL_ERR + 1
          ENDIF
 
-         DO I = 1,2                                         ! Check the 2 subcases for identical loading (if S/C 2 has any stated)
+         ! Check the 2 subcases for identical loading (if S/C 2 has any stated)
+         DO I = 1,2
             IF (SUBLOD(2,I) /= 0) THEN
                IF (SUBLOD(2,I) /= SUBLOD(1,I)) THEN
                   WRITE(ERR,1102)
@@ -303,8 +303,8 @@ inner:         DO
 
       ENDIF
 
-! Make sure that NTSUB <= NSUB (if user had more TEMP cards in C.C. than subcases, this will give problems with size of TCASE2)
-
+      ! Make sure that NTSUB <= NSUB (if user had more TEMP cards in C.C.
+      ! than subcases, this will give problems with size of TCASE2)
       IF (NTSUB > NSUB) THEN
          FATAL_ERR = FATAL_ERR + 1
          WRITE(ERR,1803) NTSUB, NSUB
@@ -312,9 +312,8 @@ inner:         DO
       ENDIF 
 
 
-! Make sure that, if there are more than 1 of SPC or MPC set requests in Case Control, that all (nonzero) are the same. Otherwise
-! issue error.
-
+     ! Make sure that, if there are more than 1 of SPC or MPC set requests
+     ! in Case Control, that all (nonzero) are the same. Otherwise issue error.
       SPCSET = SPCSETS(1)
       DO I=2,NSUB
          IF (SPCSETS(I) /= 0) THEN
@@ -326,9 +325,8 @@ inner:         DO
          ENDIF
       ENDDO
 
-! Make sure that, if there are more than 1 of MPC or MPC set requests in Case Control, that all (nonzero) are the same. Otherwise
-! issue error.
-
+      ! Make sure that, if there are more than 1 of MPC or MPC set requests in
+      ! Case Control, that all (nonzero) are the same. Otherwise issue error.
       MPCSET = MPCSETS(1)
       DO I=2,NSUB
          IF (MPCSETS(I) /= 0) THEN

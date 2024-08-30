@@ -147,8 +147,8 @@
 
       ELEM_NUM_GRDS = 0
       NUM_QUADS     = 0
-      MELGP         = 2                                    ! This max num grids/elem DOF's covers all 2 node/6 comp per node elems
-      MELDOF        = 12                                   ! (other elems will be checked and MELGP, MELDOF reset if necessary)
+      MELGP         = 2   ! This max num grids/elem DOF's covers all 2 node/6 comp per node elems
+      MELDOF        = 12  ! (other elems will be checked and MELGP, MELDOF reset if necessary)
 
       ! Process Bulk Data cards in a large loop that runs until either an 
       ! ENDDATA card is found or when an error or EOF/EOR occurs
@@ -181,19 +181,6 @@ bdf:  DO
          IF (ECHO /= 'NONE  ') THEN
             WRITE(F06,101) CARD1
          ENDIF
- 
-         ! Remove any comments within the card by deleting everything from $ on (after col 1)
-         COMMENT_COL = 1
-         DO I=2,BD_ENTRY_LEN
-            IF (CARD1(I:I) == '$') THEN
-               COMMENT_COL = I
-               EXIT
-            ENDIF
-         ENDDO
-
-         IF (COMMENT_COL > 1) THEN
-            CARD1(COMMENT_COL:) = ' '
-         ENDIF
 
          ! Determine if the card is large or small format
          LARGE_FLD_INP = 'N'
@@ -210,11 +197,10 @@ bdf:  DO
             IF (LARGE_FLD_INP == 'N') THEN
                CALL FFIELD ( CARD1, IERR )
                CARD(1:) = CARD1(1:)
-
             ELSE
                ! Read 2nd physical entry for a large field parent B.D. entry
-               CALL READ_BDF_LINE(IN1, IOCHK, CARD1)
- 
+               CALL READ_BDF_LINE(IN1, IOCHK, CARD2)
+
                IF (IOCHK < 0) THEN
                   WRITE(ERR,1011) END_CARD
                   WRITE(F06,1011) END_CARD
@@ -233,24 +219,6 @@ bdf:  DO
                IF (ECHO /= 'NONE  ') THEN
                   WRITE(F06,101) CARD2
                ENDIF
- 
-               COMMENT_COL = 1
-               DO I=2,BD_ENTRY_LEN
-                  IF (CARD2(I:I) == '$') THEN
-                     COMMENT_COL = I
-                     EXIT
-                  ENDIF
-               ENDDO
-
-               IF (COMMENT_COL > 1) THEN
-                  CARD2(COMMENT_COL:) = ' '
-               ENDIF
-
-!xx            IF (CARD2(1:8) /= CARD1(73:80)) THEN
-!xx               BACKSPACE(IN1)
-!xx               CARD2(1:) = ' '
-!xx               CARD2(1:8) = CARD1(73:80)
-!xx            ENDIF
 
                IF      (CARD2( 1: 8) == CARD1(73:80)) THEN
                   CONTINUE
@@ -258,14 +226,14 @@ bdf:  DO
                   CONTINUE
                ELSE IF ((CARD2( 1: 1) == ' ') .AND. (CARD1(73:73) == '*') .AND. (CARD2(2:8) == CARD1(74:80))) THEN
                   CONTINUE
-               ELSE                                        ! CARD2 is not a continuation of CARD1 so backspace IN1
+               ELSE
+                  ! CARD2 is not a continuation of CARD1 so backspace IN1
                   BACKSPACE(IN1)
                   CARD2(1:) = ' '
                   CARD2(1:8) = CARD1(73:80)
                ENDIF
 
                CALL FFIELD2 ( CARD1, CARD2, CARD, IERR )
-
             ENDIF
 
             IF (IERR /= 0) THEN
@@ -282,6 +250,7 @@ bdf:  DO
          ENDIF
  
          ! Process Bulk Data card
+         !write(err,*) 'cardname', card
          IF((     CARD(1:5) == 'ASET '   ) .OR. (CARD(1:5) == 'ASET*'   ) .OR.                                                     &
                  (CARD(1:5) == 'OMIT '   ) .OR. (CARD(1:5) == 'OMIT*'   )) THEN 
             CALL BD_ASET    ( CARD )
@@ -615,11 +584,19 @@ bdf:  DO
 
          ELSE IF (CARD(1:7) == 'ENDDATA' )  THEN 
             EXIT
+         ELSE IF ((CARD(1:1) == ' ') .OR. (CARD(1:1) == '+') .OR. (CARD(1:1) == '*'))  THEN 
+            WRITE(ERR,*) 'FAILED WHEN FINDING A CONTINUATION'
+            WRITE(F06,*) 'FAILED WHEN FINDING A CONTINUATION'
+            WRITE(ERR,'(A)') CARD2
+            WRITE(F06,'(A)') CARD2
+            FATAL_ERR = FATAL_ERR + 1
 
          ELSE                                              ! CARD not processed by MYSTRAN
             WARN_ERR = WARN_ERR + 1
+            write(err,*) 'card name not found...'
             WRITE(ERR,101) CARD
             WRITE(ERR,9993) PROG_NAME
+            flush(err)
             IF (SUPWARN == 'N') THEN
                IF (ECHO == 'NONE  ') THEN
                   WRITE(F06,101) CARD
@@ -633,8 +610,9 @@ bdf:  DO
 
 ! **********************************************************************************************************************************
 !///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-! Check to make sure there are no elemenmts not coded for DIFFEREN or BUCKLING solutions
-!  If there are, tell user that they have to recognize this. If they want to continue put DEBUG 201 w/val /= 0 entry in the BDF
+      ! Check to make sure there are no elemenmts not coded for DIFFEREN or BUCKLING solutions
+      !  If there are, tell user that they have to recognize this.
+      !  If they want to continue put DEBUG 201 w/val /= 0 entry in the BDF
 
       IF ((SOL_NAME(1:8) == 'DIFFEREN') .OR. (SOL_NAME(1:8) == 'BUCKLING')) THEN
          IF((NCTRIA3   > 0) .OR. (NCTRIA3K  > 0) .OR. (NCQUAD4   > 0) .OR. (NCQUAD4K  > 0) .OR. (NCSHEAR   > 0) .OR.               &
@@ -677,16 +655,15 @@ bdf:  DO
             ,'++++++++++++++++')
 !///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-! Check that, if there were PARTN requests in Exec Control (i.e. NUM_PARTN_REQUESTS > 0) that PARVEC,1 records were in Bulk Data
-
+      ! Check that, if there were PARTN requests in Exec Control
+      ! (i.e. NUM_PARTN_REQUESTS > 0) that PARVEC,1 records were in Bulk Data
       IF ((NUM_PARTN_REQUESTS > 0) .AND. (NUM_PARTVEC_RECORDS == 0)) THEN
          WRITE(ERR,1805) NUM_PARTN_REQUESTS
          WRITE(F06,1805) NUM_PARTN_REQUESTS
          FATAL_ERR = FATAL_ERR + 1
       ENDIF
 
-! Write PBAR equivalent props for the PBARL entries
-
+      ! Write PBAR equivalent props for the PBARL entries
       IF (NPBARL > 0) THEN
 
          IF (DEBUG(113) > 0) THEN
@@ -722,26 +699,23 @@ bdf:  DO
 
       ENDIF
 
-! Set MOFFSET based on the element type that requires the most offset points
-
+      ! Set MOFFSET based on the element type that requires the most offset points
       IF ((NCBAR   > 0) .OR. (NCBEAM  > 0) .OR. (NCBUSH   > 0) .OR. (NCROD    > 0)) MOFFSET = 2
       IF ((NCTRIA3 > 0) .OR. (NCTRIA3K > 0)) MOFFSET = 3
       IF ((NCQUAD4 > 0) .OR. (NCQUAD4K > 0)) MOFFSET = 4
 
-! Determine max num of indep grids on MPC's and rigid elems (for dimensioning array MPC_IND_GRIDS)
-
+      ! Determine max num of indep grids on MPC's and rigid elems
+      ! (for dimensioning array MPC_IND_GRIDS)
       LIND_GRDS_MPCS = NMPC*MMPC + 2*NRBAR + 6*NRBE1 + NRBE2 + 2*NRSPLINE
  
-! Determine the max number of BEi, SEi strain/stress recovery matrices will be needed for this execution
-
+      ! Determine the max number of BEi, SEi strain/stress recovery matrices
+      ! will be needed for this execution
       CALL CALC_MAX_STRESS_POINTS
 
-! Determine the max number of Gauss points that will be used in this execution
-
+      ! Determine the max number of Gauss points that will be used in this execution
       CALL CALC_MAX_GAUSS_POINTS
 
-! Give warning if there are any SPOINT's
-
+      ! Give warning if there are any SPOINT's
       IF (NSPOINT > 0) THEN
          WARN_ERR = WARN_ERR + 1
          WRITE(ERR,9994) NSPOINT
@@ -750,8 +724,8 @@ bdf:  DO
          ENDIF
       ENDIF
 
-! Give error if more than 1 BAROR, BEAMOR or GRDSET card was in Bulk Data (these counted by BD_BAROR0, BD_BEAMOR0, BD_GRDSET0)
-
+      ! Give error if more than 1 BAROR, BEAMOR or GRDSET card was in 
+      ! Bulk Data (these counted by BD_BAROR0, BD_BEAMOR0, BD_GRDSET0)
       IF (NBAROR > 1) THEN
          FATAL_ERR = FATAL_ERR + 1
          WRITE(ERR,1022) 'BAROR'
@@ -788,8 +762,7 @@ bdf:  DO
       ENDIF
 
 ! **********************************************************************************************************************************
-! If SOL_NAME is modes or CB then an EIGR card should have been found with SID matching a SID in Case Control.
-  
+      ! If SOL_NAME is modes or CB then an EIGR card should have been found with SID matching a SID in Case Control.
       IF ((SOL_NAME(1:5) == 'MODES') .OR. (SOL_NAME(1:8) == 'BUCKLING') .OR. (SOL_NAME(1:12) == 'GEN CB MODEL')) THEN
          IF (EIGFND == 'N') THEN
             WRITE(ERR,1005) CC_EIGR_SID
@@ -798,11 +771,10 @@ bdf:  DO
          ENDIF
       ENDIF
   
-! Check SPC entries
-! -----------------
-
-! (a) If SPC was requested in CASE CONTROL, we should have found a Bulk Data SPC, SPC1 or MPCADD with SID matching C.C SPC SID
-
+      ! Check SPC entries
+      ! -----------------
+      
+      ! (a) If SPC was requested in CASE CONTROL, we should have found a Bulk Data SPC, SPC1 or MPCADD with SID matching C.C SPC SID
       IF (CC_SPC_FND == 'N') THEN
          CONSTR_TYPE = 'SPC'
          WRITE(ERR,1006) CONSTR_TYPE,SPCSET
@@ -810,8 +782,7 @@ bdf:  DO
          FATAL_ERR = FATAL_ERR + 1
       ENDIF
 
-! (b) If there are SPCADD's check to make sure that all SPC, SPC1 Bulk Data requested on them are in the deck
-
+      ! (b) If there are SPCADD's check to make sure that all SPC, SPC1 Bulk Data requested on them are in the deck
       DO I=1,NSPCADD
          IF (SPCADD_SIDS(I,1) == SPCSET) THEN
             DO K=2,LSPCADDC
@@ -1010,7 +981,7 @@ j_do2:            DO J=2,LMPCADDC
       RETURN
 
 ! **********************************************************************************************************************************
-  101 FORMAT(A)
+  101 FORMAT('ECHO: loadb ', A)
 
  1003 FORMAT(' *ERROR  1003: ALL FIELDS ON THE ABOVE ENTRY MUST BE NO LONGER THAN 8 CHARACTERS')
 
@@ -1076,7 +1047,7 @@ j_do2:            DO J=2,LMPCADDC
                            ' PARTITIONING'                                                                                         &
                     ,/,14X,' VECTORS (BULK DATA PARVEC OR PARVEC1 ENTRIES) WERE FOUND IN THE BULK DATA DECK')
 
- 9993 FORMAT(' *WARNING    : PRIOR ENTRY NOT PROCESSED BY ',A)
+ 9993 FORMAT(' *LOADB-WARNING    : PRIOR ENTRY NOT PROCESSED BY ',A)
 
  9994 FORMAT(' *WARNING    : Due to the presence of ',I8,' scalar points (SPOINT''s) the user should be aware of the following:'   &
                     ,/,14X,'    a) They have no geometry; however their displ, forces, etc are reported in F06 as T1 components'   &
@@ -1152,9 +1123,15 @@ j_do2:            DO J=2,LMPCADDC
       CHARACTER(26), parameter   :: LOW = 'abcdefghijklmnopqrstuvwxyz'
       
       DO I = 1,256
+          ! remove $
+          IF (LINE(I:I) == '$') THEN
+              LINE(I:) = ' '
+              GOTO 100 ! break
+          ENDIF
+
           J = index(LOW, LINE(I:I))      ! Is ith character in LOW
           IF (J>0) LINE(I:I) = UPP(J:J)  ! Yes, then subst with UPP
-      ENDDO
+  100 ENDDO
       END SUBROUTINE TO_UPPER_LINE
       !end function to_upper
 
@@ -1163,19 +1140,49 @@ j_do2:            DO J=2,LMPCADDC
       
       ! it seems like there should be a better way to write an upper function...
       ! https://en.wikibooks.org/wiki/Fortran/strings
-      USE IOUNT1, ONLY                :  ERR !, F04, F06, IN1
+      USE IOUNT1, ONLY                :  ERR, INFILE, F06 !, F04
+      USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
       implicit none
       CHARACTER(256), intent (inout) :: LINE
+      CHARACTER(256)             :: TRIM_LINE
       integer, intent (in)       :: IN1
       integer, intent (inout)    :: IOCHK
-      integer                    :: I, J
+      integer                    :: I, J, FATAL_ERR
       CHARACTER(26), parameter   :: UPP = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
       CHARACTER(26), parameter   :: LOW = 'abcdefghijklmnopqrstuvwxyz'
+      CHARACTER(24*BYTE)         :: MESSAG            ! Message for output error purposes
+      INTEGER(LONG)              :: OUNT(2)           ! File units to write messages to. Input to subr READERR
+      INTEGER(LONG)              :: REC_NO            ! Record number when reading a file. Input to subr READERR
+
+      ! Make units for writing errors the error file and output file
+      OUNT(1) = ERR
+      OUNT(2) = F06
+      MESSAG = 'BULK DATA CARD          '
+      FATAL_ERR = 0
+
       READ(IN1,101,IOSTAT=IOCHK) LINE
+      
+      TRIM_LINE = TRIM(LINE)
+      DO WHILE(TRIM_LINE(1:1) == '$')
+         IF (IOCHK /= 0) THEN
+           REC_NO = -99
+           CALL READERR (IOCHK, INFILE, MESSAG, REC_NO, OUNT, 'Y')
+           FATAL_ERR = FATAL_ERR + 1
+         ENDIF
+         READ(IN1,101,IOSTAT=IOCHK) LINE
+         TRIM_LINE = TRIM(LINE)
+      ENDDO
+      
       DO I = 1,256
+          ! remove $
+          IF (LINE(I:I) == '$') THEN
+              LINE(I:) = ' '
+              GOTO 100 ! break
+          ENDIF
+
           J = index(LOW, LINE(I:I))      ! Is ith character in LOW
           IF (J>0) LINE(I:I) = UPP(J:J)  ! Yes, then subst with UPP
-      ENDDO
+  100 ENDDO
 
   101 FORMAT(A)
       END SUBROUTINE READ_BDF_LINE

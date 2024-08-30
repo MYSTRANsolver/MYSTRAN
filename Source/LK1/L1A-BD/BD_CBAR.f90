@@ -26,8 +26,7 @@
  
       SUBROUTINE BD_CBAR ( CARD, LARGE_FLD_INP )
  
-! Processes CBAR and CBEAM Bulk Data Cards:
- 
+      ! Processes CBAR and CBEAM Bulk Data Cards:
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
       USE IOUNT1, ONLY                :  WRT_ERR, WRT_LOG, ERR, F04, F06
       USE SCONTR, ONLY                :  BLNK_SUB_NAM, FATAL_ERR, IERRFL, JCARD_LEN, JF, LBAROFF, LVVEC, MEDAT_CBAR, &
@@ -80,55 +79,50 @@
       ENDIF
 
 ! **********************************************************************************************************************************
-! CBAR element Bulk Data Card routine
- 
-!   FIELD   ITEM           ARRAY ELEMENT
-!   -----   ------------   -------------
-!    1      Element type   ETYPE(nele)  =B1 for CBAR
-!    2      Element ID     EDAT(nedat+1)
-!    3      Property ID    EDAT(nedat+2)
-!    4      Grid A         EDAT(nedat+3)
-!    5      Grid B         EDAT(nedat+4)
-!    6-8    V-Vector       (see VVEC explanation below)
-!                          V vector key goes in EDAT(nedat+5)
-! on optional second card:
-!    2      Pin Flag A     EDAT(nedat+6)
-!    3      Pin Flag B     EDAT(nedat+7)
-!    4-9    Offsets        (see BAROFF explanation below)
-!                          Offset key goes in EDAT(nedat+8)
- 
-! NOTES:
- 
-! If fields 3, 6-8 are blank, they are loaded with the data from  the BAROR/BEAMOR entry (these will remain blank if
-! no BAROR/BEAMOR card exists). If V-vector is specfied via a grid point then EDAT(nedat+5) is set to that grid number.
-! If V-vector is specified via an actual vector, the vector is loaded into array VVEC(NVVEC,J) (J=1,2,3) unless
-! a vector equal to it has been put in VVEC. EDAT(nedat+5) is set equal to -NVVEC, where NVVEC is the row number
-! in array VVEC.
- 
-! Offsets are in fields 4 - 9 of the first continuation card. If there are any offsets for this element, they are written to
-! array BAROFF in row NBAROFF and NBAROFF is written in EDAT(nedat+8). If there are no offsets for this element, a zero is entered
-! in array EDAT(nedat+8).
- 
+      ! CBAR element Bulk Data Card routine
+       
+      !   FIELD   ITEM           ARRAY ELEMENT
+      !   -----   ------------   -------------
+      !    1      Element type   ETYPE(nele)  =B1 for CBAR
+      !    2      Element ID     EDAT(nedat+1)
+      !    3      Property ID    EDAT(nedat+2)
+      !    4      Grid A         EDAT(nedat+3)
+      !    5      Grid B         EDAT(nedat+4)
+      !    6-8    V-Vector       (see VVEC explanation below)
+      !                          V vector key goes in EDAT(nedat+5)
+      ! on optional second card:
+      !    2      Pin Flag A     EDAT(nedat+6)
+      !    3      Pin Flag B     EDAT(nedat+7)
+      !    4-9    Offsets        (see BAROFF explanation below)
+      !                          Offset key goes in EDAT(nedat+8)
+       
+      ! NOTES:
+       
+      ! If fields 3, 6-8 are blank, they are loaded with the data from  the BAROR/BEAMOR entry (these will remain blank if
+      ! no BAROR/BEAMOR card exists). If V-vector is specfied via a grid point then EDAT(nedat+5) is set to that grid number.
+      ! If V-vector is specified via an actual vector, the vector is loaded into array VVEC(NVVEC,J) (J=1,2,3) unless
+      ! a vector equal to it has been put in VVEC. EDAT(nedat+5) is set equal to -NVVEC, where NVVEC is the row number
+      ! in array VVEC.
+       
+      ! Offsets are in fields 4 - 9 of the first continuation card. If there are any offsets for this element, they are written to
+      ! array BAROFF in row NBAROFF and NBAROFF is written in EDAT(nedat+8). If there are no offsets for this element, a zero is entered
+      ! in array EDAT(nedat+8).
       EPS1 = EPSIL(1)
 
-! Make JCARD from CARD
- 
+      ! Make JCARD from CARD
       CALL MKJCARD ( SUBR_NAME, CARD, JCARD )
       BAR_OR_BEAM = JCARD(1)
       ELID        = JCARD(2)
  
-! Set JCARD_EDAT to JCARD
-
+      ! Set JCARD_EDAT to JCARD
       DO I=1,10
          JCARD_EDAT(I) = JCARD(I)
       ENDDO 
 
-! Initialize variables
-
+      ! Initialize variables
       VVEC_TYPE = 'UNDEFINED'
 
-! Check property ID field. Set to BAROR prop ID, if present, or to this elem ID, if not 
-  
+      ! Check property ID field. Set to BAROR prop ID, if present, or to this elem ID, if not 
       IF (JCARD(3)(1:) == ' ') THEN                        ! Prop ID field is blank, so use one of the following:
          IF (BAR_OR_BEAM(1:4) == 'CBAR') THEN
             IF (BAROR_PID /= 0) THEN                       ! Use BAROR prop ID for this CBAR prop ID
@@ -145,8 +139,7 @@
          ENDIF
       ENDIF
 
-! Call ELEPRO to increment NELE and load some of the connection data into array EDAT
-
+      ! Call ELEPRO to increment NELE and load some of the connection data into array EDAT
       IF (BAR_OR_BEAM(1:4) == 'CBAR') THEN
          CALL ELEPRO ( 'Y', JCARD_EDAT, 4, MEDAT_CBAR , 'Y', 'Y', 'Y', 'Y', 'N', 'N', 'N', 'N' )
          NCBAR = NCBAR+1
@@ -157,9 +150,9 @@
          ETYPE(NELE) = 'BEAM    '
       ENDIF
 
-! Get the V vector for this CBAR/CBEAM (either from this CBAR/CBEAM or from BAROR/BEAMOR values, if present)
-
-      DO J=1,3                                             ! Null all components. Some may be read from CBAR card
+      ! Get the V vector for this CBAR/CBEAM (either from this CBAR/CBEAM or from BAROR/BEAMOR values, if present)
+      ! Null all components. Some may be read from CBAR card
+      DO J=1,3                                             
          VV(J) = ZERO
       ENDDO
 
@@ -178,7 +171,8 @@
             ENDIF                                          ! check case where fields 6, 7, 8 are blank below         
          ENDIF
       ELSE
-         IF (NBEAMOR > 0) THEN                             ! Set VVEC fields to BEAMOR values if this CBEAM's VVEC fields are blank
+         IF (NBEAMOR > 0) THEN
+            ! Set VVEC fields to BEAMOR values if this CBEAM's VVEC fields are blank
             IF ((JCARD(6)(1:) == ' ') .AND. (JCARD(7)(1:) == ' ') .AND. (JCARD(8)(1:) == ' ')) THEN 
                IF      (BEAMOR_VVEC_TYPE == 'GRID     ') THEN
                   VVEC_TYPE = 'BEAMOR_GRD'
@@ -200,7 +194,8 @@
                EXIT
             ENDIF
          ENDDO
-         IF (VVEC_TYPE == 'VECTOR   ') THEN                ! If there is an actual V vector, get components
+         IF (VVEC_TYPE == 'VECTOR   ') THEN
+            ! If there is an actual V vector, get components
             LVVEC = LVVEC + 1
             JERR = 0
             DO J=1,3
@@ -244,8 +239,7 @@
          ENDIF
       ENDIF
 
-! Load V vector data into EDAT and into VVEC, if not already there
-
+      ! Load V vector data into EDAT and into VVEC, if not already there
       IF ((VVEC_TYPE == 'GRID     ') .OR. (VVEC_TYPE == 'BAROR_GRD')) THEN
 
          NEDAT = NEDAT + 1
@@ -278,17 +272,14 @@
 
          NEDAT = NEDAT + 1
          EDAT(NEDAT) = -VVEC_NUM
- 
       ENDIF
  
-! Write warnings and errors if any
-
+       ! Write warnings and errors if any
       CALL BD_IMBEDDED_BLANK ( JCARD,2,3,4,5,6,7,8,0 )     ! Make sure that there are no imbedded blanks in fields 2-8
       CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,0,0,0,0,0,9 )
       CALL CRDERR ( CARD )                                 ! CRDERR prints errors found when reading fields         
  
-! Optional Second Card:
-
+      ! Optional Second Card:
       IF (LARGE_FLD_INP == 'N') THEN
          CALL NEXTC  ( CARD, ICONT, IERR )
       ELSE
@@ -296,9 +287,10 @@
          CARD = CHILD
       ENDIF
       CALL MKJCARD ( SUBR_NAME, CARD, JCARD )
-      IF (ICONT == 1) THEN
 
-         DO J = 2,3                                        ! Get pin flag data, if present
+      IF (ICONT == 1) THEN
+         DO J = 2,3
+            ! Get pin flag data, if present
             IF (JCARD(J)(1:) /= ' ') THEN
                CALL IP6CHK ( JCARD(J), JCARDO, IP6TYP, IDUM )
                IF (IP6TYP == 'COMP NOS') THEN
@@ -313,19 +305,22 @@
                   WRITE(F06,1130) JCARD(J) ,J, JCARD(1), ELID
                ENDIF
             ELSE
-               NEDAT = NEDAT + 1                           ! Null EDAT for this pin flag
+               ! Null EDAT for this pin flag
+               NEDAT = NEDAT + 1
                EDAT(NEDAT) = 0
             ENDIF
          ENDDO
-                                                           ! Get offsets, if present
+
+         ! Get offsets, if present
          IF ((JCARD(4)(1:) /= ' ') .OR. (JCARD(5)(1:) /= ' ') .AND. (JCARD(6)(1:) /= ' ') .OR. (JCARD(7)(1:) /= ' ') .AND.         &
              (JCARD(8)(1:) /= ' ') .OR. (JCARD(9)(1:) /= ' ')) THEN
             NBAROFF = NBAROFF + 1
             IF (NBAROFF > LBAROFF) THEN
+               ! Coding error, so quit
                FATAL_ERR = FATAL_ERR + 1
                WRITE(ERR,1161) SUBR_NAME, JCARD(1), LBAROFF
                WRITE(F06,1161) SUBR_NAME, JCARD(1), LBAROFF
-               CALL OUTA_HERE ( 'Y' )                      ! Coding error, so quit
+               CALL OUTA_HERE ( 'Y' )
             ENDIF
             NEDAT = NEDAT + 1
             EDAT(NEDAT) = NBAROFF
@@ -336,10 +331,9 @@
                ENDIF
             ENDDO
          ELSE
-
-            NEDAT = NEDAT + 1                              ! Null EDAT for the offset flag
+            ! Null EDAT for the offset flag
+            NEDAT = NEDAT + 1
             EDAT(NEDAT) = 0
-
          ENDIF
 
          CALL BD_IMBEDDED_BLANK ( JCARD,0,0,4,5,6,7,8,9 )  ! Make sure that there are no imbedded blanks in fields 4-9

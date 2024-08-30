@@ -25,14 +25,13 @@
 ! End MIT license text.                                                                                      
   
       SUBROUTINE BD_PBAR ( CARD, LARGE_FLD_INP )
-  
-! Processes PBAR Bulk Data Cards. Reads and checks:
 
-!  1) Prop ID and Material ID and enter into array PBAR
-!  2) Area, moments of inertia, torsional constant ans nonstructural mass and enter into array RPBAR
-!  3) From 1st continuation card (if present): coords of 4 points for stress recovery and enter into array RPBAR
-!  4) From 2nd continuation card (if present): area factors for transverse shear and I12 and enter into array RPBAR
- 
+      ! Processes PBAR Bulk Data Cards. Reads and checks:
+      !  1) Prop ID and Material ID and enter into array PBAR
+      !  2) Area, moments of inertia, torsional constant ans nonstructural mass and enter into array RPBAR
+      !  3) From 1st continuation card (if present): coords of 4 points for stress recovery and enter into array RPBAR
+      !  4) From 2nd continuation card (if present): area factors for transverse shear and I12 and enter into array RPBAR
+
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
       USE IOUNT1, ONLY                :  WRT_ERR, WRT_LOG, ERR, F04, F06
       USE PARAMS, ONLY                :  EPSIL, SUPINFO
@@ -73,48 +72,42 @@
       ENDIF
 
 ! **********************************************************************************************************************************
-! PBAR Bulk Data Card routine
- 
-!   FIELD   ITEM                                            ARRAY ELEMENT
-!   -----   ----                                            -------------
-!    2      Property ID                                     PBAR(npbar, 1)
-!    3      Material ID                                     PBAR(npbar, 2)
-!    4      Area                                           RPBAR(npbar, 1)
-!    5      Inertia 1, I1                                  RPBAR(npbar, 2)
-!    6      Inertia 2, I2                                  RPBAR(npbar, 3)
-!    7      Torsional constant, J                          RPBAR(npbar, 4)
-!    8      Non-structural mass                            RPBAR(npbar, 5)
-
-! on optional second card:
-!    2      Y1 y coord of 1st point for stress recovery)   RPBAR(npbar, 6)
-!    3      Z1 z coord of 1st point for stress recovery)   RPBAR(npbar, 7)
-!    4      Y2 y coord of 2nd point for stress recovery)   RPBAR(npbar, 8)
-!    5      Z2 z coord of 2nd point for stress recovery)   RPBAR(npbar, 9)
-!    6      Y3 y coord of 3rd point for stress recovery)   RPBAR(npbar,10)
-!    7      Z3 z coord of 3rd point for stress recovery)   RPBAR(npbar,11)
-!    8      Y4 y coord of 4th point for stress recovery)   RPBAR(npbar,12)
-!    9      Z4 z coord of 4th point for stress recovery)   RPBAR(npbar,13)
-! on optional third card:
-!    2      K1, Plane 1 shear factor                       RPBAR(npbar,14)
-!    3      K2, Plane 2 shear factor                       RPBAR(npbar,15)
-!    4      I12, Product of inertia                        RPBAR(npbar,16)
-!    5      C Torsional stress recovery coefficient        RPBAR(npbar,17)
- 
- 
+      ! PBAR Bulk Data Card routine
+      !
+      !   FIELD   ITEM                                            ARRAY ELEMENT
+      !   -----   ----                                            -------------
+      !    2      Property ID                                     PBAR(npbar, 1)
+      !    3      Material ID                                     PBAR(npbar, 2)
+      !    4      Area                                           RPBAR(npbar, 1)
+      !    5      Inertia 1, I1                                  RPBAR(npbar, 2)
+      !    6      Inertia 2, I2                                  RPBAR(npbar, 3)
+      !    7      Torsional constant, J                          RPBAR(npbar, 4)
+      !    8      Non-structural mass                            RPBAR(npbar, 5)
+      !
+      ! on optional second card:
+      !    2      Y1 y coord of 1st point for stress recovery)   RPBAR(npbar, 6)
+      !    3      Z1 z coord of 1st point for stress recovery)   RPBAR(npbar, 7)
+      !    4      Y2 y coord of 2nd point for stress recovery)   RPBAR(npbar, 8)
+      !    5      Z2 z coord of 2nd point for stress recovery)   RPBAR(npbar, 9)
+      !    6      Y3 y coord of 3rd point for stress recovery)   RPBAR(npbar,10)
+      !    7      Z3 z coord of 3rd point for stress recovery)   RPBAR(npbar,11)
+      !    8      Y4 y coord of 4th point for stress recovery)   RPBAR(npbar,12)
+      !    9      Z4 z coord of 4th point for stress recovery)   RPBAR(npbar,13)
+      ! on optional third card:
+      !    2      K1, Plane 1 shear factor                       RPBAR(npbar,14)
+      !    3      K2, Plane 2 shear factor                       RPBAR(npbar,15)
+      !    4      I12, Product of inertia                        RPBAR(npbar,16)
+      !    5      C Torsional stress recovery coefficient        RPBAR(npbar,17)
       EPS1 = EPSIL(1)
-
       CHILD(1:) = ' '
 
-! Make JCARD from CARD
- 
+      ! Make JCARD from CARD
       CALL MKJCARD ( SUBR_NAME, CARD, JCARD )
- 
-! Check for overflow
 
+      ! Check for overflow
       NPBAR = NPBAR+1
- 
-! Read and check data on parent card
 
+     ! Read and check data on parent card
       ID   = JCARD(2)
       CALL I4FLD ( JCARD(2), JF(2), PROPERTY_ID )          ! Read property ID and enter into array PBAR
       IF (IERRFL(2) == 'N') THEN
@@ -125,7 +118,7 @@
                WRITE(F06,1145) JCARD(1),PROPERTY_ID
                EXIT
              ENDIF
-         ENDDO   
+         ENDDO
          PBAR(NPBAR,1) = PROPERTY_ID
       ENDIF
  
@@ -140,24 +133,25 @@
          ENDIF
       ENDIF
 
-      DO J = 1,5                                           ! Read real property values in fields 4-8
+      ! Read real property values in fields 4-8
+      DO J = 1,5
          CALL R8FLD ( JCARD(J+3), JF(J+3), RPBAR(NPBAR,J) )
       ENDDO
       IF (IERRFL(5)  == 'N') THEN
          I1 = RPBAR(NPBAR,2)   
-      ENDIF   
+      ENDIF
       IF (IERRFL(6)  == 'N') THEN
          I2 = RPBAR(NPBAR,3)
-      ENDIF   
- 
+      ENDIF
+
       CALL BD_IMBEDDED_BLANK ( JCARD,2,3,4,5,6,7,8,0 )     ! Make sure that there are no imbedded blanks in fields 2-8
       CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,0,0,0,0,0,9 )   ! Issue warning if field 9 not blank
       CALL CRDERR ( CARD )                                 ! CRDERR prints errors found when reading fields
- 
-! Read and check data on optional 2nd, 3rd cards:
- 
-      I12 = ZERO                                           ! Init I12 since the 2nd cont entry, which would reat it, may not exist
- 
+
+      ! Read and check data on optional 2nd, 3rd cards:
+      ! Init I12 since the 2nd cont entry, which would read it, may not exist
+      I12 = ZERO
+
       IF (LARGE_FLD_INP == 'N') THEN
          CALL NEXTC  ( CARD, ICONT, IERR )                 ! Read 2nd card
       ELSE
@@ -165,10 +159,11 @@
          CARD = CHILD
       ENDIF
       CALL MKJCARD ( SUBR_NAME, CARD, JCARD )
+
       IF (ICONT == 1) THEN
          DO J = 6,13                                       ! Read real property values in fields 2-9 of 2nd card
             CALL R8FLD ( JCARD(J-4), JF(J-4), RPBAR(NPBAR,J) )
-         ENDDO   
+         ENDDO
          CALL BD_IMBEDDED_BLANK ( JCARD,2,3,4,5,6,7,8,9 )  ! Make sure that there are no imbedded blanks in fields 2-9
          CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
 
@@ -178,6 +173,7 @@
             CALL NEXTC2 ( CARD, ICONT, IERR, CHILD )
             CARD = CHILD
          ENDIF
+         flush(err)
          CALL MKJCARD ( SUBR_NAME, CARD, JCARD )
          IF (ICONT == 1) THEN
             DO J = 14,16                                   ! Read real property values in fields 2-4 of 3rd card
@@ -190,7 +186,7 @@
             CALL R8FLD ( JCARD(5), JF(5), RPBAR(NPBAR,17) )
             IF (DABS(RPBAR(NPBAR,17)) > EPS1) THEN         ! Set BARTOR to 'Y' if any BAR elem has a nonzero torsional stress coeff
                BARTOR = 'Y'
-            ENDIF   
+            ENDIF
 
             CALL BD_IMBEDDED_BLANK ( JCARD,2,3,4,5,0,0,0,0)! Make sure that there are no imbedded blanks in fields 2-5
             CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,0,0,6,7,8,9 )
@@ -199,8 +195,7 @@
          ENDIF
       ENDIF
 
-! Call subr to check sensibility of I1, I2, I12 combinations
-
+      ! Call subr to check sensibility of I1, I2, I12 combinations
       CALL CHECK_BAR_MOIs ( 'PBAR', ID, I1, I2, I12, IERR )
       RPBAR(NPBAR, 2) = I1
       RPBAR(NPBAR, 3) = I2
@@ -228,5 +223,5 @@
 
 
 ! **********************************************************************************************************************************
- 
+
       END SUBROUTINE BD_PBAR
