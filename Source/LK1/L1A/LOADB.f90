@@ -590,7 +590,6 @@ bdf:  DO
             ! only defined when it's a large field continuation
             !WRITE(ERR,'(A)') CARD2
             !WRITE(F06,'(A)') CARD2
-            FATAL_ERR = FATAL_ERR + 1
 
          ELSE                                              ! CARD not processed by MYSTRAN
             WARN_ERR = WARN_ERR + 1
