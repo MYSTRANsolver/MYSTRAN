@@ -132,6 +132,16 @@
       ENDIF
 
 ! **********************************************************************************************************************************
+
+      ! GPFORCE is unsupported for buckling decks
+      IF (SOL_NAME(1:8) == "BUCKLING") THEN
+         IF (WRT_LOG >= SUBR_BEGEND) THEN
+            CALL OURTIM
+            WRITE(F04,9002) SUBR_NAME,TSEC
+         ENDIF
+         RETURN
+      ENDIF
+
       ! Print some summary info for max abs value of GP force balance for each solution vector
       IS_GPFORCE_SUMMARY_INFO = (DEBUG(192) > 0)
 
