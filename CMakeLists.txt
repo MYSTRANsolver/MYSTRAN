@@ -202,6 +202,7 @@ if (MISSING_FNS_TOTAL GREATER 0)
     )
   endif()
   add_library(my_blas OBJECT ${missing_blas_src})
+  target_link_libraries(my_blas MODULES)
 endif()
 
 # prepare the main executable, linked against the specifics and the m
