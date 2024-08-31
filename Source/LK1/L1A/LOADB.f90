@@ -93,11 +93,14 @@
       ! new parsing
       INTEGER(LONG)                   :: NCARD_LINES        ! The number of lines in the active card
       INTEGER(LONG)                   :: NCARD_FIELDS       ! The number of fields in the active card
-      INTEGER(LONG)                   :: FILE_OFFSET        ! The byte position in the file
+      INTEGER(LONG)                   :: FILE_OFFSET_OG     ! The byte position in the file
+      INTEGER(LONG)                   :: FILE_OFFSET_LARGE  ! The byte position in the file
+      INTEGER(LONG)                   :: FILE_OFFSET_PRINT  ! The byte position in the file
       CHARACTER( 8*BYTE)              :: CARD_NAME          ! The name of the active card (can be "NULL    ")
       INTEGER(LONG)                   :: ALLOC_IERR
       CHARACTER*16, ALLOCATABLE       :: CARD_FIELDS(:)     ! the fields of the card
-      CHARACTER(LEN=BD_ENTRY_LEN)     :: CARD1_TEMP         ! temporary copy of the nominal car
+      CHARACTER(LEN=BD_ENTRY_LEN)     :: CARD1_OG           ! temporary copy of the nominal card
+      CHARACTER(LEN=BD_ENTRY_LEN)     :: CARD1_CHECK        ! temporary copy of the nominal card
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
          CALL OURTIM
@@ -150,7 +153,8 @@
   
 ! **********************************************************************************************************************************
       CARD(1:) = ' '
-      CARD1_TEMP(1:) = ' '
+      CARD1_OG(1:) = ' '
+      CARD1_CHECK(1:) = ' '
 
       IPBARL    = 0
 
@@ -158,7 +162,8 @@
       NUM_QUADS     = 0
       MELGP         = 2   ! This max num grids/elem DOF's covers all 2 node/6 comp per node elems
       MELDOF        = 12  ! (other elems will be checked and MELGP, MELDOF reset if necessary)
-      FILE_OFFSET = 0
+      FILE_OFFSET_OG = 0
+      FILE_OFFSET_LARGE = 0
 
       ! Process Bulk Data cards in a large loop that runs until either an 
       ! ENDDATA card is found or when an error or EOF/EOR occurs
@@ -166,16 +171,31 @@ bdf:  DO
          NCARD_FIELDS = 0
          NCARD_LINES = 0
          CARD_NAME = 'NULL    '
-         !FILE_OFFSET = 0
-         
+
          WRITE(F06,*) '------------------------'
          WRITE(ERR,*) '------------------------'
-         IF(.FALSE.) THEN
-             ! always get the first line of the card
-             CALL READ_BDF_LINE(IN1, IOCHK, CARD1)
-             CARD1_TEMP = CARD1
+
+         ! always get the first line of the card
+         CALL READ_BDF_LINE(IN1, IOCHK, CARD1)
+         IF(.TRUE.) THEN
+             CARD1_OG = CARD1
              NCARD_LINES = 1
              ! TODO: check for out of range
+
+             ! get the marker for the possible end of the card
+             CALL FTELL(IN1, FILE_OFFSET_OG)
+             WRITE(F06,*) 'TELL: FILE_OFFSET_OG = ', FILE_OFFSET_OG
+
+             ! get the card_name
+             DO I=1,8
+                 ! stop if we break
+                 IF ((CARD1(I:I) == ' ') .OR. (CARD(I:I) == '*') .OR. (CARD(I:I) == ',')) THEN
+                     GO TO 99
+                 ENDIF
+             ENDDO
+ 99          CARD_NAME = CARD(1:I)
+             WRITE(F06,*) 'CARD_NAME = ', CARD_NAME
+             WRITE(ERR,*) 'CARD_NAME = ', CARD_NAME
 
              ! check if it's small/large field
              ! Determine if the card is large or small format
@@ -187,16 +207,19 @@ bdf:  DO
                      NCARD_LINES = NCARD_LINES + 1
                  ENDIF
              ENDDO
-             
-             ! get the marker for the possible end of the card
-             CALL FTELL(IN1, FILE_OFFSET)
-             WRITE(F06,*) 'TELL: FILE_OFFSET = ', FILE_OFFSET
+             CALL FTELL(IN1, FILE_OFFSET_LARGE)
 
+             CARD1_CHECK = CARD1
+             WRITE(F06,*) '-----------'
+             WRITE(ERR,*) '-----------'
+             WRITE(F06,*) 'checking...'
+             WRITE(ERR,*) 'checking...'
+             ! get all the continuation lines
              DO WHILE (1<2)
                  ! check if it's another line
                  CALL READ_BDF_LINE(IN1, IOCHK, CARD1)
                  ! TODO: check for out of range
-
+                 
                  IF((CARD1(1:1) == ",") .OR. (CARD1(1:1) == ",")) THEN
                    ! small field
                    NCARD_LINES = NCARD_LINES + 1
@@ -217,18 +240,20 @@ bdf:  DO
                    WRITE(F06,*) CARD1
                    WRITE(ERR,*) CARD1
                    NCARD_LINES = NCARD_LINES + 1
-
                  ELSE
-                   ! break and then rewind time
+                   ! didn't find a continuation
+                   ! go back to the local "starting point"
+                   CALL FSEEK(IN1, FILE_OFFSET_LARGE, 0, IERR)
                    WRITE(F06,*) 'rewind. didnt find space, comma, or *.  '
                    WRITE(ERR,*) 'rewind. didnt find space, comma, or *.  '
-                   WRITE(F06,*) CARD1
-                   WRITE(ERR,*) CARD1
+                   CARD1 = CARD1_CHECK
+                   !WRITE(F06,*) CARD1
+                   !WRITE(ERR,*) CARD1
                    GO TO 100
                  ENDIF
              ENDDO
              
-             NCARD_LINES = 1
+             !NCARD_LINES = 1
              !IF (LARGE_FLD_INP == 'N') THEN
              !   CALL NEXTC  ( CARD, ICONT, IERR )
              !ELSE
@@ -240,21 +265,14 @@ bdf:  DO
                ! check if it's small/large field
              !END
 
-
-             ! reset
- 100         CALL FSEEK(IN1, FILE_OFFSET, 0, ierr)  ! move to OFFSET; SEEK_SET=0
-! 100         CALL FSEEK(IN1, FILE_OFFSET, SEEK_SET, ierr)  ! move to OFFSET; SEEK_SET=0
-           
-             WRITE(F06,*) 'SEEK: FILE_OFFSET = ', FILE_OFFSET
-             WRITE(ERR,*) 'SEEK: FILE_OFFSET = ', FILE_OFFSET
-           
-             !CALL FSEEK(fd, 0, SEEK_END, ierr)       ! move to end; SEEK_END=2
-             !CALL FSEEK(fd, 0, SEEK_SET, ierr)       ! move to beginning; SEEK_SET=0
+             ! what this will ultimately be
+             CALL FTELL(IN1, FILE_OFFSET_PRINT)
+             WRITE(F06,*) 'SEEK: FILE_OFFSET_PRINT = ', FILE_OFFSET_PRINT
+             WRITE(ERR,*) 'SEEK: FILE_OFFSET_PRINT = ', FILE_OFFSET_PRINT
 
              write(ERR,*) 'NCARD_LINES = ', NCARD_LINES
              write(F06,*) 'NCARD_LINES = ', NCARD_LINES
 
-             
              ! now that we know the length of the card, we can size the fields
              NCARD_FIELDS = NCARD_LINES * 8
              write(ERR,*) 'NCARD_FIELDS = ', NCARD_FIELDS
@@ -263,9 +281,7 @@ bdf:  DO
              ! is the card small or large field
              ! split the card into fields 
 
-             !CALL FSEEK(fd, offset, SEEK_SET, ierr)  ! move to OFFSET
              !CALL READ_BDF_CARD(IN1, IOCHK, CARD_NAME, NCARD_FIELDS, CARD_FIELDS)
-             !ALLOCATE (GPFORCE_FXYZ_MXYZ(NROWS,NCARD_LINES),STAT=IERR)
              ALLOCATE (CARD_FIELDS(NCARD_FIELDS),STAT=ALLOC_IERR)
              IF (IERR == 0) THEN
                  DO I=1,NCARD_FIELDS
@@ -277,12 +293,21 @@ bdf:  DO
 
              DEALLOCATE(CARD_FIELDS,STAT=ALLOC_IERR)
              IF (IERR /= 0) THEN
-                 WRITE(ERR,*) 'GPFORCE_NID_EID DEALLOCATE error'
+                 WRITE(ERR,*) 'CARD_FIELDS DEALLOCATE error'
              ENDIF
-             CARD1 = CARD1_TEMP
-          ELSE
-             CALL READ_BDF_LINE(IN1, IOCHK, CARD1)
+
+             ! reverting to OG
+             CARD1 = CARD1_OG
+             LARGE_FLD_INP = 'N'
+ 100         CALL FSEEK(IN1, FILE_OFFSET_OG, 0, ierr)  ! move to OFFSET; SEEK_SET=0
+             WRITE(F06,*) 'end FILE_OFFSET_OG =', FILE_OFFSET_OG
+             WRITE(ERR,*) 'end FILE_OFFSET_OG =', FILE_OFFSET_OG
+             WRITE(F06,*) CARD1
+             WRITE(ERR,*) CARD1
           ENDIF
+          !CALL FTELL(IN1, FILE_OFFSET_PRINT)
+          !WRITE(F06,*) 'Final FTELL', FILE_OFFSET_PRINT
+          !WRITE(ERR,*) 'Final FTELL', FILE_OFFSET_PRINT
 
          ! Must have this since CARD goes to BD_xxxx, not CARD1.
          ! This will get reset if CARD1 is a large field format
