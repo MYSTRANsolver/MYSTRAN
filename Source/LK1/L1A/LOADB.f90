@@ -93,6 +93,7 @@
       ! new parsing
       INTEGER(LONG)                   :: NCARD_LINES        ! The number of lines in the active card
       INTEGER(LONG)                   :: NCARD_FIELDS       ! The number of fields in the active card
+      INTEGER(LONG)                   :: DUMMY              
       INTEGER(LONG)                   :: FILE_OFFSET_OG     ! The byte position in the file
       INTEGER(LONG)                   :: FILE_OFFSET_LARGE  ! The byte position in the file
       INTEGER(LONG)                   :: FILE_OFFSET_PRINT  ! The byte position in the file
@@ -165,11 +166,12 @@
       FILE_OFFSET_OG = 0
       FILE_OFFSET_LARGE = 0
 
+      DUMMY = 0
+
       ! Process Bulk Data cards in a large loop that runs until either an 
       ! ENDDATA card is found or when an error or EOF/EOR occurs
 bdf:  DO
          NCARD_FIELDS = 0
-         NCARD_LINES = 0
          CARD_NAME = 'NULL    '
 
          WRITE(F06,*) '------------------------'
@@ -177,25 +179,33 @@ bdf:  DO
 
          ! always get the first line of the card
          CALL READ_BDF_LINE(IN1, IOCHK, CARD1)
-         IF(.TRUE.) THEN
+         ! check for out of range
+         IF (IOCHK /= 0) THEN
+           FATAL_ERR = FATAL_ERR + 1
+           WRITE(F06,*) 'FATAL: IOCHECK loadb-1'
+           CALL OUTA_HERE ( 'Y' )
+         ENDIF
+
+         !ENDDATA check
+         CALL GET_CARD_NAME_FROM_CARD(CARD1, CARD_NAME)
+         WRITE(F06,*) 'CARD_NAME = ', CARD_NAME
+         WRITE(ERR,*) 'CARD_NAME = ', CARD_NAME
+
+         IF ((CARD_NAME == 'ENDDATA' ) .OR. (CARD_NAME == 'ENDATA' ))  THEN 
+            ! go to the end of parsing
+            WRITE(F06,*) 'GOTO 100 (end of parsing)'
+            GO TO 100
+         ELSE IF(.TRUE.) THEN
              CARD1_OG = CARD1
              NCARD_LINES = 1
-             ! TODO: check for out of range
 
              ! get the marker for the possible end of the card
              CALL FTELL(IN1, FILE_OFFSET_OG)
              WRITE(F06,*) 'TELL: FILE_OFFSET_OG = ', FILE_OFFSET_OG
 
-             ! get the card_name
-             DO I=1,8
-                 ! stop if we break
-                 IF ((CARD1(I:I) == ' ') .OR. (CARD(I:I) == '*') .OR. (CARD(I:I) == ',')) THEN
-                     GO TO 99
-                 ENDIF
-             ENDDO
- 99          CARD_NAME = CARD(1:I)
-             WRITE(F06,*) 'CARD_NAME = ', CARD_NAME
-             WRITE(ERR,*) 'CARD_NAME = ', CARD_NAME
+             WRITE(F06,*) 'CARD1_OG = ', CARD1_OG
+
+             !CALL IS_LARGE_FIELD(CARD1, CARD_NAME)
 
              ! check if it's small/large field
              ! Determine if the card is large or small format
@@ -204,6 +214,12 @@ bdf:  DO
                  IF (CARD1(I:I) == '*') THEN
                      LARGE_FLD_INP = 'Y'
                      CALL READ_BDF_LINE(IN1, IOCHK, CARD1)
+                     ! check for out of range
+                     IF (IOCHK /= 0) THEN
+                       FATAL_ERR = FATAL_ERR + 1
+                       WRITE(F06,*) 'FATAL: IOCHECK loadb-2'
+                       CALL OUTA_HERE ( 'Y' )
+                     ENDIF
                      NCARD_LINES = NCARD_LINES + 1
                  ENDIF
              ENDDO
@@ -212,13 +228,22 @@ bdf:  DO
              CARD1_CHECK = CARD1
              WRITE(F06,*) '-----------'
              WRITE(ERR,*) '-----------'
-             WRITE(F06,*) 'checking...'
-             WRITE(ERR,*) 'checking...'
+             WRITE(F06,*) 'checking...', LARGE_FLD_INP
+             WRITE(ERR,*) 'checking...', LARGE_FLD_INP
              ! get all the continuation lines
              DO WHILE (1<2)
                  ! check if it's another line
                  CALL READ_BDF_LINE(IN1, IOCHK, CARD1)
-                 ! TODO: check for out of range
+
+                 ! check for out of range
+                 IF (IOCHK == 0) THEN
+                   ! seems ok
+                   WRITE(F06,*) 'GOTO 99 (the checked bdf line is bad)'
+                   GO TO 99
+                   !FATAL_ERR = FATAL_ERR + 1
+                   !WRITE(F06,*) 'FATAL: IOCHECK loadb-3'
+                   !CALL OUTA_HERE ( 'Y' )
+                 ENDIF
                  
                  IF((CARD1(1:1) == ",") .OR. (CARD1(1:1) == ",")) THEN
                    ! small field
@@ -234,7 +259,12 @@ bdf:  DO
                    WRITE(F06,*) CARD1
                    WRITE(ERR,*) CARD1
                    CALL READ_BDF_LINE(IN1, IOCHK, CARD1)
-                   ! TODO: check for out of range
+                   ! check for out of range
+                   IF (IOCHK /= 0) THEN
+                     FATAL_ERR = FATAL_ERR + 1
+                     WRITE(F06,*) 'FATAL: IOCHECK loadb-4'
+                     CALL OUTA_HERE ( 'Y' )
+                   ENDIF
                    WRITE(F06,*) 'echo large 2: '
                    WRITE(ERR,*) 'echo large 2: '
                    WRITE(F06,*) CARD1
@@ -249,7 +279,8 @@ bdf:  DO
                    CARD1 = CARD1_CHECK
                    !WRITE(F06,*) CARD1
                    !WRITE(ERR,*) CARD1
-                   GO TO 100
+                   WRITE(F06,*) 'GOTO 99  (the checked bdf line is bad)'
+                   GO TO 99
                  ENDIF
              ENDDO
              
@@ -265,13 +296,14 @@ bdf:  DO
                ! check if it's small/large field
              !END
 
+ 99          DUMMY = 0
+             write(ERR,*) 'NCARD_LINES = ', NCARD_LINES
+             write(F06,*) 'NCARD_LINES = ', NCARD_LINES
+
              ! what this will ultimately be
              CALL FTELL(IN1, FILE_OFFSET_PRINT)
              WRITE(F06,*) 'SEEK: FILE_OFFSET_PRINT = ', FILE_OFFSET_PRINT
              WRITE(ERR,*) 'SEEK: FILE_OFFSET_PRINT = ', FILE_OFFSET_PRINT
-
-             write(ERR,*) 'NCARD_LINES = ', NCARD_LINES
-             write(F06,*) 'NCARD_LINES = ', NCARD_LINES
 
              ! now that we know the length of the card, we can size the fields
              NCARD_FIELDS = NCARD_LINES * 8
@@ -288,18 +320,20 @@ bdf:  DO
                      CARD_FIELDS(I) = "                "
                  ENDDO
              ELSE
-                 WRITE(ERR,*) 'CARD_FIELDS ALLOCATED error'
+                 WRITE(F06,*) 'FATAL: CARD_FIELDS ALLOCATED error'
+                 WRITE(ERR,*) 'FATAL: CARD_FIELDS ALLOCATED error'
              ENDIF
 
              DEALLOCATE(CARD_FIELDS,STAT=ALLOC_IERR)
              IF (IERR /= 0) THEN
-                 WRITE(ERR,*) 'CARD_FIELDS DEALLOCATE error'
+                 WRITE(F06,*) 'FATAL: CARD_FIELDS DEALLOCATE error'
+                 WRITE(ERR,*) 'FATAL: CARD_FIELDS DEALLOCATE error'
              ENDIF
 
              ! reverting to OG
              CARD1 = CARD1_OG
              LARGE_FLD_INP = 'N'
- 100         CALL FSEEK(IN1, FILE_OFFSET_OG, 0, ierr)  ! move to OFFSET; SEEK_SET=0
+             CALL FSEEK(IN1, FILE_OFFSET_OG, 0, ierr)  ! move to OFFSET; SEEK_SET=0
              WRITE(F06,*) 'end FILE_OFFSET_OG =', FILE_OFFSET_OG
              WRITE(ERR,*) 'end FILE_OFFSET_OG =', FILE_OFFSET_OG
              WRITE(F06,*) CARD1
@@ -735,8 +769,8 @@ bdf:  DO
          ELSE IF ((CARD(1:1) == '$') .OR. (CARD(1:BD_ENTRY_LEN) == ' ')) THEN
             CYCLE
 
-         ELSE IF (CARD(1:7) == 'ENDDATA' )  THEN 
-            EXIT
+         !ELSE IF (CARD(1:7) == 'ENDDATA' )  THEN 
+         !   EXIT
          ELSE IF ((CARD(1:1) == ' ') .OR. (CARD(1:1) == '+') .OR. (CARD(1:1) == '*'))  THEN 
             !WRITE(ERR,*) 'FAILED WHEN FINDING A CONTINUATION'
             !WRITE(F06,*) 'FAILED WHEN FINDING A CONTINUATION'
@@ -758,8 +792,12 @@ bdf:  DO
             ENDIF
 
          ENDIF
-
       ENDDO bdf
+! 100  PASS
+ 100  DUMMY = 0
+      WRITE(F06,*) 'getting to maths'
+      WRITE(ERR,*) 'getting to maths'
+
 
 ! **********************************************************************************************************************************
 !///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1265,6 +1303,32 @@ j_do2:            DO J=2,LMPCADDC
       END SUBROUTINE LOADB
 
 
+      !---------------------------------------------------------
+      SUBROUTINE GET_CARD_NAME_FROM_CARD(CARD, CARD_NAME)
+      
+      USE IOUNT1, ONLY                :  ERR, INFILE, F06 !, F04
+      USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
+      implicit none
+      CHARACTER(256), intent (in)     :: CARD
+      CHARACTER(8), intent (inout)    :: CARD_NAME
+      INTEGER(LONG)              :: I
+
+      ! get the card_name
+      !WRITE(F06, *) 'CARD', CARD
+      !WRITE(ERR, *) 'CARD', CARD
+      DO I=1,8
+          !WRITE(F06, 100) I, CARD(I:I)
+          !WRITE(ERR, 100) I, CARD(I:I)
+          ! stop if we break
+          IF ((CARD(I:I) == ' ') .OR. (CARD(I:I) == '*') .OR. (CARD(I:I) == ',')) THEN
+              GO TO 101
+          ENDIF
+      ENDDO
+ 100  FORMAT('CARD(',I1,') = ', A)
+ 101  CARD_NAME = CARD(1:I)
+      END SUBROUTINE GET_CARD_NAME_FROM_CARD
+
+      !---------------------------------------------------------
       !function to_upper(in) result (out)
       SUBROUTINE TO_UPPER_LINE(LINE)
       ! it seems like there should be a better way to write an upper function...
