@@ -82,7 +82,11 @@
 ! Check to see if our binary search will have an integer overflow
 ! Pick a more appropriate version if so, or raise an error
      IF ((ASIZE+1) > (HUGE(TMP_N)-1)/2) THEN
-        ! use the double version I guess?
+        ! use the double version I guess? Just error for now.
+        FATAL_ERR = FATAL_ERR + 1
+        WRITE(ERR,9003) CALLING_SUBR, ARRAY_NAME
+        WRITE(F06,9003) CALLING_SUBR, ARRAY_NAME
+        CALL OUTA_HERE ( 'Y' )
      ENDIF
 
 ! Initialize outputs
@@ -130,7 +134,8 @@
       RETURN
 
 
-
+ 9003 FORMAT(' *ERROR   9003: ERROR IN SUBROUTINE ',A                                                                   &
+      ,/,14X,' INPUT ARRAY ',A,' HAS TOO MANY ELEMENTS AND WILL OVERFLOW INTEGER(LONG) INDEX, MAX SUPPORTED ELEMS: 1073741823')
 
 
 ! **********************************************************************************************************************************
