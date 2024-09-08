@@ -142,7 +142,7 @@
 
       END SUBROUTINE GET_ARRAY_ROW_NUM
 
-      SUBROUTINE ASSERT_ARRAY_SORTED ( ARRAY_NAME, CALLING_SUBR, ASIZE, ARRAY, EXT_ID, ROW_NUM )
+      SUBROUTINE ASSERT_ARRAY_SORTED ( ARRAY_NAME, CALLING_SUBR, ASIZE, ARRAY )
       !     Checks and asserts that the array is sorted
       !     This check was previously internal to GET_ARRAY_ROW_NUM, however that function is usually called in large loops
       !     leading to much longer runtimes.
@@ -163,8 +163,6 @@
 
       INTEGER(LONG), INTENT(IN)       :: ASIZE             ! Size of ARRAY
       INTEGER(LONG), INTENT(IN)       :: ARRAY(ASIZE)      ! Array to search
-      INTEGER(LONG), INTENT(IN)       :: EXT_ID            ! External (actual) ID to find in ARRAY
-      INTEGER(LONG), INTENT(OUT)      :: ROW_NUM           ! Internal ID (row in ARRAY) where EXT_ID exists
       INTEGER(LONG)                   :: N                 ! Loop index
       ! **********************************************************************************************************************************
 
