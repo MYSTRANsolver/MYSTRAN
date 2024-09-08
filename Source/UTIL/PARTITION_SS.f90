@@ -251,8 +251,8 @@ i_do: DO I=1,NROW_A                                        ! Matrix partition lo
             I_B(L+1) = I_B(L)                              ! Start out with next I_B equal to last.
 
                                                            ! Write message to screen
-            CALL OURTIM
             IF (NOCOUNTS /= 'Y') THEN
+               CALL OURTIM
                WRITE(SC1,12345,ADVANCE='NO') MAT_B_NAME, MAT_A_NAME, L, NROW_B, SYM_A, SYM_B, HOUR, MINUTE, SEC, SFRAC, CR13
             ENDIF
             DO K=1,AROW_MAX_TERMS                          ! Null J_AROW and AROW each time we begin a new row of A

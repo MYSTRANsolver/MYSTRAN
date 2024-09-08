@@ -67,9 +67,9 @@
       INTEGER(LONG)                   :: N                 ! When the search is completed, N is the ROW_NUM we ara looking for
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = GET_ARRAY_ROW_NUM_BEGEND
  
-      REAL(DOUBLE)                    :: DBL_N             ! Real value of (DBL_HI + DBL_LO + 1.D0)/2.D0
-      REAL(DOUBLE)                    :: DBL_HI            ! Real value of HI
-      REAL(DOUBLE)                    :: DBL_LO            ! Real value of LO
+      INTEGER(LONG)                   :: TMP_N             ! Real value of (DBL_HI + DBL_LO + 1.D0)/2.D0
+      INTEGER(LONG)                   :: TMP_HI            ! Real value of HI
+      INTEGER(LONG)                   :: TMP_LO            ! Real value of LO
 
       INTRINSIC                       :: FLOOR             ! Largest integer less than real argument
 
@@ -83,14 +83,20 @@
 ! **********************************************************************************************************************************
 ! Make sure array is sorted into numerically increasing order
 
-      DO N=2,ASIZE
-         IF (ARRAY(N) < ARRAY(N-1)) THEN
-            FATAL_ERR = FATAL_ERR + 1
-            WRITE(ERR,920) CALLING_SUBR, ARRAY_NAME
-            WRITE(F06,920) CALLING_SUBR, ARRAY_NAME
-            CALL OUTA_HERE ( 'Y' )
-         ENDIF
-      ENDDO
+!       DO N=2,ASIZE
+!          IF (ARRAY(N) < ARRAY(N-1)) THEN
+!             FATAL_ERR = FATAL_ERR + 1
+!             WRITE(ERR,920) CALLING_SUBR, ARRAY_NAME
+!             WRITE(F06,920) CALLING_SUBR, ARRAY_NAME
+!             CALL OUTA_HERE ( 'Y' )
+!          ENDIF
+!       ENDDO
+
+! Check to see if our binary search will have an integer overflow
+! Pick a more appropriate version if so, or raise an error
+     IF ((ASIZE+1) > (HUGE(TMP_N)-1)/2) THEN
+        ! use the double version I guess?
+     ENDIF
 
 ! Initialize outputs
 
@@ -100,13 +106,13 @@
 
       HI     = ASIZE
       LO     = 0
-      DBL_HI = DBLE(HI)
-      DBL_LO = DBLE(LO)
+      TMP_HI = HI
+      TMP_LO = LO
       LAST   = 0
 
       DO
-         DBL_N = (DBL_HI + DBL_LO + ONE)/TWO
-         N     = FLOOR(DBL_N)
+         N = (TMP_HI + TMP_LO + 1)/2
+      !    N     = FLOOR(DBL_N)
          IF (N == LAST) THEN
             ROW_NUM = -1
             RETURN
@@ -114,11 +120,11 @@
          LAST = N  
          IF      (EXT_ID <  ARRAY(N)) THEN
            HI     = N
-           DBL_HI = DBLE(HI)
+           TMP_HI = HI
            CYCLE
          ELSE IF (EXT_ID >  ARRAY(N)) THEN
            LO     = N
-           DBL_LO = DBLE(LO)
+           TMP_LO = LO
            CYCLE
          ELSE IF (EXT_ID == ARRAY(N)) THEN 
            EXIT
