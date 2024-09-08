@@ -37,10 +37,8 @@
 ! The algorithm then iterates until EXT_ID = ARRAY(N) by modifying HI and LO as follows:
 !   (a) If EXT_ID < ARRAY(N) then HI is lowered   to N and a new N is calculated from (1) and the procedure repeated
 !   (b) If EXT_ID > ARRAY(N) then LO is increased to N and a new N is calculated from (1) and the procedure repeated
-
-! The FLOOR intrinsic function is used to ensure that N is the largest integer less than the real value of eqn (1), or:
  
-!                          DBL_N = (DBL_HI + DBL_LO + 1.D0)/2.D0  (2) 
+!                          TMP_N = (TMP_HI + TMP_LO + 1.D0)/2.D0  (2) 
 
  
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
@@ -71,8 +69,6 @@
       INTEGER(LONG)                   :: TMP_HI            ! Real value of HI
       INTEGER(LONG)                   :: TMP_LO            ! Real value of LO
 
-      INTRINSIC                       :: FLOOR             ! Largest integer less than real argument
-
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
          CALL OURTIM
@@ -81,16 +77,7 @@
       ENDIF
 
 ! **********************************************************************************************************************************
-! Make sure array is sorted into numerically increasing order
 
-!       DO N=2,ASIZE
-!          IF (ARRAY(N) < ARRAY(N-1)) THEN
-!             FATAL_ERR = FATAL_ERR + 1
-!             WRITE(ERR,920) CALLING_SUBR, ARRAY_NAME
-!             WRITE(F06,920) CALLING_SUBR, ARRAY_NAME
-!             CALL OUTA_HERE ( 'Y' )
-!          ENDIF
-!       ENDDO
 
 ! Check to see if our binary search will have an integer overflow
 ! Pick a more appropriate version if so, or raise an error
@@ -142,9 +129,6 @@
 
       RETURN
 
-! **********************************************************************************************************************************
-  920 FORMAT(' *ERROR   920: PROGRAMMING ERROR IN SUBROUTINE ',A                                                                   &
-                    ,/,14X,' INPUT ARRAY ',A,' MUST BE SORTED IN NUMERICALLY INCREASING ORDER FOR THIS SUBR TO WORK')
 
 
 
@@ -152,3 +136,46 @@
 ! **********************************************************************************************************************************
 
       END SUBROUTINE GET_ARRAY_ROW_NUM
+
+      SUBROUTINE ASSERT_ARRAY_SORTED ( ARRAY_NAME, CALLING_SUBR, ASIZE, ARRAY, EXT_ID, ROW_NUM )
+      !     Checks and asserts that the array is sorted
+      !     This check was previously internal to GET_ARRAY_ROW_NUM, however that function is usually called in large loops
+      !     leading to much longer runtimes.
+      !
+      ! **********************************************************************************************************************************
+
+      USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
+      USE IOUNT1, ONLY                :  WRT_ERR, WRT_LOG, ERR, F04, f06
+      USE SCONTR, ONLY                :  BLNK_SUB_NAM, FATAL_ERR
+      
+      USE GET_ARRAY_ROW_NUM_USE_IFs
+
+      IMPLICIT NONE
+ 
+      CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: SUBR_NAME = 'ASSERT_ARRAY_SORTED'
+      CHARACTER(LEN=*), INTENT(IN)    :: ARRAY_NAME        ! Name of array to be searched
+      CHARACTER(LEN=*), INTENT(IN)    :: CALLING_SUBR      ! Name of subr that called this one
+
+      INTEGER(LONG), INTENT(IN)       :: ASIZE             ! Size of ARRAY
+      INTEGER(LONG), INTENT(IN)       :: ARRAY(ASIZE)      ! Array to search
+      INTEGER(LONG), INTENT(IN)       :: EXT_ID            ! External (actual) ID to find in ARRAY
+      INTEGER(LONG), INTENT(OUT)      :: ROW_NUM           ! Internal ID (row in ARRAY) where EXT_ID exists
+      INTEGER(LONG)                   :: N                 ! Loop index
+      ! **********************************************************************************************************************************
+
+      ! Make sure array is sorted into numerically increasing order
+
+      DO N=2,ASIZE
+         IF (ARRAY(N) < ARRAY(N-1)) THEN
+            FATAL_ERR = FATAL_ERR + 1
+            WRITE(ERR,920) CALLING_SUBR, ARRAY_NAME
+            WRITE(F06,920) CALLING_SUBR, ARRAY_NAME
+            CALL OUTA_HERE ( 'Y' )
+         ENDIF
+      ENDDO
+      RETURN
+      ! **********************************************************************************************************************************
+  920 FORMAT(' *ERROR   920: PROGRAMMING ERROR IN SUBROUTINE ',A                                                                   &
+      ,/,14X,' INPUT ARRAY ',A,' MUST BE SORTED IN NUMERICALLY INCREASING ORDER FOR THIS SUBR TO WORK')
+      
+      END SUBROUTINE ASSERT_ARRAY_SORTED
