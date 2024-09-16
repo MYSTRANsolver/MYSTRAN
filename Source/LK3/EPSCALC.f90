@@ -52,12 +52,13 @@
 
       INTEGER(LONG), INTENT(IN)       :: ISUB              ! Internal subcase no. (1 to NSUB)
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = EPSCALC_BEGEND
+      integer                         :: memerror
 
       REAL(DOUBLE) , PARAMETER        :: ALPHA     =  ONE  ! Scalar multiplier for KLL in calc'ing residual vector, RES 
       REAL(DOUBLE) , PARAMETER        :: BETA      = -ONE  ! Scalar multiplier for PL in calc'ing residual vector, RES 
       REAL(DOUBLE)                    :: DEN               ! Denominator in EPSILON calculation
       REAL(DOUBLE)                    :: EPSILON           ! The indicator of numerical accuracy of the displ soln, UL
-      REAL(DOUBLE)                    :: KU(NDOFL)         ! Result of multiplying KLL and UL_COL
+      REAL(DOUBLE),allocatable        :: KU(:)!(NDOFL)         ! Result of multiplying KLL and UL_COL
       REAL(DOUBLE)                    :: NUM               ! Numerator in EPSILON calculation
 
       INTRINSIC                       :: DABS
@@ -68,7 +69,8 @@
          WRITE(F04,9001) SUBR_NAME,TSEC
  9001    FORMAT(1X,A,' BEGN ',F10.3)
       ENDIF
-
+      allocate ( KU (NDOFL), stat=memerror )
+      if (memerror.ne.0) stop 'error allocating memory ku at epscalc'
 ! **********************************************************************************************************************************
 ! Calculate residual vector. First, multiply KLL x UL_COL and then add -PL_COL:
 
@@ -101,7 +103,7 @@
          WRITE(F04,9002) SUBR_NAME,TSEC
  9002    FORMAT(1X,A,' END  ',F10.3)
       ENDIF
-
+      deallocate ( KU  )
       RETURN
 
 ! **********************************************************************************************************************************
