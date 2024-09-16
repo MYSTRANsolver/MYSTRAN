@@ -25,7 +25,9 @@
 ! End MIT license text.                                                                                      
 
       SUBROUTINE REDUCE_F_AO
- 
+      #ifdef MKLDSS   
+        use mkl_dss   
+      #endifdef MKLDSS  
 ! Call routines to reduce stiffness, mass, loads from F-set to A, O-sets
  
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
@@ -72,7 +74,11 @@
       REAL(DOUBLE)                    :: KAA_MAX_DIAG        ! Max diag term  from KAA
       REAL(DOUBLE)                    :: KAAD_DIAG(NDOFA)    ! Diagonal terms from KAAD
       REAL(DOUBLE)                    :: KAAD_MAX_DIAG       ! Max diag term  from KAAD
-
+      #ifdef MKLDSS   
+       TYPE(MKL_DSS_HANDLE)            :: handle              ! Allocate storage for the solver handle. 
+       INTEGER                         :: perm(1)             ! DSS VAR
+       INTEGER                         :: dsserror  
+      #endifdef MKLDSS   
       INTRINSIC                       :: DABS
 
 ! **********************************************************************************************************************************
@@ -170,7 +176,20 @@ FreeS:      IF (SOLLIB == 'SPARSE  ') THEN                       ! Last, free th
                      WRITE(*,*) 'SUPERLU STORAGE NOT FREED. INFO FROM SUPERLU FREE STORAGE ROUTINE = ', SLU_INFO
                   ENDIF
 
+               #ifdef MKLDSS 
+               ELSEIF  (SPARSE_FLAVOR(1:3) == 'DSS') THEN  !DSS STARTED
+
+                 DO J=1,NDOFO                                          ! Need a null col of loads when SuperLU is called to factor KLL
+                    DUM_COL(J) = ZERO                                  ! (only because it appears in the calling list)
+                 ENDDO
+
+                ! Deallocate solver storage and various local arrays.
+                     dsserror = DSS_DELETE(handle, MKL_DSS_DEFAULTS)
+                 IF (dsserror /= MKL_DSS_SUCCESS) STOP 'DSS error in CLEARING :' 
+
+               #endifdef MKLDSS 
                ENDIF
+              
 
             ENDIF FreeS
  
