@@ -62,7 +62,7 @@
 !                                                              'N' for nonsymmetric storage)
 
       INTEGER(LONG)                   :: AROW_MAX_TERMS      ! Output from MATMULT_SFS_NTERM and input to MATMULT_SFS
-      INTEGER(LONG)                   :: I,J                 ! DO loop indices
+      INTEGER(LONG)                   :: I,J, memerror       ! DO loop indices
       INTEGER(LONG)                   :: NTERM_CCS1          ! Number of terms in matrix CCS1  
       INTEGER(LONG)                   :: NTERM_CRS1          ! Number of terms in matrix CRS1  
       INTEGER(LONG)                   :: NTERM_CRS2          ! Number of terms in matrix CRS2  
@@ -70,10 +70,12 @@
       INTEGER(LONG)                   :: NUM_MRRcb_DIAG_0    ! Number of zero diagonal terms in MRRcb
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = CALC_MRRcb_BEGEND
 
-      REAL(DOUBLE)                    :: DUMR6(NDOFR,6)      ! Intermediate matrix
+      REAL(DOUBLE),allocatable        :: DUMR6(:,:)!(NDOFR,6)      ! Intermediate matrix
                                                              ! Full representation of MRRcb
-      REAL(DOUBLE)                    :: MRRcb_FULL(NDOFR,NDOFR)
-
+      REAL(DOUBLE),allocatable        :: MRRcb_FULL(:,:)!(NDOFR,NDOFR)
+      
+      allocate (MRRcb_FULL(NDOFR,NDOFR) , DUMR6(NDOFR,6) ,staT = memerror )
+      if (memerror.ne.0) stop 'error allocating memory at CALC_MRRcb'
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
          CALL OURTIM
@@ -320,7 +322,7 @@
          WRITE(F04,9002) SUBR_NAME,TSEC
  9002    FORMAT(1X,A,' END  ',F10.3)
       ENDIF
-
+      deallocate (MRRcb_FULL , DUMR6  )
       RETURN
 
 ! **********************************************************************************************************************************

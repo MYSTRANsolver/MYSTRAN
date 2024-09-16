@@ -55,26 +55,33 @@
       CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: SUBR_NAME = 'MERGE_MXX  '
 
       INTEGER(LONG)                   :: I,J                ! DO loop indices
-      INTEGER(LONG)                   :: I_GEN_MASS2(NVEC+1)! 
-      INTEGER(LONG)                   :: I_MNR(NVEC+1)      ! 
-      INTEGER(LONG)                   :: I_MXXa(NDOFR+1)    ! Upper NDOFR rows of MXX
-      INTEGER(LONG)                   :: I_MXXb(NVEC+1)     ! Lower NVEC  rows of MXX
-      INTEGER(LONG)                   :: J_GEN_MASS2(NVEC)  ! 
-      INTEGER(LONG)                   :: J_MNR(NTERM_MRN)   !
-      INTEGER(LONG)                   :: J_MXXa(NTERM_MRRcbn+NTERM_MRN)
-      INTEGER(LONG)                   :: J_MXXb(NTERM_MRN+NVEC)
+      INTEGER(LONG),allocatable       :: I_GEN_MASS2(:)!(NVEC+1)! 
+      INTEGER(LONG),allocatable       :: I_MNR(:)!(NVEC+1)      ! 
+      INTEGER(LONG),allocatable       :: I_MXXa(:)!(NDOFR+1)    ! Upper NDOFR rows of MXX
+      INTEGER(LONG),allocatable       :: I_MXXb(:)!(NVEC+1)     ! Lower NVEC  rows of MXX
+      INTEGER(LONG),allocatable       :: J_GEN_MASS2(:)!(NVEC)  ! 
+      INTEGER(LONG),allocatable       :: J_MNR(:)!(NTERM_MRN)   !
+      INTEGER(LONG),allocatable       :: J_MXXa(:)!(NTERM_MRRcbn+NTERM_MRN)
+      INTEGER(LONG),allocatable       :: J_MXXb(:)!(NTERM_MRN+NVEC)
+
 !xx   INTEGER(LONG)                   :: K1,K2              ! Counters
-      INTEGER(LONG)                   :: MXXn_MERGE_VEC(NDOFR+NVEC) 
+      INTEGER(LONG),allocatable       :: MXXn_MERGE_VEC(:)!(NDOFR+NVEC) 
+ 
       INTEGER(LONG)                   :: NTERM_MNR          ! 
       INTEGER(LONG)                   :: NTERM_MXXa         ! 
       INTEGER(LONG)                   :: NTERM_MXXb         ! 
 !xx   INTEGER(LONG)                   :: NUM_MNR_IN_ROW_I   ! Number of terms in row i of MNR
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = MERGE_MXX_BEGEND
 
-      REAL(DOUBLE)                    :: GEN_MASS2(NVEC)
-      REAL(DOUBLE)                    :: MNR(NTERM_MRN)
-      REAL(DOUBLE)                    :: MXXa(NTERM_MRRcbn+NTERM_MRN)
-      REAL(DOUBLE)                    :: MXXb(NTERM_MRN+NVEC)
+      REAL(DOUBLE) ,allocatable                     :: GEN_MASS2(:)!(NVEC)
+      REAL(DOUBLE) ,allocatable                     :: MNR(:)!(NTERM_MRN)
+      REAL(DOUBLE) ,allocatable                     :: MXXa(:)!(NTERM_MRRcbn+NTERM_MRN)
+      REAL(DOUBLE) ,allocatable                     :: MXXb(:)!(NTERM_MRN+NVEC)
+
+      allocate(I_GEN_MASS2(NVEC+1), I_MNR(NVEC+1) ,   I_MXXa(NDOFR+1) , I_MXXb(NVEC+1) , J_GEN_MASS2(NVEC) ,J_MNR(NTERM_MRN)  )
+      allocate(J_MXXa(NTERM_MRRcbn+NTERM_MRN),J_MXXb(NTERM_MRN+NVEC), MXXn_MERGE_VEC(NDOFR+NVEC) ,GEN_MASS2(NVEC), MNR(NTERM_MRN))
+      allocate(MXXa(NTERM_MRRcbn+NTERM_MRN), MXXb(NTERM_MRN+NVEC))
+
 
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
@@ -213,7 +220,9 @@
          WRITE(F04,9002) SUBR_NAME,TSEC
  9002    FORMAT(1X,A,' END  ',F10.3)
       ENDIF
- 
+      deallocate(I_GEN_MASS2, I_MNR ,   I_MXXa , I_MXXb , J_GEN_MASS2 ,J_MNR  )
+      deallocate(J_MXXa,J_MXXb, MXXn_MERGE_VEC,GEN_MASS2, MNR)
+      deallocate(MXXa, MXXb) 
       RETURN
 
 ! **********************************************************************************************************************************

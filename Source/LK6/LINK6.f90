@@ -79,11 +79,13 @@
       INTEGER(LONG)                   :: IOCHK               ! IOSTAT error number when opening/reading a file
       INTEGER(LONG)                   :: NUM_SOLNS           ! No. of solutions to process (e.g. NSUB for STATICS)
       INTEGER(LONG)                   :: OUNT(2)             ! File units to write messages to. Input to subr UNFORMATTED_OPEN.
-      INTEGER(LONG)                   :: PART_VEC_A_LR(NDOFA)! Partitioning vector (N set into F and S sets) 
+      INTEGER(LONG),allocatable       :: PART_VEC_A_LR(:)!(NDOFA)! Partitioning vector (N set into F and S sets) 
       INTEGER(LONG), PARAMETER        :: P_LINKNO  = 4       ! Prior LINK no's that should have run before this LINK can execute
       INTEGER(LONG)                   :: REC_NO              ! Record number when reading a file.
       
-      REAL(DOUBLE)                    :: PHIZL_COL(NDOFL)    ! Full column from sparse PHIZL matrix
+      REAL(DOUBLE),allocatable        :: PHIZL_COL(:)!(NDOFL)    ! Full column from sparse PHIZL matrix
+
+      allocate(PART_VEC_A_LR(NDOFA),PHIZL_COL(NDOFL) )
 
 ! **********************************************************************************************************************************
       LINKNO = 6
@@ -476,7 +478,7 @@
       IF (( DEBUG(193) == 6) .OR. (DEBUG(193) == 999)) THEN
          CALL FILE_INQUIRE ( 'near end of LINK6' )
       ENDIF
-
+      deallocate(PART_VEC_A_LR,PHIZL_COL )
 ! Write LINK4 end to screen
 
       WRITE(SC1,153) LINKNO

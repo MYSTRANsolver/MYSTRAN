@@ -58,17 +58,19 @@
       CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: SUBR_NAME = 'CALC_CB_MEFM_MPF'
 !                                                              'N' for nonsymmetric storage)
 
-      INTEGER(LONG)                   :: I,J,K                   ! DO loop indices
+      INTEGER(LONG)                   :: I,J,K, memerror               ! DO loop indices
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = CALC_CB_MEFM_MPF_BEGEND
 
-      REAL(DOUBLE)                    :: DUM1(NDOFR,6)           ! Intermediate matrix
-      REAL(DOUBLE)                    :: MEFW_MAT_RR(NDOFR,NDOFR)! Modal eff wgt for 1 mode for all R DOF's
+      REAL(DOUBLE),allocatable        :: DUM1(:,:)!(NDOFR,6)           ! Intermediate matrix
+      REAL(DOUBLE),allocatable        :: MEFW_MAT_RR(:,:)!(NDOFR,NDOFR)! Modal eff wgt for 1 mode for all R DOF's
       REAL(DOUBLE)                    :: MEFW_MAT_66(6,6)        ! Modal eff wgt for 1 mode transformed to CG via TR6_CG
-      REAL(DOUBLE)                    :: MEFW_DIAG_NR(NVEC,NDOFR)! Matrix whose i-th row is the diagonal from MEFW for mode i
-      REAL(DOUBLE)                    :: MPFt(NDOFR,NVEC)        ! Transpose of MPF
-      REAL(DOUBLE)                    :: MPFi(1,NDOFR)           ! i-th row of MPF
-      REAL(DOUBLE)                    :: MPFit(NDOFR,1)          ! MPFi'
-
+      REAL(DOUBLE),allocatable        :: MEFW_DIAG_NR(:,:)!(NVEC,NDOFR)! Matrix whose i-th row is the diagonal from MEFW for mode i
+      REAL(DOUBLE),allocatable        :: MPFt(:,:)!(NDOFR,NVEC)        ! Transpose of MPF
+      REAL(DOUBLE),allocatable        :: MPFi(:,:)!(1,NDOFR)           ! i-th row of MPF
+      REAL(DOUBLE),allocatable        :: MPFit(:,:)!(NDOFR,1)          ! MPFi'
+      
+      allocate ( DUM1(NDOFR,6), MEFW_MAT_RR(NDOFR,NDOFR),MEFW_DIAG_NR(NVEC,NDOFR),MPFt(NDOFR,NVEC),MPFi(1,NDOFR), MPFit(NDOFR,1),stat=memerror)
+      if (memerror.ne.0) stop 'error allocating memory at CALC_CB_MEFM_MPF'  
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
          CALL OURTIM
@@ -133,7 +135,7 @@
          WRITE(F04,9002) SUBR_NAME,TSEC
  9002    FORMAT(1X,A,' END  ',F10.3)
       ENDIF
- 
+       deallocate ( DUM1, MEFW_MAT_RR,MEFW_DIAG_NR,MPFt,MPFi, MPFit)  
       RETURN
 
 ! **********************************************************************************************************************************

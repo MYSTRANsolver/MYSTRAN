@@ -50,9 +50,10 @@
       CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: SUBR_NAME = 'MERGE_LTM  '
 
       INTEGER(LONG)                   :: I                 ! DO loop index
-      INTEGER(LONG)                   :: LTM_MERGE_VEC(6+NDOFR) 
+      INTEGER(LONG),allocatable       :: LTM_MERGE_VEC(:)!(6+NDOFR) 
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = MERGE_LTM_BEGEND
-
+      
+      allocate(LTM_MERGE_VEC(6+NDOFR))
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
          CALL OURTIM
@@ -83,7 +84,7 @@
          WRITE(F04,9002) SUBR_NAME,TSEC
  9002    FORMAT(1X,A,' END  ',F10.3)
       ENDIF
- 
+      deallocate(LTM_MERGE_VEC)
       RETURN
 
 ! **********************************************************************************************************************************

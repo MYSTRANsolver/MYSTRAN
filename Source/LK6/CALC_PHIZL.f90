@@ -63,14 +63,17 @@
       CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: SUBR_NAME = 'CALC_PHIZL'
 
       INTEGER(LONG)                   :: AROW_MAX_TERMS    ! Output from MATMULT_SFS_NTERM and input to MATMULT_SFS
-      INTEGER(LONG)                   :: I,J               ! DO loop indices
+      INTEGER(LONG)                   :: I,J, memerror     ! DO loop indices
       INTEGER(LONG)                   :: NTERM_CRS1        ! Number of terms in matrix CRS1  
       INTEGER(LONG)                   :: NTERM_CRS2        ! Number of terms in matrix CRS2  
       INTEGER(LONG)                   :: NTERM_CRS3        ! Number of terms in matrix CRS3  
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = CALC_PHIZL_BEGEND
 
-      REAL(DOUBLE)                    :: DUM1(NDOFL,NVEC)  ! Intermediate matrix
+      REAL(DOUBLE),alloatable         :: DUM1(:,:)!(NDOFL,NVEC)  ! Intermediate matrix
       REAL(DOUBLE)                    :: SMALL             ! A number used in filtering out small numbers from a full matrix
+
+      allocate(DUM1(NDOFL,NVEC),stat=memerror  )
+      if (memerror.ne.0) stop 'error allocating memoty at CALC_PHIZL'
 
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
@@ -220,7 +223,7 @@
          WRITE(F04,9002) SUBR_NAME,TSEC
  9002    FORMAT(1X,A,' END  ',F10.3)
       ENDIF
- 
+      deallocate(DUM1)
       RETURN
 
 ! **********************************************************************************************************************************

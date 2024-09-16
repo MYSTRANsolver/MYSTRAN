@@ -60,18 +60,20 @@
       INTEGER(LONG)                   :: AROW_MAX_TERMS    ! Output from MATMULT_SFS_NTERM and input to MATMULT_SFS
       INTEGER(LONG)                   :: DEB_PRT(2)        ! Debug numbers to say whether to write ABAND and/or its decomp to output
 !                                                            file in called subr SYM_MAT_DECOMP_LAPACK
-      INTEGER(LONG)                   :: I,J               ! DO loop indices
+      INTEGER(LONG)                   :: I,J, memerror     ! DO loop indices
       INTEGER(LONG)                   :: INFO        = -1  ! Input value for subr SYM_MAT_DECOMP_LAPACK (don't quit on sing KRRCB)
 
       INTEGER(LONG)                   :: NTERM_CRS1        ! Number of terms in matrix CRS1  
       INTEGER(LONG)                   :: NTERM_CRS3        ! Number of terms in matrix CRS3
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = CALC_KRRcb_BEGEND
 
-      REAL(DOUBLE)                    :: EQUIL_SCALE_FACS(NDOFR)
+      REAL(DOUBLE),allocatable        :: EQUIL_SCALE_FACS(:)!(NDOFR)
                                                            ! LAPACK_S values returned from subr SYM_MAT_DECOMP_LAPACK
       REAL(DOUBLE)                    :: K_INORM           ! Inf norm of KRRcb matrix (det in  subr COND_NUM)
       REAL(DOUBLE)                    :: RCOND             ! Recrip of cond no. of the KLL. Det in  subr COND_NUM
-
+      
+      allocate(EQUIL_SCALE_FACS(NDOFR), stat = memerror)
+      if (memerror.ne.0) stop 'error allocatinng memory at CALC_KRRcb '
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
          CALL OURTIM
@@ -194,7 +196,7 @@
          WRITE(F04,9002) SUBR_NAME,TSEC
  9002    FORMAT(1X,A,' END  ',F10.3)
       ENDIF
-
+      deallocate(EQUIL_SCALE_FACS)
       RETURN
 
 ! **********************************************************************************************************************************
