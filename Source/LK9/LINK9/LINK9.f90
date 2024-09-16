@@ -131,7 +131,7 @@
       INTEGER(LONG)                   :: ITG       = 0     ! Index (1 thru MOU4) for file unit num for grid OTM's text files
       INTEGER(LONG)                   :: IUE       = 0     ! Index (1 thru MOT4) for file unit num for elem OTM's unformatted files
       INTEGER(LONG)                   :: IUG       = 0     ! Index (1 thru MOU4) for file unit num for grid OTM's unformatted files
-      INTEGER(LONG)                   :: IERROR            ! Error count
+      INTEGER(LONG)                   :: IERROR,memerror   ! Error count
       INTEGER(LONG)                   :: IOCHK             ! IOSTAT error number when opening/reading a file
       INTEGER(LONG)                   :: JVEC              ! DO loop index - output vector no. being processed (S/C or eigenvec no.)
       INTEGER(LONG), PARAMETER        :: NUM1      = 1     ! Used in subr's that partition matrices
@@ -142,8 +142,8 @@
       INTEGER(LONG)                   :: OUNT(2)           ! File units to write messages to. Input to subr UNFORMATTED_OPEN  
       INTEGER(LONG)                   :: OT4_EROW  = 0     ! Row number in OT4 elem related files. Accumulated in OFP1,2 for OTM's
       INTEGER(LONG)                   :: OT4_GROW  = 0     ! Row number in OT4 grid related files. Accumulated in OFP1,2 for OTM's
-      INTEGER(LONG)                   :: PART_G_NM(NDOFG)  ! Partitioning vector (G set into N and M sets) 
-      INTEGER(LONG)                   :: PART_SUB(NSUB)    ! Partitioning vector (1's for all subcases) 
+      INTEGER(LONG), allocatable      :: PART_G_NM(:)!(NDOFG)  ! Partitioning vector (G set into N and M sets) 
+      INTEGER(LONG), allocatable      :: PART_SUB(:)!(NSUB)    ! Partitioning vector (1's for all subcases) 
       INTEGER(LONG)                   :: P_LINKNO          ! Prior LINK no's that should have run before this LINK can execute
       INTEGER(LONG)                   :: PM_ROW_MAX_TERMS  ! Output from subr PARTITION_SIZE (max terms in any row of matrix)
       INTEGER(LONG)                   :: REC_NO            ! Record number when reading a file
@@ -170,7 +170,8 @@
  
 ! **********************************************************************************************************************************
       LINKNO = 9
-
+      allocate(PART_G_NM(NDOFG), PART_SUB(NSUB),stat=memerror)
+      if (memerror.ne.0) stop 'Error allocating memory at LINK9'
       ! Set time initializing parameters
       CALL TIME_INIT
 
@@ -1364,7 +1365,7 @@ j_do: DO JVEC=1,NUM_SOLNS
       ENDIF
 
 ! Write LINK9 end to screen
-
+      deallocate(PART_G_NM, PART_SUB )
       CALL OURTIM             
       WRITE(SC1,153) LINKNO
 
