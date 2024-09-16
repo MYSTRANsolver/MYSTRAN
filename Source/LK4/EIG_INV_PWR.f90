@@ -57,24 +57,28 @@
       INTEGER(LONG)                   :: DEB_PRT(2)        ! Debug numbers to say whether to write ABAND and/or its decomp to output
 !                                                            file in called subr SYM_MAT_DECOMP_LAPACK (ABAND = band form of KLL)
 
-      INTEGER(LONG)                   :: I                 ! DO loop index
+      INTEGER(LONG)                   :: I, memerror       ! DO loop index
       INTEGER(LONG)                   :: INFO        = 0   ! 
       INTEGER(LONG)                   :: ITER_NUM          ! Number of iterations in converging on eigenvalue 
 
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = EIG_INV_PWR_BEGEND
 
-      REAL(DOUBLE)                    :: EIGEN_VAL_APPROX(0:MXITERI)
+      REAL(DOUBLE),allocatable        :: EIGEN_VAL_APPROX(:)!(0:MXITERI)
                                                            ! Eigenvalue at a given iteration number
 
       REAL(DOUBLE)                    :: K_INORM           ! Inf norm of KOO matrix
-      REAL(DOUBLE)                    :: MVEC(NDOFL,1)     ! MLL*EIGEN_VEC (or KLLD*EIGEN_VEC for BUCKLING)
+      REAL(DOUBLE),allocatable        :: MVEC(:,:)!(NDOFL,1)     ! MLL*EIGEN_VEC (or KLLD*EIGEN_VEC for BUCKLING)
       REAL(DOUBLE)                    :: MAX_VALUE         ! Max value from EIGEN_VEC(I,1)
-      REAL(DOUBLE)                    :: NULL_SCALE_FACS(NDOFL)
+      REAL(DOUBLE),allocatable        :: NULL_SCALE_FACS(:)!(NDOFL)
                                                            ! KMSM will not be equilibrated so set these to zero
       REAL(DOUBLE)                    :: PERCENT_CHANGE    ! % change in eigenvalue estimate between two successive iterations
       REAL(DOUBLE)                    :: RCOND             ! Recrip of cond no. of the KLL. Det in  subr COND_NUM
 
       INTRINSIC                       :: MIN
+
+      allocate(EIGEN_VAL_APPROX(0:MXITERI),stat=memerror)
+      allocate(MVEC(NDOFL,1),  NULL_SCALE_FACS(NDOFL), stat=memerror )
+      if (memerror.ne.0) stop 'error allocating memory at eig_inv_pwr'
 
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
@@ -350,6 +354,8 @@ iters:DO
          WRITE(F04,9002) SUBR_NAME,TSEC
  9002    FORMAT(1X,A,' END  ',F10.3)
       ENDIF
+      deallocate(EIGEN_VAL_APPROX)
+      deallocate(MVEC, NULL_SCALE_FACS )
 
       RETURN
 
