@@ -82,12 +82,15 @@
       CHARACTER( 44*BYTE)             :: MODNAM              ! Name to write to screen to describe module being run.
 
       INTEGER(LONG)                   :: I,J                 ! DO loop indices or counters.
-      INTEGER(LONG)                   :: IERROR              ! Error count when reading records from a file.
+      INTEGER(LONG)                   :: IERROR,memerror     ! Error count when reading records from a file.
       INTEGER(LONG)                   :: OUNT(2)             ! File units to write messages to. Input to subr UNFORMATTED_OPEN.
       INTEGER(LONG), PARAMETER        :: P_LINKNO = 2        ! Prior LINK no's that should have run before this LINK can execute.
 
       REAL(DOUBLE)                    :: EPS1                ! Small number to compare variables against zero.
-      REAL(DOUBLE)                    :: EIGEN_VEC_COL(NDOFL)! One eigenvector put into a 1-D array.
+      REAL(DOUBLE),allocatable        :: EIGEN_VEC_COL(:)!(NDOFL)! One eigenvector put into a 1-D array.
+      
+      allocate (EIGEN_VEC_COL(NDOFL),stat=memerror)
+      if (memerror.ne.0) stop 'error allocating memory at link4'
 
 ! **********************************************************************************************************************************
       LINKNO = 4
@@ -454,7 +457,7 @@
 
 ! Write LINK4 end to screen
       WRITE(SC1,153) LINKNO
-
+      deallocate (EIGEN_VEC_COL)
       RETURN
 
 ! **********************************************************************************************************************************
