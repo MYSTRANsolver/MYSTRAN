@@ -109,7 +109,8 @@
       INTEGER(LONG)                   :: ITER_MAX           ! Naximum iterations before quiting 
       INTEGER(LONG)                   :: NUM_INCL_FILES     ! Number of INCLUDE statements found in the Bulk data file
       INTEGER(LONG)                   :: NUM_LOAD_STEPS     ! Number of steps to divide the load into (1 unless SOL is nonlinear)
-      INTEGER(LONG)                   :: OUNT(2)            ! File units to write messages to 
+      INTEGER(LONG)                   :: OUNT(2)            ! File units to write messages to
+      integer                         :: clock1, clock2, rate ! for new benchmark method  
 
       REAL(DOUBLE)                    :: CPU_SECS           ! CPU time for job
       REAL(DOUBLE)                    :: EPS1               ! Small number with which to compare to 0
@@ -121,7 +122,7 @@
 ! **********************************************************************************************************************************
       EPS1 = EPSIL(1)
 
-      CALL CPU_TIME ( TIME_START )
+      CALL SYSTEM_CLOCK (clock1,rate)  ! get benchmark (n) start time ! CALL CPU_TIME ( TIME_START )
 
 ! Default units for writing errors the screen (until LINK1A is read)
 
@@ -322,6 +323,8 @@ iters:      DO
             CALL LINK9 ( I )
 
          ENDDO steps
+         if (allocated(PERCENT_CHANGE)) deallocate(PERCENT_CHANGE)
+         if (allocated(UG_NORM)) deallocate(UG_NORM)
 
       ELSE                                                 ! This is a restart
 
@@ -395,8 +398,8 @@ iters:      DO
 ! Write MYSTRAN END to BUG, ERR, F04, F06 and then close those files
 
       WRITE(F06,*)
-      CALL CPU_TIME ( TIME_END )
-      CPU_SECS = TIME_END - TIME_START
+      CALL SYSTEM_CLOCK (clock2,rate) !CALL CPU_TIME ( TIME_END )
+      CPU_SECS = (clock2-clock1)/DBLE(rate)  !CPU_SECS = TIME_END - TIME_START
       WRITE(F06,200) CPU_SECS
 
       CALL OURTIM
