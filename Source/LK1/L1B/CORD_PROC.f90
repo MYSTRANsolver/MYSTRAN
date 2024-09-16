@@ -66,12 +66,12 @@
       CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: SUBR_NAME   = 'CORD_PROC'
       CHARACTER( 1*BYTE)              :: ALL_RIDS_0  = 'Y' ! Set to 'Y' when all coord systems' RID is basic
       CHARACTER( 1*BYTE)              :: CIRC_ERR    = 'N' ! Set to 'Y' if a coord sys has a circular reference back to itself
-      CHARACTER( 6*BYTE)              :: CORD_NAME(NCORD)  ! Name of coord system (CORD1R, etc)
+      CHARACTER( 6*BYTE), allocatable :: CORD_NAME(:)! (NCORD)  ! Name of coord system (CORD1R, etc)
       CHARACTER( 1*BYTE)              :: FOUND_GA    = 'N' ! Set to 'Y' if grid A for CORD1R coord system is found in array GRID
       CHARACTER( 1*BYTE)              :: FOUND_GB    = 'N' ! Set to 'Y' if grid B for CORD1R coord system is found in array GRID
       CHARACTER( 1*BYTE)              :: FOUND_GC    = 'N' ! Set to 'Y' if grid C for CORD1R coord system is found in array GRID
       CHARACTER( 1*BYTE)              :: FOUND_RID   = 'N' ! Set to 'Y' if the RID for a coord system is a system in array CORD
-      CHARACTER( 1*BYTE)              :: TRANS_DONE(NCORD) ! If 'Y' then the transformation to basic for a coord sys has been done
+      CHARACTER( 1*BYTE), allocatable :: TRANS_DONE(:)!(NCORD) ! If 'Y' then the transformation to basic for a coord sys has been done
  
       INTEGER(LONG)                   :: CASCADE_PROC_ARRAY1(3,3)
                                                            ! Array which has info about how many coord systems have to be cascaded
@@ -84,7 +84,7 @@
 !                                                            transformation from CID to basic.
 !                                                             
 
-      INTEGER(LONG)                   :: CASCADE_PROC_ARRAY(3,NCORD)
+      INTEGER(LONG), allocatable      :: CASCADE_PROC_ARRAY(:,:)!(3,NCORD)
                                                            ! Same info from CASCADE_PROC_ARRAY1 but values for all coord systems.
 !                                                            For  CORD1R, the 3 cols in CASCADE_PROC_ARRAY1 are reduced to have the
 !                                                            col which has the shortest path from basic up to the coord system
@@ -93,9 +93,9 @@
       INTEGER(LONG)                   :: CIDA, CIDB, CIDC  ! Actual coord system numbers
       INTEGER(LONG)                   :: CID_RID0          ! Actual coord sys number for a system that has basic as its' ref system
       INTEGER(LONG)                   :: CORD_TYPE         ! Integer value for coord system type
-      INTEGER(LONG)                   :: GA(NCORD)         ! Grid nos put into array CORD for pt A when B.D. was read for CORD1R
-      INTEGER(LONG)                   :: GB(NCORD)         ! Grid nos put into array CORD for pt B when B.D. was read for CORD1R
-      INTEGER(LONG)                   :: GC(NCORD)         ! Grid nos put into array CORD for pt C when B.D. was read for CORD1R
+      INTEGER(LONG), allocatable      :: GA(:)!(NCORD)     ! Grid nos put into array CORD for pt A when B.D. was read for CORD1R
+      INTEGER(LONG), allocatable      :: GB(:)!(NCORD)     ! Grid nos put into array CORD for pt B when B.D. was read for CORD1R
+      INTEGER(LONG), allocatable      :: GC(:)!(NCORD)     ! Grid nos put into array CORD for pt C when B.D. was read for CORD1R
       INTEGER(LONG)                   :: I,J,K,L,M         ! DO loop indices
       INTEGER(LONG)                   :: I1                ! A computed index
       INTEGER(LONG)                   :: ICID              ! The internal coord sys ID for an actual coord sys number
@@ -107,8 +107,8 @@
       INTEGER(LONG)                   :: NUM_LEFT_AT_BEG   ! Num of CORD1 systems left to process at some point in Phase 7
       INTEGER(LONG)                   :: NUM_LEFT_AT_END   ! Num of CORD1 systems left to process at some point in Phase 7
       INTEGER(LONG)                   :: RID               ! The reference coord sys from a CORD array entry
-
-      INTEGER(LONG)                   :: RID_ARRAY(NCORD+1,3*NCORD1+NCORD2)
+      integer                         :: memerror
+      INTEGER(LONG), allocatable      :: RID_ARRAY(:,:)!(NCORD+1,3*NCORD1+NCORD2)
                                                            ! An array that shows the chain of coord sys refs for all coord systems
 !                                                            There has to be more cols than number of coord systems since CORD1R can
 !                                                            take up 3 cols (one for each ref pt on the CORD1R). The top of the
@@ -128,12 +128,12 @@
       REAL(DOUBLE)                    :: MAGVK             ! Magnitude of VK
       REAL(DOUBLE)                    :: PHI               ! Elevation angle in a sph coord system
       REAL(DOUBLE)                    :: RADIUS            ! Radius in a cyl or sph coord system
-      REAL(DOUBLE)                    :: RGA(NCORD,3)      ! Coords of origin (pt A) in a coord system definition
-      REAL(DOUBLE)                    :: RGB(NCORD,3)      ! Coords of a pt (B) on the z axis in a coord system definition
-      REAL(DOUBLE)                    :: RGC(NCORD,3)      ! Coords of a pt (C) in the x-z plane in a coord system definition
-      REAL(DOUBLE)                    :: RO(3,NCORD)       ! Array of basic coords of origin of coord sys rel to origin of basic sys
+      REAL(DOUBLE), allocatable       :: RGA(:,:)!(NCORD,3)      ! Coords of origin (pt A) in a coord system definition
+      REAL(DOUBLE), allocatable       :: RGB(:,:)!(NCORD,3)      ! Coords of a pt (B) on the z axis in a coord system definition
+      REAL(DOUBLE), allocatable       :: RGC(:,:)!(NCORD,3)      ! Coords of a pt (C) in the x-z plane in a coord system definition
+      REAL(DOUBLE), allocatable       :: RO(:,:)!(3,NCORD)       ! Array of basic coords of origin of coord sys rel to origin of basic sys
       REAL(DOUBLE)                    :: ROJ(3)            ! A column from array RO
-      REAL(DOUBLE)                    :: RP(3,NCORD)       ! Array of basic coords of origin of coord sys rel to their ref sys
+      REAL(DOUBLE), allocatable       :: RP(:,:)!(3,NCORD)       ! Array of basic coords of origin of coord sys rel to their ref sys
       REAL(DOUBLE)                    :: RPJ(3)            ! A column from array RP
       REAL(DOUBLE)                    :: T0A(3,3)          ! A coord transformation matrix in an intermediate calc
       REAL(DOUBLE)                    :: T0B(3,3)          ! A coord transformation matrix in an intermediate calc
@@ -166,7 +166,10 @@
 ! Initialize
  
       EPS1    = DABS(EPSIL(1))
- 
+      ALLOCATE(CORD_NAME(NCORD),stat=memerror)
+      ALLOCATE(TRANS_DONE(NCORD),stat=memerror)
+      if (memerror.ne.0) stop 'Error in allocate memory trans_done at cord_proc'
+
       DO I=1,NCORD
          TRANS_DONE = 'N'
          IF (CORD(I,1) == 11) CORD_NAME(I) = 'CORD1R'
@@ -176,7 +179,8 @@
          IF (CORD(I,1) == 22) CORD_NAME(I) = 'CORD2C'
          IF (CORD(I,1) == 23) CORD_NAME(I) = 'CORD2S'         
       ENDDO
-
+      allocate(RGA(NCORD,3),RGb(NCORD,3),RGc(NCORD,3),stat=memerror)
+      if (memerror.ne.0) stop 'Error in allocate memory RGA RGB RGC at cord_proc'
       DO I=1,NCORD
          DO J=1,3                                          ! Initialize
             RGA(I,J) = ZERO
@@ -195,7 +199,10 @@
       IERROR = 0
 
       CALL CORDCHK ( IERROR )                              ! CORDCHK makes sure that all cord system ID's are unique
- 
+      allocate(GA(NCORD),GB(NCORD),GC(NCORD),stat=memerror)
+      if (memerror.ne.0) stop 'error allocation memory ga at cord_proc'
+      ALLOCATE(RID_ARRAY(NCORD+1,3*NCORD1+NCORD2),stat=memerror)
+      if (memerror.ne.0) stop 'error allocation memory rid_array at cord_proc' 
 doi11:DO I=1,NCORD
 
          CORD_TYPE = CORD(I,1)
@@ -457,6 +464,8 @@ dol21:                        DO L=1,I1-1                  ! Check for circular 
 ! **********************************************************************************************************************************
 ! Phase 4: Solve for array CASCADE_PROC_ARRAY. It will be used to do the cascading of coord references to get the transformation
 ! from CID to basic
+      if(.not.allocated(CASCADE_PROC_ARRAY)) allocate(CASCADE_PROC_ARRAY(3,NCORD),STAT=MEMERROR)
+      IF (MEMERROR.NE.0) STOP 'ERROR ON ALLOCATION CASCADE_PROC_ARRAY AT CORD_PROC'
 
       DO J=1,NCORD
          CASCADE_PROC_ARRAY(1,J) = 0
@@ -653,7 +662,8 @@ doi32:DO I=1,NCORD
   
 ! The basic coords of the origin of each coord system are also calculated. The calc begins by taking the point A coords from the
 ! system that has 0 as reference and adding the amounts from each coord sys A point after transforming it to basic.
- 
+      allocate(RO(3,NCORD),RP(3,NCORD),stat=memerror )
+      if (memerror.ne.0) stop 'Error allocating memory Rp at cord_proc'
       IERROR = 0
 main: DO                                                   ! Until all RID's are 0
          ALL_RIDS_0 = 'Y'                                  ! Find out if there are coord systems whose RID is not, or has not been
@@ -769,7 +779,8 @@ jloop2:     DO J = 1,NCORD                                 ! Loop on J since the
          ENDIF
  
       ENDDO main
-  
+      IF (ALLOCATED(RO)) deALLOCATE(RO)
+      IF (ALLOCATED(RP)) deALLOCATE(RP)
 ! Check IERROR and quit if > 0
 
       IF (IERROR > 0) THEN
@@ -1115,6 +1126,16 @@ big_loop:   DO J=1,NCORD                                   ! Find a CORD1 with a
       IF ((PRTCORD == 1) .OR. (PRTCORD == 2)) CALL PARAM_PRTCORD_OUTPUT ( '81' )
 
 ! Check IERROR and quit if > 0
+      IF (ALLOCATED(CORD_NAME)) deALLOCATE(CORD_NAME)
+      IF (ALLOCATED(TRANS_DONE))  DeALLOCATE(TRANS_DONE)
+      IF (ALLOCATED(CASCADE_PROC_ARRAY)) Deallocate(CASCADE_PROC_ARRAY)
+      IF (ALLOCATED(GA)) Deallocate(GA)
+      iF (ALLOCATED(GB)) Deallocate(GB)
+      iF (ALLOCATED(GC)) Deallocate(GC)
+      IF (ALLOCATED(RID_ARRAY)) DeALLOCATE(RID_ARRAY)
+      IF (ALLOCATED(RGA)) Deallocate(RGA)
+      IF (ALLOCATED(RGb)) Deallocate(RGb)
+      IF (ALLOCATED(RGc)) Deallocate(RGc)
 
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
