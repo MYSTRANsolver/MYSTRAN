@@ -61,15 +61,15 @@
       INTEGER(LONG)                   :: B_SDIA              ! No. of superdiags in the BBAND (MLL or KLLD) matrix upper triangle.
       INTEGER(LONG)                   :: COMPV               ! Component number (1-6) of a grid DOF
       INTEGER(LONG)                   :: GRIDV               ! Grid number
-      INTEGER(LONG)                   :: I                   ! DO loop index
-      INTEGER(LONG)                   :: IFAIL(NDOFL)        ! For LAPACK - integer numbers of eigenvectors that failed to converge
-      INTEGER(LONG)                   :: IFAIL_IND(NDOFL)    ! The integer numbers from array IFAIL that are not 0.
+      INTEGER(LONG)                   :: I,memerror          ! DO loop index
+      INTEGER(LONG), allocatable      :: IFAIL(:)! (NDOFL)   ! For LAPACK - integer numbers of eigenvectors that failed to converge
+      INTEGER(LONG), allocatable      :: IFAIL_IND(:)!(NDOFL)! The integer numbers from array IFAIL that are not 0.
       INTEGER(LONG)                   :: IL, IU              ! For LAPACK - the lower/upper eigenvector numbers in over
 !                                                               which LAPACK will calc eigenvectors.
 !///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ! NOTE: LAPACK says to dimension         IWORK(5*NDOFL),       This failed on some small DOF problems. Seems like 8*NDOFL works.
 !///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-      INTEGER(LONG)                   :: IWORK(8*NDOFL)      ! Integer workspace used by LAPACK.
+      INTEGER(LONG), allocatable      :: IWORK(:)!(8*NDOFL)  ! Integer workspace used by LAPACK.
       INTEGER(LONG)                   :: INFO        = 0     ! Output from LAPACK routine to do eigenvalue, vector calculation:
 !                                                                 0:  successful exit
 !                                                               < 0:  if INFO = -i, the i-th argument had an illegal value
@@ -92,14 +92,16 @@
       REAL(DOUBLE)                    :: VU                  ! EIG_FRQ2 written as an eigenvalue.
       REAL(DOUBLE)                    :: LAMBDA1             ! Eigenvalue corresponding to EIG_FRQ1.
       REAL(DOUBLE)                    :: LAMBDA2             ! Eigenvalue corresponding to EIG_FRQ2.
-      REAL(DOUBLE)                    :: Q(NDOFL,NDOFL)      ! Matrix used in LAPACK reduction of eigen problem to standard form.
-      REAL(DOUBLE)                    :: WORK(7*NDOFL)       ! Real workspace for METH = GIV.
+      REAL(DOUBLE), allocatable       :: Q(:,:)!(NDOFL,NDOFL)! Matrix used in LAPACK reduction of eigen problem to standard form.
+      REAL(DOUBLE), allocatable       :: WORK(:)!(7*NDOFL)   ! Real workspace for METH = GIV.
 
       REAL(DOUBLE)                    :: DLAMCH
       EXTERNAL                        :: DLAMCH
 
       INTRINSIC                       :: DSQRT, MIN
-
+      
+      allocate(IFAIL(NDOFL),IFAIL_IND(NDOFL),Q(NDOFL,NDOFL),WORK(7*NDOFL))
+      if (memerror.ne.0) stop 'Error in allocate memory Q at Eig_giv_mgiv'
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
          CALL OURTIM
@@ -434,7 +436,7 @@
          ENDIF
 
       ENDIF
-
+      deallocate(IFAIL,IFAIL_IND,Q,WORK)
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
          CALL OURTIM
