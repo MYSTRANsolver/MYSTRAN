@@ -56,7 +56,7 @@
       INTEGER(LONG)                   :: BEG_COL_GET       ! An input to subr MATGET/MATPUT (what col to start get/put rows)
       INTEGER(LONG)                   :: GRID_ID_ROW_NUM_J ! Row number in array GRID_ID where AGRID(J) is found
       INTEGER(LONG)                   :: GRID_ID_ROW_NUM_K ! Row number in array GRID_ID where AGRID(K) is found
-      INTEGER(LONG)                   :: I,J,K,L,M         ! DO loop indices
+      INTEGER(LONG)                   :: I,J,K,L,M,memerror! DO loop indices
       INTEGER(LONG)                   :: ICID              ! Internal coord sys ID
       INTEGER(LONG), PARAMETER        :: NCOLA     = 3     ! An input to subr MATMULT_FFF/MATMULT_FFF_T, called herein
       INTEGER(LONG)                   :: NCOLB             ! An input to subr MATMULT_FFF/MATMULT_FFF_T, called herein
@@ -70,8 +70,8 @@
       REAL(DOUBLE) , INTENT(INOUT)    :: ZE(MELDOF,MELDOF) ! Either the mass or stiff matrix of the element
       REAL(DOUBLE)                    :: DUM11(3,3)        ! An intermadiate matrix in a matrix multiply operation 
       REAL(DOUBLE)                    :: DUM12(3,3)        ! An intermadiate matrix in a matrix multiply operation
-      REAL(DOUBLE)                    :: DUM21(3,NSUB)     ! An intermadiate matrix in a matrix multiply operation
-      REAL(DOUBLE)                    :: DUM22(3,NSUB)     ! An intermadiate matrix in a matrix multiply operation
+      REAL(DOUBLE), allocatable       :: DUM21(:,:)!(3,NSUB)     ! An intermadiate matrix in a matrix multiply operation
+      REAL(DOUBLE), allocatable       :: DUM22(:,:)!(3,NSUB)     ! An intermadiate matrix in a matrix multiply operation
       REAL(DOUBLE)                    :: THETAD,PHID       ! Outputs from subr GEN_T0L
       REAL(DOUBLE)                    :: TJ(3,3)           ! Coord transform matrix from basic to global for an internal
       REAL(DOUBLE)                    :: TK(3,3)           ! Coord transform matrix from basic to global for an internal grid
@@ -84,7 +84,8 @@
       ENDIF
 
 ! **********************************************************************************************************************************
-
+      allocate(DUM21(3,NSUB),DUM22(3,NSUB),stat=memerror)
+      if (memerror.ne.0) stop 'error in dum21 allocate elem_Transform_lbg'
       IF ((TYPE(1:4) == 'ELAS') .OR. (TYPE == 'USERIN  ')) THEN
          FATAL_ERR = FATAL_ERR + 1
          WRITE(ERR,1407) SUBR_NAME, ' ELASi, USERIN '
@@ -284,7 +285,7 @@ k_cord2:       DO K=1,NCORD
          WRITE(F04,9002) SUBR_NAME,TSEC
  9002    FORMAT(1X,A,' END  ',F10.3)
       ENDIF
-
+      deallocate(DUM21,DUM22)
       RETURN
 
 ! **********************************************************************************************************************************
