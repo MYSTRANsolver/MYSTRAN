@@ -105,7 +105,7 @@
 
       INTEGER(LONG)                   :: I,J               ! DO loop indices
       INTEGER(LONG)                   :: I1,I2             ! Intermediate integer variable
-      INTEGER(LONG)                   :: JERROR    = 0     ! Local error count
+      INTEGER(LONG)                   :: JERROR    = 0, memerror     ! Local error count
       INTEGER(LONG)                   :: OUNT(2)           ! File units to write messages to. Input to subr UNFORMATTED_OPEN  
       INTEGER(LONG)                   :: PRINTIT   = 0     ! 'Y'/'N' depending on whether to tell subr GET_MATRIX_DIAG_STATS to
 !                                                            print output
@@ -115,15 +115,17 @@
       INTEGER(LONG)                   :: SETLKTM_DEF       ! Default value of SETLKTM
       INTEGER(LONG) :: POST
 
-      REAL(DOUBLE)                    :: KGG_DIAG(NDOFG)   ! Diagonal of KGG (needed for equil check on RESTART)
-      REAL(DOUBLE)                    :: KGG_MAX_DIAG      ! Max diag term from KGG (needed for equil check on RESTART)
+      REAL(DOUBLE), allocatable       :: KGG_DIAG(:)! (NDOFG)   ! Diagonal of KGG (needed for equil check on RESTART)
+      REAL(DOUBLE)                   :: KGG_MAX_DIAG      ! Max diag term from KGG (needed for equil check on RESTART)
 
       INTRINSIC                       :: IAND
    
 ! **********************************************************************************************************************************
       LINKNO = 0
       POST = -1
-
+      allocate(KGG_DIAG(NDOFG),stat=memerror)
+      if (memerror.ne.0) stop 'Error allocating memory in Link0'
+      
 ! Initialize WRT_BUG
 
       DO I=0,MBUG-1
@@ -1200,6 +1202,7 @@ res20:IF (RESTART == 'N') THEN
 ! Write LINK0 end to screen
 
       WRITE(SC1,154) LINKNO
+      deallocate(KGG_DIAG)
 
 ! **********************************************************************************************************************************
    10 FORMAT(' >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>',&
