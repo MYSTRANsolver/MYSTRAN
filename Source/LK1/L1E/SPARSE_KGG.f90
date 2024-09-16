@@ -64,7 +64,7 @@
  
       INTEGER(LONG)                   :: AGRIDI             ! Actual grid ID
       INTEGER(LONG)                   :: G_SET_COL          ! Col in TDOF where G-set DOF's are
-      INTEGER(LONG)                   :: I,J,K,L,N          ! DO loop indices
+      INTEGER(LONG)                   :: I,J,K,L,N,memerror ! DO loop indices
       INTEGER(LONG)                   :: IGRID              ! Internal grid ID
       INTEGER(LONG)                   :: IOCHK              ! IOSTAT error number when opening/reading a file
       INTEGER(LONG)                   :: IS                 ! Index into array STF3
@@ -80,12 +80,12 @@
       INTEGER(LONG)                   :: NZERO   = 0        ! Count on zero terms in array STF
       INTEGER(LONG)                   :: OUNT(2)            ! File units to write messages to. Input to subr UNFORMATTED_OPEN  
       INTEGER(LONG)                   :: ROW_NUM_START      ! DOF number where TDOF data begins for a grid
-      INTEGER(LONG)                   :: RJ(NDOFG)          ! Column numbers corresponding to the terms in RSTF(I).
+      INTEGER(LONG), allocatable      :: RJ(:)!(NDOFG)          ! Column numbers corresponding to the terms in RSTF(I).
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = SPARSE_KGG_BEGEND
  
       REAL(DOUBLE)                    :: EPS1               ! A small number to compare real zero
       REAL(DOUBLE)                    :: KGG_II(6,6)        ! 6 x 6 diagonal stiffness matrices for 1 grid
-      REAL(DOUBLE)                    :: RSTF(NDOFG)        ! 1D array of terms from STF(I) pertaining to one row of the G-set
+      REAL(DOUBLE), allocatable       :: RSTF(:)!(NDOFG)    ! 1D array of terms from STF(I) pertaining to one row of the G-set
 !                                                             stiffness matrix. Initially, the cols are not in increasing global
 !                                                             DOF order. RSTF is sorted, prior to writing the G-set stiff matrix
 !                                                             to file LINK1L, so that the cols are in increasing DOF order.
@@ -102,7 +102,8 @@
 
 ! **********************************************************************************************************************************
       EPS1 = EPSIL(1)
-
+      allocate ( RJ(NDOFG) , RSTF(NDOFG) , stat = memerror )
+      if (memerror.ne.0) stop 'Error allocating memory at SPARSE_KGG'
 ! Pass # 1: Determine final NTERM_KGG (may be less due to terms stripped)
 
       NZERO = 0
@@ -353,7 +354,7 @@ j_do4:   DO J=1,NIND_GRDS_MPCS                           ! on MPC's since they m
          WRITE(F04,9002) SUBR_NAME,TSEC
  9002    FORMAT(1X,A,' END  ',F10.3)
       ENDIF
-
+      deallocate ( RJ , RSTF )
       RETURN
 
 ! **********************************************************************************************************************************

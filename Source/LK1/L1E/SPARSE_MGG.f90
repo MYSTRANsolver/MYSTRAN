@@ -56,7 +56,7 @@
  
       INTEGER(LONG)                   :: GRID_NUM          ! An actual grid ID
       INTEGER(LONG)                   :: I,J,K             ! DO loop indices
-      INTEGER(LONG)                   :: IERR              ! Local error count
+      INTEGER(LONG)                   :: IERR, memerror    ! Local error count
       INTEGER(LONG)                   :: IGRID             ! Internal grid ID
       INTEGER(LONG)                   :: IK                ! Index for array I_MGGE
       INTEGER(LONG)                   :: IS                ! Index into arrays EMSPNT, EMSLIS, EMSCOL
@@ -68,13 +68,13 @@
       INTEGER(LONG)                   :: NUM_COMPS         ! Number of displ components (1 for SPOINT, 6 for physical grid)
       INTEGER(LONG)                   :: NZERO   = 0       ! Count on zero terms in array EMS
       INTEGER(LONG)                   :: OUNT(2)           ! File units to write messages to. Input to subr UNFORMATTED_OPEN  
-      INTEGER(LONG)                   :: RJ(NDOFG)         ! Column numbers corresponding to the terms in REMS(I).
+      INTEGER(LONG), allocatable      :: RJ(:)!(NDOFG)         ! Column numbers corresponding to the terms in REMS(I).
       INTEGER(LONG)                   :: ROW_NUM_START     ! DOF number where TDOF data begins for a grid
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = SPARSE_MGG_BEGEND
  
       REAL(DOUBLE)                    :: EPS1              ! A small number to compare real zero
       REAL(DOUBLE)                    :: GRID_MGG(6,6)     ! 6 x 6 mass matrix for a grid
-      REAL(DOUBLE)                    :: REMS(NDOFG)       ! 1D array of the terms from EMS(I) pertaining to one row of the G-set
+      REAL(DOUBLE), allocatable       :: REMS(:)!(NDOFG)       ! 1D array of the terms from EMS(I) pertaining to one row of the G-set
 !                                                            mass matrix. Initially, the cols are not in increasing global DOF
 !                                                            order. REMS is sorted, prior to writing the G-set mass matrix
 !                                                            to file LINK1R, so that the cols are in increasing DOF order.
@@ -87,7 +87,8 @@
          WRITE(F04,9001) SUBR_NAME,TSEC
  9001    FORMAT(1X,A,' BEGN ',F10.3)
       ENDIF
-
+      allocate (  RJ(NDOFG), REMS(NDOFG) ,stat = memerror  )
+      if (memerror.ne.0) stop 'Error allocating memory at SPARSE_MGG'
 ! **********************************************************************************************************************************
       EPS1 = EPSIL(1)
 ! Pass # 1: Determine final NTERM_MGGE (may be less due to zero terms)
@@ -352,7 +353,7 @@ j_do3:      DO J = 1,NUM
          WRITE(F04,9002) SUBR_NAME,TSEC
  9002    FORMAT(1X,A,' END  ',F10.3)
       ENDIF
-
+      deallocate (  RJ, REMS  )
       RETURN
 
 ! **********************************************************************************************************************************

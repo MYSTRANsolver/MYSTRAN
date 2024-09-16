@@ -65,13 +65,13 @@
       CHARACTER(FILE_NAM_MAXLEN*BYTE) :: SCRFIL            ! File name
  
       INTEGER(LONG), PARAMETER        :: DEB_NUM   = 46    ! Debug number for output error message
-      INTEGER(LONG)                   :: EDOF(MELDOF)      ! A list of the G-set DOF's for an elem
+      INTEGER(LONG), allocatable      :: EDOF(:)!(MELDOF)      ! A list of the G-set DOF's for an elem
       INTEGER(LONG)                   :: EDOF_ROW_NUM      ! Row number in array EDOF
       INTEGER(LONG)                   :: G_SET_COL_NUM     ! Col no. in array TDOF where G-set DOF's are kept 
       INTEGER(LONG)                   :: I,J,K             ! DO loop indices
       INTEGER(LONG)                   :: I1                ! Intermediate variable resulting from an IAND operation
       INTEGER(LONG)                   :: IDUM              ! Dummy variable used when flipping DOF's
-      INTEGER(LONG)                   :: IERROR            ! Local error indicator
+      INTEGER(LONG)                   :: IERROR,memerror   ! Local error indicator
       INTEGER(LONG)                   :: IGRID             ! Internal grid ID
       INTEGER(LONG)                   :: IOCHK             ! IOSTAT error number when opening a file
       INTEGER(LONG)                   :: IS                ! A pointer into arrays STFKEY and STFPNT
@@ -93,7 +93,7 @@
       INTEGER(LONG)                   :: LTERM             ! Either LTERM_KGGD (BUCKLING) or LTERM_KGG otherwise
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = ESP_BEGEND
 
-      REAL(DOUBLE)                    :: DQE(MELDOF,NSUB)  ! Dummy array in call to ELEM_TRANSFORM_LBG
+      REAL(DOUBLE), allocatable       :: DQE(:,:)!(MELDOF,NSUB)  ! Dummy array in call to ELEM_TRANSFORM_LBG
       REAL(DOUBLE)                    :: EPS1              ! A small number to compare real zero
  
       INTRINSIC                       :: DABS
@@ -117,7 +117,8 @@
       OUNT(2) = F06
  
 ! Null dummy array DQE used in call to ELEM_TRANSFORM_LBG
-
+      allocate(DQE(MELDOF,NSUB),stat=memerror)
+      if (memerror.ne.0) stop 'error in dqe allocate esp'
       DO I=1,MELDOF
          DO J=1,NSUB
             DQE(I,J) = ZERO
@@ -165,7 +166,8 @@
       IF ((DEBUG(10) == 12) .OR. (DEBUG(10) == 13) .OR. (DEBUG(10) == 32) .OR. (DEBUG(10) == 33)) THEN
          CALL DUMPSTF ( '0', 0, 0, 0, 0, 0, 0 )
       ENDIF
- 
+      allocate(EDOF(MELDOF) ,stat=memerror)
+      if (memerror.ne.0) stop 'error in edof allocate esp'
       IERROR = 0
 !xx   WRITE(SC1, * )                                       ! Advance 1 line for screen messages         
 elems:DO I=1,NELE
@@ -424,6 +426,7 @@ stfpnt0:          DO                                       ! so, run this loop u
  
       ENDDO elems 
       WRITE(SC1,*) CR13
+      deallocate(DQE,edof)
  
 ! Reset subr EMG option flags:
  
@@ -677,12 +680,14 @@ stfpnt0:          DO                                       ! so, run this loop u
 
       INTEGER(LONG)                   :: II,JJ,KK,LL,MM    ! DO loop indices or counters
       INTEGER(LONG)                   :: NUM_DIAG_NEGS     ! Number of neg values on the diag of the quad element stiffness matrix
-      INTEGER(LONG)                   :: WHAT              ! What header to write out
+      INTEGER(LONG)                   :: WHAT,memerror     ! What header to write out
 
       REAL(DOUBLE)                    :: MAX_ABS_DIAG      ! Max absolute diagonal term
       REAL(DOUBLE)                    :: RATIO             ! Ratio of diagonal term to MAX_ABS_DIAG
-      REAL(DOUBLE)                    :: ZE(ELDOF,ELDOF)   ! Either KE or KED (KED for BUCKLING)
+      REAL(DOUBLE),allocatable        :: ZE(:,:)!(ELDOF,ELDOF)   ! Either KE or KED (KED for BUCKLING)
 
+      allocate(ZE(ELDOF,ELDOF),stat=memerror)
+      if (memerror.ne.0) stop 'ze'
       IF ((SOL_NAME(1:8) == 'BUCKLING') .AND. (LOAD_ISTEP == 2)) THEN
          DO II=1,ELDOF
             DO JJ=1,ELDOF
@@ -745,6 +750,7 @@ stfpnt0:          DO                                       ! so, run this loop u
          ENDDO
          WRITE(F06,*)
       ENDIF
+      deallocate(ZE)
 
 97531 FORMAT(' Diagonal stiffnesses for ',A,' element ',I8, ' in local elem coords. Element has ', I3,' negative diagonal terms')
 
