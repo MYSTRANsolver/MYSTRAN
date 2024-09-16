@@ -2824,6 +2824,12 @@
                   CALL LEFT_ADJ_BDFLD ( CHRPARM )
                   IF      (CHRPARM(1:7) == 'SUPERLU') THEN
                      SPARSE_FLAVOR = 'SUPERLU '
+                  #ifdef MKLDSS                             !IntelMKL
+                  ELSEIF      (CHRPARM(1:3) == 'DSS') THEN  !IntelMKL
+                     SPARSE_FLAVOR = 'DSS     '             !IntelMKL
+                  ELSEIF      (CHRPARM(1:7) == 'PARDISO') THEN  !IntelMKL
+                     SPARSE_FLAVOR = 'PARDISO'              !IntelMKL
+                  #endif                                    !IntelMKL
                   ELSE
                      WARN_ERR = WARN_ERR + 1
                      WRITE(ERR,101) CARD
