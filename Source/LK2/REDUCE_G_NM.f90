@@ -73,21 +73,21 @@
       CHARACTER(44*BYTE)              :: MODNAM              ! Name to write to screen to describe module being run
  
       INTEGER(LONG)                   :: DO_WHICH_CODE_FRAG    ! 1 or 2 depending on which seg of code to run (depends on BUCKLING)
-      INTEGER(LONG)                   :: I,J,K               ! DO loop indices
+      INTEGER(LONG)                   :: I,J,K,memerror      ! DO loop indices
       INTEGER(LONG)                   :: N_SET_COL           ! Col no. in array TDOFI where the N-set is (from subr TDOF_COL_NUM)
       INTEGER(LONG)                   :: N_SET_DOF           ! N-set DOF number
       INTEGER(LONG)                   :: NUM_ASPC_BY_COMP(6) ! Number of AUTOSPC's by component number
       INTEGER(LONG)                   :: NUM_COMPS           ! 6 if GRID_NUM is an physical grid, 1 if an SPOINT
-      INTEGER(LONG)                   :: PART_VEC_G_NM(NDOFG)! Partitioning vector (G set into N and M sets) 
-      INTEGER(LONG)                   :: PART_VEC_M(NDOFM)   ! Partitioning vector (1's for all M set DOF's) 
-      INTEGER(LONG)                   :: PART_VEC_SUB(NSUB)  ! Partitioning vector (1's for all subcases) 
+      INTEGER(LONG),allocatable       :: PART_VEC_G_NM(:)!(NDOFG)! Partitioning vector (G set into N and M sets) 
+      INTEGER(LONG),allocatable       :: PART_VEC_M(:)!(NDOFM)   ! Partitioning vector (1's for all M set DOF's) 
+      INTEGER(LONG),allocatable       :: PART_VEC_SUB(:)!(NSUB)  ! Partitioning vector (1's for all subcases) 
       INTEGER(LONG)                   :: SA_SET_COL          ! Col no. in array TDOF where the SA-set is (from subr TDOF_COL_NUM)
       INTEGER(LONG)                   :: TOT_NUM_ASPC        ! Sum of NUM_ASPC_BY_COMP(6)
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = REDUCE_G_NM_BEGEND
 
-      REAL(DOUBLE)                    :: KNN_DIAG(NDOFN)     ! Diagonal terms from KNN
+      REAL(DOUBLE),allocatable        :: KNN_DIAG(:)!(NDOFN)     ! Diagonal terms from KNN
       REAL(DOUBLE)                    :: KNN_MAX_DIAG        ! Max diag term from  KNN
-      REAL(DOUBLE)                    :: KNND_DIAG(NDOFN)    ! Diagonal terms from KNND
+      REAL(DOUBLE),allocatable        :: KNND_DIAG(:)!(NDOFN)    ! Diagonal terms from KNND
       REAL(DOUBLE)                    :: KNND_MAX_DIAG       ! Max diag term from  KNND
 
       INTRINSIC                       :: DABS
@@ -98,7 +98,10 @@
          WRITE(F04,9001) SUBR_NAME,TSEC
  9001    FORMAT(1X,A,' BEGN ',F10.3)
       ENDIF
-
+        allocate(PART_VEC_G_NM(NDOFG), PART_VEC_M(NDOFM) , PART_VEC_SUB(NSUB),stat=memerror)
+        if (memerror.ne.0) stop 'error allocating part_vec in reduce_g_nm'
+        allocate(KNN_DIAG(NDOFN),KNND_DIAG(NDOFN),stat=memerror)
+        if (memerror.ne.0) stop 'error allocating knn_Diag in reduce_g_nm'
 ! **********************************************************************************************************************************
 ! Determine if we need to keep any OUTPUT4 matrices allocated until after they are processed in LINK2
 
@@ -552,7 +555,8 @@
          WRITE(F04,9002) SUBR_NAME,TSEC
  9002    FORMAT(1X,A,' END  ',F10.3)
       ENDIF
-
+      deallocate(PART_VEC_G_NM, PART_VEC_M , PART_VEC_SUB)
+      deallocate(KNN_DIAG,KNND_DIAG)
       RETURN
 
 ! **********************************************************************************************************************************

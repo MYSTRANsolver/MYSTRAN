@@ -72,26 +72,30 @@
       INTEGER(LONG)                   :: DO_WHICH_CODE_FRAG    ! 1 or 2 depending on which seg of code to run (depends on BUCKLING)
       INTEGER(LONG)                   :: F_SET_COL             ! Col no. in array TDOFI where the F-set is (from subr TDOF_COL_NUM)
       INTEGER(LONG)                   :: F_SET_DOF             ! F-set DOF number
-      INTEGER(LONG)                   :: IERROR                ! Error count
+      INTEGER(LONG)                   :: IERROR,memerror       ! Error count
       INTEGER(LONG)                   :: IOCHK                 ! IOSTAT error number when opening/reading a file
       INTEGER(LONG)                   :: I,J                   ! DO loop indices               
       INTEGER(LONG)     , PARAMETER   :: NUM_YS_COLS = 1       ! Variable for number of cols in array YSe 
       INTEGER(LONG)                   :: OUNT(2)               ! File units to write messages to. Input to subr UNFORMATTED_OPEN  
-      INTEGER(LONG)                   :: PART_VEC_F(NDOFF)     ! Partitioning vector (1's for all of F set) 
-      INTEGER(LONG)                   :: PART_VEC_N_FS(NDOFN)  ! Partitioning vector (N set into F and S sets) 
-      INTEGER(LONG)                   :: PART_VEC_S(NDOFS)     ! Partitioning vector (1's for all of S set) 
-      INTEGER(LONG)                   :: PART_VEC_S_SzSe(NDOFS)! Partitioning vector (S set into SZ and SE sets) 
-      INTEGER(LONG)                   :: PART_VEC_SUB(NSUB)    ! Partitioning vector (1's for all subcases) 
+      INTEGER(LONG),allocatable       :: PART_VEC_F(:)!(NDOFF)     ! Partitioning vector (1's for all of F set) 
+      INTEGER(LONG),allocatable       :: PART_VEC_N_FS(:)!(NDOFN)  ! Partitioning vector (N set into F and S sets) 
+      INTEGER(LONG),allocatable       :: PART_VEC_S(:)!(NDOFS)     ! Partitioning vector (1's for all of S set) 
+      INTEGER(LONG),allocatable       :: PART_VEC_S_SzSe(:)!(NDOFS)! Partitioning vector (S set into SZ and SE sets) 
+      INTEGER(LONG),allocatable       :: PART_VEC_SUB(:)!(NSUB)    ! Partitioning vector (1's for all subcases) 
       INTEGER(LONG)                   :: REC_NO                ! Record number when reading a file
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = REDUCE_N_FS_BEGEND
 
-      REAL(DOUBLE)                    :: KFF_DIAG(NDOFF)       ! Diagonal terms from KFF
+      REAL(DOUBLE),allocatable        :: KFF_DIAG(:)!(NDOFF)       ! Diagonal terms from KFF
       REAL(DOUBLE)                    :: KFF_MAX_DIAG          ! Max diag term from KFF
 
 
       ! ensure output units are set
       OUNT(1) = ERR
       OUNT(2) = F06
+      allocate( PART_VEC_F(NDOFF) ,PART_VEC_N_FS(NDOFN) ,PART_VEC_S(NDOFS) ,PART_VEC_S_SzSe(NDOFS), PART_VEC_SUB(NSUB),stat=memerror   )
+      if (memerror.ne.0) stop 'error allocating memory part_vec at reduce_n_fs'
+      allocate(KFF_DIAG(NDOFF),stat=memerror )
+      if (memerror.ne.0) stop 'error allocating memory kff_diag at reduce_n_fs'
 
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
@@ -534,7 +538,8 @@
          WRITE(F04,9002) SUBR_NAME,TSEC
  9002    FORMAT(1X,A,' END  ',F10.3)
       ENDIF
-
+      deallocate( PART_VEC_F ,PART_VEC_N_FS ,PART_VEC_S ,PART_VEC_S_SzSe, PART_VEC_SUB )
+      deallocate(KFF_DIAG )
       RETURN
 
 ! **********************************************************************************************************************************
