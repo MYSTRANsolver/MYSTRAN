@@ -508,15 +508,18 @@
 
       IMPLICIT NONE
 
-      INTEGER(LONG)                   :: INFO              ! 
+      INTEGER(LONG)                   :: INFO, memerror              ! 
       INTEGER(LONG)                   :: NUM_NEG_TERMS     ! Number of negative terms on the diagonal of RFAC
 
-      REAL(DOUBLE)                    :: DIAG(NDOFL)       ! 
+      REAL(DOUBLE), allocatable       :: DIAG(:)!(NDOFL)       ! 
       REAL(DOUBLE)                    :: FREQ              ! 
-      REAL(DOUBLE)                    :: OFF_DIAG(NDOFL-1) ! 
-      REAL(DOUBLE)                    :: QMAT(1,NDOFL)     ! 
+      REAL(DOUBLE), allocatable       :: OFF_DIAG(:)!(NDOFL-1) ! 
+      REAL(DOUBLE), allocatable       :: QMAT(:,:)!(1,NDOFL)     ! 
       REAL(DOUBLE)                    :: SIGMA             ! 
-      REAL(DOUBLE)                    :: WORK(NDOFL)       ! 
+      REAL(DOUBLE), allocatable       :: WORK(:)!(NDOFL)       ! 
+      
+      allocate ( DIAG(NDOFL), OFF_DIAG(NDOFL-1) , QMAT(1,NDOFL) , WORK(NDOFL), stat = memerror)
+      if (memerror.ne.0) stop 'error allocating memory at est_num_eigens_banded'       
 
 ! **********************************************************************************************************************************
       NUM_NEG_TERMS = 0
@@ -565,7 +568,7 @@
 
       CALL DEALLOCATE_SPARSE_MAT ( 'KMSM' )
       CALL DEALLOCATE_LAPACK_MAT ( 'RFAC' )
-
+      deallocate ( DIAG  ,  OFF_DIAG  , QMAT      , WORK)
       RETURN
 
 ! **********************************************************************************************************************************
