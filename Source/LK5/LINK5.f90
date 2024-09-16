@@ -820,12 +820,14 @@ j_do: DO J = 1,NUM_SOLNS
       CHARACTER(JCARD_LEN*BYTE)       :: DATA_FIELD
       CHARACTER(80*BYTE)              :: TITLE             ! First record in EINFIL
 
-      INTEGER(LONG)                   :: IOCHK             ! Vaue of IOSTAT in file open
+      INTEGER(LONG)                   :: IOCHK, memerror   ! Vaue of IOSTAT in file open
       INTEGER(LONG)                   :: NUM_CHANGED       ! Number of eigenvectors to have their sign changed
       INTEGER(LONG)                   :: REC_NUM           ! Number of the record read from file
       INTEGER(LONG)                   :: VEC_NUM           ! Number of a eigenvector read from EINFIL
-      INTEGER(LONG)                   :: VECS_CHANGED(NVEC)! Numbers of eigenvectors to have their sign changed
+      INTEGER(LONG),allocatable       :: VECS_CHANGED(:)!(NVEC)! Numbers of eigenvectors to have their sign changed
 
+      allocate(VECS_CHANGED(nvec), stat = memerror)
+      if (memerror.ne.0) stop 'error allocating memory at READ_EIGNORM2'
 ! **********************************************************************************************************************************
       DO I=1,NDOFL
          VEC_SIGN_CHG(I) = .FALSE.
@@ -946,7 +948,7 @@ j_do: DO J = 1,NUM_SOLNS
          WRITE(F06,5999)
          CALL WRITE_FILNAM ( EINFIL, F06, 15 )
       ENDIF
-
+      deallocate(VECS_CHANGED)
       RETURN
 
 ! **********************************************************************************************************************************

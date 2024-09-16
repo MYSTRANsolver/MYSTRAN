@@ -48,14 +48,16 @@
       CHARACTER(54*BYTE)              :: MODNAM            ! Name to write to screen to describe module being run
       CHARACTER( 1*BYTE)              :: NULL_COL          ! = 'Y' if col of PHIXA is null
 
-      INTEGER(LONG)                   :: I,J               ! DO loop indices
+      INTEGER(LONG)                   :: I,J,memerror      ! DO loop indices
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = EXPAND_PHIXA_TO_PHIXG_BEGEND
 
-      REAL(DOUBLE)                    :: PHIXG_FULL(NDOFG,NDOFR+NVEC)
+      REAL(DOUBLE),allocatable        :: PHIXG_FULL(:,:)!(NDOFG,NDOFR+NVEC)
 !                                                          ! Full representation of matrix PHIXG before converting to sparse matrix
 
       REAL(DOUBLE)                    :: SMALL             ! A number used in filtering out small numbers from a full matrix
 
+      allocate(PHIXG_FULL(NDOFG,NDOFR+NVEC),stat=memerror)
+      if (memerror.ne.0) stop 'error allocating memory at expand_phixa_to_phixg'
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
          CALL OURTIM
@@ -127,7 +129,7 @@
          WRITE(F04,9002) SUBR_NAME,TSEC
  9002    FORMAT(1X,A,' END  ',F10.3)
       ENDIF
-
+      deallocate(PHIXG_FULL)
       RETURN
 
 ! **********************************************************************************************************************************

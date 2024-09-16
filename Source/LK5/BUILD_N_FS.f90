@@ -45,7 +45,7 @@
  
       CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: SUBR_NAME   = 'BUILD_N_FS'
   
-      INTEGER(LONG)                   :: I                 ! DO loop index
+      INTEGER(LONG)                   :: I, memerror       ! DO loop index
       INTEGER(LONG)                   :: N_SET_COL         ! Col no. in TDOF for N  displ set definition
       INTEGER(LONG)                   :: F_SET_COL         ! Col no. in TDOF for F  displ set definition
       INTEGER(LONG)                   :: S_SET_COL         ! Col no. in TDOF for S  displ set definition
@@ -53,8 +53,10 @@
       INTEGER(LONG)                   :: SE_SET_COL        ! Col no. in TDOF for SE displ set definition
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = BUILD_N_FS_BEGEND
 
-      REAL(DOUBLE)                    :: USZ_COL(NDOFSZ)   ! Array of zero displs for the SZ set 
+      REAL(DOUBLE), allocatable       :: USZ_COL(:)!(NDOFSZ)   ! Array of zero displs for the SZ set 
  
+      allocate(USZ_COL(NDOFSZ),stat = memerror)
+      if (memerror.ne.0) stop 'error allocating memory at build_n_fs'
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
          CALL OURTIM
@@ -119,7 +121,7 @@
          WRITE(F04,9002) SUBR_NAME,TSEC
  9002    FORMAT(1X,A,' END  ',F10.3)
       ENDIF
-
+      deallocate(USZ_COL)
       RETURN
 
 ! **********************************************************************************************************************************
