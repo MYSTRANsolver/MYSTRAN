@@ -87,7 +87,7 @@
       CHARACTER(  1*BYTE)             :: OPND       = 'N'  ! Input to subr READ_MATRIX_i. 'Y'/'N' whether to open  a file or not 
  
       INTEGER(LONG)                   :: I,J               ! DO loop indices
-      INTEGER(LONG)                   :: IERROR            ! Error count
+      INTEGER(LONG)                   :: IERROR,memerror   ! Error count
       INTEGER(LONG)                   :: IOCHK             ! IOSTAT error number when opening/reading a file
       INTEGER(LONG)                   :: NTERM_KSF         ! Number of nonzeros in sparse matrix KSF (= NTERM_KFS)
       INTEGER(LONG)                   :: NUM_SOLNS         ! NSUB for statics, NVEC for eigenvalues, etc
@@ -95,10 +95,10 @@
       INTEGER(LONG)                   :: REC_NO            ! Record number when reading a file
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = PRT_MATS_ON_RESTART_BEGEND
 
-      REAL(DOUBLE)                    :: KAA_DIAG(NDOFA)   ! Diagonal of KAA
-      REAL(DOUBLE)                    :: KGG_DIAG(NDOFG)   ! Diagonal of KGG
-      REAL(DOUBLE)                    :: KLL_DIAG(NDOFL)   ! Diagonal of KLL 
-      REAL(DOUBLE)                    :: KRR_DIAG(NDOFR)   ! Diagonal of KRR 
+      REAL(DOUBLE), allocatable       :: KAA_DIAG(:)!(NDOFA)   ! Diagonal of KAA
+      REAL(DOUBLE), allocatable       :: KGG_DIAG(:)!(NDOFG)   ! Diagonal of KGG
+      REAL(DOUBLE), allocatable       :: KLL_DIAG(:)!(NDOFL)   ! Diagonal of KLL 
+      REAL(DOUBLE), allocatable       :: KRR_DIAG(:)!(NDOFR)   ! Diagonal of KRR 
 
       REAL(DOUBLE)                    :: KAA_MAX_DIAG      ! Max diag term from KAA
       REAL(DOUBLE)                    :: KGG_MAX_DIAG      ! Max diag term from KGG
@@ -220,7 +220,8 @@
 ! Write KGG stiffness matrix and matrix diagonal and stats, if requested
 ! NOTE: KGG was allocated and read in LINK0, if needed, prior to this (if RESTART = 'Y')
 ! ----
-
+      allocate (KGG_DIAG(NDOFG),stat=memerror )
+      if (memerror.ne.0) stop 'Error in allocate KGG_DIAG at PRT_MATS_ON_RESTART'
       IF ((PRTSTIFF(1) >= 1) .OR. (PRTSTIFD(1) >= 1)) THEN
          INQUIRE ( FILE=LINK1L, EXIST=FILE_EXIST )
          IF ((FILE_EXIST) .AND. (NTERM_KGG > 0)) THEN
@@ -229,9 +230,12 @@
             IF (PRTSTIFF(1) >= 1) THEN
                CALL WRITE_SPARSE_CRS ( L1L_MSG, 'G ', 'G ', NTERM_KGG, NDOFG, I_KGG, J_KGG, KGG )
             ENDIF
+
             IF (PRTSTIFD(1) > 0) THEN
                CALL GET_MATRIX_DIAG_STATS ( 'KGG', 'G ', NDOFG, NTERM_KGG, I_KGG, J_KGG, KGG, PRTSTIFD(1), KGG_DIAG, KGG_MAX_DIAG  )
             ENDIF
+
+
 !xx         CALL DEALLOCATE_SPARSE_MAT ( 'KGG' )
          ELSE
             WARN_ERR = WARN_ERR + 1
@@ -241,7 +245,7 @@
             ENDIF
          ENDIF
       ENDIF
-
+      deallocate (KGG_DIAG )
 ! ----------------------------------------------------------------------------------------------------------------------------------
 ! Write MGG mass matrix
 
@@ -423,7 +427,8 @@
 
 ! ----------------------------------------------------------------------------------------------------------------------------------
 ! Write KLL stiffness matrix and matrix diagonal and stats, if requested
-
+      allocate (KLL_DIAG(NDOFL),stat = memerror)
+      if (memerror.ne.0) stop 'Error in allocate KLL_DIAG at PRT_MATS_ON_RESTART'
       IF ((PRTSTIFF(5) == 1) .OR. (PRTSTIFF(5) == 3) .OR.(PRTSTIFD(5) > 0)) THEN
          INQUIRE ( FILE=LINK2G, EXIST=FILE_EXIST )
          IF ((FILE_EXIST) .AND. (NTERM_KLL > 0)) THEN
@@ -446,6 +451,7 @@
             ENDIF
          ENDIF
       ENDIF
+      deallocate(KLL_DIAG)!(NDOFL) 
 
 ! ----------------------------------------------------------------------------------------------------------------------------------
 ! Write PL load matrix
@@ -533,7 +539,8 @@
 
 ! ----------------------------------------------------------------------------------------------------------------------------------
 ! Write KRR stiffness matrix and matrix diagonal and stats, if requested
-
+      allocate( KRR_DIAG(NDOFR) , stat = memerror)
+      if (memerror.ne.0) stop 'Error in allocate KRR_DIAG at PRT_MATS_ON_RESTART'
       IF ((PRTSTIFF(5) == 2) .OR. (PRTSTIFF(5) == 3) .OR. (PRTSTIFD(5) == 1)) THEN
          INQUIRE ( FILE=LINK2L, EXIST=FILE_EXIST )
          IF ((FILE_EXIST) .AND. (NTERM_KRR > 0)) THEN
@@ -556,7 +563,7 @@
             ENDIF
          ENDIF
       ENDIF
-
+      deallocate( KRR_DIAG )
 ! ----------------------------------------------------------------------------------------------------------------------------------
 ! Write MRL mass matrix
 
@@ -601,7 +608,8 @@
 
 ! ----------------------------------------------------------------------------------------------------------------------------------
 ! Write KAA stiffness matrix and matrix diagonal and stats, if requested
-
+      allocate(KAA_DIAG(NDOFA),stat=memerror)
+      if (memerror.ne.0) stop 'Error in allocate KAA_DIAG at PRT_MATS_ON_RESTART' 
       IF ((PRTSTIFF(4) == 1) .OR. (PRTSTIFF(4) == 3) .OR. (PRTSTIFD(4) == 1)) THEN
          INQUIRE ( FILE=LINK2O, EXIST=FILE_EXIST )
          IF ((FILE_EXIST) .AND. (NTERM_KAA > 0)) THEN
@@ -624,7 +632,7 @@
             ENDIF
          ENDIF
       ENDIF
-
+      deallocate(KAA_DIAG)
 ! ----------------------------------------------------------------------------------------------------------------------------------
 ! Write MAA mass matrix
 

@@ -116,15 +116,15 @@
       INTEGER(LONG)                   :: A_NTERM_ROW_I         ! Number of terms in row I of matrix A
       INTEGER(LONG)                   :: B_NTERM_COL_J         ! Number of terms in col J of matrix B
       INTEGER(LONG)                   :: DELTA_KTERM_C         ! Incr in KTERM_C (0 or 1) when mult row I of A times col J of B
-      INTEGER(LONG)                   :: I,J,K,L,II            ! DO loop indices
+      INTEGER(LONG)                   :: I,J,K,L,II,memerror   ! DO loop indices
       INTEGER(LONG)                   :: I1,I2                 ! DO loop range
-      INTEGER(LONG)                   :: J_AROW(AROW_MAX_TERMS)! Col numbers of terms in real array AROW (see below)
+      INTEGER(LONG), allocatable      :: J_AROW(:)!(AROW_MAX_TERMS)! Col numbers of terms in real array AROW (see below)
       INTEGER(LONG)                   :: KTERM_C               ! Count of number of nonzero terms put into output matrix C
       INTEGER(LONG)                   :: NHITS                 ! Number of "hits" of terms in a row of A existing where terms in a
 !                                                                col of B exist when a row of A is multiplied by a col of B
       INTEGER(LONG)                   :: NTERM_AROW            ! Number of nonzero terms in AROW (one row of A)
-      INTEGER(LONG)                   :: A_ROW_COLJ_BEG(NROW_A)! jth term is row number in array A where col j nonzeros begin 
-      INTEGER(LONG)                   :: A_ROW_COLJ_END(NROW_A)! jth term is row number in MATIN where col j nonzeros end
+      INTEGER(LONG), allocatable      :: A_ROW_COLJ_BEG(:)!(NROW_A)! jth term is row number in array A where col j nonzeros begin 
+      INTEGER(LONG), allocatable      :: A_ROW_COLJ_END(:)!(NROW_A)! jth term is row number in MATIN where col j nonzeros end
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = MATMULT_SSS_BEGEND
        
       REAL(DOUBLE) , INTENT(IN )      :: CONS                  ! Constant multiplier in cons*A*B to get C
@@ -133,7 +133,7 @@
       REAL(DOUBLE) , INTENT(OUT)      :: C(NTERM_C)            ! Nonzero values in matrix C
       REAL(DOUBLE)                    :: CTEMP                 ! A value accumulated as the nonzero terms from one row of A are
 !                                                                multiplied by the corresponding nonzero terms from one col of B
-      REAL(DOUBLE)                    :: AROW(AROW_MAX_TERMS)  ! Array containing the nonzero terms from one row of A
+      REAL(DOUBLE), allocatable       :: AROW(:)!(AROW_MAX_TERMS)  ! Array containing the nonzero terms from one row of A
 
       INTRINSIC                       :: MAX
 
@@ -175,6 +175,13 @@
 ! A_ROW_COLJ_END is an array that gives, for each col of A, the ending   row number of nonzero terms in that column.
 ! The span: A_ROW_COLJ_BEG to A_ROW_COLJ_END is used when we search for terms in the columns.
 ! We only need A_ROW_COLJ_BEG and A_ROW_COLJ_END when A is input symmetric and MATOUT is not to be output as symmetric  
+      allocate (A_ROW_COLJ_BEG(NROW_A),A_ROW_COLJ_END(NROW_A),stat=memerror)
+      if (memerror.ne.0) stop 'Failed in allocating A_ROW_COLJ_BEGw(NROW_A) in MATMULT_SSS'
+      if(.not.allocated(J_AROW)) allocate(J_AROW(AROW_MAX_TERMS),stat=memerror)
+      if (memerror.ne.0) stop 'Fail in allocating J_AROW in MATMULT_SSS'
+      if(.not.allocated(AROW)) allocate(AROw(AROW_MAX_TERMS),stat=memerror)
+      if (memerror.ne.0) stop 'Fail in allocating AROW in MATMULT_SSS'
+         
 
       IF (SYM_A == 'Y') THEN                              ! The number of cols in A is NROW_A (due to SYM_A = 'Y')
 
@@ -275,7 +282,10 @@ l_do:          DO L=B_COL_BEG,B_COL_END
          WRITE(F04,9002) SUBR_NAME,TSEC
  9002    FORMAT(1X,A,' END  ',F10.3)
       ENDIF
- 
+      if (allocated(A_ROW_COLJ_BEG)) deallocate (A_ROW_COLJ_BEG)
+      if (allocated(A_ROW_COLJ_END)) deallocate (A_ROW_COLJ_END)
+      if(allocated(J_AROW)) deallocate(J_AROW)
+      if(allocated(AROW)) deallocate(AROW)
       RETURN
 
 ! **********************************************************************************************************************************

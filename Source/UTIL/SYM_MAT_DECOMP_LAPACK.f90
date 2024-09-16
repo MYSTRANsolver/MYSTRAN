@@ -86,7 +86,7 @@
       INTEGER(LONG), INTENT(OUT)      :: MATIN_SDIA        ! No. of superdiags in the MATIN upper triangle
       INTEGER(LONG)                   :: COMPV             ! Component number (1-6) of a grid DOF
       INTEGER(LONG)                   :: GRIDV             ! Grid number
-      INTEGER(LONG)                   :: I                 ! DO loop index             
+      INTEGER(LONG)                   :: I,memerror        ! DO loop index             
       INTEGER(LONG)                   :: IIMAX             ! Row/Col in MATIN where max diagonal term occurs
       INTEGER(LONG)                   :: IIMIN             ! Row/Col in MATIN where min diagonal term occurs
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = SYM_MAT_DECOMP_LAPACK_BEGEND
@@ -99,7 +99,7 @@
       REAL(DOUBLE) , INTENT(OUT)      :: EQUIL_SCALE_FACS(NROWS)
                                                            ! LAPACK_S values to return to calling subr
 
-      REAL(DOUBLE)                    :: MATIN_DIAG(NROWS) ! Diagonal terms from MATIN matrix
+      REAL(DOUBLE), allocatable       :: MATIN_DIAG(:)!(NROWS) ! Diagonal terms from MATIN matrix
       REAL(DOUBLE)                    :: KRATIO            ! Ratio: MAXKII/MINKII
       REAL(DOUBLE)                    :: MAXKII            ! Maximum diagonal term in MATIN
       REAL(DOUBLE)                    :: MAXIMAX_RATIO     ! Largest of the ratios of matrix diagonal to factor diagonal
@@ -339,7 +339,9 @@
       CALL OURTIM
       MODNAM = 'CALC MAX RATIO OF MATRIX DIAGONAL TO FACTOR DIAGONAL'
       WRITE(SC1,3092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
-
+      allocate (MATIN_DIAG(NROWS),stat=memerror)
+      if (memerror.ne.0) stop 'fail allocating MATIN_DIAg in sym_mat_Decomp_lapack'
+      
       DO I=1,NROWS                                         ! First, get diagonal terms from MATIN
          IF (NOCOUNTS /= 'Y') THEN
             WRITE(SC1,12345,ADVANCE='NO') I, NROWS, CR13
@@ -403,7 +405,7 @@
 
       ENDDO
       WRITE(SC1,*) CR13  
-
+      deallocate(MATIN_DIAg)
       IF (NONPOS_DEF == 'N') THEN
 
          WRITE(ERR,984) MATIN_NAME, MAXIMAX_RATIO

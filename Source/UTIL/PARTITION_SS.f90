@@ -84,7 +84,7 @@
       CHARACTER(LEN=*), INTENT(IN )   :: MAT_A_NAME             ! Name of input matrix to be partitioned
       CHARACTER( 1*BYTE)              :: J_AROW_NULL            ! = 'Y' if array J_AROW is null when a row of A is processed
       INTEGER(LONG), INTENT(IN)       :: AROW_MAX_TERMS         ! Max number of terms in any row of A
-      CHARACTER( 3*BYTE)              :: ALG(AROW_MAX_TERMS)    ! Which algorithm is used (#2 for terms above diag when SYM_A='Y'
+      CHARACTER( 3*BYTE),allocatable  :: ALG(:)!(AROW_MAX_TERMS)    ! Which algorithm is used (#2 for terms above diag when SYM_A='Y'
 !                                                                 or #1 for terms in row from diag out)
 
       INTEGER(LONG), INTENT(IN )      :: NCOL_A                 ! No. cols in A
@@ -101,29 +101,29 @@
       INTEGER(LONG), INTENT(OUT)      :: I_B(NROW_B+1)          ! Starting locations in B for each row
       INTEGER(LONG), INTENT(OUT)      :: J_B(NTERM_B)           ! Col number for each B output matrix term
       INTEGER(LONG)                   :: A_NTERM_ROW_I          ! Number of terms in A row I
-      INTEGER(LONG)                   :: B_COL_NUM_ARRAY(NCOL_A)! Col number for terms where COL_PART_VEC = VAL_COLS
+      INTEGER(LONG), allocatable      :: B_COL_NUM_ARRAY(:)!(NCOL_A)! Col number for terms where COL_PART_VEC = VAL_COLS
 !                                                                 e.g., if COL_PART_VEC = 1 1 0 1 0 1 0 0, VAL_COLS = 1,
 !                                                                 then:       B_COL_NUM_ARRAY = 1 2 0 3 0 4 0 0
 !                                                                 It is a counter for the VAL_COLS terms in COL_PART_VEC 
       INTEGER(LONG)                   :: B_COL_NUM              ! A col number value from B_COL_NUM_ARRAY 
-      INTEGER(LONG)                   :: B_ROW_NUM_ARRAY(NROW_A)! Row number for terms where ROW_PART_VEC = VAL_ROWS 
+      INTEGER(LONG), allocatable      :: B_ROW_NUM_ARRAY(:)!(NROW_A)! Row number for terms where ROW_PART_VEC = VAL_ROWS 
       INTEGER(LONG)                   :: B_ROW_NUM              ! A row number value from B_ROW_NUM_ARRAY 
       INTEGER(LONG)                   :: I,II,K,L               ! DO loop indices or counters 
       INTEGER(LONG)                   :: I1,I2                  ! DO loop range
-      INTEGER(LONG)                   :: IERROR                 ! Error indicator
-      INTEGER(LONG)                   :: J_AROW(AROW_MAX_TERMS) ! Col numbers of terms in real array AROW (see below)
+      INTEGER(LONG)                   :: IERROR,memerror        ! Error indicator
+      INTEGER(LONG), allocatable      :: J_AROW(:)!(AROW_MAX_TERMS) ! Col numbers of terms in real array AROW (see below)
       INTEGER(LONG)                   :: KBEG_A                 ! Index into array I_A where a row of matrix A ends
       INTEGER(LONG)                   :: KEND_A                 ! Index into array I_A where a row of matrix A ends
       INTEGER(LONG)                   :: KTERM_B                ! Counter for terms as they are put into B
       INTEGER(LONG)                   :: KTERM_AROW             ! Count of number of terms in a row of A (need for SYM='Y'
       INTEGER(LONG)                   :: NCOL_B                 ! Number of columns in the output matrix
-      INTEGER(LONG)                   :: ROW_AT_COLJ_BEG(NCOL_A)! jth term is row number in A where col j nonzeros begin 
-      INTEGER(LONG)                   :: ROW_AT_COLJ_END(NCOL_A)! jth term is row number in A where col j nonzeros end
+      INTEGER(LONG), allocatable      :: ROW_AT_COLJ_BEG(:)!(NCOL_A)! jth term is row number in A where col j nonzeros begin 
+      INTEGER(LONG), allocatable      :: ROW_AT_COLJ_END(:)!(NCOL_A)! jth term is row number in A where col j nonzeros end
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = PARTITION_SS_BEGEND
        
       REAL(DOUBLE) , INTENT(IN )      :: A(NTERM_A)             ! Input  matrix nonzero terms
       REAL(DOUBLE) , INTENT(OUT)      :: B(NTERM_B)             ! Output matrix nonzero terms
-      REAL(DOUBLE)                    :: AROW(AROW_MAX_TERMS)   ! Array that will contain the nonzero terms from one row of A
+      REAL(DOUBLE), allocatable       :: AROW(:)!(AROW_MAX_TERMS)   ! Array that will contain the nonzero terms from one row of A
 
       INTRINSIC                       :: DABS
 
@@ -133,7 +133,9 @@
          WRITE(F04,9001) SUBR_NAME,TSEC,MAT_A_NAME,MAT_B_NAME
  9001    FORMAT(1X,A,' BEGN ',F10.3,' Input matrix is ',A,'. Partitioned output matrix is ',A)
       ENDIF
-
+      allocate ( ALG(AROW_MAX_TERMS), B_ROW_NUM_ARRAY(NROW_A), B_COL_NUM_ARRAY(NCOL_A),stat=memerror)
+      allocate (  J_AROW(AROW_MAX_TERMS),   ROW_AT_COLJ_BEG(NCOL_A), ROW_AT_COLJ_END(NCOL_A) , AROW(AROW_MAX_TERMS),stat=memerror)
+      if (memerror.ne.0) stop 'Error allocating memory at PARTITION_SS'
 ! **********************************************************************************************************************************
 ! Initialize outputs
 
@@ -332,7 +334,7 @@ i_do: DO I=1,NROW_A                                        ! Matrix partition lo
          WRITE(F04,9002) SUBR_NAME,TSEC
  9002    FORMAT(1X,A,' END  ',F10.3)
       ENDIF
- 
+       deallocate ( ALG,  ROW_AT_COLJ_BEG,  ROW_AT_COLJ_END,J_AROW,  B_ROW_NUM_ARRAY, B_COL_NUM_ARRAY, AROW)
       RETURN
 
 ! **********************************************************************************************************************************

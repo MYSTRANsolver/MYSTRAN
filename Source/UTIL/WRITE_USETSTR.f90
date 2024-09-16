@@ -48,9 +48,9 @@
       CHARACTER( 1*BYTE)              :: USETSTR_OUTPUT      ! If 'Y' then output of USET tables is requested
 
       INTEGER(LONG)                   :: COL_NUM             ! Column number in TDOF where a DOF set exists
-      INTEGER(LONG)                   :: GRID_NUM(NDOFG)     ! Array of grid numbers for members of a DOF set requested in USETSTR
-      INTEGER(LONG)                   :: COMP_NUM(NDOFG)     ! Array of comp numbers for members of a DOF set requested in USETSTR
-      INTEGER(LONG)                   :: I,J,K               ! DO loop indices or counters
+      INTEGER(LONG), allocatable      :: GRID_NUM(:)!(NDOFG)     ! Array of grid numbers for members of a DOF set requested in USETSTR
+      INTEGER(LONG), allocatable      :: COMP_NUM(:)!(NDOFG)     ! Array of comp numbers for members of a DOF set requested in USETSTR
+      INTEGER(LONG)                   :: I,J,K, memerror         ! DO loop indices or counters
       INTEGER(LONG)                   :: NUM_LEFT            ! Used when printing a line of 10 values in the set
       INTEGER(LONG)                   :: NUM_IN_SET          ! A set length (e.g. NDOFM for the M-set
       INTEGER(LONG)                   :: NUM_NULL            ! Number of sets that have been requested for output that are null
@@ -114,6 +114,9 @@
                ENDIF
 
                IF (NUM_IN_SET > 0) THEN
+                  if(.not.allocated(GRID_NUM))  allocate(GRID_NUM(NDOFG) ,stat=memerror)
+                  if(.not.allocated(COMP_NUM))  allocate(COMP_NUM(NDOFG) ,stat=memerror)
+                  if (memerror.ne.0) stop 'Error allocating memory at WRITE_USETSTR'      
 
                   WRITE(F06,201) CHAR_SET
                   DO J=1,NDOFG
@@ -164,7 +167,9 @@
                   NULL_SET_NAME(NUM_NULL) = CHAR_SET
 
                ENDIF
-
+               if(allocated(GRID_NUM))  deallocate(GRID_NUM ,stat=memerror)
+               if(allocated(COMP_NUM))  deallocate(COMP_NUM ,stat=memerror)
+               if (memerror.ne.0) stop 'Error deallocating memory at WRITE_USETSTR'   
             ENDIF
 
          ENDDO
@@ -186,7 +191,8 @@
          WRITE(F04,9002) SUBR_NAME,TSEC
  9002    FORMAT(1X,A,' END  ',F10.3)
       ENDIF
-
+      if(allocated(GRID_NUM))  deallocate(GRID_NUM ,stat=memerror)
+      if(allocated(COMP_NUM))  deallocate(COMP_NUM ,stat=memerror)
       RETURN
 
 ! **********************************************************************************************************************************

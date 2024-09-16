@@ -48,7 +48,7 @@
       CHARACTER(LEN=*), INTENT(IN)    :: CALLING_SUBR      ! The subr that called this subr (used for output error purposes)
       CHARACTER(LEN=*), INTENT(IN)    :: MATIN_NAME        ! Name of matrix to be decomposed
 
-      INTEGER(LONG)                   :: I                 ! DO loop index
+      INTEGER(LONG)                   :: I,memerror        ! DO loop index
       INTEGER(LONG), INTENT(IN)       :: NROWS             ! Number of rows in sparse matrix MATIN
       INTEGER(LONG), INTENT(IN)       :: NTERMS            ! Number of nonzeros in sparse matrix MATIN
       INTEGER(LONG), INTENT(IN)       :: I_MATIN(NROWS+1)  ! Indicators of number of nonzero terms in rows of matrix MATIN
@@ -59,7 +59,7 @@
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = SYM_MAT_DECOMP_SUPRLU_BEGEND
 
       REAL(DOUBLE) , INTENT(IN)       :: MATIN(NTERMS)     ! A small number to compare real zero
-      REAL(DOUBLE)                    :: DUM_COL(NROWS)    ! Temp variable for solving equations
+      REAL(DOUBLE), allocatable       :: DUM_COL(:)!(NROWS)    ! Temp variable for solving equations
 
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
@@ -69,6 +69,9 @@
       ENDIF
 
 ! **********************************************************************************************************************************
+      memerror= 0
+      allocate(DUM_COL(NROWS),stat=memerror)
+      if (memerror.ne.0) stop 'Fail allocating dum_col in SYM_MAT_DECOMP_SUPRLU'
 
       DO I=1,NROWS                                         ! Need a null col of loads when SuperLU is called to factor KLL
          DUM_COL(I) = ZERO                                 ! (only because it appears in the calling list)
@@ -128,7 +131,7 @@
          WRITE(F04,9002) SUBR_NAME,TSEC
  9002    FORMAT(1X,A,' END  ',F10.3)
       ENDIF
-
+      deallocate(dum_Col)
       RETURN
 
 !***********************************************************************************************************************************
