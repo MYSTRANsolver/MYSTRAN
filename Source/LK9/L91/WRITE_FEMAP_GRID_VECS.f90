@@ -50,7 +50,7 @@
       INTEGER(LONG)                   :: GRID_MAX          ! Grid ID where vector is max
       INTEGER(LONG)                   :: GRID_MIN          ! Grid ID where vector is min
       INTEGER(LONG)                   :: GRID_NUMS(NGRID)  ! Grid ID's in global order
-      INTEGER(LONG)                   :: I                 ! DO loop index
+      INTEGER(LONG)                   :: I,memerror        ! DO loop index
       INTEGER(LONG)                   :: ICID              ! Internal coord sys no. corresponding to an actual coord sys no. 
       INTEGER(LONG)                   :: IGRID             ! Internal grid ID for a grid in array GRID_NUMS
       INTEGER(LONG)                   :: IARRAY(NGRID)     ! Original GRID_NUMS array
