@@ -62,7 +62,7 @@
  
       INTEGER(LONG)                   :: DEB_PRT(2)        ! Debug numbers to say whether to write ABAND and/or its decomp to output
 !                                                            file in called subr SYM_MAT_DECOMP_LAPACK
-      INTEGER(LONG)                   :: I,J               ! DO loop indices or counters
+      INTEGER(LONG)                   :: I,J,memerror      ! DO loop indices or counters
       INTEGER(LONG)                   :: INFO        = 0   ! Info on success of factorization or solve
       INTEGER(LONG)                   :: IOCHK             ! IOSTAT error number when opening a file
       INTEGER(LONG)                   :: OUNT(2)           ! File units to write messages to. Input to subr UNFORMATTED_OPEN   
@@ -70,15 +70,19 @@
 
       REAL(DOUBLE)                    :: EPS1              ! A small number to compare real zero
 
-      REAL(DOUBLE)                    :: EQUIL_SCALE_FACS(NDOFL)
+      REAL(DOUBLE),allocatable        :: EQUIL_SCALE_FACS(:)!(NDOFL)
                                                            ! LAPACK_S values returned from subr SYM_MAT_DECOMP_LAPACK
 
-      REAL(DOUBLE)                    :: DLR_COL(NDOFL)    ! A column of DLR solved for herein
-      REAL(DOUBLE)                    :: INOUT_COL(NDOFL)  ! Temp variable for subr FBS
+      REAL(DOUBLE),allocatable        :: DLR_COL(:)!(NDOFL)    ! A column of DLR solved for herein
+      REAL(DOUBLE),allocatable        :: INOUT_COL(:)!(NDOFL)  ! Temp variable for subr FBS
       REAL(DOUBLE)                    :: K_INORM           ! Inf norm of KLL matrix (det in  subr COND_NUM)
       REAL(DOUBLE)                    :: RCOND             ! Recrip of cond no. of the KLL. Det in  subr COND_NUM
  
       INTRINSIC                       :: DABS
+      
+      allocate(EQUIL_SCALE_FACS(NDOFL) , DLR_COL(NDOFL) , INOUT_COL(NDOFL) , stat=memerror )
+      if (memerror.ne.0) stop 'error allocating memory at solve_dlr'
+
 
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
@@ -266,7 +270,7 @@
          WRITE(F04,9002) SUBR_NAME,TSEC
  9002    FORMAT(1X,A,' END  ',F10.3)
       ENDIF
-
+      deallocate(EQUIL_SCALE_FACS , DLR_COL , INOUT_COL  )
       RETURN
 
 ! **********************************************************************************************************************************
