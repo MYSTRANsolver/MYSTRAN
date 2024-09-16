@@ -56,7 +56,7 @@
 
       REAL(DOUBLE)                    :: BETA              ! Multiple for rhs for use in subr FBS
 
-      REAL(DOUBLE)                    :: DUM_COL(NDOFL)    ! Temp variable used in SuperLU
+      REAL(DOUBLE), allocatable       :: DUM_COL(:)!(NDOFL)    ! Temp variable used in SuperLU
  
       END SUBROUTINE LINK3
 

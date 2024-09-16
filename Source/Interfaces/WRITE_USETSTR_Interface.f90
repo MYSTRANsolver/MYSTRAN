@@ -44,8 +44,8 @@
       CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: SUBR_NAME = 'WRITE_USETSTR'
       CHARACTER( 1*BYTE)              :: USETSTR_OUTPUT      ! If 'Y' then output of USET tables is requested
 
-      INTEGER(LONG)                   :: GRID_NUM(NDOFG)     ! Array of grid numbers for members of a DOF set requested in USETSTR
-      INTEGER(LONG)                   :: COMP_NUM(NDOFG)     ! Array of comp numbers for members of a DOF set requested in USETSTR
+      INTEGER(LONG),allocatable       :: GRID_NUM(:)!(NDOFG)     ! Array of grid numbers for members of a DOF set requested in USETSTR
+      INTEGER(LONG),allocatable       :: COMP_NUM(:)!(NDOFG)     ! Array of comp numbers for members of a DOF set requested in USETSTR
       INTEGER(LONG)                   :: NUM_LEFT            ! Used when printing a line of 10 values in the set
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = WRITE_USETSTR_BEGEND
 

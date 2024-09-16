@@ -59,7 +59,7 @@
  
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = REDUCE_F_AO_BEGEND
 
-      REAL(DOUBLE)                    :: DUM_COL(NDOFO)      ! Temp variable used in SuperLU
+      REAL(DOUBLE),allocatable        :: DUM_COL(:)!(NDOFO)      ! Temp variable used in SuperLU
 
       END SUBROUTINE REDUCE_F_AO
 
