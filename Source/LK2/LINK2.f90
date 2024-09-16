@@ -79,12 +79,12 @@
       CHARACTER( 44*BYTE)             :: MODNAM            ! Name to write to screen to describe module being run
 
       INTEGER(LONG)                   :: NROWS             ! Value of DOF size to pass to subr WRITE_USERIN_BD_CARDS
-      INTEGER(LONG)                   :: I,J               ! DO loop indices
+      INTEGER(LONG)                   :: I,J, memerror     ! DO loop indices
       INTEGER(LONG), PARAMETER        :: P_LINKNO  = 1     ! Prior LINK no's that should have run before this LINK can execute
       
-      REAL(DOUBLE)                    :: KGG_DIAG(NDOFG)   ! Diagonal of KGG
+      REAL(DOUBLE), allocatable       :: KGG_DIAG(:)!(NDOFG)   ! Diagonal of KGG
       REAL(DOUBLE)                    :: KGG_MAX_DIAG      ! Max diag term from KGG
-      REAL(DOUBLE)                    :: KGGD_DIAG(NDOFG)  ! Diagonal of KGGD
+      REAL(DOUBLE), allocatable       :: KGGD_DIAG(:)!(NDOFG)  ! Diagonal of KGGD
       REAL(DOUBLE)                    :: KGGD_MAX_DIAG     ! Max diag term from KGGD
 
 ! **********************************************************************************************************************************
@@ -129,6 +129,7 @@
 ! Deallocate the sparse matrices that will be generated in LINK2 (just to make sure none get missed later)
 
       CALL DEALLOCATE_LINK2_ARRAYS ( 1 )
+      
 
 ! Write G-set stiff matrix diagonal and stats, if requested.
 ! NOTE: call this subr even if PRTSTIFFD(1) = 0 since we need KGG_DIAG, KGG_MAX_DIAG for the equilibrium check
@@ -148,8 +149,13 @@
  3006    FORMAT(6(1ES15.6))
       ENDIF
       IF ((SOL_NAME(1:8) == 'BUCKLING') .AND. (LOAD_ISTEP == 2)) THEN
+         if (.not.allocated (kggd_diag)) allocate(KGGd_DIAG(NDOFG),stat=memerror )
+         if (memerror.ne.0) stop 'error allocating kggd_diag at link2'
          CALL GET_MATRIX_DIAG_STATS ( 'KGGD', 'G ', NDOFG, NTERM_KGGD, I_KGGD, J_KGGD, KGGD, PRTSTIFD(1), KGGD_DIAG , KGGD_MAX_DIAG)
+         deallocate(KGGd_DIAG )
       ELSE
+         if (.not.allocated (kgg_diag)) allocate(KGG_DIAG(NDOFG),stat=memerror )
+         if (memerror.ne.0) stop 'error allocating kgg_diag at link2'
          CALL GET_MATRIX_DIAG_STATS ( 'KGG ', 'G ', NDOFG, NTERM_KGG , I_KGG , J_KGG , KGG , PRTSTIFD(1), KGG_DIAG  , KGG_MAX_DIAG )
          IF (EQCHK_OUTPUT(1) > 0) THEN
             CALL OURTIM
@@ -158,8 +164,8 @@
             CALL STIFF_MAT_EQUIL_CHK ( EQCHK_OUTPUT(1), 'G ', SYM_KGG, NDOFG, NTERM_KGG, I_KGG, J_KGG, KGG, KGG_DIAG, KGG_MAX_DIAG,&
                                        RBGLOBAL_GSET )
          ENDIF
+         deallocate(KGG_DIAG )
       ENDIF
-
 ! If NDOFR > 0 make sure A-set equil check is done
 
       IF (NDOFR > 0) THEN
