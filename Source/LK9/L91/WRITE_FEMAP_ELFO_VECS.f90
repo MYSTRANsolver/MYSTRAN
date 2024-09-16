@@ -56,25 +56,27 @@
       INTEGER(LONG)                   :: ELEM_MIN               ! Grid ID where vector is min
 
                                                                 ! Col from FEMAP_EL_NUMS (elem ID's)
-      INTEGER(LONG)                   :: ELEM_NUMS(NUM_FEMAP_ROWS)
+      INTEGER(LONG),allocatable       :: ELEM_NUMS(:)!(NUM_FEMAP_ROWS)
 
       INTEGER(LONG)                   :: ELEM_NAME_LEN          ! Length of ELEM_TYP without trailing blanks
-      INTEGER(LONG)                   :: I,J                    ! DO loop indices
+      INTEGER(LONG)                   :: I,J, memerror          ! DO loop indices
       INTEGER(LONG)                   :: ID(20)                 ! Vector ID's for FEMAP output
       INTEGER(LONG)                   :: VEC_ID_OFFSET          ! Offset in determining output vector ID
       INTEGER(LONG)                   :: VEC_ID                 ! Vector ID for FEMAP output
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = WRITE_FEMAP_ELFO_VECS_BEGEND
 
                                                                 ! Columns from FEMAP_EL_VECS
-      REAL(DOUBLE)                    :: ELEM_VECS(NUM_FEMAP_ROWS,12)
+      REAL(DOUBLE),allocatable        :: ELEM_VECS(:,:)!(NUM_FEMAP_ROWS,12)
 
                                                                 ! One column from FEMAP_EL_VECS
-      REAL(DOUBLE)                    :: ELEM_VEC(NUM_FEMAP_ROWS)
+      REAL(DOUBLE),allocatable        :: ELEM_VEC(:)!(NUM_FEMAP_ROWS)
 
       REAL(DOUBLE)                    :: VEC_ABS                ! Abs value in vector
       REAL(DOUBLE)                    :: VEC_MAX                ! Max value in vector
       REAL(DOUBLE)                    :: VEC_MIN                ! Min value in vector
- 
+      
+      allocate(ELEM_NUMS(NUM_FEMAP_ROWS),ELEM_VECS(NUM_FEMAP_ROWS,12), ELEM_VEC(NUM_FEMAP_ROWS), stat=memerror)
+      if (memerror.ne.0) stop 'ERROR in write FEMAP ELFO VEcs'
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
          CALL OURTIM                                          
@@ -398,7 +400,7 @@
          WRITE(F04,9002) SUBR_NAME,TSEC
  9002    FORMAT(1X,A,' END  ',F10.3)
       ENDIF
-
+      deallocate(ELEM_NUMS,ELEM_VECS, ELEM_VEC)
       RETURN
 
 ! **********************************************************************************************************************************

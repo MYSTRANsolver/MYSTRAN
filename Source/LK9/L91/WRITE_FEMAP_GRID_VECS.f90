@@ -66,19 +66,30 @@
       REAL(DOUBLE)                    :: DIS(3)            ! Array of 3 translation components
       REAL(DOUBLE)                    :: ROT(3)            ! Array of 3 rotation components
       REAL(DOUBLE)                    :: PHID, THETAD      ! Outputs from subr GEN_T0L
-      REAL(DOUBLE)                    :: TOTR_VEC(NGRID)   ! RSS of 6 rotation    components in  GRID_VEC
-      REAL(DOUBLE)                    :: TOTT_VEC(NGRID)   ! RSS of 6 translation components in  GRID_VEC
-      REAL(DOUBLE)                    :: T1_VEC(NGRID)     ! T1 translation component from GRID_VEC
-      REAL(DOUBLE)                    :: T2_VEC(NGRID)     ! T2 translation component from GRID_VEC
-      REAL(DOUBLE)                    :: T3_VEC(NGRID)     ! T3 translation component from GRID_VEC
-      REAL(DOUBLE)                    :: R1_VEC(NGRID)     ! R1 rotation    component from GRID_VEC
-      REAL(DOUBLE)                    :: R2_VEC(NGRID)     ! R2 rotation    component from GRID_VEC
-      REAL(DOUBLE)                    :: R3_VEC(NGRID)     ! R3 rotation    component from GRID_VEC
+      REAL(DOUBLE),allocatable        :: TOTR_VEC(:)!(NGRID)   ! RSS of 6 rotation    components in  GRID_VEC
+      REAL(DOUBLE),allocatable        :: TOTT_VEC(:)!(NGRID)   ! RSS of 6 translation components in  GRID_VEC
+      REAL(DOUBLE),allocatable        :: T1_VEC(:)!(NGRID)     ! T1 translation component from GRID_VEC
+      REAL(DOUBLE),allocatable        :: T2_VEC(:)!(NGRID)     ! T2 translation component from GRID_VEC
+      REAL(DOUBLE),allocatable        :: T3_VEC(:)!(NGRID)     ! T3 translation component from GRID_VEC
+      REAL(DOUBLE),allocatable        :: R1_VEC(:)!(NGRID)     ! R1 rotation    component from GRID_VEC
+      REAL(DOUBLE),allocatable        :: R2_VEC(:)!(NGRID)     ! R2 rotation    component from GRID_VEC
+      REAL(DOUBLE),allocatable        :: R3_VEC(:)!(NGRID)     ! R3 rotation    component from GRID_VEC
       REAL(DOUBLE)                    :: T0G(3,3)           ! Matrix to transform offsets from global to basic  coords 
       REAL(DOUBLE)                    :: VEC_ABS           ! Abs value in vector
       REAL(DOUBLE)                    :: VEC_MAX           ! Max value in vector
       REAL(DOUBLE)                    :: VEC_MIN           ! Min value in vector
  
+      if (.not.allocated(TOTR_VEC)) allocate (TOTR_VEC(NGRID),stat=memerror)
+      if (.not.allocated(TOTT_VEC)) allocate (TOTT_VEC(NGRID),stat=memerror )
+      if (.not.allocated(T1_VEC)) allocate (T1_VEC(NGRID),stat=memerror)
+      if (.not.allocated(T2_VEC)) allocate (T2_VEC(NGRID),stat=memerror)
+      if (.not.allocated(T3_VEC)) allocate (T3_VEC(NGRID),stat=memerror)
+      if (.not.allocated(R1_VEC)) allocate (R1_VEC(NGRID),stat=memerror)
+      if (.not.allocated(R2_VEC)) allocate (R2_VEC(NGRID),stat=memerror)
+      if (.not.allocated(R3_VEC)) allocate (R3_VEC(NGRID),stat=memerror)
+      if (memerror .ne. 0) stop 'error allocating memory at WRITE_FEMAP_GRID_VECS'
+
+
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
          CALL OURTIM
@@ -397,6 +408,15 @@
          WRITE(F04,9002) SUBR_NAME,TSEC
  9002    FORMAT(1X,A,' END  ',F10.3)
       ENDIF
+      if (allocated(TOTR_VEC)) deallocate (TOTR_VEC)
+      if (allocated(TOTT_VEC)) deallocate (TOTT_VEC)
+      if (allocated(T1_VEC)) deallocate (T1_VEC)
+      if (allocated(T2_VEC)) deallocate (T2_VEC)
+      if (allocated(T3_VEC)) deallocate (T3_VEC)
+      if (allocated(R1_VEC)) deallocate (R1_VEC)
+      if (allocated(R2_VEC)) deallocate (R2_VEC)
+      if (allocated(R3_VEC)) deallocate (R3_VEC)
+
 
       RETURN
 
