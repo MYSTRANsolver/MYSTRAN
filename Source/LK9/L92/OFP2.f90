@@ -91,7 +91,7 @@
       INTEGER(LONG)                   :: S_SET_COL         ! Col number in TDOF where the S-set DOF's exist
       INTEGER(LONG)                   :: SA_SET_COL        ! Col number in TDOF where the SA-set DOF's exist
       INTEGER(LONG)                   :: GDOF              ! G-set DOF number
-      INTEGER(LONG)                   :: I,J               ! DO loop indices
+      INTEGER(LONG)                   :: I,J,memerror      ! DO loop indices
       INTEGER(LONG)                   :: IB1               ! If > 0, there are SPC or MPC force output requests
       INTEGER(LONG)                   :: IB2               ! If > 0, there are GP force balance requests so calc SPC or MPC forces
       INTEGER(LONG)                   :: IGRID             ! Internal grid ID
@@ -109,11 +109,11 @@
 
       REAL(DOUBLE)                    :: DEN               ! Intermediate variable
       REAL(DOUBLE)                    :: MPF               ! Intermediate variable
-      REAL(DOUBLE)                    :: QSK_COL(NDOFS)    ! KSF*UF
-      REAL(DOUBLE)                    :: QSM_COL(NDOFS)    ! -EIGEN_VAL*MFS*UF
-      REAL(DOUBLE)                    :: QMK_COL(NDOFM)    ! HMN*UF
-      REAL(DOUBLE)                    :: QMM_COL(NDOFM)    ! -EIGEN_VAL*LMN*UF
-      REAL(DOUBLE)                    :: QGs_MEFM(NDOFG)   ! QGs_COL transformed from global to coord system MEMFCORD
+      REAL(DOUBLE), allocatable       :: QSK_COL(:)!(NDOFS)    ! KSF*UF
+      REAL(DOUBLE), allocatable       :: QSM_COL(:)!(NDOFS)    ! -EIGEN_VAL*MFS*UF
+      REAL(DOUBLE), allocatable       :: QMK_COL(:)!(NDOFM)    ! HMN*UF
+      REAL(DOUBLE), allocatable       :: QMM_COL(:)!(NDOFM)    ! -EIGEN_VAL*LMN*UF
+      REAL(DOUBLE), allocatable       :: QGs_MEFM(:)!(NDOFG)   ! QGs_COL transformed from global to coord system MEMFCORD
       REAL(DOUBLE)                    :: QGs_MEFM_SUM(6)   ! QGs_COL transformed from global to coord system MEMFCORD
       REAL(DOUBLE)                    :: QSA_MAX_ABS(6)    ! Max abs value of any QS force on an AUTOSPC'd DOF
       REAL(DOUBLE)                    :: QSA_SUM(6)        ! Sum of all QS forces on AUTOSPC'd DOF's
@@ -176,7 +176,8 @@
                ENDIF
             ENDDO
          ENDIF
-
+         allocate(QSK_COL(NDOFS),QSm_COL(NDOFS),stat=memerror)
+         if (memerror.ne.0) stop 'fail allocating memory QSK_COL in  OFP2'
          DO I=1,NDOFS
             QSK_COL = ZERO
             QSM_COL = ZERO
@@ -210,7 +211,7 @@
                QS_COL(I) = QSK_COL(I) + QSM_COL(I) + QSYS_COL(I) - PS_COL(I)
             ENDIF
          ENDDO   
-
+         deallocate(QSK_COL,QSM_COL)
          SPCF_ALL_SAME_CID = 'Y'                           ! Check if all grids, for which there will be output, have same coord sys
          DO I=1,NGRID-1                                    ! If not, then we won't write SPC output totals
             IB1 = IAND(GROUT(I,INT_SC_NUM),IBIT(GROUT_SPCF_BIT))
@@ -329,7 +330,8 @@
 
 ! Calc modal effective masses and/or modal participation factors for current eigenector, if requested (but only if not CB soln)
 ! Requests for MPF, MEFFMASS for CB are handled elsewhere
-
+         allocate(QGs_MEFM(NDOFG),stat=memerror)
+         if (memerror.ne.0) stop ' fail allocting memory QGs_MEFM ofp2'
          IF (SPCF_MEFM_MPF == 'Y') THEN                    ! NOTE: this would not be true if CB soln due to its value set above
 
             IF ((MEFFMASS_CALC == 'Y') .OR. (MPFACTOR_CALC == 'Y')) THEN
@@ -360,6 +362,8 @@
             ENDIF
 
          ENDIF
+         deallocate(QGs_MEFM)
+
 
 ! Calc largest and sum of QS forces for AUTOSPC DOF's. Write SPC forces on the SA DOF's if PARAM AUTOSPC_SPCF = 'Y'
 
@@ -468,7 +472,8 @@
                ENDIF
             ENDDO
          ENDIF
-
+         allocate(QmK_COL(NDOFm),Qmm_COL(NDOFm),stat=memerror)
+         if (memerror.ne.0) stop 'fail allocating memory QmK_COL in  OFP2'
          DO I=1,NDOFM
             QMK_COL(I) = ZERO
             QMM_COL(I) = ZERO
@@ -509,7 +514,7 @@
          DO I=1,NDOFM
             QM_COL(I) = QMK_COL(I) + QMM_COL(I) - PM_COL(I)
          ENDDO
-
+         deallocate(QmK_COL,Qmm_COL)
          CALL DEALLOCATE_COL_VEC ( 'PM_COL' )
 
                                                            ! Calculate QN_COL = -GMNt*QM_COL
