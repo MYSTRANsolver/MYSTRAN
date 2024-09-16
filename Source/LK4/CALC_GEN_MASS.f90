@@ -61,16 +61,19 @@
       CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: SUBR_NAME = 'CALC_GEN_MASS'
 
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = CALC_GEN_MASS_BEGEND
-      INTEGER(LONG)                   :: I,J,K             ! DO loop indices
+      INTEGER(LONG)                   :: I,J,K,memerror    ! DO loop indices
 
       REAL(DOUBLE)                    :: DMIJ              ! DABS of MIJ
       REAL(DOUBLE)                    :: MAX               ! Temporary variable used in finding MAXMIJ
       REAL(DOUBLE)                    :: MIJ               ! The i,j-th value from gen. mass matrix. Used to find MAXMIJ
-      REAL(DOUBLE)                    :: OUTVECI(NDOFL,1)  ! One eigenvector
-      REAL(DOUBLE)                    :: OUTVECJ(NDOFL,1)  ! One eigenvector
-      REAL(DOUBLE)                    :: ZVEC(NDOFL,1)     ! Intermediate matrix in the calculation of GEN_MASS
+      REAL(DOUBLE), allocatable       :: OUTVECI(:,:)!(NDOFL,1)  ! One eigenvector
+      REAL(DOUBLE), allocatable       :: OUTVECJ(:,:)!(NDOFL,1)  ! One eigenvector
+      REAL(DOUBLE), allocatable       :: ZVEC(:,:)!(NDOFL,1)     ! Intermediate matrix in the calculation of GEN_MASS
 
       INTRINSIC                       :: DABS
+      
+      allocate( OUTVECI(NDOFL,1) , OUTVECJ(NDOFL,1), ZVEC(NDOFL,1) ,stat = memerror)
+      if (memerror.ne.0) stop 'error allocating memory at calc_gen_mass'
 
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
@@ -153,7 +156,7 @@
          WRITE(F04,9002) SUBR_NAME,TSEC
  9002    FORMAT(1X,A,' END  ',F10.3)
       ENDIF
-
+      deallocate( OUTVECI , OUTVECJ, ZVEC)
       RETURN
 
 ! **********************************************************************************************************************************
