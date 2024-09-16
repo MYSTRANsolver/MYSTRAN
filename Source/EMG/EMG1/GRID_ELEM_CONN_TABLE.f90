@@ -46,10 +46,14 @@
 
       CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: SUBR_NAME = 'GRID_ELEM_CONN_TABLE'
 
-      INTEGER(LONG)                   :: GRD_NUM_ELEM(NGRID)! Array that specifies the number of elements connected to each grid
-      INTEGER(LONG)                   :: I,J,K              ! DO loop indices
+      INTEGER(LONG), allocatable      :: GRD_NUM_ELEM(:) ! (NGRID)!! Array that specifies the number of elements connected to each grid
+      INTEGER(LONG)                   :: I,J,K ,memerror    ! DO loop indices and memory stat error
       INTEGER(LONG)                   :: IGRID              ! Internal grid ID (row in array GRID_ID where an act grid num exists)
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = GRID_ELEM_CONN_TABLE_BEGEND
+
+
+      if (.not.allocated( GRD_NUM_ELEM)) allocate( GRD_NUM_ELEM(NGRID),stat= memerror)
+      if (memerror.ne.0) stop 'Error in allocate GRD_NUM_ELEM'
 
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
@@ -106,7 +110,7 @@
             WRITE(F06,9101) (GRID_ELEM_CONN_ARRAY(I,J),J=1,GRD_NUM_ELEM(I)+2)
          ENDDO
       ENDIF
-
+      if (allocated( GRD_NUM_ELEM)) deallocate( GRD_NUM_ELEM)
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
          CALL OURTIM
