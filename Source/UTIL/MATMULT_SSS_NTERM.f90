@@ -86,8 +86,8 @@
       INTEGER(LONG), INTENT(IN )      :: I_B(NTERM_B)           ! Row no's for nonzero terms in matrix B
       INTEGER(LONG), INTENT(OUT)      :: AROW_MAX_TERMS         ! Max number of terms in any row of A
       INTEGER(LONG), INTENT(OUT)      :: NTERM_C                ! Number of nonzero terms in output matrix C
-      INTEGER(LONG)                   :: A_ROW_COLJ_BEG(NROW_A) ! jth term is row number in A where col j nonzeros begin 
-      INTEGER(LONG)                   :: A_ROW_COLJ_END(NROW_A) ! jth term is row number in A where col j nonzeros end
+      INTEGER(LONG), allocatable      :: A_ROW_COLJ_BEG(:)!(NROW_A) ! jth term is row number in A where col j nonzeros begin 
+      INTEGER(LONG), allocatable      :: A_ROW_COLJ_END(:)!(NROW_A) ! jth term is row number in A where col j nonzeros end
       INTEGER(LONG)                   :: A_NTERM_ROW_I          ! Number of terms in row I of matrix A
       INTEGER(LONG)                   :: A_COL_NUM              ! A col number in matrix A
       INTEGER(LONG)                   :: A_ROW_BEG              ! Index into array I_A where a row of matrix A begins
@@ -97,7 +97,7 @@
       INTEGER(LONG)                   :: B_COL_BEG              ! Index into array J_B where a col of matrix B begins
       INTEGER(LONG)                   :: B_COL_END              ! Index into array J_B where a col of matrix B ends
       INTEGER(LONG)                   :: DELTA_NTERM_C = 0      ! Incr in NTERM_C (0,1) resulting from mult row of A times col of B
-      INTEGER(LONG)                   :: I,J,K,L,II             ! DO loop indices
+      INTEGER(LONG)                   :: I,J,K,L,II,memerror    ! DO loop indices
       INTEGER(LONG)                   :: I1,I2                  ! DO loop range
       INTEGER(LONG)                   :: NHITS                  ! Num of "hits" of terms in a col of A existing where terms in a
 !                                                                 row of B exist when a row of A is multiplied by a col of B
@@ -108,6 +108,8 @@
        
       INTRINSIC                       :: MAX
 
+      allocate(A_ROW_COLJ_END(NROW_A),A_ROW_COLJ_BEG(NROW_A),stat=memerror)
+      if (memerror.ne.0) STOP 'A_ROW_COLJ_END in MATMULT_SSS_NTERM cant allocated'
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
          CALL OURTIM
@@ -260,7 +262,8 @@ l_do:          DO L=B_COL_BEG,B_COL_END
          WRITE(F04,9002) SUBR_NAME,TSEC
  9002    FORMAT(1X,A,' END  ',F10.3)
       ENDIF
- 
+      if (allocated(A_ROW_COLJ_END)) deallocate(A_ROW_COLJ_END)
+      if (allocated(A_ROW_COLJ_BEG)) deallocate(A_ROW_COLJ_BEG) 
       RETURN
 
 ! **********************************************************************************************************************************
