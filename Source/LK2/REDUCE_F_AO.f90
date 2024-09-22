@@ -62,18 +62,26 @@
       INTEGER(LONG)                   :: A_SET_COL           ! Col no. in array TDOFI where the A-set is (from subr TDOF_COL_NUM)
       INTEGER(LONG)                   :: A_SET_DOF           ! A-set DOF number
       INTEGER(LONG)                   :: DO_WHICH_CODE_FRAG    ! 1 or 2 depending on which seg of code to run (depends on BUCKLING)
-      INTEGER(LONG)                   :: I,J                 ! DO loop indices
-      INTEGER(LONG)                   :: PART_VEC_F_AO(NDOFF)! Partitioning vector (G set into N and M sets) 
-      INTEGER(LONG)                   :: PART_VEC_SUB(NSUB)  ! Partitioning vector (1's for all subcases) 
+      
+      INTEGER(LONG)                   :: I,J, memerror       ! DO loop indices
+      INTEGER(LONG),allocatable       :: PART_VEC_F_AO(:)!(NDOFF)! Partitioning vector (G set into N and M sets) 
+      INTEGER(LONG),allocatable       :: PART_VEC_SUB(:)!(NSUB)  ! Partitioning vector (1's for all subcases) 
+      
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = REDUCE_F_AO_BEGEND
+      
+      REAL(DOUBLE),allocatable        :: DUM_COL(:)!(NDOFO)      ! Temp variable used in SuperLU
+      REAL(DOUBLE),allocatable        :: KAA_DIAG(:)!(NDOFA)     ! Diagonal terms from KAA
 
-      REAL(DOUBLE)                    :: DUM_COL(NDOFO)      ! Temp variable used in SuperLU
-      REAL(DOUBLE)                    :: KAA_DIAG(NDOFA)     ! Diagonal terms from KAA
       REAL(DOUBLE)                    :: KAA_MAX_DIAG        ! Max diag term  from KAA
-      REAL(DOUBLE)                    :: KAAD_DIAG(NDOFA)    ! Diagonal terms from KAAD
+
+      REAL(DOUBLE),allocatable        :: KAAD_DIAG(:)!(NDOFA)    ! Diagonal terms from KAAD
+
       REAL(DOUBLE)                    :: KAAD_MAX_DIAG       ! Max diag term  from KAAD
 
       INTRINSIC                       :: DABS
+
+      allocate(PART_VEC_F_AO(NDOFF) , PART_VEC_SUB(NSUB) , DUM_COL(NDOFO) , KAA_DIAG(NDOFA)  , KAAD_DIAG(NDOFA) ,stat = memerror)
+      if (memerror.ne.0) stop 'error allocating memory at reduce f_ao'
 
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
@@ -461,7 +469,7 @@ FreeS:      IF (SOLLIB == 'SPARSE  ') THEN                       ! Last, free th
          WRITE(F04,9002) SUBR_NAME,TSEC
  9002    FORMAT(1X,A,' END  ',F10.3)
       ENDIF
-
+      deallocate(PART_VEC_F_AO , PART_VEC_SUB , DUM_COL , KAA_DIAG  , KAAD_DIAG )
       RETURN
 
 ! **********************************************************************************************************************************
