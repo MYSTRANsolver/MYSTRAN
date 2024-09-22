@@ -23,461 +23,462 @@
 ! _______________________________________________________________________________________________________
                                                                                                         
 ! End MIT license text.                                                                                      
- 
-      SUBROUTINE LINK3
- 
-! LINK 3 solves the equation KLL*UL = PL where KLL, UL, PL are the L-set stiffness matrix, displs and loads. It solves the equation
-! using one of three methods. For each method the solution is obtained in a 2 step process: (1) the KLL matrix is decomposed into
-! triangular factors and (2) UL is solved for by forward-backward substitution (FBS). The 3 methods are:
 
-!   a) The LAPACK freeware code. This code requires KLL to be in banded (NOT sparse) form. LAPACH has the advantage that
-!      MYSTRAN contains the LAPACK source code so debugging is easy. Its disadvantage is that banded matrices require much more 
-!      memory than sparse storage for large stiffness matrices.
-
+      SUBROUTINE REDUCE_F_AO
+ 
+! Call routines to reduce stiffness, mass, loads from F-set to A, O-sets
+ 
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
-      USE IOUNT1, ONLY                :  WRT_BUG, WRT_LOG, ERR, F04, F06, L3A, SC1, LINK3A, L3A_MSG
-      USE SCONTR, ONLY                :  BLNK_SUB_NAM, COMM, FATAL_ERR, KLL_SDIA, LINKNO, MBUG, NDOFL, NSUB,                       &
-                                         NTERM_KLL, NTERM_PL, RESTART,  SOL_NAME, WARN_ERR
-      USE TIMDAT, ONLY                :  HOUR, MINUTE, SEC, SFRAC       
-      USE CONSTANTS_1, ONLY           :  ZERO, ONE, TWO, TEN
-      USE PARAMS, ONLY                :  CRS_CCS, EPSERR, EPSIL, KLLRAT, RELINK3, RCONDK, SOLLIB, SUPWARN, SPARSE_FLAVOR
-      USE SPARSE_MATRICES, ONLY       :  I_KLL, J_KLL, KLL, I_PL, J_PL, PL
-      USE LAPACK_DPB_MATRICES, ONLY   :  RES
-      USE COL_VECS, ONLY              :  UL_COL, PL_COL
-      USE MACHINE_PARAMS, ONLY        :  MACH_EPS, MACH_SFMIN
-      USE DEBUG_PARAMETERS, ONLY      :  DEBUG
-      USE LAPACK_BLAS_AUX
-      USE LAPACK_LIN_EQN_DPB
-      USE SCRATCH_MATRICES, ONLY      :  I_CCS1, J_CCS1, CCS1
+      USE IOUNT1, ONLY                :  ERR, F04, F06, SC1, WRT_ERR, WRT_LOG
+      USE CONSTANTS_1, ONLY           :  ZERO
+      USE SCONTR, ONLY                :  BLNK_SUB_NAM, LINKNO, KOO_SDIA, NDOFF, NDOFG, NDOFA, NDOFO, NSUB, SOL_NAME,               &
+                                         NTERM_KFF , NTERM_KAA , NTERM_KAO , NTERM_KOO ,                                           &
+                                         NTERM_KFFD, NTERM_KAAD, NTERM_KAOD, NTERM_KOOD,                                           &
+                                         NTERM_MFF , NTERM_MAA , NTERM_MAO , NTERM_MOO ,                                           &
+                                         NTERM_PF  , NTERM_PA  , NTERM_PO  , NTERM_GOA
+      USE PARAMS, ONLY                :  EQCHK_OUTPUT, MATSPARS, PRTSTIFD, PRTSTIFF, PRTMASS, PRTFOR, SOLLIB, SPARSE_FLAVOR
+      USE NONLINEAR_PARAMS, ONLY      :  LOAD_ISTEP
+      USE TIMDAT, ONLY                :  HOUR, MINUTE, SEC, SFRAC, TSEC
+      USE DOF_TABLES, ONLY            :  TDOFI
+      USE RIGID_BODY_DISP_MATS, ONLY  :  RBGLOBAL_GSET, RBGLOBAL_FSET, RBGLOBAL_ASET
+      USE SUBR_BEGEND_LEVELS, ONLY    :  REDUCE_F_AO_BEGEND
+      USE SPARSE_MATRICES, ONLY       :  I_KFF , J_KFF , KFF , I_KAA , J_KAA , KAA , I_KAO , J_KAO , KAO , I_KOO , J_KOO , KOO ,   &
+                                         I_KFFD, J_KFFD, KFFD, I_KAAD, J_KAAD, KAAD, I_KAOD, J_KAOD, KAOD, I_KOOD, J_KOOD, KOOD,   &
+                                         I_MFF , J_MFF , MFF , I_MAA , J_MAA , MAA , I_MAO , J_MAO , MAO , I_MOO , J_MOO , MOO ,   &
+                                         I_PF  , J_PF  , PF  , I_PA  , J_PA  , PA  , I_PO  , J_PO  , PO
+      USE SPARSE_MATRICES, ONLY       :  SYM_KAA
+      USE SCRATCH_MATRICES
       USE SuperLU_STUF, ONLY          :  SLU_FACTORS, SLU_INFO
+ 
+      USE REDUCE_F_AO_USE_IFs
 
-! Interface module not needed for subr's DPBTRF and DPBTRS. These are "CONTAIN'ed" in module LAPACK_LIN_EQN_DPB,
-! which is "USE'd" above
-
-!     USE LINK3_USE_IFs
-                      
       IMPLICIT NONE
- 
+               
       CHARACTER, PARAMETER            :: CR13 = CHAR(13)   ! This causes a carriage return simulating the "+" action in a FORMAT
-      CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: SUBR_NAME = 'LINK3'
-      CHARACTER(  2*BYTE)             :: L_SET    = 'L '   ! L-set designator
-      CHARACTER(  1*BYTE)             :: EQUED             ! 'Y' if the stiff matrix was equilibrated in subr EQUILIBRATE    
-      CHARACTER(  1*BYTE)             :: NULL_COL          ! 'Y' if a col of KAO(transpose) is null 
-      CHARACTER( 54*BYTE)             :: MODNAM            ! Name to write to screen
+      CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: SUBR_NAME = 'REDUCE_F_AO'
+      CHARACTER(132*BYTE)             :: MATRIX_NAME         ! Name of matrix for printout 
+      CHARACTER(44*BYTE)              :: MODNAM              ! Name to write to screen to describe module being run
  
-      INTEGER(LONG)                   :: DEB_PRT(2)        ! Debug numbers to say whether to write ABAND and/or its decomp to output
-!                                                            file in called subr SYM_MAT_DECOMP_LAPACK (ABAND = band form of KLL)
+      INTEGER(LONG)                   :: A_SET_COL           ! Col no. in array TDOFI where the A-set is (from subr TDOF_COL_NUM)
+      INTEGER(LONG)                   :: A_SET_DOF           ! A-set DOF number
+      INTEGER(LONG)                   :: DO_WHICH_CODE_FRAG    ! 1 or 2 depending on which seg of code to run (depends on BUCKLING)
+      
+      INTEGER(LONG)                   :: I,J, memerror       ! DO loop indices
+      INTEGER(LONG),allocatable       :: PART_VEC_F_AO(:)!(NDOFF)! Partitioning vector (G set into N and M sets) 
+      INTEGER(LONG),allocatable       :: PART_VEC_SUB(:)!(NSUB)  ! Partitioning vector (1's for all subcases) 
+      
+      INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = REDUCE_F_AO_BEGEND
+      
+      REAL(DOUBLE),allocatable        :: DUM_COL(:)!(NDOFO)      ! Temp variable used in SuperLU
+      REAL(DOUBLE),allocatable        :: KAA_DIAG(:)!(NDOFA)     ! Diagonal terms from KAA
 
-      INTEGER(LONG)                   :: IER_DECOMP        ! Overall error indicator
-      INTEGER(LONG)                   :: ISUB              ! DO loop index for subcases 
-      INTEGER(LONG)                   :: INFO     = 0      ! Info output from some routine that has been called
-      INTEGER(LONG)                   :: I,J               ! DO loop indices            
-      INTEGER(LONG)                   :: OUNT(2)           ! File units to write messages to. Input to subr UNFORMATTED_OPEN  
-      INTEGER(LONG), PARAMETER        :: P_LINKNO = 2      ! Prior LINK no's that should have run before this LINK can execute
+      REAL(DOUBLE)                    :: KAA_MAX_DIAG        ! Max diag term  from KAA
 
-      REAL(DOUBLE)                    :: BETA              ! Multiple for rhs for use in subr FBS
-      REAL(DOUBLE)                    :: DEN               ! K_INORM*UL_INORM + PL_INORM
-      REAL(DOUBLE)                    :: EPS1              ! A small number to compare real zero
+      REAL(DOUBLE),allocatable        :: KAAD_DIAG(:)!(NDOFA)    ! Diagonal terms from KAAD
 
-      REAL(DOUBLE)                    :: EQUIL_SCALE_FACS(NDOFL)
-                                                           ! LAPACK_S values returned from subr SYM_MAT_DECOMP_LAPACK
-      REAL(DOUBLE)                    :: DUM_COL(NDOFL)    ! Temp variable used in SuperLU
-      REAL(DOUBLE)                    :: K_INORM           ! Inf norm of KLL matrix (det in  subr COND_NUM)
-      REAL(DOUBLE)                    :: LAP_ERR1          ! Bound on displ error = 2*OMEGAI/RCOND
-      REAL(DOUBLE)                    :: OMEGAI            ! RES_INORM/DEN (similar to EPSILON)
-      REAL(DOUBLE)                    :: OMEGAI0           ! Upper bound on OMEGAI. OMEGAI0 = 10*NDOFL*MACH_EPS
-      REAL(DOUBLE)                    :: PL_INORM          ! Inf norm of load vector
-      REAL(DOUBLE)                    :: RES_INORM         ! Inf norm of residual vector R = K*UL - PL 
-      REAL(DOUBLE)                    :: RCOND             ! Recrip of cond no. of the KLL. Det in  subr COND_NUM
-      REAL(DOUBLE)                    :: UL_INORM          ! Inf norm of displacement vector
- 
+      REAL(DOUBLE)                    :: KAAD_MAX_DIAG       ! Max diag term  from KAAD
+
       INTRINSIC                       :: DABS
 
-!***********************************************************************************************************************************
-      LINKNO = 3
+      allocate(PART_VEC_F_AO(NDOFF) , PART_VEC_SUB(NSUB) , DUM_COL(NDOFO) , KAA_DIAG(NDOFA)  , KAAD_DIAG(NDOFA) ,stat = memerror)
+      if (memerror.ne.0) stop 'error allocating memory at reduce f_ao'
 
-      EPS1 = EPSIL(1)
-
-! Set time initializing parameters
-
-      CALL TIME_INIT
-
-! Initialize WRT_BUG
-
-      DO I=0,MBUG-1
-         WRT_BUG(I) = 0
-      ENDDO
-
-! Get date and time, write to screen
-
-      CALL OURDAT
-      CALL OURTIM
-      WRITE(SC1,152) LINKNO
-
-! Make units for writing errors the screen until we open output files
-
-      OUNT(1) = SC1
-      OUNT(2) = SC1
-
-! Make units for writing errors the error file and output file
-
-      OUNT(1) = ERR
-      OUNT(2) = F06
-
-! Write info to text files
-  
-      WRITE(F06,150) LINKNO
-      IF (WRT_LOG > 0) THEN
-         WRITE(F04,150) LINKNO
-      ENDIF
-      WRITE(ERR,150) LINKNO
-
-! Read LINK1A file
- 
-      CALL READ_L1A ( 'KEEP', 'Y' )
-
-! Check COMM for successful completion of prior LINKs
-
-      IF (COMM(P_LINKNO) /= 'C') THEN
-         WRITE(ERR,9998) P_LINKNO,P_LINKNO,LINKNO
-         WRITE(F06,9998) P_LINKNO,P_LINKNO,LINKNO
-         FATAL_ERR = FATAL_ERR + 1
-         CALL OUTA_HERE ( 'Y' )                            ! Prior LINK's didn't complete, so quit
+! **********************************************************************************************************************************
+      IF (WRT_LOG >= SUBR_BEGEND) THEN
+         CALL OURTIM
+         WRITE(F04,9001) SUBR_NAME,TSEC
+ 9001    FORMAT(1X,A,' BEGN ',F10.3)
       ENDIF
 
-! Make sure SOL is STATICS, BUCKLING or NLSTATIC
+! **********************************************************************************************************************************
+! Depending on whether this is a BUCKLING soln (and LOAD_ISTEP value) or not, one or another segment of code will be run
 
-      IF ((SOL_NAME(1:7) /= 'STATICS') .AND. (SOL_NAME(1:8) /= 'BUCKLING') .AND. (SOL_NAME(1:8) /= 'NLSTATIC')) THEN
-         WRITE(ERR,999) SOL_NAME, 'STATICS or BUCKLING or NLSTATIC'
-         WRITE(F06,999) SOL_NAME, 'STATICS or BUCKLING or NLSTATIC'
-         CALL OUTA_HERE ( 'Y' )
-      ENDIF
-
-!***********************************************************************************************************************************
-! Factor KLL
-
-      DEB_PRT(1) = 34
-      DEB_PRT(2) = 35
-      IER_DECOMP = 0
-
-      DO J=1,NDOFL                                         ! Need a null col of loads when SuperLU is called to factor KLL
-         DUM_COL(J) = ZERO                                 ! (only because it appears in the calling list)
-      ENDDO
-
-      IF ((RESTART == 'Y') .AND. (RELINK3 == 'Y')) THEN     
-sol_do:  DO
-            WRITE(SC1,*) ' Input the value of SOLLIB (8 characters) to use in this restart:'
-            READ (*,*) SOLLIB
-            IF ((SOLLIB /= 'BANDED  ') .AND. (SOLLIB /= 'SPARSE  ')) THEN
-               WRITE(SC1,*) '  Incorrect SOLLIB. Value must be BANDED or SPARSE'
-               WRITE(SC1,*)
-               CYCLE sol_do
-            ELSE
-               EXIT sol_do
-            ENDIF
-         ENDDO sol_do
-      ENDIF
-
-Factr:IF (SOLLIB == 'BANDED  ') THEN                       ! Use LAPACK
-
-         INFO = 0
-         CALL SYM_MAT_DECOMP_LAPACK ( SUBR_NAME, 'KLL', L_SET, NDOFL, NTERM_KLL, I_KLL, J_KLL, KLL, 'Y', KLLRAT, 'Y', RCONDK,      &
-                                      DEB_PRT, EQUED, KLL_SDIA, K_INORM, RCOND, EQUIL_SCALE_FACS, INFO )
-
-      ELSE IF (SOLLIB == 'SPARSE  ') THEN
-
-         IF (SPARSE_FLAVOR(1:7) == 'SUPERLU') THEN
-
-            SLU_INFO = 0
-            CALL SYM_MAT_DECOMP_SUPRLU ( SUBR_NAME, 'KLL', NDOFL, NTERM_KLL, I_KLL, J_KLL, KLL, SLU_INFO )
-
-         ELSE
-
-            FATAL_ERR = FATAL_ERR + 1
-            WRITE(ERR,9991) SUBR_NAME, 'SPARSE_FLAVOR'
-            WRITE(F06,9991) SUBR_NAME, 'SPARSE_FLAVOR'
-            CALL OUTA_HERE ( 'Y' )
-
+      IF ((SOL_NAME(1:8) == 'BUCKLING')) THEN
+         IF      (LOAD_ISTEP == 1) THEN
+            DO_WHICH_CODE_FRAG = 1
+         ELSE IF (LOAD_ISTEP == 2) THEN
+            DO_WHICH_CODE_FRAG = 2
          ENDIF
-
       ELSE
+         DO_WHICH_CODE_FRAG = 1
+      ENDIF
 
-         FATAL_ERR = FATAL_ERR + 1
-         WRITE(ERR,9991) SUBR_NAME, 'SOLLIB'
-         WRITE(F06,9991) SUBR_NAME, 'SOLLIB'
-         CALL OUTA_HERE ( 'Y' )
+! **********************************************************************************************************************************
+      IF (DO_WHICH_CODE_FRAG == 1) THEN                    ! This is for all except BUCKLING w LOAD_ISTEP=2 (eigen part of BUCKLING)
 
-      ENDIF Factr
+! If there is an O-set, reduce KFF to KAA, MFF to MAA, PF to PA using UO = GOA*UA + UO0, where GOA = -KOO(-1)*KAO', UO0 = KOO(-1)*PO
+! If there is no O-set, then equate KAA to KFF, MAA to MFF, PA to PF
 
-!***********************************************************************************************************************************
-!  Allocate col vector arrays for loads, displs and res vector
+         IF (NDOFO > 0) THEN
+                                                           ! First, need to create part vectors used in the reduction (if NDOFO > 0)
+            CALL PARTITION_VEC (NDOFF,'F ','A ','O ',PART_VEC_F_AO)
 
-!xx   CALL ALLOCATE_COL_VEC ( 'UL_COL', NDOFL, SUBR_NAME )
-!xx   CALL ALLOCATE_COL_VEC ( 'PL_COL', NDOFL, SUBR_NAME )
-      CALL ALLOCATE_LAPACK_MAT ( 'RES', NDOFL, 1, SUBR_NAME )
-
-! Open file for writing displs to.
- 
-      CALL FILE_OPEN ( L3A, LINK3A, OUNT, 'REPLACE', L3A_MSG, 'WRITE_STIME', 'UNFORMATTED', 'WRITE', 'REWIND', 'Y', 'N', 'Y' )
- 
-! Loop on subcases
-
-      WRITE(F06,*)
-      BETA = ONE
-Solve:DO ISUB = 1,NSUB
-
-         SLU_INFO = 0
-         CALL ALLOCATE_COL_VEC ( 'UL_COL', NDOFL, SUBR_NAME )
-         CALL ALLOCATE_COL_VEC ( 'PL_COL', NDOFL, SUBR_NAME )
-
-         CALL OURTIM                                       ! Get the loads for this subcase from I_PL, J_PL, PL and put into PL_COL
-         MODNAM = 'GET COL OF PL LOADS FOR                        Subcase'
-         WRITE(SC1,3093) LINKNO,MODNAM,ISUB,HOUR,MINUTE,SEC,SFRAC
-         DO J=1,NDOFL
-            PL_COL(J)  = ZERO
-            DUM_COL(J) = ZERO
-         ENDDO
-         CALL GET_SPARSE_CRS_COL ( 'PL        ', ISUB, NTERM_PL, NDOFL, NSUB, I_PL, J_PL, PL, BETA, PL_COL, NULL_COL )
-         DO J=1,NDOFL
-            DUM_COL(J) = PL_COL(J)
-         ENDDO
- 
-         IF (DEBUG(32) == 1) THEN                          ! DEBUG output of load vector for this subcase, if requested
-            WRITE(F06,3020) ISUB
-            CALL WRITE_VECTOR ( '      L-SET LOADS      ',' LOAD', NDOFL, PL_COL )
-            WRITE(F06,*)
-         ENDIF
- 
-         CALL OURTIM                                       ! Call FBS to solve for displacements for this subcase
-         MODNAM = 'FBS - SOLVE FOR RHS ANSWERS FOR                   "'
-         WRITE(SC1,3093) LINKNO,MODNAM,ISUB,HOUR,MINUTE,SEC,SFRAC
-   !xx   WRITE(SC1, * )                                    ! Advance 1 line for screen messages
-
-         IF      (SOLLIB == 'BANDED  ') THEN
-
-            CALL FBS_LAPACK ( EQUED, NDOFL, KLL_SDIA, EQUIL_SCALE_FACS, DUM_COL )
-
-         ELSE IF (SOLLIB == 'SPARSE  ') THEN
-
-            IF (SPARSE_FLAVOR(1:7) == 'SUPERLU') THEN
-
-               SLU_INFO = 0
-               CALL FBS_SUPRLU ( SUBR_NAME, 'KLL', NDOFL, NTERM_KLL, I_KLL, J_KLL, KLL, ISUB, DUM_COL, SLU_INFO )
-
-            ELSE
-
-               FATAL_ERR = FATAL_ERR + 1
-               WRITE(ERR,9991) SUBR_NAME, 'SPARSE_FLAVOR'
-               WRITE(F06,9991) SUBR_NAME, 'SPARSE_FLAVOR'
-               CALL OUTA_HERE ( 'Y' )
-
-            ENDIF
-
-         ELSE
-
-            FATAL_ERR = FATAL_ERR + 1
-            WRITE(ERR,9991) SUBR_NAME, 'SOLLIB'
-            WRITE(F06,9991) SUBR_NAME, 'SOLLIB'
-            CALL OUTA_HERE ( 'Y' )
-
-         ENDIF
-
-         DO J=1,NDOFL
-            UL_COL(J) = DUM_COL(J)
-         ENDDO
-
-         IF (DEBUG(33) == 1) THEN                          ! DEBUG output of displs
-            WRITE(F06,3022) ISUB
-            CALL WRITE_VECTOR ( '      A-SET DISPL      ','DISPL', NDOFL, UL_COL )
-            WRITE(F06,*)
-         ENDIF
- 
-         IF (EPSERR == 'Y') THEN                           ! Calculate residual vector, R. Use RES to calculate EPSILON
-            CALL OURTIM
-            MODNAM = 'CALC  EPSILON ERROR ESTIMATE                      "'
-            WRITE(SC1,3093) LINKNO,MODNAM,ISUB,HOUR,MINUTE,SEC,SFRAC
-            CALL EPSCALC ( ISUB )
-         ENDIF
-                                                           ! Calculate the LAPACK error bounds
-         IF ((RCONDK == 'Y') .AND. (SOLLIB == 'BANDED')) THEN 
-            IF (DABS(RCOND) > MACH_SFMIN) THEN
-               CALL OURTIM
-               MODNAM = 'CALC LAPACK ERROR ESTIMATE                        "'
-               WRITE(SC1,3093) LINKNO,MODNAM,ISUB,HOUR,MINUTE,SEC,SFRAC
-               CALL VECINORM ( UL_COL, NDOFL,  UL_INORM )
-               CALL VECINORM ( PL_COL, NDOFL,  PL_INORM )
-               CALL VECINORM ( RES   , NDOFL, RES_INORM )
-               DEN = K_INORM*UL_INORM + PL_INORM 
-               IF (DABS(DEN) > EPS1) THEN
-                  OMEGAI = (RES_INORM)/(DEN)
-                  OMEGAI0 = TEN*NDOFL*MACH_EPS
-                  LAP_ERR1 = TWO*OMEGAI/RCOND
-                  WRITE(F06,3024) ISUB, LAP_ERR1, OMEGAI, RCOND, DEN, RES_INORM, K_INORM, UL_INORM, PL_INORM, OMEGAI0, MACH_EPS
-               ELSE
-                  WRITE(F06,3026)
-               ENDIF
-            ELSE
-               WARN_ERR = WARN_ERR + 1
-               WRITE(ERR,3025) ISUB, RCOND, MACH_SFMIN
-               IF (SUPWARN == 'N') THEN 
-                  WRITE(F06,3025) ISUB, RCOND, MACH_SFMIN
-               ENDIF 
-            ENDIF
-         ENDIF
-
-         DO J=1,NDOFL                                      ! Write UL to file L3A for this subcase
-            WRITE(L3A) UL_COL(J)
-         ENDDO
-
-         CALL DEALLOCATE_COL_VEC  ( 'UL_COL' )
-         CALL DEALLOCATE_COL_VEC  ( 'PL_COL' )
-
-
-      ENDDO Solve
-
-FreeS:IF (SOLLIB == 'SPARSE  ') THEN                       ! Last, free the storage allocated inside SuperLU
-
-         IF (SPARSE_FLAVOR(1:7) == 'SUPERLU') THEN
-
-            DO J=1,NDOFL                                         ! Need a null col of loads when SuperLU is called to factor KLL
-               DUM_COL(J) = ZERO                                  ! (only because it appears in the calling list)
+            DO I=1,NSUB
+               PART_VEC_SUB = 1
             ENDDO
 
-            CALL C_FORTRAN_DGSSV( 3, NDOFL, NTERM_KLL, 1, KLL , I_KLL , J_KLL , DUM_COL, NDOFL, SLU_FACTORS, SLU_INFO )
-
-            IF (SLU_INFO .EQ. 0) THEN
-               WRITE (*,*) 'SUPERLU STORAGE FREED'
+            CALL OURTIM                                    ! Reduce KFF to KAA 
+            IF (MATSPARS == 'Y') THEN
+               MODNAM = 'REDUCE KFF TO KAA (SPARSE MATRIX ROUTINES)'
             ELSE
-               WRITE(*,*) 'SUPERLU STORAGE NOT FREED. INFO FROM SUPERLU FREE STORAGE ROUTINE = ', SLU_INFO
+               MODNAM = 'REDUCE KFF TO KAA (FULL MATRIX ROUTINES)'
+            ENDIF
+            WRITE(SC1,2092) MODNAM,HOUR,MINUTE,SEC,SFRAC
+
+            CALL REDUCE_KFF_TO_KAA ( PART_VEC_F_AO )
+
+            CALL OURTIM                                    ! Reduce MFF to MAA 
+            IF (MATSPARS == 'Y') THEN
+               MODNAM = 'REDUCE MFF TO MAA (SPARSE MATRIX ROUTINES)'
+            ELSE
+               MODNAM = 'REDUCE MFF TO MAA (FULL MATRIX ROUTINES)'
+            ENDIF
+            WRITE(SC1,2092) MODNAM,HOUR,MINUTE,SEC,SFRAC
+
+            CALL REDUCE_MFF_TO_MAA ( PART_VEC_F_AO )
+
+
+            IF ((SOL_NAME(1:5) /= 'MODES') .AND. (SOL_NAME(1:12) /= 'GEN CB MODEL')) THEN
+
+               IF (NTERM_PF > 0) THEN                      ! Reduce PF to PA 
+
+                  CALL OURTIM
+                  IF (MATSPARS == 'Y') THEN
+                     MODNAM = 'REDUCE PF  TO PA  (SPARSE MATRIX ROUTINES)'
+                  ELSE
+                     MODNAM = 'REDUCE PF  TO PA  (FULL MATRIX ROUTINES)'
+                  ENDIF
+                  WRITE(SC1,2092) MODNAM,HOUR,MINUTE,SEC,SFRAC
+
+                  CALL REDUCE_PF_TO_PA ( PART_VEC_F_AO, PART_VEC_SUB )
+
+               ELSE
+
+                  NTERM_PA = 0
+                  NTERM_PO = 0
+                  CALL ALLOCATE_SPARSE_MAT ( 'PA', NDOFA, NTERM_PA, SUBR_NAME )
+
+               ENDIF
+
+            ENDIF
+
+FreeS:      IF (SOLLIB == 'SPARSE  ') THEN                       ! Last, free the storage allocated inside SuperLU
+
+               IF (SPARSE_FLAVOR(1:7) == 'SUPERLU') THEN
+
+                  DO J=1,NDOFO
+                     DUM_COL(J) = ZERO
+                  ENDDO
+
+                  CALL C_FORTRAN_DGSSV( 3, NDOFO, NTERM_KOO, 1, KOO , I_KOO , J_KOO , DUM_COL, NDOFO, SLU_FACTORS, SLU_INFO )
+
+                  IF (SLU_INFO .EQ. 0) THEN
+                     WRITE (*,*) 'SUPERLU STORAGE FREED'
+                  ELSE
+                     WRITE(*,*) 'SUPERLU STORAGE NOT FREED. INFO FROM SUPERLU FREE STORAGE ROUTINE = ', SLU_INFO
+                  ENDIF
+
+               ENDIF
+
+            ENDIF FreeS
+ 
+         ELSE                                              ! There is no O-set, so equate F, A sets
+
+            CALL OURTIM
+            MODNAM = 'EQUATING A-SET TO F-SET'
+            WRITE(SC1,2092) MODNAM,HOUR,MINUTE,SEC,SFRAC
+
+            NDOFA     = NDOFF
+
+            NTERM_KAA = NTERM_KFF
+            NTERM_KAO = 0
+            NTERM_KOO = 0
+
+            NTERM_MAA = NTERM_MFF
+            NTERM_MAO = 0
+            NTERM_MOO = 0
+
+            NTERM_PA  = NTERM_PF
+            NTERM_PO  = 0
+
+            CALL ALLOCATE_SPARSE_MAT ( 'KAA', NDOFA, NTERM_KAA, SUBR_NAME )
+
+!xx      DO I=1,NDOFA+1
+!xx         I_KAA(I) = I_KFF(I)
+!xx      ENDDO
+!xx
+!xx      DO I=1,NTERM_KAA
+!xx         J_KAA(I) = J_KFF(I)
+!xx           KAA(I) =   KFF(I)
+!xx      ENDDO
+
+            CALL ALLOCATE_SPARSE_MAT ( 'MAA', NDOFA, NTERM_MAA, SUBR_NAME )
+
+!xx      DO I=1,NDOFA+1
+!xx         I_MAA(I) = I_MFF(I)
+!xx      ENDDO
+!xx
+!xx      DO I=1,NTERM_MAA
+!xx         J_MAA(I) = J_MFF(I)
+!xx           MAA(I) =   MFF(I)
+!xx      ENDDO
+
+            IF ((SOL_NAME(1:5) /= 'MODES') .AND. (SOL_NAME(1:12) /= 'GEN CB MODEL')) THEN
+
+               CALL ALLOCATE_SPARSE_MAT ( 'PA', NDOFA, NTERM_PA, SUBR_NAME )
+
+!xx         DO I=1,NDOFA+1
+!xx            I_PA(I)  = I_PF(I)
+!xx         ENDDO
+!xx
+!xx         DO I=1,NTERM_PA
+!xx            J_PA(I) = J_PF(I)
+!xx              PA(I) =   PF(I)
+!xx         ENDDO
+
             ENDIF
 
          ENDIF
 
-      ENDIF FreeS
- 
-! Dellocate arrays
+! Deallocate F set arrays
 
-      CALL OURTIM
-      MODNAM = 'DEALLOCATE ARRAYS'
-      WRITE(SC1,3092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
-!xx   WRITE(SC1, * )                                       ! Advance 1 line for screen messages         
+         MODNAM = 'DEALLOCATE F-SET ARRAYS'
+         WRITE(SC1,2092) MODNAM,HOUR,MINUTE,SEC,SFRAC
+   !xx   WRITE(SC1, * )                                    ! Advance 1 line for screen messages         
+         WRITE(SC1,12345,ADVANCE='NO') '       Deallocate KFF  ', CR13   ;   CALL DEALLOCATE_SPARSE_MAT ( 'KFF' )
+         WRITE(SC1,12345,ADVANCE='NO') '       Deallocate MFF  ', CR13   ;   CALL DEALLOCATE_SPARSE_MAT ( 'MFF' )
+         WRITE(SC1,12345,ADVANCE='NO') '       Deallocate PF   ', CR13   ;   CALL DEALLOCATE_SPARSE_MAT ( 'PF' )
+         WRITE(SC1,*) CR13
 
-      IF (SOL_NAME(1:8) == 'BUCKLING') THEN
-         CONTINUE
-      ELSE
-         IF (SOL_NAME(1:12) /= 'GEN CB MODEL' ) THEN
-            WRITE(SC1,12345,ADVANCE='NO') '       Deallocate KLL  ', CR13
-            CALL DEALLOCATE_SPARSE_MAT ( 'KLL' )
+! Deallocate ABAND (which was KOO before decomp and TOO later) and GOA
+
+         MODNAM = 'DEALLOCATE GOA, ABAND ARRAYS'
+         WRITE(SC1,2092) MODNAM,HOUR,MINUTE,SEC,SFRAC
+   !xx   WRITE(SC1, * )                                    ! Advance 1 line for screen messages         
+         WRITE(SC1,12345,ADVANCE='NO') '       Deallocate GOA  ', CR13   ;   CALL DEALLOCATE_SPARSE_MAT ( 'GOA' )
+         WRITE(SC1,12345,ADVANCE='NO') '       Deallocate ABAND', CR13   ;   CALL DEALLOCATE_LAPACK_MAT ( 'ABAND' )
+         WRITE(SC1,*) CR13
+
+         IF (NDOFO == 0) THEN
+            NTERM_GOA = 0
          ENDIF
-      ENDIF
 
-      WRITE(SC1,12345,ADVANCE='NO') '       Deallocate ABAND ', CR13   ;   CALL DEALLOCATE_LAPACK_MAT ( 'ABAND' )
-      WRITE(SC1,12345,ADVANCE='NO') '       Deallocate RES   ', CR13   ;   CALL DEALLOCATE_LAPACK_MAT ( 'RES' )
-!xx   WRITE(SC1,12345,ADVANCE='NO') '       Deallocate UL_COL', CR13   ;   CALL DEALLOCATE_COL_VEC  ( 'UL_COL' )
-!xx   WRITE(SC1,12345,ADVANCE='NO') '       Deallocate PL_COL', CR13   ;   CALL DEALLOCATE_COL_VEC  ( 'PL_COL' )
-!xx   WRITE(SC1,12345,ADVANCE='NO') '       Deallocate PL    ', CR13   ;   CALL DEALLOCATE_SPARSE_MAT ( 'PL' )
+! Print out stiffness matrix partitions, if requested
 
-      CALL FILE_CLOSE ( L3A, LINK3A, 'KEEP', 'Y' )
-
-! Process is now complete so set COMM(LINKNO)
-  
-      COMM(LINKNO) = 'C'
-
-! Write data to L1A
-
-      CALL WRITE_L1A ( 'KEEP', 'Y', 'Y' )
-  
-! Check allocation status of allocatable arrays, if requested
-
-      IF (DEBUG(100) > 0) THEN
-         CALL CHK_ARRAY_ALLOC_STAT
-         IF (DEBUG(100) > 1) THEN
-            CALL WRITE_ALLOC_MEM_TABLE ( 'at the end of '//SUBR_NAME )
+         IF (( PRTSTIFF(4) == 1) .OR. ( PRTSTIFF(4) == 3)) THEN
+            IF (NTERM_KAA > 0) THEN
+               MATRIX_NAME = 'STIFFNESS MATRIX KAA'
+               CALL WRITE_SPARSE_CRS ( MATRIX_NAME, 'A ', 'A ', NTERM_KAA, NDOFA, I_KAA, J_KAA, KAA )
+            ENDIF
          ENDIF
+
+         IF (( PRTSTIFF(4) == 2) .OR. ( PRTSTIFF(4) == 3)) THEN
+            IF (NTERM_KAO > 0) THEN
+               MATRIX_NAME = 'STIFFNESS MATRIX KAO'
+               CALL WRITE_SPARSE_CRS ( MATRIX_NAME, 'A ', 'O ', NTERM_KAO, NDOFA, I_KAO, J_KAO, KAO )
+            ENDIF
+            IF (NTERM_KOO > 0) THEN
+               MATRIX_NAME = 'STIFFNESS MATRIX KOO'
+               CALL WRITE_SPARSE_CRS ( MATRIX_NAME, 'O ', 'O ', NTERM_KOO, NDOFO, I_KOO, J_KOO, KOO )
+            ENDIF
+         ENDIF
+
+         MODNAM = 'DEALLOCATE O SET ARRAYS'
+         WRITE(SC1,2092) MODNAM,HOUR,MINUTE,SEC,SFRAC
+   !xx   WRITE(SC1, * )                                    ! Advance 1 line for screen messages         
+         WRITE(SC1,12345,ADVANCE='NO') '       Deallocate KAO', CR13   ;   CALL DEALLOCATE_SPARSE_MAT ( 'KAO' )
+         WRITE(SC1,12345,ADVANCE='NO') '       Deallocate KOO', CR13   ;   CALL DEALLOCATE_SPARSE_MAT ( 'KOO' )
+         WRITE(SC1,*) CR13
+
+! Write matrix diagonal and stats, if requested.
+! NOTE: call this subr even if PRTSTIFFD(4) = 0 since we need KAA_DIAG, KAA_MAX_DIAG for the equilibrium check
+
+         CALL GET_MATRIX_DIAG_STATS ( 'KAA', 'A ', NDOFA, NTERM_KAA, I_KAA, J_KAA, KAA, PRTSTIFD(4), KAA_DIAG, KAA_MAX_DIAG )
+
+! Print out mass matrix partitions, if requested
+
+         IF (( PRTMASS(4) == 1) .OR. ( PRTMASS(4) == 3)) THEN
+            IF (NTERM_MAA > 0) THEN
+               MATRIX_NAME = 'MASS MATRIX MAA'
+               CALL WRITE_SPARSE_CRS ( MATRIX_NAME, 'A ', 'A ', NTERM_MAA, NDOFA, I_MAA, J_MAA, MAA )
+            ENDIF
+         ENDIF
+
+         IF (( PRTMASS(4) == 2) .OR. ( PRTMASS(4) == 3)) THEN
+            IF (NTERM_MAO > 0) THEN
+               MATRIX_NAME = 'MASS MATRIX MAO'
+               CALL WRITE_SPARSE_CRS ( MATRIX_NAME, 'A ', 'O ', NTERM_MAO, NDOFA, I_MAO, J_MAO, MAO )
+            ENDIF
+            IF (NTERM_MOO > 0) THEN
+               MATRIX_NAME = 'MASS MATRIX MOO'
+               CALL WRITE_SPARSE_CRS ( MATRIX_NAME, 'O ', 'O ', NTERM_MOO, NDOFO, I_MOO, J_MOO, MOO )
+            ENDIF
+         ENDIF
+
+         WRITE(SC1,12345,ADVANCE='NO') '       Deallocate MAO', CR13   ;   CALL DEALLOCATE_SPARSE_MAT ( 'MAO' )
+         WRITE(SC1,12345,ADVANCE='NO') '       Deallocate MOO', CR13   ;   CALL DEALLOCATE_SPARSE_MAT ( 'MOO' )
+         WRITE(SC1,*) CR13
+
+! Print out load matrix partitions, if requested
+
+         IF (( PRTFOR(4) == 1) .OR. ( PRTFOR(4) == 3)) THEN
+            IF (NTERM_PA  > 0) THEN
+               MATRIX_NAME = 'LOAD MATRIX PA'
+               CALL WRITE_SPARSE_CRS ( MATRIX_NAME, 'A ', 'SUBCASE', NTERM_PA, NDOFA, I_PA, J_PA, PA )
+            ENDIF
+         ENDIF
+
+         IF (( PRTFOR(4) == 2) .OR. ( PRTFOR(4) == 3)) THEN
+            IF (NTERM_PO  > 0) THEN
+               MATRIX_NAME = 'LOAD MATRIX PO'
+               CALL WRITE_SPARSE_CRS ( MATRIX_NAME, 'O ', 'SUBCASE', NTERM_PO, NDOFO, I_PO, J_PO, PO )
+            ENDIF
+         ENDIF
+
+         WRITE(SC1,12345,ADVANCE='NO') '       Deallocate PO ', CR13   ;   CALL DEALLOCATE_SPARSE_MAT ( 'PO' )
+         WRITE(SC1,*) CR13
+
+! Do equilibrium check on the A-set stiffness matrix, if requested
+
+         IF ((EQCHK_OUTPUT(4) > 0) .OR. (EQCHK_OUTPUT(5) > 0)) THEN
+            CALL ALLOCATE_RBGLOBAL ( 'A ', SUBR_NAME )
+            IF (NDOFO > 0) THEN
+               CALL TDOF_COL_NUM ( 'A ', A_SET_COL )
+               DO I=1,NDOFG
+                  A_SET_DOF = TDOFI(I,A_SET_COL)
+                  IF (A_SET_DOF > 0) THEN
+                     DO J=1,6
+                        RBGLOBAL_ASET(A_SET_DOF,J) = RBGLOBAL_GSET(I,J)
+                     ENDDO
+                  ENDIF
+               ENDDO
+            ELSE
+               DO I=1,NDOFA
+                  DO J=1,6
+                     RBGLOBAL_ASET(I,J) = RBGLOBAL_FSET(I,J)
+                  ENDDO
+               ENDDO
+            ENDIF
+         ENDIF
+
+         IF (EQCHK_OUTPUT(4) > 0) THEN
+            CALL OURTIM
+            MODNAM = 'EQUILIBRIUM CHECK ON KAA                '
+            WRITE(SC1,2092) MODNAM,HOUR,MINUTE,SEC,SFRAC
+            CALL STIFF_MAT_EQUIL_CHK ( EQCHK_OUTPUT(4),'A ', SYM_KAA, NDOFA, NTERM_KAA, I_KAA, J_KAA, KAA, KAA_DIAG, KAA_MAX_DIAG, &
+                                       RBGLOBAL_ASET)
+         ENDIF
+!xx      CALL DEALLOCATE_RBGLOBAL ( 'A ' )
+         CALL DEALLOCATE_RBGLOBAL ( 'F ' )
+
+! **********************************************************************************************************************************
+      ELSE                                                 ! This is BUCKLING with LOAD_ISTEP = 2 (eigen part of BUCKLING)
+
+         IF (NDOFO > 0) THEN
+                                                           ! First, need to create part vectors used in the reduction (if NDOFO > 0)
+            CALL PARTITION_VEC (NDOFF,'F ','A ','O ',PART_VEC_F_AO)
+
+            DO I=1,NSUB
+               PART_VEC_SUB = 1
+            ENDDO
+
+            CALL OURTIM                                       ! Reduce KFF to KAA 
+            IF (MATSPARS == 'Y') THEN
+               MODNAM = 'REDUCE KFFD TO KAAD (SPARSE MATRIX ROUTINES)'
+            ELSE
+               MODNAM = 'REDUCE KFFD TO KAAD (FULL MATRIX ROUTINES)'
+            ENDIF
+            WRITE(SC1,2092) MODNAM,HOUR,MINUTE,SEC,SFRAC
+
+            CALL REDUCE_KFFD_TO_KAAD ( PART_VEC_F_AO )
+
+         ELSE                                                 ! There is no O-set, so equate F, A sets
+
+            CALL OURTIM
+            MODNAM = 'EQUATING A-SET TO F-SET'
+            WRITE(SC1,2092) MODNAM,HOUR,MINUTE,SEC,SFRAC
+
+            NDOFA     = NDOFF
+
+            NTERM_KAAD = NTERM_KFFD
+            NTERM_KAOD = 0
+            NTERM_KOOD = 0
+
+            CALL ALLOCATE_SPARSE_MAT ( 'KAAD', NDOFA, NTERM_KAAD, SUBR_NAME )
+
+         ENDIF
+
+! Deallocate F set arrays
+
+         MODNAM = 'DEALLOCATE F-SET ARRAYS'
+         WRITE(SC1,2092) MODNAM,HOUR,MINUTE,SEC,SFRAC
+   !xx   WRITE(SC1, * )                                    ! Advance 1 line for screen messages         
+         WRITE(SC1,12345,ADVANCE='NO') '       Deallocate KFFD  ', CR13   ;   CALL DEALLOCATE_SPARSE_MAT ( 'KFFD' )
+         WRITE(SC1,*) CR13
+
+! Deallocate ABAND (which was KOO before decomp and TOO later) and GOA
+
+         MODNAM = 'DEALLOCATE GOA, ABAND ARRAYS'
+         WRITE(SC1,2092) MODNAM,HOUR,MINUTE,SEC,SFRAC
+   !xx   WRITE(SC1, * )                                    ! Advance 1 line for screen messages         
+         WRITE(SC1,12345,ADVANCE='NO') '       Deallocate GOA  ', CR13   ;   CALL DEALLOCATE_SPARSE_MAT ( 'GOA' )
+         WRITE(SC1,12345,ADVANCE='NO') '       Deallocate ABAND', CR13   ;   CALL DEALLOCATE_LAPACK_MAT ( 'ABAND' )
+         WRITE(SC1,*) CR13
+
+         IF (NDOFO == 0) THEN
+            NTERM_GOA = 0
+         ENDIF
+
+! Print out stiffness matrix partitions, if requested
+
+         IF (( PRTSTIFF(4) == 1) .OR. ( PRTSTIFF(4) == 3)) THEN
+            IF (NTERM_KAAD > 0) THEN
+               MATRIX_NAME = 'STIFFNESS MATRIX KAAD'
+               CALL WRITE_SPARSE_CRS ( MATRIX_NAME, 'A ', 'A ', NTERM_KAAD, NDOFA, I_KAAD, J_KAAD, KAAD )
+            ENDIF
+         ENDIF
+
+         IF (( PRTSTIFF(4) == 2) .OR. ( PRTSTIFF(4) == 3)) THEN
+            IF (NTERM_KAOD > 0) THEN
+               MATRIX_NAME = 'STIFFNESS MATRIX KAOD'
+               CALL WRITE_SPARSE_CRS ( MATRIX_NAME, 'A ', 'O ', NTERM_KAOD, NDOFA, I_KAOD, J_KAOD, KAOD )
+            ENDIF
+            IF (NTERM_KOOD > 0) THEN
+               MATRIX_NAME = 'STIFFNESS MATRIX KOOD'
+               CALL WRITE_SPARSE_CRS ( MATRIX_NAME, 'O ', 'O ', NTERM_KOOD, NDOFO, I_KOOD, J_KOOD, KOOD )
+            ENDIF
+         ENDIF
+
+         MODNAM = 'DEALLOCATE O SET ARRAYS'
+         WRITE(SC1,2092) MODNAM,HOUR,MINUTE,SEC,SFRAC
+   !xx   WRITE(SC1, * )                                    ! Advance 1 line for screen messages         
+         WRITE(SC1,12345,ADVANCE='NO') '       Deallocate KAOD', CR13   ;   CALL DEALLOCATE_SPARSE_MAT ( 'KAOD' )
+         WRITE(SC1,12345,ADVANCE='NO') '       Deallocate KOOD', CR13   ;   CALL DEALLOCATE_SPARSE_MAT ( 'KOOD' )
+         WRITE(SC1,*) CR13
+
+! Write matrix diagonal and stats, if requested.
+! NOTE: call this subr even if PRTSTIFFD(4) = 0 since we need KAA_DIAG, KAA_MAX_DIAG for the equilibrium check
+
+         CALL GET_MATRIX_DIAG_STATS ( 'KAAD', 'A ', NDOFA, NTERM_KAAD, I_KAAD, J_KAAD, KAAD, PRTSTIFD(4), KAAD_DIAG, KAAD_MAX_DIAG )
+
       ENDIF
 
-! Write LINK3 end to F04, F06
-
-      CALL OURTIM
-      IF (WRT_LOG > 0) THEN
-         WRITE(F04,151) LINKNO
+! **********************************************************************************************************************************
+      IF (WRT_LOG >= SUBR_BEGEND) THEN
+         CALL OURTIM
+         WRITE(F04,9002) SUBR_NAME,TSEC
+ 9002    FORMAT(1X,A,' END  ',F10.3)
       ENDIF
-      WRITE(F06,151) LINKNO
+      deallocate(PART_VEC_F_AO , PART_VEC_SUB , DUM_COL , KAA_DIAG  , KAAD_DIAG )
+      RETURN
 
-! Close files
-  
-      IF (( DEBUG(193) == 3) .OR. (DEBUG(193) == 999)) THEN
-         CALL FILE_INQUIRE ( 'near end of LINK3' )
-      ENDIF
-
-! Write LINK3 end to screen
-
-      WRITE(SC1,153) LINKNO
-!***********************************************************************************************************************************
-  150 FORMAT(/,' >> LINK',I3,' BEGIN',/)
-
-  151 FORMAT(/,' >> LINK',I3,' END',/)
-
-  152 FORMAT(/,' >> LINK',I3,' BEGIN')
-
-  153 FORMAT(  ' >> LINK',I3,' END')
-
-  933 FORMAT(' *ERROR   933: PROGRAMMING ERROR IN SUBROUTINE ',A                                                                   &
-                    ,/,14X,' CRS_CCS  MUST BE EITHER "CRS" OR "CCS" BUT VALUE IS ',A)
-
-  999 FORMAT(' *ERROR   999: INCORRECT SOLUTION IN EXEC CONTROL. SHOULD BE ',A,', BUT IS SOL = ',A)
-
- 3020 FORMAT(//,18X,'LOAD VECTOR FOR SUBCASE ',I8)
-
- 3022 FORMAT(//,18X,'DISPLACEMENTS FOR SUBCASE ',I8,/23X,'LSET DOF',10X,'DISP',14X,'S(J)')
-
- 3024 FORMAT(' *INFORMATION: FOR INTERNAL SUBCASE NUMBER ',I8,' LAPACK ERROR EST (2*OMEGAI/RCOND) = ',1ES13.6,                     &
-             ' Gen, slightly > than true err'                                                                                   ,/,&
-                                          52X,'................................................................................',/,&
-             '                                                    ... OMEGAI                        = ',1ES13.6,                   &
-             ' (RES_INORM/DEN)              .'                                                                                  ,/,&
-             '                                                    ... RCOND                         = ',1ES13.6,                   &
-             ' (Recriprocal of KLL cond num).'                                                                                  ,/,&
-             '                                                    ... DEN                           = ',1ES13.6,                   &
-             ' (K_INORM*UL_INORM + PL_INORM).'                                                                                  ,/,&
-             '                                                    ... RES_INORM                     = ',1ES13.6,                   &
-             ' (Inf norm of KLL*UL - PL)    .'                                                                                  ,/,&
-             '                                                    ... K_INORM                       = ',1ES13.6,                   &
-             ' (Infinity norm of KLL)       .'                                                                                  ,/,&
-             '                                                    ... UL_INORM                      = ',1ES13.6,                   &
-             ' (Infinity norm of UL displs) .'                                                                                  ,/,&
-             '                                                    ... PL_INORM                      = ',1ES13.6,                   &
-             ' (Infinity norm of PL loads)  .'                                                                                  ,/,&
-             '                                                    ... OMEGAI0 (OMEGAI upper bound)  = ',1ES13.6,                   &
-             ' (10*NDOFL*MACH_EPS)          .'                                                                                  ,/,&
-             '                                                    ... MACH_EPS                      = ',1ES13.6,                   &
-             ' (Machine precision)          .'                                                                                  ,/,&
-                                          52X,'................................................................................',/)
-
- 3025 FORMAT(' *WARNING    : CANNOT CALCULATE LAPACK ERROR ESTIMATE FOR INTERNAL SUBCASE NUMBER ',I8                               &
-                    ,/,14X,' THE RECIPROCAL OF THE CONDITION NUMBER OF KLL, RCOND         = ',1ES15.6,' CANNOT BE INVERTED.'       &
-                    ,/,14X,' IT IS TOO SMALL COMPARED TO MACHINE SAFE MINIMUN (MACH_SFMIN) = ',1ES15.6,/)
-
- 3026 FORMAT(' *INFORMATION: CANNOT CALCULATE OMEGAI. DEN = 0',/)
-
- 3092 FORMAT(1X,I2,'/',A54,8X,2X,I2,':',I2,':',I2,'.',I3)
-
- 3093 FORMAT(1X,I2,'/',A54,I8,2X,I2,':',I2,':',I2,'.',I3)
-
- 9991 FORMAT(' *ERROR  9991: PROGRAMMING ERROR IN SUBROUTINE ',A                                                                   &
-                    ,/,14X,A, ' = ',A,' NOT PROGRAMMED ',A)
-
- 9998 FORMAT(' *ERROR  9998: COMM ',I3,' INDICATES UNSUCCESSFUL LINK ',I2,' COMPLETION.'                                           &
-                    ,/,14X,' FATAL ERROR - CANNOT START LINK ',I2)
+! **********************************************************************************************************************************
+ 2092 FORMAT(6X,A44,18X,I2,':',I2,':',I2,'.',I3)
 
 12345 FORMAT(A,10X,A)
 
-!***********************************************************************************************************************************
+! **********************************************************************************************************************************
 
-      END SUBROUTINE LINK3
-
-
-
-
+      END SUBROUTINE REDUCE_F_AO
 
 
