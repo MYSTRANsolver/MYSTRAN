@@ -310,22 +310,26 @@
  
       INTEGER(LONG)                   :: COMPV             ! Component number (1-6) of a grid DOF
       INTEGER(LONG)                   :: GRIDV             ! Grid number
-      INTEGER(LONG)                   :: I,J,K             ! DO loop indices or counters
+      INTEGER(LONG)                   :: I,J,K, memerror   ! DO loop indices or counters
       INTEGER(LONG)                   :: INFO      = 0     ! Output from factorization routines
-      INTEGER(LONG)                   :: IPIV(NDOFM)       ! Pivot indices from factorization of RMM
+      INTEGER(LONG),allocatable       :: IPIV(:)!(NDOFM)       ! Pivot indices from factorization of RMM
       INTEGER(LONG)                   :: IOCHK             ! IOSTAT error number when opening a file
       INTEGER(LONG)                   :: NRHS              ! No. of RHS's in solving (RMM)*(GMN) = -RMN
       INTEGER(LONG)                   :: OUNT(2)           ! File units to write messages to. Input to subr UNFORMATTED_OPEN  
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = SOLVE_GMN_BEGEND + 1
 
       REAL(DOUBLE)                    :: BETA              ! Multiple for rhs for use in subr FBS
-      REAL(DOUBLE)                    :: DUM_COL(NDOFM)    ! Temp variable used in SuperLU
+      REAL(DOUBLE),allocatable        :: DUM_COL(:)!(NDOFM)    ! Temp variable used in SuperLU
       REAL(DOUBLE)                    :: EPS1              ! A small number to compare real zero
-      REAL(DOUBLE)                    :: GMN_COL(NDOFM)    ! A column of GMN solved for herein
-      REAL(DOUBLE)                    :: RMN_COL(NDOFM)    ! A column of RMN. The solution for GMN_COL is from RMM*GMN_COL = RMN_COL
+      REAL(DOUBLE),allocatable        :: GMN_COL(:)!(NDOFM)    ! A column of GMN solved for herein
+      REAL(DOUBLE),allocatable        :: RMN_COL(:)!(NDOFM)    ! A column of RMN. The solution for GMN_COL is from RMM*GMN_COL = RMN_COL
 
       INTRINSIC                       :: DABS
 
+
+      allocate(IPIV(NDOFM))
+      allocate(DUM_COL(NDOFM),GMN_COL(NDOFM),RMN_COL(NDOFM),stat=memerror)
+      if (memerror.ne.0) stop 'Error when allocating memory in solve_gmn'
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
          CALL OURTIM
@@ -570,7 +574,7 @@ FreeS:IF (SOLLIB == 'SPARSE  ') THEN                       ! Last, free the stor
          WRITE(F04,9002) SUBR_NAME,TSEC
  9002    FORMAT(1X,A,' END  ',F10.3)
       ENDIF
-
+      deallocate(IPIV,DUM_COL,GMN_COL,RMN_COL)
       RETURN
 
 ! **********************************************************************************************************************************
