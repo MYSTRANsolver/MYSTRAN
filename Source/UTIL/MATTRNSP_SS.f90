@@ -72,13 +72,15 @@
       INTEGER(LONG), INTENT(IN)       :: J_A(NTERM)        ! Col numbers for nonzero terms in A
       INTEGER(LONG), INTENT(OUT)      :: I_AT(NCOLA+1)     ! I_AT(I+1) - I_AT(I) are the num of nonzeros in AT row I
       INTEGER(LONG), INTENT(OUT)      :: J_AT(NTERM)       ! Col numbers for nonzero terms in AT
-      INTEGER(LONG)                   :: I,J,K,L           ! DO loop indices or counters
+      INTEGER(LONG)                   :: I,J               ! DO loop indices or counters
       INTEGER(LONG)                   :: ISTART            ! Starting value of I when looking for row number of a term in MATIN
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = MATTRNSP_SS_BEGEND
 
       REAL(DOUBLE) , INTENT(IN)       :: A(NTERM)          ! Real nonzero values in input  matrix A
       REAL(DOUBLE) , INTENT(OUT)      :: AT(NTERM)         ! Real nonzero values in output matrix AT
-
+      
+      INTEGER(LONG)                   :: TMP, COL          ! temp variables for storage in loops
+      INTEGER(LONG)                   :: CUMSUM            ! cumulative sum 
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
          CALL OURTIM
@@ -100,26 +102,44 @@
 
       IF ((DEBUG(85) == 1) .OR. (DEBUG(85) == 3)) CALL MATTRNSP_SS_DEB ( '1', '   ' )
 
-      L = 0                                                ! Counter for terms going into AT
-      I_AT(1) = 1
-      DO J=1,NCOLA
-         I_AT(J+1) = I_AT(J)
-         ISTART  = 1
-         DO K=1,NTERM
-            IF (J_A(K) == J) THEN                          ! We found a term that belongs in col J
-               I_AT(J+1) = I_AT(J+1) + 1
-i_do:          DO I=ISTART,NROWA                           ! Find out what the row number is for this term
-                  IF ((K >= I_A(I)) .AND. (K < I_A(I+1))) THEN
-                     L       = L + 1
-                     J_AT(L) = I                           ! J_AT has row numbers of the NTERM terms going into AT
-                       AT(L) = A(K)
-                     ISTART = I                            ! Reset I loop start point. Next term in this col will be higher row num.
-                     EXIT i_do                             ! We found row number so continue with K loop
-                  ENDIF
-               ENDDO i_do
-            ENDIF
+      ! count the entries per column
+      TMP=0
+      DO I=1,NTERM
+         TMP = J_A(I)
+         I_AT(TMP) = I_AT(TMP) + 1
+      ENDDO
+
+      ! cumulative sum along columns
+      TMP = 0
+      CUMSUM = 0
+      DO I=1,NCOLA
+         TMP = I_AT(I)
+         I_AT(I) = CUMSUM
+         CUMSUM = CUMSUM + TMP
+      ENDDO
+      I_AT(NCOLA+1) = NTERM
+
+      ! do the transpose
+      TMP=0
+      DO I=1,NROWA
+         DO J=I_A(I),I_A(I+1)-1
+            COL = J_A(J)
+            TMP = I_AT(COL)+1
+            J_AT(TMP) = I
+            AT(TMP) = A(J)
+            I_AT(COL) = I_AT(COL) + 1
          ENDDO
       ENDDO
+
+      ! right shift the array
+      TMP = 0
+      CUMSUM = 0
+      DO I=1,NCOLA
+         TMP = I_AT(I)
+         I_AT(I) = CUMSUM+1
+         CUMSUM = TMP
+      ENDDO
+      I_AT(NCOLA+1)=CUMSUM+1
 
       IF ((DEBUG(85) == 1) .OR. (DEBUG(85) == 3)) CALL MATTRNSP_SS_DEB ( '2', '   ' )
 

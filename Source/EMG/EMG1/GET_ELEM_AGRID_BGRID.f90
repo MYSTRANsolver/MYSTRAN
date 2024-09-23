@@ -72,6 +72,9 @@
 
       CALL GET_ELGP ( INT_ELEM_ID )
 
+      ! assert that the array is sorted and the binary search in GET_ARRAY_ROW_NUM will work
+      CALL ASSERT_ARRAY_SORTED ( 'GRID_ID', SUBR_NAME, NGRID, GRID_ID) 
+
       DO I=1,ELGP
          DELTA = 1
          IF (TYPE == 'BUSH    ') THEN                      ! 1st grid in EDAT for BUSH is at EPNTK+3 since "Num grids" is EPNTK+2

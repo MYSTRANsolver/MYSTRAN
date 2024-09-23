@@ -52,6 +52,24 @@
  
       END SUBROUTINE GET_ARRAY_ROW_NUM
 
+      SUBROUTINE ASSERT_ARRAY_SORTED ( ARRAY_NAME, CALLING_SUBR, ASIZE, ARRAY)
+
+         USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
+         USE IOUNT1, ONLY                :  WRT_ERR, WRT_LOG, ERR, F04, f06
+         USE SCONTR, ONLY                :  BLNK_SUB_NAM, FATAL_ERR
+         
+         USE GET_ARRAY_ROW_NUM_USE_IFs
+   
+         IMPLICIT NONE
+    
+         CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: SUBR_NAME = 'ASSERT_ARRAY_SORTED'
+         CHARACTER(LEN=*), INTENT(IN)    :: ARRAY_NAME        ! Name of array to be searched
+         CHARACTER(LEN=*), INTENT(IN)    :: CALLING_SUBR      ! Name of subr that called this one
+   
+         INTEGER(LONG), INTENT(IN)       :: ASIZE             ! Size of ARRAY
+         INTEGER(LONG), INTENT(IN)       :: ARRAY(ASIZE)      ! Array to search
+         INTEGER(LONG)                   :: N                 ! Loop index
+      END SUBROUTINE ASSERT_ARRAY_SORTED
    END INTERFACE
 
    END MODULE GET_ARRAY_ROW_NUM_Interface
