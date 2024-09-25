@@ -149,7 +149,7 @@ add_subdirectory(${SUPERLU_DIR})
 set(Modules_DIR "${CMAKE_SOURCE_DIR}/Modules")
 file(GLOB_RECURSE Modules_ARPACK_FILES "${Modules_DIR}/ARPACK/*.f*")
 file(GLOB_RECURSE Modules_LAPACK_FILES "${Modules_DIR}/LAPACK/*.f*")
-file(GLOB_RECURSE Modules_BANDIT_FILES "${Modules_DIR}/BANDIT/*.f*")
+#file(GLOB_RECURSE Modules_BANDIT_FILES "${Modules_DIR}/BANDIT/*.f*")
 file(GLOB_RECURSE Modules_FILES "${Modules_DIR}/*.f*")
 file(GLOB_RECURSE Interfaces_FILES "${CMAKE_SOURCE_DIR}/Interfaces/*.f*")
 file(GLOB_RECURSE USE_IFs_FILES "${CMAKE_SOURCE_DIR}/USE_IFs/*.f*")
@@ -161,7 +161,7 @@ set(
 add_library(MODULES OBJECT ${MODULES_ALL_FILES})
 
 # collect modules
-list(APPEND modules_names ARPACK BANDIT LK1 LK2 LK3 LK4 LK5 LK6 LK9 EMG)
+list(APPEND modules_names ARPACK LK1 LK2 LK3 LK4 LK5 LK6 LK9 EMG)
 foreach (modname IN LISTS modules_names)
   file(GLOB_RECURSE TMP_MOD_FILES "${CMAKE_SOURCE_DIR}/${modname}/*.f*")
   add_library(${modname} OBJECT ${TMP_MOD_FILES} ${TMP_MOD_FILES_PP})
