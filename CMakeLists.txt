@@ -9,6 +9,8 @@ include(CheckFunctionExists)
 enable_language(Fortran)
 project(Mystran)
 
+option(BUILD_F2C "build f2c and aritcheck" OFF)
+
 # basic compiler and output options
 set(CMAKE_SOURCE_DIR "${PROJECT_SOURCE_DIR}/Source")
 set(PROJECT_BINARY_DIR "${PROJECT_SOURCE_DIR}/Binaries")
@@ -67,68 +69,71 @@ endif()
 
 
 # f2c stuff
-set(F2C_DIR "${PROJECT_SOURCE_DIR}/f2c")
-set(F2C_INCLUDE_DIR "${F2C_DIR}/include")
-set(F2C_FN "${F2C_DIR}/libf2c.zip")
-set(F2C_URL "https://www.netlib.org/f2c/libf2c.zip")
+if(BUILD_F2C)
+  set(F2C_DIR "${PROJECT_SOURCE_DIR}/f2c")
+  set(F2C_INCLUDE_DIR "${F2C_DIR}/include")
+  set(F2C_FN "${F2C_DIR}/libf2c.zip")
+  set(F2C_URL "https://www.netlib.org/f2c/libf2c.zip")
 
-# download f2c
-if(NOT EXISTS ${F2C_DIR})
-  message(STATUS "Downloading libf2c source from ${F2C_URL}...")
-  make_directory("${F2C_DIR}")
-  file(DOWNLOAD ${F2C_URL} ${F2C_FN} TIMEOUT 60 STATUS DOWNLOAD_STATUS)
-  # Check if download was successful.
-  list(GET DOWNLOAD_STATUS 0 STATUS_CODE)
-  list(GET DOWNLOAD_STATUS 1 ERROR_MESSAGE)
-  if(${STATUS_CODE} EQUAL 0)
-    message(STATUS "Done downloading libf2c.")
-  else()
-    # Exit CMake if the download failed, printing the error message.
-    file(REMOVE_RECURSE ${F2C_DIR})
-    message(FATAL_ERROR "Error downloading libf2c: ${ERROR_MESSAGE}")
+  # download f2c
+  if(NOT EXISTS ${F2C_DIR})
+    message(STATUS "Downloading libf2c source from ${F2C_URL}...")
+    make_directory("${F2C_DIR}")
+    file(DOWNLOAD ${F2C_URL} ${F2C_FN} TIMEOUT 60 STATUS DOWNLOAD_STATUS)
+    # Check if download was successful.
+    list(GET DOWNLOAD_STATUS 0 STATUS_CODE)
+    list(GET DOWNLOAD_STATUS 1 ERROR_MESSAGE)
+    if(${STATUS_CODE} EQUAL 0)
+      message(STATUS "Done downloading libf2c.")
+    else()
+      # Exit CMake if the download failed, printing the error message.
+      file(REMOVE_RECURSE ${F2C_DIR})
+      message(FATAL_ERROR "Error downloading libf2c: ${ERROR_MESSAGE}")
+    endif()
   endif()
-endif()
 
-# extract libf2c source
-file(ARCHIVE_EXTRACT INPUT ${F2C_FN} DESTINATION ${F2C_DIR})
+  # extract libf2c source
+  file(ARCHIVE_EXTRACT INPUT ${F2C_FN} DESTINATION ${F2C_DIR})
 
-# prepare libf2c header files
-file(GLOB_RECURSE F2C_PREHEADERS "${F2C_DIR}/*.h0")
-foreach(H0 ${F2C_PREHEADERS})
-  string(REGEX REPLACE "[.]h0$" ".h" H0_R ${H0})
-  file(RENAME "${H0}" "${H0_R}")
-  file(COPY "${H0_R}" DESTINATION "${F2C_INCLUDE_DIR}")
-endforeach()
+  # prepare libf2c header files
+  file(GLOB_RECURSE F2C_PREHEADERS "${F2C_DIR}/*.h0")
+  foreach(H0 ${F2C_PREHEADERS})
+    string(REGEX REPLACE "[.]h0$" ".h" H0_R ${H0})
+    file(RENAME "${H0}" "${H0_R}")
+    file(COPY "${H0_R}" DESTINATION "${F2C_INCLUDE_DIR}")
+  endforeach()
 
-# get a load of this: f2c generates its own "arith.h" on the fly
-# so we gotta compile arithchk and run it
-set(F2C_ARITHCHK_SRC "${F2C_DIR}/arithchk.c")
-set(F2C_ARITHCHK_BIN "${F2C_DIR}/arithchk")
+  # get a load of this: f2c generates its own "arith.h" on the fly
+  # so we gotta compile arithchk and run it
+  set(F2C_ARITHCHK_SRC "${F2C_DIR}/arithchk.c")
+  set(F2C_ARITHCHK_BIN "${F2C_DIR}/arithchk")
 
-if (WIN32)
-  set(F2C_ARITHCHK_BIN "${F2C_ARITHCHK_BIN}.exe")
-endif()
+  if (WIN32)
+    set(F2C_ARITHCHK_BIN "${F2C_ARITHCHK_BIN}.exe")
+  endif()
 
-set(F2C_ARITH_H "${F2C_INCLUDE_DIR}/arith.h")
-set_source_files_properties(
-  ${F2C_ARITHCHK_SRC} PROPERTIES COMPILE_FLAGS "-DNO_LONG_LONG -DNO_FPINIT"
-)
-add_executable(arithchk ${F2C_ARITHCHK_SRC})
-target_link_libraries(arithchk m)
-set_target_properties(
-  arithchk PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${F2C_DIR}
-)
-add_custom_command(
-  OUTPUT ${F2C_ARITH_H}
-  COMMAND ${F2C_ARITHCHK_BIN} > ${F2C_ARITH_H}
-  DEPENDS ${F2C_ARITHCHK_BIN}
-)
+  set(F2C_ARITH_H "${F2C_INCLUDE_DIR}/arith.h")
+  set_source_files_properties(
+    ${F2C_ARITHCHK_SRC} PROPERTIES COMPILE_FLAGS "-DNO_LONG_LONG -DNO_FPINIT"
+  )
+  add_executable(arithchk ${F2C_ARITHCHK_SRC})
+  target_link_libraries(arithchk m)
+  set_target_properties(
+    arithchk PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${F2C_DIR}
+  )
+  add_custom_command(
+    OUTPUT ${F2C_ARITH_H}
+    COMMAND ${F2C_ARITHCHK_BIN} > ${F2C_ARITH_H}
+    DEPENDS ${F2C_ARITHCHK_BIN}
+  )
 
-# add libf2c to the compilation procedures
-include_directories(${F2C_INCLUDE_DIR})
-file(GLOB_RECURSE F2C_CFILES "${F2C_DIR}/*.c")
-add_definitions(-DINTEGER_STAR_8)
-add_library(f2c ${F2C_CFILES} ${F2C_ARITH_H})
+  # add libf2c to the compilation procedures
+  include_directories(${F2C_INCLUDE_DIR})
+  file(GLOB_RECURSE F2C_CFILES "${F2C_DIR}/*.c")
+  add_definitions(-DINTEGER_STAR_8)
+  add_library(f2c ${F2C_CFILES} ${F2C_ARITH_H})
+
+endif(BUILD_F2C)
 
 # add some extra win32 flags for libf2c
 if (WIN32)
