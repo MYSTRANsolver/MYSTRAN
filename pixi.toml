@@ -16,3 +16,4 @@ build = { cmd = ["make", "-C", "build", "-j", "2", "install"], depends-on = ["co
 [dependencies]
 compilers = ">=1.8.0,<2"
 cmake = ">=3.31.2,<4"
+f2c = ">=20210323183018,<20210323183019"

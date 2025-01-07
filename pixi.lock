@@ -24,6 +24,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/compiler-rt_osx-arm64-17.0.6-h832e737_2.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/compilers-1.8.0-hce30654_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/cxx-compiler-1.8.0-h18dbf2f_1.conda
+      - conda: https://conda.anaconda.org/conda-forge/osx-arm64/f2c-20210323183018-he4db4b2_1010.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/fortran-compiler-1.8.0-hc3477c4_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/gfortran-13.2.0-h1ca8e4b_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/gfortran_impl_osx-arm64-13.2.0-h252ada1_3.conda
@@ -225,8 +226,6 @@ packages:
   - ncurses >=6.5,<7.0a0
   - rhash >=1.4.5,<2.0a0
   - zstd >=1.5.6,<1.6.0a0
-  arch: arm64
-  platform: osx
   license: BSD-3-Clause
   license_family: BSD
   size: 16526042
@@ -276,6 +275,14 @@ packages:
   license_family: BSD
   size: 6261
   timestamp: 1728985417226
+- conda: https://conda.anaconda.org/conda-forge/osx-arm64/f2c-20210323183018-he4db4b2_1010.tar.bz2
+  sha256: fe1ee4ff3ebb7b40702e50ce326dea96c38b510cbcde77dd6c5f64fe52fae5fd
+  md5: b3f05abe7313d6de5338c9f0da2543fe
+  arch: arm64
+  platform: osx
+  license: SMLNJ
+  size: 255770
+  timestamp: 1651442839678
 - conda: https://conda.anaconda.org/conda-forge/osx-arm64/fortran-compiler-1.8.0-hc3477c4_1.conda
   sha256: 42c19f382855e406d017cc8dac2fc3a957a44c7700906de3fbb2a5c23730296e
   md5: 467c9db2314e049c2ca4d34f9aa87dca
