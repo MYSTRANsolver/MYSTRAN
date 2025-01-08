@@ -8,12 +8,14 @@ platforms = ["osx-arm64"]
 
 [tasks]
 initialize = { cmd = ["git", "submodule", "update", "--init", "--recursive"]}
-configure = { cmd = ["cmake", "-B", "build", "-S", ".",
+configure = { cmd = ["cmake", "-B", "build", "-S", ".", "-G", "Ninja",
      						  "-D", "CMAKE_BUILD_TYPE=Release",
       						  "-D", "CMAKE_INSTALL_PREFIX:FILEPATH=$CONDA_PREFIX"], depends-on = ["initialize"]}
-build = { cmd = ["make", "-C", "build", "-j", "2", "install"], depends-on = ["configure"]}
+build = { cmd = ["ninja", "-C", "build", "install", "&&",
+				 "cp", "./Binaries/mystran", "$CONDA_PREFIX/bin/mystran"], depends-on = ["configure"]}
 
 [dependencies]
 compilers = ">=1.8.0,<2"
 cmake = ">=3.31.2,<4"
 f2c = ">=20210323183018,<20210323183019"
+ninja = ">=1.12.1,<2"
