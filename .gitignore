@@ -28,3 +28,6 @@ install_manifest.txt
 compile_commands.json
 CTestTestfile.cmake
 _deps
+# pixi environments
+.pixi
+*.egg-info

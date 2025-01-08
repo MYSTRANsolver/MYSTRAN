@@ -1,0 +1,21 @@
+[project]
+name = "MYSTRAN"
+version = "0.1.0"
+description = "Add a short description here"
+authors = ["looooo <sppedflyer@gmail.com>"]
+channels = ["conda-forge", "freecad/label/dev"]
+platforms = ["linux-64", "linux-aarch64", "osx-64", "osx-arm64", "win-64"]
+
+[tasks]
+initialize = { cmd = ["git", "submodule", "update", "--init", "--recursive"]}
+configure = { cmd = ["cmake", "-B", "build", "-S", ".", "-G", "Ninja",
+     						  "-D", "CMAKE_BUILD_TYPE=Release",
+      						  "-D", "CMAKE_INSTALL_PREFIX:FILEPATH=$CONDA_PREFIX"], depends-on = ["initialize"]}
+build = { cmd = ["ninja", "-C", "build", "install", "&&",
+				 "cp", "./Binaries/mystran", "$CONDA_PREFIX/bin/mystran"], depends-on = ["configure"]}
+
+[dependencies]
+compilers = ">=1.8.0,<2"
+cmake = ">=3.31.2,<4"
+f2c = ">=20210323183018,<20210323183019"
+ninja = ">=1.12.1,<2"
