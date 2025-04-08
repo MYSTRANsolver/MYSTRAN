@@ -882,86 +882,22 @@
       ! PRTALL writes all outputs for all output files regardless of other flags
       ELSE IF ((PARAM_NAME(1:8) == 'PRTALL  ') .OR. (PARAM_NAME(1:8) == 'FILES   ')) THEN
          PARNAM = 'PRTALL  '
-         CALL CHAR_FLD ( JCARD(3), JF(3), CHRPARM )
-         IF (IERRFL(3) == 'N') THEN
-            CALL LEFT_ADJ_BDFLD ( CHRPARM )
-            IF      (CHRPARM(1:1) == 'Y') THEN
-               PRTALL = 'Y'
-            ELSE IF (CHRPARM(1:1) == 'N') THEN
-               PRTALL = 'N'
-            ELSE
-               WARN_ERR = WARN_ERR + 1
-               WRITE(ERR,101) CARD
-               WRITE(ERR,1189) PARNAM,'Y OR N',CHRPARM,PRTALL
-               IF (PRTALL == 'N') THEN
-                  IF (ECHO == 'NONE  ') THEN
-                     WRITE(F06,101) CARD
-                  ENDIF
-                  WRITE(F06,1189) PARNAM,'Y OR N',CHRPARM,PRTALL
-               ENDIF
-            ENDIF
-         ENDIF
-         CALL BD_IMBEDDED_BLANK   ( JCARD,0,3,0,0,0,0,0,0 )! Make sure that there are no imbedded blanks in field 3
-         CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,4,5,6,7,8,9 )! Issue warning if fields 4-9 not blank
-         CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
+         CALL YES_NO_CHECK(CARD, JCARD, CHRPARM, PARNAM, PRTALL)
 
       ! PRTOP2 writes all outputs for the op2 file regardless of other flags besides PRTALL
       ELSE IF ((PARAM_NAME(1:8) == 'PRTOP2  ') .OR. (PARAM_NAME(1:8) == 'OP2     ')) THEN
          PARNAM = 'PRTOP2  '
-         CALL CHAR_FLD ( JCARD(3), JF(3), CHRPARM )
-         IF (IERRFL(3) == 'N') THEN
-            CALL LEFT_ADJ_BDFLD ( CHRPARM )
-            IF      (CHRPARM(1:1) == 'Y') THEN
-               PRTOP2 = 'Y'
-            ELSE IF (CHRPARM(1:1) == 'N') THEN
-               PRTOP2 = 'N'
-            ELSE
-               WARN_ERR = WARN_ERR + 1
-               WRITE(ERR,101) CARD
-               WRITE(ERR,1189) PARNAM,'Y OR N',CHRPARM,PRTOP2
-               IF (PRTOP2 == 'N') THEN
-                  IF (ECHO == 'NONE  ') THEN
-                     WRITE(F06,101) CARD
-                  ENDIF
-                  WRITE(F06,1189) PARNAM,'Y OR N',CHRPARM,PRTOP2
-               ENDIF
-            ENDIF
-         ENDIF
-         CALL BD_IMBEDDED_BLANK   ( JCARD,0,3,0,0,0,0,0,0 )! Make sure that there are no imbedded blanks in field 3
-         CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,4,5,6,7,8,9 )! Issue warning if fields 4-9 not blank
-         CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
+         CALL YES_NO_CHECK(CARD, JCARD, CHRPARM, PARNAM, PRTOP2)
 
       ! PRTANS writes all outputs for the ans file regardless of other flags besides PRTALL
       ELSE IF ((PARAM_NAME(1:8) == 'PRTANS  ') .OR. (PARAM_NAME(1:8) == 'ANS     ')) THEN
          PARNAM = 'PRTANS  '
-         CALL CHAR_FLD ( JCARD(3), JF(3), CHRPARM )
-         IF (IERRFL(3) == 'N') THEN
-            CALL LEFT_ADJ_BDFLD ( CHRPARM )
-            IF      (CHRPARM(1:1) == 'Y') THEN
-               PRTANS = 'Y'
-            ELSE IF (CHRPARM(1:1) == 'N') THEN
-               PRTANS = 'N'
-            ELSE
-               WARN_ERR = WARN_ERR + 1
-               WRITE(ERR,101) CARD
-               WRITE(ERR,1189) PARNAM,'Y OR N',CHRPARM,PRTANS
-               IF (PRTANS == 'N') THEN
-                  IF (ECHO == 'NONE  ') THEN
-                     WRITE(F06,101) CARD
-                  ENDIF
-                  WRITE(F06,1189) PARNAM,'Y OR N',CHRPARM,PRTANS
-               ENDIF
-            ENDIF
-         ENDIF
-         CALL BD_IMBEDDED_BLANK   ( JCARD,0,3,0,0,0,0,0,0 )! Make sure that there are no imbedded blanks in field 3
-         CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,4,5,6,7,8,9 )! Issue warning if fields 4-9 not blank
-         CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
+         CALL YES_NO_CHECK(CARD, JCARD, CHRPARM, PARNAM, PRTANS)
 
       ! PRTNEU writes all outputs for the neu file regardless of other flags besides PRTALL
       ELSE IF ((PARAM_NAME(1:8) == 'PRTNEU  ') .OR. (PARAM_NAME(1:8) == 'NEU     ')) THEN
          PARNAM = 'PRTNEU  '
          CALL YES_NO_CHECK(CARD, JCARD, CHRPARM, PARNAM, PRTNEU)
-         CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
 
       ! GRDPNT causes the grid point weight generator to be run to calculate mass of the model relative to G.P defined by PARAM GRDPNT.
       ELSE IF (JCARD(2)(1:8) == 'GRDPNT  ') THEN
@@ -3369,27 +3305,28 @@ do_i:    DO I=1,JCARD_LEN
       CHARACTER(LEN(JCARD)), INTENT(INOUT) :: CHRPARM           ! A char value read from a PARAM Bulk Data card
       CHARACTER(1*BYTE), INTENT(INOUT)     :: VALUE             ! The vakue of the parameter
 
-         CALL CHAR_FLD ( JCARD(3), JF(3), CHRPARM )
-         IF (IERRFL(3) == 'N') THEN
-            CALL LEFT_ADJ_BDFLD ( CHRPARM )
-            IF      (CHRPARM(1:1) == 'Y') THEN
-               VALUE = 'Y'
-            ELSE IF (CHRPARM(1:1) == 'N') THEN
-               VALUE = 'N'
-            ELSE
-               WARN_ERR = WARN_ERR + 1
-               WRITE(ERR,101) CARD
-               WRITE(ERR,1189) PARNAM,'Y OR N',CHRPARM,VALUE
-               IF (VALUE == 'N') THEN
-                  IF (ECHO == 'NONE  ') THEN
-                     WRITE(F06,101) CARD
-                  ENDIF
-                  WRITE(F06,1189) PARNAM,'Y OR N',CHRPARM,VALUE
+      CALL CHAR_FLD ( JCARD(3), JF(3), CHRPARM )
+      IF (IERRFL(3) == 'N') THEN
+         CALL LEFT_ADJ_BDFLD ( CHRPARM )
+         IF      (CHRPARM(1:1) == 'Y') THEN
+            VALUE = 'Y'
+         ELSE IF (CHRPARM(1:1) == 'N') THEN
+            VALUE = 'N'
+         ELSE
+            WARN_ERR = WARN_ERR + 1
+            WRITE(ERR,101) CARD
+            WRITE(ERR,1189) PARNAM,'Y OR N',CHRPARM,VALUE
+            IF (VALUE == 'N') THEN
+               IF (ECHO == 'NONE  ') THEN
+                  WRITE(F06,101) CARD
                ENDIF
+               WRITE(F06,1189) PARNAM,'Y OR N',CHRPARM,VALUE
             ENDIF
          ENDIF
-         CALL BD_IMBEDDED_BLANK   ( JCARD,0,3,0,0,0,0,0,0 )! Make sure that there are no imbedded blanks in field 3
-         CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,4,5,6,7,8,9 )! Issue warning if fields 4-9 not blank
+      ENDIF
+      CALL BD_IMBEDDED_BLANK   ( JCARD,0,3,0,0,0,0,0,0 )! Make sure that there are no imbedded blanks in field 3
+      CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,4,5,6,7,8,9 )! Issue warning if fields 4-9 not blank
+      CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
 
       RETURN
   101 FORMAT(A)
