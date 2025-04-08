@@ -447,29 +447,7 @@
 
       ELSE IF (JCARD(2)(1:8) == 'CHKGRDS ') THEN
          PARNAM = 'CHKGRDS  '
-         CALL CHAR_FLD ( JCARD(3), JF(3), CHRPARM )
-         IF (IERRFL(3) == 'N') THEN
-            CALL LEFT_ADJ_BDFLD ( CHRPARM )
-            IF      (CHRPARM(1:1) == 'Y') THEN
-               CHKGRDS = 'Y'
-            ELSE IF (CHRPARM(1:1) == 'N') THEN
-               CHKGRDS = 'N'
-            ELSE
-               WARN_ERR = WARN_ERR + 1
-               WRITE(ERR,101) CARD
-               WRITE(ERR,1189) PARNAM, 'Y OR N', CHRPARM, CHKGRDS
-               IF (SUPWARN == 'N') THEN
-                  IF (ECHO == 'NONE  ') THEN
-                     WRITE(F06,101) CARD
-                  ENDIF
-                  WRITE(F06,1189) PARNAM, 'Y OR N', CHRPARM, CHKGRDS
-               ENDIF
-            ENDIF
-         ENDIF
-
-         CALL BD_IMBEDDED_BLANK   ( JCARD,0,3,0,0,0,0,0,0 )! Make sure that there are no imbedded blanks in field 3
-         CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,4,5,6,7,8,9 )! Issue warning if fields 4-9 not blank
-         CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
+         CALL YES_NO_CHECK(CARD, JCARD, CHRPARM, PARNAM, CHKGRDS)
   
 ! CRS_CCS specifies the storage method (CRS or CCS)
 
@@ -638,29 +616,7 @@
 
       ELSE IF (JCARD(2)(1:8) == 'EIGNORM2') THEN
          PARNAM = 'EIGNORM2'
-         CALL CHAR_FLD ( JCARD(3), JF(3), CHRPARM )
-         IF (IERRFL(3) == 'N') THEN
-            CALL LEFT_ADJ_BDFLD ( CHRPARM )
-            IF      (CHRPARM(1:1) == 'Y') THEN
-               EIGNORM2 = 'Y'
-            ELSE IF (CHRPARM(1:1) == 'N') THEN
-               EIGNORM2 = 'N'
-            ELSE
-               WARN_ERR = WARN_ERR + 1
-               WRITE(ERR,101) CARD
-               WRITE(ERR,1189) PARNAM,'Y OR N',CHRPARM,EIGNORM2
-               IF (SUPWARN == 'N') THEN
-                  IF (ECHO == 'NONE  ') THEN
-                     WRITE(F06,101) CARD
-                  ENDIF
-                  WRITE(F06,1189) PARNAM,'Y OR N',CHRPARM,EIGNORM2
-               ENDIF
-            ENDIF
-         ENDIF
-
-         CALL BD_IMBEDDED_BLANK   ( JCARD,0,3,0,0,0,0,0,0 )! Make sure that there are no imbedded blanks in field 3
-         CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,4,5,6,7,8,9 )! Issue warning if fields 4-9 not blank
-         CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
+         CALL YES_NO_CHECK(CARD, JCARD, CHRPARM, PARNAM, EIGNORM2)
   
 ! ELFORCEN changes default from global to local or basic coords for calculating element nodal forces in LINK9
 
@@ -696,29 +652,7 @@
 
       ELSE IF (JCARD(2)(1:8) == 'EPSERR  ') THEN
          PARNAM = 'EPSERR  '
-         CALL CHAR_FLD ( JCARD(3), JF(3), CHRPARM )
-         IF (IERRFL(3) == 'N') THEN
-            CALL LEFT_ADJ_BDFLD ( CHRPARM )
-            IF      (CHRPARM(1:1) == 'Y') THEN
-               EPSERR = 'Y'
-            ELSE IF (CHRPARM(1:1) == 'N') THEN
-               EPSERR = 'N'
-            ELSE
-               WARN_ERR = WARN_ERR + 1
-               WRITE(ERR,101) CARD
-               WRITE(ERR,1189) PARNAM,'Y OR N',CHRPARM,EPSERR
-               IF (SUPWARN == 'N') THEN
-                  IF (ECHO == 'NONE  ') THEN
-                     WRITE(F06,101) CARD
-                  ENDIF
-                  WRITE(F06,1189) PARNAM,'Y OR N',CHRPARM,EPSERR
-               ENDIF
-            ENDIF
-         ENDIF
-
-         CALL BD_IMBEDDED_BLANK   ( JCARD,0,3,0,0,0,0,0,0 )! Make sure that there are no imbedded blanks in field 3
-         CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,4,5,6,7,8,9 )! Issue warning if fields 4-9 not blank
-         CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
+         CALL YES_NO_CHECK(CARD, JCARD, CHRPARM, PARNAM, EPSERR)
   
 ! EPSIL are roundoff numbers used in comparing computed values to zero
 
@@ -1153,57 +1087,13 @@
 
       ELSE IF (JCARD(2)(1:8) == 'KLLRAT  ') THEN
          PARNAM = 'KLLRAT  '
-         CALL CHAR_FLD ( JCARD(3), JF(3), CHRPARM )
-         IF (IERRFL(3) == 'N') THEN
-            CALL LEFT_ADJ_BDFLD ( CHRPARM )
-            IF      (CHRPARM(1:1) == 'Y') THEN
-               KLLRAT = 'Y'
-            ELSE IF (CHRPARM(1:1) == 'N') THEN
-               KLLRAT = 'N'
-            ELSE
-               WARN_ERR = WARN_ERR + 1
-               WRITE(ERR,101) CARD
-               WRITE(ERR,1189) PARNAM,'Y OR N',CHRPARM,KLLRAT
-               IF (SUPWARN == 'N') THEN
-                  IF (ECHO == 'NONE  ') THEN
-                     WRITE(F06,101) CARD
-                  ENDIF
-                  WRITE(F06,1189) PARNAM,'Y OR N',CHRPARM,KLLRAT
-               ENDIF
-            ENDIF
-         ENDIF
-
-         CALL BD_IMBEDDED_BLANK   ( JCARD,0,3,0,0,0,0,0,0 )! Make sure that there are no imbedded blanks in field 3
-         CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,4,5,6,7,8,9 )! Issue warning if fields 4-9 not blank
-         CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
+         CALL YES_NO_CHECK(CARD, JCARD, CHRPARM, PARNAM, KLLRAT)
   
 ! KOORAT tells whether to calculate max ratio of matrix diagonal to factor diagonal
 
       ELSE IF (JCARD(2)(1:8) == 'KOORAT  ') THEN
          PARNAM = 'KOORAT  '
-         CALL CHAR_FLD ( JCARD(3), JF(3), CHRPARM )
-         IF (IERRFL(3) == 'N') THEN
-            CALL LEFT_ADJ_BDFLD ( CHRPARM )
-            IF      (CHRPARM(1:1) == 'Y') THEN
-               KOORAT = 'Y'
-            ELSE IF (CHRPARM(1:1) == 'N') THEN
-               KOORAT = 'N'
-            ELSE
-               WARN_ERR = WARN_ERR + 1
-               WRITE(ERR,101) CARD
-               WRITE(ERR,1189) PARNAM,'Y OR N',CHRPARM,KOORAT
-               IF (SUPWARN == 'N') THEN
-                  IF (ECHO == 'NONE  ') THEN
-                     WRITE(F06,101) CARD
-                  ENDIF
-                  WRITE(F06,1189) PARNAM,'Y OR N',CHRPARM,KOORAT
-               ENDIF
-            ENDIF
-         ENDIF
-
-         CALL BD_IMBEDDED_BLANK   ( JCARD,0,3,0,0,0,0,0,0 )! Make sure that there are no imbedded blanks in field 3
-         CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,4,5,6,7,8,9 )! Issue warning if fields 4-9 not blank
-         CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
+         CALL YES_NO_CHECK(CARD, JCARD, CHRPARM, PARNAM, KOORAT)
   
 ! LANCMETH sets the method to be used for Lanczos eigen extraction
 
@@ -1562,29 +1452,7 @@
 
       ELSE IF (JCARD(2)(1:8) == 'PBARLSHR') THEN
          PARNAM = 'PBARLSHR'
-         CALL CHAR_FLD ( JCARD(3), JF(3), CHRPARM )
-         IF (IERRFL(3) == 'N') THEN
-            CALL LEFT_ADJ_BDFLD ( CHRPARM )
-            IF      (CHRPARM(1:1) == 'Y') THEN
-               PBARLSHR = 'Y'
-            ELSE IF (CHRPARM(1:1) == 'N') THEN
-               PBARLSHR = 'N'
-            ELSE
-               WARN_ERR = WARN_ERR + 1
-               WRITE(ERR,101) CARD
-               WRITE(ERR,1189) PARNAM,'Y OR N',CHRPARM,PBARLSHR
-               IF (SUPWARN == 'N') THEN
-                  IF (ECHO == 'NONE  ') THEN
-                     WRITE(F06,101) CARD
-                  ENDIF
-                  WRITE(F06,1189) PARNAM,'Y OR N',CHRPARM,PBARLSHR
-               ENDIF
-            ENDIF
-         ENDIF
-
-         CALL BD_IMBEDDED_BLANK   ( JCARD,0,3,0,0,0,0,0,0 )! Make sure that there are no imbedded blanks in field 3
-         CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,4,5,6,7,8,9 )! Issue warning if fields 4-9 not blank
-         CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
+         CALL YES_NO_CHECK(CARD, JCARD, CHRPARM, PARNAM, PBARLSHR)
   
 ! PCOMPEQ Indicator to write equiv PSHELL, MAT2 to F06 for PCOMP's
 
@@ -2590,61 +2458,17 @@
          CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,4,5,6,7,8,9 )! Issue warning if fields 4-9 not blank
          CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
 
-! RCONDK = 'Y' executes LAPACK code in LINK3 to calc the recriprocal of the condition number, RCOND, of a matrix to be decomposed
 
+      ! RCONDK = 'Y' executes LAPACK code in LINK3 to calc the recriprocal of the condition number, RCOND, of a matrix to be decomposed
       ELSE IF (JCARD(2)(1:8) == 'RCONDK  ') THEN
          PARNAM = 'RCONDK  '
-         CALL CHAR_FLD ( JCARD(3), JF(3), CHRPARM )
-         IF (IERRFL(3) == 'N') THEN
-            CALL LEFT_ADJ_BDFLD ( CHRPARM )
-            IF      (CHRPARM(1:1) == 'Y') THEN
-               RCONDK = 'Y'
-            ELSE IF (CHRPARM(1:1) == 'N') THEN
-               RCONDK = 'N'
-            ELSE
-               WARN_ERR = WARN_ERR + 1
-               WRITE(ERR,101) CARD
-               WRITE(ERR,1189) PARNAM,'Y OR N',CHRPARM,RCONDK
-               IF (SUPWARN == 'N') THEN
-                  IF (ECHO == 'NONE  ') THEN
-                     WRITE(F06,101) CARD
-                  ENDIF
-                  WRITE(F06,1189) PARNAM,'Y OR N',CHRPARM,RCONDK
-               ENDIF
-            ENDIF
-         ENDIF
-
-         CALL BD_IMBEDDED_BLANK   ( JCARD,0,3,0,0,0,0,0,0 )! Make sure that there are no imbedded blanks in field 3
-         CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,4,5,6,7,8,9 )! Issue warning if fields 4-9 not blank
-         CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
+         CALL YES_NO_CHECK(CARD, JCARD, CHRPARM, PARNAM, RCONDK)
 
 ! RELINK3 = 'Y' causes LINK3 (and therefore also LINK5) to be rerun in a RESTART. This is only used in linear statics
 
       ELSE IF (JCARD(2)(1:8) == 'RELINK3 ') THEN
          PARNAM = 'RELINK3  '
-         CALL CHAR_FLD ( JCARD(3), JF(3), CHRPARM )
-         IF (IERRFL(3) == 'N') THEN
-            CALL LEFT_ADJ_BDFLD ( CHRPARM )
-            IF      (CHRPARM(1:1) == 'Y') THEN
-               RELINK3 = 'Y'
-            ELSE IF (CHRPARM(1:1) == 'N') THEN
-               RELINK3 = 'N'
-            ELSE
-               WARN_ERR = WARN_ERR + 1
-               WRITE(ERR,101) CARD
-               WRITE(ERR,1189) PARNAM,'Y OR N',CHRPARM,RELINK3
-               IF (SUPWARN == 'N') THEN
-                  IF (ECHO == 'NONE  ') THEN
-                     WRITE(F06,101) CARD
-                  ENDIF
-                  WRITE(F06,1189) PARNAM,'Y OR N',CHRPARM,RELINK3
-               ENDIF
-            ENDIF
-         ENDIF
-
-         CALL BD_IMBEDDED_BLANK   ( JCARD,0,3,0,0,0,0,0,0 )! Make sure that there are no imbedded blanks in field 3
-         CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,4,5,6,7,8,9 )! Issue warning if fields 4-9 not blank
-         CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
+         CALL YES_NO_CHECK(CARD, JCARD, CHRPARM, PARNAM, RELINK3)
 
 ! SETLKTK parameter gives the option number for how LTERM_KGG is calculated
 
@@ -2790,29 +2614,7 @@
       ! SKIPMGG 'Y', 'N' indicator to say whether to skip calculation of MGG
       ELSE IF (JCARD(2)(1:7) == 'SKIPMGG') THEN
          PARNAM = 'SKIPMGG '
-         CALL CHAR_FLD ( JCARD(3), JF(3), CHRPARM )
-         IF (IERRFL(3) == 'N') THEN
-            CALL LEFT_ADJ_BDFLD ( CHRPARM )
-            IF      (CHRPARM(1:1) == 'Y') THEN
-               SKIPMGG = 'Y'
-            ELSE IF (CHRPARM(1:1) == 'N') THEN
-               SKIPMGG = 'N'
-            ELSE
-               WARN_ERR = WARN_ERR + 1
-               WRITE(ERR,101) CARD
-               WRITE(ERR,1189) PARNAM,'Y OR N',CHRPARM,SKIPMGG
-               IF (SKIPMGG == 'N') THEN
-                  IF (ECHO == 'NONE  ') THEN
-                     WRITE(F06,101) CARD
-                  ENDIF
-                  WRITE(F06,1189) PARNAM,'Y OR N',CHRPARM,SKIPMGG
-               ENDIF
-            ENDIF
-         ENDIF
-
-         CALL BD_IMBEDDED_BLANK   ( JCARD,0,3,0,0,0,0,0,0 )! Make sure that there are no imbedded blanks in field 3
-         CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,4,5,6,7,8,9 )! Issue warning if fields 4-9 not blank
-         CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
+         CALL YES_NO_CHECK(CARD, JCARD, CHRPARM, PARNAM, SKIPMGG)
 
 ! SOLLIB sets the method for solving equations (BANDED, SPARSE)
 
@@ -2933,95 +2735,27 @@
          CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,4,5,6,7,8,9 )! Issue warning if fields 4-9 not blank
          CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
 
-! SUPINFO determines whether warning messages are suppressed in the output file
 
+      ! SUPINFO determines whether warning messages are suppressed in the output file
       ELSE IF (JCARD(2)(1:8) == 'SUPINFO ') THEN
          PARNAM = 'SUPINFO  '
-         CALL CHAR_FLD ( JCARD(3), JF(3), CHRPARM )
-         IF (IERRFL(3) == 'N') THEN
-            CALL LEFT_ADJ_BDFLD ( CHRPARM )
-            IF      (CHRPARM(1:1) == 'Y') THEN
-               SUPINFO = 'Y'
-            ELSE IF (CHRPARM(1:1) == 'N') THEN
-               SUPINFO = 'N'
-            ELSE
-               WARN_ERR = WARN_ERR + 1
-               WRITE(ERR,101) CARD
-               WRITE(ERR,1189) PARNAM,'Y OR N',CHRPARM,SUPINFO
-               IF (SUPINFO == 'N') THEN
-                  IF (ECHO == 'NONE  ') THEN
-                     WRITE(F06,101) CARD
-                  ENDIF
-                  WRITE(F06,1189) PARNAM,'Y OR N',CHRPARM,SUPINFO
-               ENDIF
-            ENDIF
-         ENDIF
+         CALL YES_NO_CHECK(CARD, JCARD, CHRPARM, PARNAM, SUPINFO)
 
-         CALL BD_IMBEDDED_BLANK   ( JCARD,0,3,0,0,0,0,0,0 )! Make sure that there are no imbedded blanks in field 3
-         CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,4,5,6,7,8,9 )! Issue warning if fields 4-9 not blank
-         CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
 
-! SUPWARN determines whether warning messages are suppressed in the output file
-
+      ! SUPWARN determines whether warning messages are suppressed in the output file
       ELSE IF (JCARD(2)(1:8) == 'SUPWARN ') THEN
          PARNAM = 'SUPWARN  '
-         CALL CHAR_FLD ( JCARD(3), JF(3), CHRPARM )
-         IF (IERRFL(3) == 'N') THEN
-            CALL LEFT_ADJ_BDFLD ( CHRPARM )
-            IF      (CHRPARM(1:1) == 'Y') THEN
-               SUPWARN = 'Y'
-            ELSE IF (CHRPARM(1:1) == 'N') THEN
-               SUPWARN = 'N'
-            ELSE
-               WARN_ERR = WARN_ERR + 1
-               WRITE(ERR,101) CARD
-               WRITE(ERR,1189) PARNAM,'Y OR N',CHRPARM,SUPWARN
-               IF (SUPWARN == 'N') THEN
-                  IF (ECHO == 'NONE  ') THEN
-                     WRITE(F06,101) CARD
-                  ENDIF
-                  WRITE(F06,1189) PARNAM,'Y OR N',CHRPARM,SUPWARN
-               ENDIF
-            ENDIF
-         ENDIF
+         CALL YES_NO_CHECK(CARD, JCARD, CHRPARM, PARNAM, SUPWARN)
 
-         CALL BD_IMBEDDED_BLANK   ( JCARD,0,3,0,0,0,0,0,0 )! Make sure that there are no imbedded blanks in field 3
-         CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,4,5,6,7,8,9 )! Issue warning if fields 4-9 not blank
-         CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
-
-! NOCOUNT suppresses all "counter", progress-indicating, non-advance writes to
-! standard output. It's good when debugging, and basically required if stdout
-! has no rewrite capabilities (like a file). We should probably check if the
-! output is not rewrite-friendly and set it automatically at some point.
-
+      ! NOCOUNT suppresses all "counter", progress-indicating, non-advance writes to
+      ! standard output. It's good when debugging, and basically required if stdout
+      ! has no rewrite capabilities (like a file). We should probably check if the
+      ! output is not rewrite-friendly and set it automatically at some point.
       ELSE IF (JCARD(2)(1:8) == 'NOCOUNTS') THEN
          PARNAM = 'NOCOUNTS'
-         CALL CHAR_FLD ( JCARD(3), JF(3), CHRPARM )
-         IF (IERRFL(3) == 'N') THEN
-            CALL LEFT_ADJ_BDFLD ( CHRPARM )
-            IF      (CHRPARM(1:1) == 'Y') THEN
-               NOCOUNTS = 'Y'
-            ELSE IF (CHRPARM(1:1) == 'N') THEN
-               NOCOUNTS = 'N'
-            ELSE
-               WARN_ERR = WARN_ERR + 1
-               WRITE(ERR,101) CARD
-               WRITE(ERR,1189) PARNAM,'Y OR N',CHRPARM,SUPWARN
-               IF (SUPWARN == 'N') THEN
-                  IF (ECHO == 'NONE  ') THEN
-                     WRITE(F06,101) CARD
-                  ENDIF
-                  WRITE(F06,1189) PARNAM,'Y OR N',CHRPARM,SUPWARN
-               ENDIF
-            ENDIF
-         ENDIF
+         CALL YES_NO_CHECK(CARD, JCARD, CHRPARM, PARNAM, NOCOUNTS)
 
-         CALL BD_IMBEDDED_BLANK   ( JCARD,0,3,0,0,0,0,0,0 )! Make sure that there are no imbedded blanks in field 3
-         CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,4,5,6,7,8,9 )! Issue warning if fields 4-9 not blank
-         CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
-
-! THRESHK is used in determining if equilibration is performed (see LAPACK subr DLAQSB in MODULE LAPACK_BLAS_AUX_1)
-
+      ! THRESHK is used in determining if equilibration is performed (see LAPACK subr DLAQSB in MODULE LAPACK_BLAS_AUX_1)
       ELSE IF (JCARD(2)(1:8) == 'THRESHK ') THEN
          PARNAM = 'THRESHK '
          CALL R8FLD ( JCARD(3), JF(3), THRESHK )
@@ -3037,8 +2771,7 @@
          CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,4,5,6,7,8,9 )! Issue warning if fields 4-9 not blank
          CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
 
-! TINY acts as a filter for small terms in matrix print
-
+      ! TINY acts as a filter for small terms in matrix print
       ELSE IF (JCARD(2)(1:8) == 'TINY    ') THEN
          PARNAM = 'TINY'
          CALL CHAR_FLD ( JCARD(3), JF(3), CHRPARM )
