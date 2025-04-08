@@ -143,6 +143,12 @@
       CHARACTER(  1*BYTE)      :: EQCHK_NORM     =    'N'    ! 'Y'/'N' indicates whether to norm the equil check on stiff mat diags
 
 ! ----------------------------------------------------------------------------------------------------------------------------------
+      CHARACTER(  1*BYTE)      :: PRTALL         =    'N'    ! 'Y', 'N' flag to write all output for all files regardless of other flags
+      CHARACTER(  1*BYTE)      :: PRTOP2         =    'N'    ! 'Y', 'N' flag to write all op2 outputs regardless of other flags besides PRTALL
+      CHARACTER(  1*BYTE)      :: PRTNEU         =    'N'    ! 'Y', 'N' flag to write all neu outputs regardless of other flags besides PRTALL
+      CHARACTER(  1*BYTE)      :: PRTANS         =    'N'    ! 'Y', 'N' flag to write all ans outputs regardless of other flags besides PRTALL
+
+! ----------------------------------------------------------------------------------------------------------------------------------
       INTEGER(LONG)            :: GRDPNT         =    -1     ! Ref grid for GPWG (neg integer so 0 can be interp as basic origin)
 
       INTEGER(LONG)            :: GRDPNT_IN      =    -1     ! Value of GRDPNT read in the Bulk Data File

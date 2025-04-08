@@ -69,7 +69,8 @@
                                          SUPINFO         , SUPWARN         , NOCOUNTS                                            , &
                                          THRESHK         , THRESHK_LAP     , TINY            ,                                     &
                                          TSTM_DEF        , USR_JCT         , USR_LTERM_KGG   , USR_LTERM_MGG   , WINAMEM         , &
-                                         WTMASS          , K6ROT
+                                         WTMASS          , K6ROT,                                                                  &
+                                         PRTALL          , PRTOP2          , PRTNEU          , PRTANS
  
       USE BD_PARAM_USE_IFs
 
@@ -80,6 +81,7 @@
       CHARACTER(LEN=JCARD_LEN)        :: JCARD(10)         ! The 10 fields of 8 characters making up CARD
       CHARACTER(LEN(JCARD))           :: CHRPARM           ! A char value read from a PARAM Bulk Data card
       CHARACTER(15*BYTE)              :: PARNAM            ! The name of a parameter
+      CHARACTER(8*BYTE)               :: PARAM_NAME        ! The name of a parameter
  
       INTEGER(LONG)                   :: I4PARM    = 0     ! A value read from input file that should be an integer value
       INTEGER(LONG)                   :: I4PARMI(5)        ! Values read from input file that should be an integer value
@@ -112,10 +114,11 @@
 ! Make JCARD from CARD
  
       CALL MKJCARD ( SUBR_NAME, CARD, JCARD )
+      PARAM_NAME = JCARD(2)
  
-! ARP_TOL is the variable TOL used in ARPACK routines to decide convergence.
-! NOTE: if a value of -1. is input on a PARAM ARP_TOL entry, then the Lanczos algorithm will use machine precision for ARP_TOL
 
+      ! ARP_TOL is the variable TOL used in ARPACK routines to decide convergence.
+      ! NOTE: if a value of -1. is input on a PARAM ARP_TOL entry, then the Lanczos algorithm will use machine precision for ARP_TOL
       IF      (JCARD(2)(1:7) == 'ARP_TOL') THEN
          PARNAM = 'ARP_TOL  '
          CALL R8FLD ( JCARD(3), JF(3), R8PARM )
@@ -875,8 +878,92 @@
 !zzzz    CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,4,5,6,7,8,9 )! Issue warning if fields 4-9 not blank
 !zzzz    CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
 
-! GRDPNT causes the grid point weight generator to be run to calculate mass of the model relative to G.P defined by PARAM GRDPNT.
 
+      ! PRTALL writes all outputs for all output files regardless of other flags
+      ELSE IF ((PARAM_NAME(1:8) == 'PRTALL  ') .OR. (PARAM_NAME(1:8) == 'FILES   ')) THEN
+         PARNAM = 'PRTALL  '
+         CALL CHAR_FLD ( JCARD(3), JF(3), CHRPARM )
+         IF (IERRFL(3) == 'N') THEN
+            CALL LEFT_ADJ_BDFLD ( CHRPARM )
+            IF      (CHRPARM(1:1) == 'Y') THEN
+               PRTALL = 'Y'
+            ELSE IF (CHRPARM(1:1) == 'N') THEN
+               PRTALL = 'N'
+            ELSE
+               WARN_ERR = WARN_ERR + 1
+               WRITE(ERR,101) CARD
+               WRITE(ERR,1189) PARNAM,'Y OR N',CHRPARM,PRTALL
+               IF (PRTALL == 'N') THEN
+                  IF (ECHO == 'NONE  ') THEN
+                     WRITE(F06,101) CARD
+                  ENDIF
+                  WRITE(F06,1189) PARNAM,'Y OR N',CHRPARM,PRTALL
+               ENDIF
+            ENDIF
+         ENDIF
+         CALL BD_IMBEDDED_BLANK   ( JCARD,0,3,0,0,0,0,0,0 )! Make sure that there are no imbedded blanks in field 3
+         CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,4,5,6,7,8,9 )! Issue warning if fields 4-9 not blank
+         CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
+
+      ! PRTOP2 writes all outputs for the op2 file regardless of other flags besides PRTALL
+      ELSE IF ((PARAM_NAME(1:8) == 'PRTOP2  ') .OR. (PARAM_NAME(1:8) == 'OP2     ')) THEN
+         PARNAM = 'PRTOP2  '
+         CALL CHAR_FLD ( JCARD(3), JF(3), CHRPARM )
+         IF (IERRFL(3) == 'N') THEN
+            CALL LEFT_ADJ_BDFLD ( CHRPARM )
+            IF      (CHRPARM(1:1) == 'Y') THEN
+               PRTOP2 = 'Y'
+            ELSE IF (CHRPARM(1:1) == 'N') THEN
+               PRTOP2 = 'N'
+            ELSE
+               WARN_ERR = WARN_ERR + 1
+               WRITE(ERR,101) CARD
+               WRITE(ERR,1189) PARNAM,'Y OR N',CHRPARM,PRTOP2
+               IF (PRTOP2 == 'N') THEN
+                  IF (ECHO == 'NONE  ') THEN
+                     WRITE(F06,101) CARD
+                  ENDIF
+                  WRITE(F06,1189) PARNAM,'Y OR N',CHRPARM,PRTOP2
+               ENDIF
+            ENDIF
+         ENDIF
+         CALL BD_IMBEDDED_BLANK   ( JCARD,0,3,0,0,0,0,0,0 )! Make sure that there are no imbedded blanks in field 3
+         CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,4,5,6,7,8,9 )! Issue warning if fields 4-9 not blank
+         CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
+
+      ! PRTANS writes all outputs for the ans file regardless of other flags besides PRTALL
+      ELSE IF ((PARAM_NAME(1:8) == 'PRTANS  ') .OR. (PARAM_NAME(1:8) == 'ANS     ')) THEN
+         PARNAM = 'PRTANS  '
+         CALL CHAR_FLD ( JCARD(3), JF(3), CHRPARM )
+         IF (IERRFL(3) == 'N') THEN
+            CALL LEFT_ADJ_BDFLD ( CHRPARM )
+            IF      (CHRPARM(1:1) == 'Y') THEN
+               PRTANS = 'Y'
+            ELSE IF (CHRPARM(1:1) == 'N') THEN
+               PRTANS = 'N'
+            ELSE
+               WARN_ERR = WARN_ERR + 1
+               WRITE(ERR,101) CARD
+               WRITE(ERR,1189) PARNAM,'Y OR N',CHRPARM,PRTANS
+               IF (PRTANS == 'N') THEN
+                  IF (ECHO == 'NONE  ') THEN
+                     WRITE(F06,101) CARD
+                  ENDIF
+                  WRITE(F06,1189) PARNAM,'Y OR N',CHRPARM,PRTANS
+               ENDIF
+            ENDIF
+         ENDIF
+         CALL BD_IMBEDDED_BLANK   ( JCARD,0,3,0,0,0,0,0,0 )! Make sure that there are no imbedded blanks in field 3
+         CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,4,5,6,7,8,9 )! Issue warning if fields 4-9 not blank
+         CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
+
+      ! PRTNEU writes all outputs for the neu file regardless of other flags besides PRTALL
+      ELSE IF ((PARAM_NAME(1:8) == 'PRTNEU  ') .OR. (PARAM_NAME(1:8) == 'NEU     ')) THEN
+         PARNAM = 'PRTNEU  '
+         CALL YES_NO_CHECK(CARD, JCARD, CHRPARM, PARNAM, PRTNEU)
+         CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
+
+      ! GRDPNT causes the grid point weight generator to be run to calculate mass of the model relative to G.P defined by PARAM GRDPNT.
       ELSE IF (JCARD(2)(1:8) == 'GRDPNT  ') THEN
          ! GRDPNT_IN is used to decide if GPWG is run in LINK0
          PARNAM = 'GRDPNT  '
@@ -1669,8 +1756,8 @@
          CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,0,0,6,7,8,9 )! Issue warning if fields 6-9 not blank
          CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
 
-! POST writes FEMAP data to file NEU 
 
+      ! POST writes FEMAP data to file NEU
       ELSE IF (JCARD(2)(1:8) == 'POST    ') THEN
          PARNAM = 'POST    '
          CALL I4FLD ( JCARD(3), JF(3), I4PARM )
@@ -1694,8 +1781,8 @@
          CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,4,5,6,7,8,9 )! Issue warning if fields 4-9 not blank
          CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
 
-! PRTBASIC prints the grid coordinates in the basic coord system
 
+      ! PRTBASIC prints the grid coordinates in the basic coord system
       ELSE IF (JCARD(2)(1:8) == 'PRTBASIC') THEN
          PARNAM = 'PRTBASIC'
          CALL I4FLD ( JCARD(3), JF(3), I4PARM )
@@ -2764,8 +2851,7 @@
          CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,4,5,6,7,8,9 )! Issue warning if fields 4-9 not blank
          CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
 
-! SKIPMGG 'Y', 'N' indicator to say whether to skip calculation of MGG
-
+      ! SKIPMGG 'Y', 'N' indicator to say whether to skip calculation of MGG
       ELSE IF (JCARD(2)(1:7) == 'SKIPMGG') THEN
          PARNAM = 'SKIPMGG '
          CALL CHAR_FLD ( JCARD(3), JF(3), CHRPARM )
@@ -3271,11 +3357,50 @@ do_i:    DO I=1,JCARD_LEN
  
 ! ##################################################################################################################################
  
-      SUBROUTINE LOAD_USETSTR_TABLE ( DOF_SET_NAME, PARNAM )
+      SUBROUTINE YES_NO_CHECK(CARD, JCARD, CHRPARM, PARNAM, VALUE)
+      USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG
+      IMPLICIT NONE
  
-! Formulates a table that shows which of the DOF sets (G, M, N, SA, SB, SG, SZ, SE, S, F, O, S, R, L, U1, U2) that have been
-! requested for output. The table has 2 columns. Col 1 has the DOF set names and col 2 has a 1 if that set was requested for
-! output or 0 otherwise. 
+      !CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: SUBR_NAME = 'BD_PARAM'
+      CHARACTER(LEN=*), INTENT(IN)         :: CARD              ! A Bulk Data card
+      CHARACTER(LEN=JCARD_LEN), INTENT(IN) :: JCARD(10)         ! The 10 fields of 8 characters making up CARD
+      CHARACTER(15*BYTE), INTENT(IN)       :: PARNAM            ! The name  of the parameter
+      !
+      CHARACTER(LEN(JCARD)), INTENT(INOUT) :: CHRPARM           ! A char value read from a PARAM Bulk Data card
+      CHARACTER(1*BYTE), INTENT(INOUT)     :: VALUE             ! The vakue of the parameter
+
+         CALL CHAR_FLD ( JCARD(3), JF(3), CHRPARM )
+         IF (IERRFL(3) == 'N') THEN
+            CALL LEFT_ADJ_BDFLD ( CHRPARM )
+            IF      (CHRPARM(1:1) == 'Y') THEN
+               VALUE = 'Y'
+            ELSE IF (CHRPARM(1:1) == 'N') THEN
+               VALUE = 'N'
+            ELSE
+               WARN_ERR = WARN_ERR + 1
+               WRITE(ERR,101) CARD
+               WRITE(ERR,1189) PARNAM,'Y OR N',CHRPARM,VALUE
+               IF (VALUE == 'N') THEN
+                  IF (ECHO == 'NONE  ') THEN
+                     WRITE(F06,101) CARD
+                  ENDIF
+                  WRITE(F06,1189) PARNAM,'Y OR N',CHRPARM,VALUE
+               ENDIF
+            ENDIF
+         ENDIF
+         CALL BD_IMBEDDED_BLANK   ( JCARD,0,3,0,0,0,0,0,0 )! Make sure that there are no imbedded blanks in field 3
+         CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,4,5,6,7,8,9 )! Issue warning if fields 4-9 not blank
+
+      RETURN
+  101 FORMAT(A)
+ 1189 FORMAT(' *WARNING    : PARAMETER NAMED ',A,' MUST BE ',A,' BUT INPUT VALUE IS: ',A,'. DEFAULT VALUE = ',A,' WILL BE USED')
+      END SUBROUTINE YES_NO_CHECK
+
+! ##################################################################################################################################
+      SUBROUTINE LOAD_USETSTR_TABLE ( DOF_SET_NAME, PARNAM )
+     ! Formulates a table that shows which of the DOF sets (G, M, N, SA, SB, SG, SZ, SE, S, F, O, S, R, L, U1, U2) that have been
+     ! requested for output. The table has 2 columns. Col 1 has the DOF set names and col 2 has a 1 if that set was requested for
+     ! output or 0 otherwise. 
 
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG
       USE DOF_TABLES, ONLY            :  USETSTR_TABLE

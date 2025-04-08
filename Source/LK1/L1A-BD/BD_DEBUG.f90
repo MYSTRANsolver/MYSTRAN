@@ -32,7 +32,7 @@
       USE IOUNT1, ONLY                :  WRT_ERR, WRT_LOG, ERR, F04, F06
       USE SCONTR, ONLY                :  BLNK_SUB_NAM, ECHO, IERRFL, JCARD_LEN, JF, WARN_ERR 
       USE TIMDAT, ONLY                :  TSEC
-      USE PARAMS, ONLY                :  SUPWARN
+      USE PARAMS, ONLY                :  SUPWARN, PRTANS
       USE SUBR_BEGEND_LEVELS, ONLY    :  BD_DEBUG_BEGEND
       USE DEBUG_PARAMETERS, ONLY      :  DEBUG, NDEBUG
  
@@ -70,7 +70,19 @@
       IF (IERRFL(2) == 'N') THEN
          IF ((INDEX >= LOWER) .AND. (INDEX <= UPPER)) THEN
             CALL I4FLD ( JCARD(3), JF(3), VALUE )
-            IF (IERRFL(3) == 'N') THEN
+            IF ((INDEX == 200) .AND. (PRTANS == 'Y')) THEN
+               ! already set this; VALUE is irrelvant because PRTANS takes priority
+               WARN_ERR = WARN_ERR + 1
+               WRITE(ERR,101) CARD
+               WRITE(ERR,1121) VALUE
+               IF (SUPWARN == 'N') THEN
+                  IF (ECHO == 'NONE  ') THEN
+                     WRITE(F06,101) CARD
+                  ENDIF
+                  WRITE(F06,1121) VALUE
+               ENDIF
+
+            ELSEIF (IERRFL(3) == 'N') THEN
                DEBUG(INDEX) = VALUE
             ENDIF
          ELSE
@@ -103,6 +115,8 @@
   101 FORMAT(A)
 
  1120 FORMAT(' *WARNING    : DEBUG INDEX MUST BE >= ',I4,' AND <= ',I4,' BUT INPUT VALUE IS: ',I8,'. ENTRY IGNORED')
+ 1121 FORMAT(' *WARNING    : DEBUG,200 IS DEPRECATED AND IS REPLACED BY PARAM,PRTANS. BOTH WERE DEFINED. DEBUG,200, ', &
+             I4, ' AND WILL BE IGNORED')
    
 ! **********************************************************************************************************************************
  
