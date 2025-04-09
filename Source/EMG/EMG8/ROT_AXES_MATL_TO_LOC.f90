@@ -74,8 +74,8 @@
       REAL(DOUBLE)                    :: EBM0(3,3)         ! Bend/membr coupling matl matrix before coord transformation
       REAL(DOUBLE)                    :: ES0(6,6)          ! 3D stress matl matrix before coord transformation
       REAL(DOUBLE)                    :: ET0(2,2)          ! 2D transverse shear matl matrix before coord transformation
-	  
-	  REAL(DOUBLE)                    :: T1transposed(6,6) ! Victor - Bug fix for solid elem default coord issue
+  
+      REAL(DOUBLE)                    :: T1transposed(6,6) ! Victor - Bug fix for solid elem default coord issue
 
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
@@ -129,6 +129,20 @@
             CALL PLANE_COORD_TRANS_21 ( MATL_AXES_ROTATE, TME, SUBR_NAME )
 !xx         CALL GET_T1_TRANSFORM_MAT
             CALL MATL_TRANSFORM_MATRIX ( TME, T1 )
+
+            !Victor - Shell element default cooord system issue #98 - Add start
+            DO I=1,6
+               DO J=1,6
+                  T1transposed(I,J) = T1(J,I)
+               ENDDO
+            ENDDO
+            DO I=1,6
+               DO J=1,6
+                  T1(I,J) = T1transposed(I,J)
+               ENDDO
+            ENDDO
+            !Victor - Shell element default cooord system issue #98 - Add end
+            
                                                            ! T1_MB is for Sxx, Syy, Sxy which are rows and cols 1,2,4 from T1
             T1_MB(1,1) = T1(1,1)     ;     T1_MB(1,2) = T1(1,2)     ;     T1_MB(1,3) = T1(1,4)
             T1_MB(2,1) = T1(2,1)     ;     T1_MB(2,2) = T1(2,2)     ;     T1_MB(2,3) = T1(2,4)
@@ -227,30 +241,25 @@
 
 !xx         CALL GET_T1_TRANSFORM_MAT
             CALL MATL_TRANSFORM_MATRIX ( TME, T1 )
-            !Victor - Solid element default cooord system issue - Remove 3 lines
-			!CALL MATMULT_FFF   ( ES , T1   , 6, 6, 6, DUM66 )
-            !CALL MATMULT_FFF_T ( T1 , DUM66, 6, 6, 6, ES    )
 
-            !CALL MATMULT_FFF_T (T1, ALPVEC, 6, 6, MEMATC, DUM64 )
-			
-			!Victor - Solid element default cooord system issue - Add start
-			DO I=1,6
+            !Victor - Solid element default cooord system issues #95 and #96 - Add start
+            DO I=1,6
                DO J=1,6
                   T1transposed(I,J) = T1(J,I)
                ENDDO
             ENDDO
+            DO I=1,6
+               DO J=1,6
+                  T1(I,J) = T1transposed(I,J)
+               ENDDO
+            ENDDO
+            !Victor - Solid element default cooord system issues #95 and #96 - Add end
+            
+            CALL MATMULT_FFF   ( ES , T1   , 6, 6, 6, DUM66 )
+            CALL MATMULT_FFF_T ( T1 , DUM66, 6, 6, 6, ES    )
 
-            CALL MATMULT_FFF   ( ES , T1transposed   , 6, 6, 6, DUM66 )
-            CALL MATMULT_FFF_T ( T1transposed , DUM66, 6, 6, 6, ES    )
+            CALL MATMULT_FFF_T (T1, ALPVEC, 6, 6, MEMATC, DUM64 )
 
-            CALL MATMULT_FFF_T (T1transposed, ALPVEC, 6, 6, MEMATC, DUM64 )
-			!Victor - Solid element default cooord system issue - Add end
-			
-			
-			
-			
-			
-			
             DO I=1,6
                DO J=1,MEMATC
                   ALPVEC(I,J) = DUM64(I,J)
