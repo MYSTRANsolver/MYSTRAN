@@ -64,7 +64,7 @@
       USE TIMDAT, ONLY                :  YEAR, MONTH, DAY, HOUR, MINUTE, SEC, SFRAC, STIME, TSEC
       USE SUBR_BEGEND_LEVELS, ONLY    :  LINK9_BEGEND
       USE CONSTANTS_1, ONLY           :  ZERO, ONE
-      USE PARAMS, ONLY                :  EPSIL, MPFOUT, POST, SUPINFO, SUPWARN, WTMASS
+      USE PARAMS, ONLY                :  EPSIL, MPFOUT, PRTNEU, SUPINFO, SUPWARN, WTMASS
       USE NONLINEAR_PARAMS, ONLY      :  LOAD_ISTEP
       USE COL_VECS, ONLY              :  FG_COL, UG_COL, PG_COL, PM_COL, PS_COL, QSYS_COL, QGm_COL, QGr_COL, QGs_COL, QR_COL,      &
                                          PHIXG_COL, PHIXN_COL
@@ -299,7 +299,7 @@
       
       IF ((SOL_NAME(1:7)=='STATICS') .OR. (SOL_NAME(1:8)=='NLSTATIC') .OR. ((SOL_NAME(1:8)=='BUCKLING') .AND. (LOAD_ISTEP==1))) THEN
 
-         IF ((ANY_OLOA_OUTPUT > 0) .OR. (ANY_MPCF_OUTPUT > 0) .OR. (ANY_GPFO_OUTPUT > 0) .OR. (POST /= 0)) THEN
+         IF ((ANY_OLOA_OUTPUT > 0) .OR. (ANY_MPCF_OUTPUT > 0) .OR. (ANY_GPFO_OUTPUT > 0) .OR. (PRTNEU == 'Y')) THEN
 
             IF (NTERM_PG > 0) THEN
 
@@ -313,7 +313,7 @@
                CLOSE_IT   = 'N'
                CALL READ_MATRIX_1 ( LINK1E, L1E, 'N', CLOSE_IT, 'KEEP', L1E_MSG, 'PG', NTERM_PG, 'Y', NDOFG,                       &
                                     I_PG, J_PG, PG)
-               IF ((ANY_MPCF_OUTPUT > 0) .OR. (ANY_GPFO_OUTPUT > 0) .OR. (POST /= 0)) THEN
+               IF ((ANY_MPCF_OUTPUT > 0) .OR. (ANY_GPFO_OUTPUT > 0) .OR. (PRTNEU == 'Y')) THEN
                   IF (NTERM_PM  > 0) THEN                  ! Partition PM from PG if there are any loads on the M-set
                      CALL PARTITION_VEC (NDOFG,'G ','N ','M ',PART_G_NM)
                      DO I=1,NSUB
@@ -335,15 +335,15 @@
       ENDIF
 
       ! Read files with KSF, MSF, QSYS (used to calc SPC constraint forces, QS), but only if they will be needed.
-      ! For any SOL_NAME they will be needed if any SPC constraint force output is requested or GP force balance or if POST /=0. 
+      ! For any SOL_NAME they will be needed if any SPC constraint force output is requested or GP force balance or if PRTNEU=Y. 
       ! For non CB they will be needed also if MEFFMASS, MPFACTOR are to be calculated (done via SPC force total method)
       READ_SPCARRAYS = 'N'
       IF (SOL_NAME == 'GEN CB MODEL') THEN
-         IF ((ANY_SPCF_OUTPUT > 0) .OR. (ANY_GPFO_OUTPUT > 0) .OR. (NDOFSA > 0) .OR. (POST /= 0)) THEN
+         IF ((ANY_SPCF_OUTPUT > 0) .OR. (ANY_GPFO_OUTPUT > 0) .OR. (NDOFSA > 0) .OR. (PRTNEU == 'Y')) THEN
             READ_SPCARRAYS = 'Y'
          ENDIF
       ELSE
-         IF ((ANY_SPCF_OUTPUT > 0) .OR. (ANY_GPFO_OUTPUT > 0) .OR. (NDOFSA > 0) .OR. (POST /= 0) .OR.                              &
+         IF ((ANY_SPCF_OUTPUT > 0) .OR. (ANY_GPFO_OUTPUT > 0) .OR. (NDOFSA > 0) .OR. (PRTNEU == 'Y') .OR.                           &
              (MEFFMASS_CALC == 'Y') .OR. (MPFACTOR_CALC == 'Y')) THEN
             READ_SPCARRAYS = 'Y'
          ENDIF
@@ -445,7 +445,7 @@
       ENDIF
       
       ! Read MPC constraint matrices
-      IF ((ANY_MPCF_OUTPUT > 0) .OR. (ANY_GPFO_OUTPUT > 0) .OR. (POST /= 0)) THEN
+      IF ((ANY_MPCF_OUTPUT > 0) .OR. (ANY_GPFO_OUTPUT > 0) .OR. (PRTNEU == 'Y')) THEN
 
          IF (NDOFM > 0) THEN
 
@@ -583,9 +583,8 @@
 
 !      CALL WRITE_OP2_GEOM()
 
-! Open FEMAP neutral file for writing, if PARAM POST /= 0, and write FEMAP data block 100
-
-      IF (POST /= 0) THEN
+      ! Open FEMAP neutral file for writing, if PRTNEU == 'Y', and write FEMAP data block 100
+      IF (PRTNEU == 'Y') THEN
          WRITE(CTIME,9000) STIME
          CALL FILE_OPEN ( NEU, NEUFIL, OUNT, 'REPLACE', NEU_MSG, 'WRITE_STIME', 'FORMATTED', 'WRITE', 'REWIND', 'Y', 'N', 'Y' )
          FEMAP_BLK = '   100'
@@ -701,7 +700,7 @@ j_do: DO JVEC=1,NUM_SOLNS
 
          ENDIF
 
-         IF (POST /= 0) THEN
+         IF (PRTNEU == 'Y') THEN
             FEMAP_BLK = '   450'
             CALL CONCATENATE_TITLES
             WRITE(NEU,9001)                                ! Write data block 450 to FEMAP NEU file
@@ -800,7 +799,7 @@ j_do: DO JVEC=1,NUM_SOLNS
 
         NEW_RESULT = .TRUE.
         ITABLE = -1
-         IF ((SC_ACCE_OUTPUT > 0) .OR. (POST /= 0)) THEN
+         IF ((SC_ACCE_OUTPUT > 0) .OR. (PRTNEU == 'Y')) THEN
             IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
                CALL OURTIM
                MODNAM = 'PROCESS ACCEL OUTPUT REQUESTS,                    "'
@@ -817,7 +816,7 @@ j_do: DO JVEC=1,NUM_SOLNS
          ENDIF
 
          ! Process displacement output requests
-         IF ((SC_DISP_OUTPUT > 0) .OR. (POST /= 0)) THEN
+         IF ((SC_DISP_OUTPUT > 0) .OR. (PRTNEU == 'Y')) THEN
             CALL OURTIM
             MODNAM = 'PROCESS DISPL OUTPUT REQUESTS,                    "'
             WRITE(SC1,9093) LINKNO,MODNAM,JVEC,HOUR,MINUTE,SEC,SFRAC
@@ -830,7 +829,7 @@ j_do: DO JVEC=1,NUM_SOLNS
          NEW_RESULT = .TRUE.
          ITABLE = -1
          IF (PROC_PG_OUTPUT == 'Y') THEN
-            IF ((SC_OLOA_OUTPUT > 0) .OR. (SC_GPFO_OUTPUT > 0) .OR. (POST /= 0)) THEN
+            IF ((SC_OLOA_OUTPUT > 0) .OR. (SC_GPFO_OUTPUT > 0) .OR. (PRTNEU == 'Y')) THEN
                IF  ((SOL_NAME(1:7) == 'STATICS') .OR. (SOL_NAME(1:8) == 'BUCKLING') .OR. (SOL_NAME(1:8) == 'NLSTATIC')) THEN
                   CALL OURTIM
                   MODNAM = 'PROCESS APPLIED LOAD OUTPUT REQS,                 "'
@@ -859,7 +858,7 @@ j_do: DO JVEC=1,NUM_SOLNS
          ENDIF
 
          IF ((NDOFS > 0) .OR. (SC_SPCF_OUTPUT > 0) .OR. (SC_GPFO_OUTPUT > 0) .OR.                                                  &
-             (MEFFMASS_CALC == 'Y') .OR. (MPFACTOR_CALC == 'Y') .OR. (POST /= 0)) THEN
+             (MEFFMASS_CALC == 'Y') .OR. (MPFACTOR_CALC == 'Y') .OR. (PRTNEU == 'Y')) THEN
 
             CALL ALLOCATE_COL_VEC ( 'PS_COL', NDOFS, SUBR_NAME )
             DO K=1,NDOFS
@@ -889,7 +888,7 @@ j_do: DO JVEC=1,NUM_SOLNS
          NEW_RESULT = .TRUE.
          IF (NDOFM > 0) THEN
 
-            IF ((SC_MPCF_OUTPUT > 0) .OR. (SC_GPFO_OUTPUT > 0) .OR. (POST /= 0)) THEN
+            IF ((SC_MPCF_OUTPUT > 0) .OR. (SC_GPFO_OUTPUT > 0) .OR. (PRTNEU == 'Y')) THEN
 
                CALL ALLOCATE_COL_VEC ( 'PM_COL', NDOFM, SUBR_NAME )
                DO K=1,NDOFM
@@ -980,7 +979,7 @@ j_do: DO JVEC=1,NUM_SOLNS
          SC_STRN_OUTPUT = IAND(OELOUT(INT_SC_NUM),IBIT(ELOUT_STRN_BIT))
          IF((SC_ELFE_OUTPUT > 0) .OR. (SC_ELFN_OUTPUT > 0) .OR. (SC_STRE_OUTPUT > 0) .OR. (SC_STRN_OUTPUT > 0) .OR.                &
             ! (ANY_U_P_OUTPUT > 0) .OR.
-            (POST /= 0)) THEN
+            (PRTNEU == 'Y')) THEN
             CALL OURTIM
             MODNAM = 'PROCESS ELEM FORCE/STRESS REQUESTS,               "'
             WRITE(SC1,9093) LINKNO,MODNAM,JVEC,HOUR,MINUTE,SEC,SFRAC
@@ -1035,13 +1034,15 @@ j_do: DO JVEC=1,NUM_SOLNS
                                                            ! For BUCKLING we want to keep UG_COL from the linear statics portion of
          CALL DEALLOCATE_COL_VEC ( 'PHIXG_COL' )
 
-         IF (POST /= 0) THEN
+         IF (PRTNEU == 'Y') THEN
             WRITE(NEU,9001)                                ! End of FEMAP block 451 indicator
          ENDIF
 
       ENDDO j_do
 
-      IF (POST /= 0) THEN
+      !IF (POST /= 0) THEN
+      !ENDIF
+      IF (PRTNEU == 'Y') THEN
          WRITE(NEU,9001)                                   ! End of FEMAP block 451 indicator
          CALL FILE_CLOSE ( NEU, NEUFIL, 'KEEP', 'Y' )
       ENDIF

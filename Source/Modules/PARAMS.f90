@@ -144,10 +144,14 @@
 
 ! ----------------------------------------------------------------------------------------------------------------------------------
       CHARACTER(  1*BYTE)      :: PRTALL         =    'N'    ! 'Y', 'N' flag to write all output for all files regardless of other flags
-      CHARACTER(  1*BYTE)      :: PRTOP2         =    'N'    ! 'Y', 'N' flag to write all op2 outputs regardless of other flags besides PRTALL
-      CHARACTER(  1*BYTE)      :: PRTNEU         =    'N'    ! 'Y', 'N' flag to write all neu outputs regardless of other flags besides PRTALL
       CHARACTER(  1*BYTE)      :: PRTANS         =    'N'    ! 'Y', 'N' flag to write all ans outputs regardless of other flags besides PRTALL
+      CHARACTER(  1*BYTE)      :: PRTF06         =    'N'    ! 'Y', 'N' flag to write all f06 outputs regardless of other flags besides PRTALL
+      CHARACTER(  1*BYTE)      :: PRTNEU         =    'N'    ! 'Y', 'N' flag to write all neu outputs regardless of other flags besides PRTALL
+      CHARACTER(  1*BYTE)      :: PRTOP2         =    'N'    ! 'Y', 'N' flag to write all op2 outputs regardless of other flags besides PRTALL
 
+! case 1: PRTALL=Y, PRTOP2=N -> all op2 output will be created and all ans/neu output 
+! case 2: PRTALL=N, PRTOP2=Y -> all op2 output will be created
+! case 3: PRTALL=N, PRTOP2=N -> do whatever the case control says
 ! ----------------------------------------------------------------------------------------------------------------------------------
       INTEGER(LONG)            :: GRDPNT         =    -1     ! Ref grid for GPWG (neg integer so 0 can be interp as basic origin)
 

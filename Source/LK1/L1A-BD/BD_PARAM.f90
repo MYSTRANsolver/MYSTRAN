@@ -70,7 +70,7 @@
                                          THRESHK         , THRESHK_LAP     , TINY            ,                                     &
                                          TSTM_DEF        , USR_JCT         , USR_LTERM_KGG   , USR_LTERM_MGG   , WINAMEM         , &
                                          WTMASS          , K6ROT,                                                                  &
-                                         PRTALL          , PRTOP2          , PRTNEU          , PRTANS
+                                         PRTALL          , PRTANS          , PRTF06          , PRTNEU          , PRTOP2
  
       USE BD_PARAM_USE_IFs
 
@@ -818,20 +818,25 @@
          PARNAM = 'PRTALL  '
          CALL YES_NO_CHECK(CARD, JCARD, CHRPARM, PARNAM, PRTALL)
 
-      ! PRTOP2 writes all outputs for the op2 file regardless of other flags besides PRTALL
-      ELSE IF ((PARAM_NAME(1:8) == 'PRTOP2  ') .OR. (PARAM_NAME(1:8) == 'OP2     ')) THEN
-         PARNAM = 'PRTOP2  '
-         CALL YES_NO_CHECK(CARD, JCARD, CHRPARM, PARNAM, PRTOP2)
-
       ! PRTANS writes all outputs for the ans file regardless of other flags besides PRTALL
       ELSE IF ((PARAM_NAME(1:8) == 'PRTANS  ') .OR. (PARAM_NAME(1:8) == 'ANS     ')) THEN
          PARNAM = 'PRTANS  '
          CALL YES_NO_CHECK(CARD, JCARD, CHRPARM, PARNAM, PRTANS)
 
+      ! PRTOP2 writes all outputs for the f06 file regardless of other flags besides PRTALL
+      ELSE IF ((PARAM_NAME(1:8) == 'PRTF06  ') .OR. (PARAM_NAME(1:8) == 'F06     ')) THEN
+         PARNAM = 'PRTF06  '
+         CALL YES_NO_CHECK(CARD, JCARD, CHRPARM, PARNAM, PRTF06)
+
       ! PRTNEU writes all outputs for the neu file regardless of other flags besides PRTALL
       ELSE IF ((PARAM_NAME(1:8) == 'PRTNEU  ') .OR. (PARAM_NAME(1:8) == 'NEU     ')) THEN
          PARNAM = 'PRTNEU  '
          CALL YES_NO_CHECK(CARD, JCARD, CHRPARM, PARNAM, PRTNEU)
+
+      ! PRTOP2 writes all outputs for the op2 file regardless of other flags besides PRTALL
+      ELSE IF ((PARAM_NAME(1:8) == 'PRTOP2  ') .OR. (PARAM_NAME(1:8) == 'OP2     ')) THEN
+         PARNAM = 'PRTOP2  '
+         CALL YES_NO_CHECK(CARD, JCARD, CHRPARM, PARNAM, PRTOP2)
 
       ! GRDPNT causes the grid point weight generator to be run to calculate mass of the model relative to G.P defined by PARAM GRDPNT.
       ELSE IF (JCARD(2)(1:8) == 'GRDPNT  ') THEN
@@ -1126,29 +1131,7 @@
 
       ELSE IF (JCARD(2)(1:8) == 'MATSPARS') THEN
          PARNAM = 'MATSPARS'
-         CALL CHAR_FLD ( JCARD(3), JF(3), CHRPARM )
-         IF (IERRFL(3) == 'N') THEN
-            CALL LEFT_ADJ_BDFLD ( CHRPARM )
-            IF      (CHRPARM(1:1) == 'Y') THEN
-               MATSPARS = 'Y'
-            ELSE IF (CHRPARM(1:1) == 'N') THEN
-               MATSPARS = 'N'
-            ELSE
-               WARN_ERR = WARN_ERR + 1
-               WRITE(ERR,101) CARD
-               WRITE(ERR,1189) PARNAM,'Y OR N',CHRPARM,MATSPARS
-               IF (SUPWARN == 'N') THEN
-                  IF (ECHO == 'NONE  ') THEN
-                     WRITE(F06,101) CARD
-                  ENDIF
-                  WRITE(F06,1189) PARNAM,'Y OR N',CHRPARM,MATSPARS
-               ENDIF
-            ENDIF
-         ENDIF
-
-         CALL BD_IMBEDDED_BLANK   ( JCARD,0,3,0,0,0,0,0,0 )! Make sure that there are no imbedded blanks in field 3
-         CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,4,5,6,7,8,9 )! Issue warning if fields 4-9 not blank
-         CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
+         CALL YES_NO_CHECK(CARD, JCARD, CHRPARM, PARNAM, MATSPARS)
   
 ! MXALLOCA defines the max allowable attempts when attempting to allocate an array before quiting with a fatal error
 
@@ -1568,6 +1551,7 @@
          IF (IERRFL(3) == 'N') THEN
             IF (I4PARM <= 0) THEN
                POST = I4PARM
+               PRTNEU = 'Y'
             ELSE
                WARN_ERR = WARN_ERR + 1
                WRITE(ERR,101) CARD
@@ -1747,8 +1731,8 @@
          CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,4,5,6,7,8,9 )! Issue warning if fields 4-9 not blank
          CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
 
-! PRTDOF prints the DOF tables (TDOF and/or TDOFI). TDOF is sorted by external grid, TDOFI by resequenced DOF number
 
+      ! PRTDOF prints the DOF tables (TDOF and/or TDOFI). TDOF is sorted by external grid, TDOFI by resequenced DOF number
       ELSE IF (JCARD(2)(1:8) == 'PRTDOF  ') THEN
          PARNAM = 'PRTDOF  '
          CALL I4FLD ( JCARD(3), JF(3), I4PARM )
@@ -1774,8 +1758,8 @@
          CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,4,5,6,7,8,9 )! Issue warning if fields 4-9 not blank
          CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
 
-! PRTFOR prints G, N, F, A and/or L set stiffness matrices in LINK2
 
+      ! PRTFOR prints G, N, F, A and/or L set stiffness matrices in LINK2
       ELSE IF (JCARD(2)(1:8) == 'PRTFOR  ') THEN
          PARNAM = 'PRTFOR  '
          DO I=1,5
@@ -1803,8 +1787,8 @@
          CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,0,0,0,0,8,9 )! Issue warning if fields 8-9 not blank
          CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
 
-! PRTGMN  prints GMN constraint matrix
 
+      ! PRTGMN  prints GMN constraint matrix
       ELSE IF (JCARD(2)(1:8) == 'PRTGMN  ') THEN
          PARNAM = 'PRTGMN  '
          CALL I4FLD ( JCARD(3), JF(3), I4PARM )
@@ -1830,8 +1814,7 @@
          CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,4,5,6,7,8,9 )! Issue warning if fields 4-9 not blank
          CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
 
-! PRTGOA  prints GOA constraint matrix
-
+      ! PRTGOA  prints GOA constraint matrix
       ELSE IF (JCARD(2)(1:8) == 'PRTGOA  ') THEN
          PARNAM = 'PRTGOA  '
          CALL I4FLD ( JCARD(3), JF(3), I4PARM )
@@ -1857,8 +1840,8 @@
          CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,4,5,6,7,8,9 )! Issue warning if fields 4-9 not blank
          CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
 
-! PRTHMN  prints HMN constraint matrix
 
+      ! PRTHMN  prints HMN constraint matrix
       ELSE IF (JCARD(2)(1:8) == 'PRTHMN  ') THEN
          PARNAM = 'PRTHMN  '
          CALL I4FLD ( JCARD(3), JF(3), I4PARM )
@@ -1884,8 +1867,8 @@
          CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,4,5,6,7,8,9 )! Issue warning if fields 4-9 not blank
          CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
 
-! PRTIFLTM prints the CB matrix 
 
+      ! PRTIFLTM prints the CB matrix 
       ELSE IF (JCARD(2)(1:8) == 'PRTIFLTM') THEN
          PARNAM = 'PRTIFLTM '
          CALL I4FLD ( JCARD(3), JF(3), I4PARM )
@@ -1911,8 +1894,8 @@
          CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,4,5,6,7,8,9 )! Issue warning if fields 4-9 not blank
          CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
 
-! PRTKXX prints the CB matrix 
 
+      ! PRTKXX prints the CB matrix
       ELSE IF (JCARD(2)(1:8) == 'PRTKXX  ') THEN
          PARNAM = 'PRTKXX  '
          CALL I4FLD ( JCARD(3), JF(3), I4PARM )
@@ -1938,8 +1921,8 @@
          CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,4,5,6,7,8,9 )! Issue warning if fields 4-9 not blank
          CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
 
-! PRTMASS  prints G, N, F, A and/or L set stiffness matrices in LINK2
 
+      ! PRTMASS  prints G, N, F, A and/or L set stiffness matrices in LINK2
       ELSE IF (JCARD(2)(1:8) == 'PRTMASS ') THEN
          PARNAM = 'PRTMASS '
          DO I=1,5
@@ -1967,8 +1950,8 @@
          CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,0,0,0,0,8,9 )! Issue warning if fields 8-9 not blank
          CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
 
-! PRTMASSD prints G, N, F, A and/or L set mass matrix diagonals in LINK2
 
+      ! PRTMASSD prints G, N, F, A and/or L set mass matrix diagonals in LINK2
       ELSE IF (JCARD(2)(1:8) == 'PRTMASSD') THEN
          PARNAM = 'PRTMASSD'
          DO I=1,5
@@ -1996,8 +1979,8 @@
          CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,0,0,0,0,8,9 )! Issue warning if fields 8-9 not blank
          CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
 
-! PRTMXX prints the CB matrix 
 
+      ! PRTMXX prints the CB matrix 
       ELSE IF (JCARD(2)(1:8) == 'PRTMXX  ') THEN
          PARNAM = 'PRTMXX  '
          CALL I4FLD ( JCARD(3), JF(3), I4PARM )
@@ -2019,8 +2002,8 @@
             ENDIF
          ENDIF
 
-! PRTOU4 prints the CB matrix 
 
+      ! PRTOU4 prints the CB matrix 
       ELSE IF (JCARD(2)(1:8) == 'PRTOU4  ') THEN
          PARNAM = 'PRTOU4  '
          CALL I4FLD ( JCARD(3), JF(3), I4PARM )
@@ -2046,8 +2029,8 @@
          CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,4,5,6,7,8,9 )! Issue warning if fields 4-9 not blank
          CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
 
-! PRTPHIXA prints the CB matrix PHIXA
 
+      ! PRTPHIXA prints the CB matrix PHIXA
       ELSE IF (JCARD(2)(1:8) == 'PRTPHIXA') THEN
          PARNAM = 'PRTPHIXA'
          CALL I4FLD ( JCARD(3), JF(3), I4PARM )
@@ -2464,8 +2447,7 @@
          PARNAM = 'RCONDK  '
          CALL YES_NO_CHECK(CARD, JCARD, CHRPARM, PARNAM, RCONDK)
 
-! RELINK3 = 'Y' causes LINK3 (and therefore also LINK5) to be rerun in a RESTART. This is only used in linear statics
-
+      ! RELINK3 = 'Y' causes LINK3 (and therefore also LINK5) to be rerun in a RESTART. This is only used in linear statics
       ELSE IF (JCARD(2)(1:8) == 'RELINK3 ') THEN
          PARNAM = 'RELINK3  '
          CALL YES_NO_CHECK(CARD, JCARD, CHRPARM, PARNAM, RELINK3)
@@ -3030,7 +3012,6 @@ do_i:    DO I=1,JCARD_LEN
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG
       IMPLICIT NONE
  
-      !CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: SUBR_NAME = 'BD_PARAM'
       CHARACTER(LEN=*), INTENT(IN)         :: CARD              ! A Bulk Data card
       CHARACTER(LEN=JCARD_LEN), INTENT(IN) :: JCARD(10)         ! The 10 fields of 8 characters making up CARD
       CHARACTER(15*BYTE), INTENT(IN)       :: PARNAM            ! The name  of the parameter
