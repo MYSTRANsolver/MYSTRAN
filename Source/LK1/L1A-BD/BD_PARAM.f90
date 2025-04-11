@@ -423,9 +423,9 @@
          CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,4,5,6,7,8,9 )! Issue warning if fields 4-9 not blank
          CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
  
-! CBMIN4T is a parameter for the Mindlin (thick) quad plate element (CQUAD4).
-! It is used in calculating PHISQ, a scalar multiple of the transverse shear stiff
 
+      ! CBMIN4T is a parameter for the Mindlin (thick) quad plate element (CQUAD4).
+      ! It is used in calculating PHISQ, a scalar multiple of the transverse shear stiff
       ELSE IF (JCARD(2)(1:8) == 'CBMIN4T ') THEN
          PARNAM = 'CBMIN4T '
          CALL R8FLD ( JCARD(3), JF(3), R8PARM )
@@ -438,19 +438,18 @@
                CBMIN4T = R8PARM
             ENDIF
          ENDIF
-
          CALL BD_IMBEDDED_BLANK   ( JCARD,0,3,0,0,0,0,0,0 )! Make sure that there are no imbedded blanks in field 3
          CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,4,5,6,7,8,9 )! Issue warning if fields 4-9 not blank
          CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
  
-! CHKGRDS tells whether to call GET_ELEM_AGRID_BGRID to make sure all grids on elem connection entries are defined
-
+      ! CHKGRDS tells whether to call GET_ELEM_AGRID_BGRID to make sure
+      ! all grids on elem connection entries are defined
       ELSE IF (JCARD(2)(1:8) == 'CHKGRDS ') THEN
          PARNAM = 'CHKGRDS  '
          CALL YES_NO_CHECK(CARD, JCARD, CHRPARM, PARNAM, CHKGRDS)
-  
-! CRS_CCS specifies the storage method (CRS or CCS)
 
+
+      ! CRS_CCS specifies the storage method (CRS or CCS)
       ELSE IF (JCARD(2)(1:8) == 'CRS_CCS ') THEN
          PARNAM = 'CRS_CCS '
          CALL CHAR_FLD ( JCARD(3), JF(3), CHRPARM )
@@ -547,8 +546,9 @@
          CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,0,0,0,0,8,9 )! Issue warning if fields 8-9 not blank
          CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
 
-! Delta to add to EIG_N2 so that ARPACK will find a few more eigens than user requested (since higher ones seem to be a little bad)
 
+      ! Delta to add to EIG_N2 so that ARPACK will find a few more eigen
+      ! than user requested (since higher ones seem to be a little bad)
       ELSE IF (JCARD(2)(1:8) == 'DARPACK ') THEN
          PARNAM = 'DARPACK '
          CALL I4FLD ( JCARD(3), JF(3), I4PARM )
@@ -571,8 +571,8 @@
          CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,4,5,6,7,8,9 )! Issue warning if fields 4-9 not blank
          CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
   
-! DELBAN, where if it is 1, delete the bandit files left over, if 0, don't.
 
+      ! DELBAN, where if it is 1, delete the bandit files left over, if 0, don't.
       ELSE IF (JCARD(2)(1:8) == 'DELBAN  ') THEN
          PARNAM = 'DELBAN  '
          CALL I4FLD ( JCARD(3), JF(3), I4PARM )
@@ -593,8 +593,7 @@
          CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
 
 
-! EIGESTL defines upper limit on NDOFL for running code to estimate the number of eigens < EIG_FRQ2
-
+      ! EIGESTL defines upper limit on NDOFL for running code to estimate the number of eigens < EIG_FRQ2
       ELSE IF (JCARD(2)(1:8) == 'EIGESTL ') THEN
          PARNAM = 'EIGESTL '
          CALL I4FLD ( JCARD(3), JF(3), I4PARM )
@@ -647,13 +646,14 @@
          CALL BD_IMBEDDED_BLANK   ( JCARD,0,3,0,0,0,0,0,0 )! Make sure that there are no imbedded blanks in field 3
          CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,4,5,6,7,8,9 )! Issue warning if fields 4-9 not blank
          CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
-  
-! EPSERR tells whether to calculate the NASTRAN like epsilon error estimate
 
+
+      ! EPSERR tells whether to calculate the NASTRAN like epsilon error estimate
       ELSE IF (JCARD(2)(1:8) == 'EPSERR  ') THEN
          PARNAM = 'EPSERR  '
          CALL YES_NO_CHECK(CARD, JCARD, CHRPARM, PARNAM, EPSERR)
-  
+
+
 ! EPSIL are roundoff numbers used in comparing computed values to zero
 
       ELSE IF (JCARD(2)(1:8) == 'EPSIL   ') THEN
@@ -817,6 +817,12 @@
       ELSE IF ((PARAM_NAME(1:8) == 'PRTALL  ') .OR. (PARAM_NAME(1:8) == 'FILES   ')) THEN
          PARNAM = 'PRTALL  '
          CALL YES_NO_CHECK(CARD, JCARD, CHRPARM, PARNAM, PRTALL)
+         IF (PRTALL == 'Y') THEN
+             PRTANS = 'Y'
+             PRTF06 = 'Y'
+             PRTNEU = 'Y'
+             PRTOP2 = 'Y'
+         ENDIF
 
       ! PRTANS writes all outputs for the ans file regardless of other flags besides PRTALL
       ELSE IF ((PARAM_NAME(1:8) == 'PRTANS  ') .OR. (PARAM_NAME(1:8) == 'ANS     ')) THEN

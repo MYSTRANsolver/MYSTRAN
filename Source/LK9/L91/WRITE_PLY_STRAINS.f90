@@ -34,6 +34,7 @@
                                          NVEC, SOL_NAME
       USE TIMDAT, ONLY                :  TSEC
       USE CONSTANTS_1, ONLY           :  ZERO
+      USE PARAMS, ONLY                :  PRTANS
       USE DEBUG_PARAMETERS, ONLY      :  DEBUG
       USE NONLINEAR_PARAMS, ONLY      :  LOAD_ISTEP
       USE SUBR_BEGEND_LEVELS, ONLY    :  WRITE_PLY_STRAINS_BEGEND
@@ -216,7 +217,7 @@
             ENDIF
          ENDIF
 
-         IF (DEBUG(200) > 0) THEN
+         IF (PRTANS == 'Y') THEN
             WRITE(ANS,*)
             WRITE(ANS,*)
             IF    ((SOL_NAME(1:7) == 'STATICS') .OR. (SOL_NAME(1:8) == 'NLSTATIC')) THEN
@@ -337,7 +338,7 @@
                WRITE(F06,1408) FILL(1: 0), EID_OUT_ARRAY(I,2), (OGEL(I,J),J=1,9)
             ENDIF
          ENDIF
-         IF (DEBUG(200) > 0) THEN
+         IF (PRTANS == 'Y') THEN
             IF (ANY_FAILURE_THEORY == 'Y') THEN
                WRITE(ANS,1416) EID_OUT_ARRAY(I,1), EID_OUT_ARRAY(I,2), (OGEL(I,J),J=1,9)
             ELSE
@@ -379,7 +380,7 @@
                       FILL(1: 0)            , (MIN_ANS(I),I=1,10),                                                                 &
                       FILL(1: 0)            , (ABS_ANS(I),I=1,10), FILL(1: 0)
 
-      IF (DEBUG(200) > 0) THEN
+      IF (PRTANS == 'Y') THEN
          WRITE(ANS,1419) (MAX_ANS(I),I=1,10), (MIN_ANS(I),I=1,10), (ABS_ANS(I),I=1,10)
       ENDIF
 

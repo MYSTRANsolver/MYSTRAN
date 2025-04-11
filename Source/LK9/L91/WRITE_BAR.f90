@@ -36,6 +36,7 @@
       USE CONSTANTS_1, ONLY           :  ZERO
       USE DEBUG_PARAMETERS, ONLY      :  DEBUG
       USE LINK9_STUFF, ONLY           :  EID_OUT_ARRAY, MAXREQ, MSPRNT, OGEL
+      USE PARAMS, ONLY                :  PRTANS
  
       USE WRITE_BAR_USE_IFs
 
@@ -196,7 +197,7 @@
             BLINE2A = BOUT2//BMS2//BMSF2//BMS3//BMSF3
             WRITE(F06,9031) BLINE1A
             WRITE(F06,9031) BLINE2A
-            IF (DEBUG(200) > 0) THEN
+            IF (PRTANS == 'Y') THEN
                WRITE(ANS,9901) FILL_ANS, EID_OUT_ARRAY(I,1), (OGEL(K-1,J),J=1,9)
                WRITE(ANS,9902) FILL_ANS, (OGEL(K,J),J=1,9)
             ENDIF
@@ -205,13 +206,13 @@
             BLINE2B = BOUT2//BMS2//BMSF2
             WRITE(F06,9031) BLINE1B
             WRITE(F06,9031) BLINE2B
-            IF (DEBUG(200) > 0) THEN
+            IF (PRTANS == 'Y') THEN
                WRITE(ANS,9903) FILL_ANS, EID_OUT_ARRAY(I,1), (OGEL(K-1,J),J=1,8)
                WRITE(ANS,9904) FILL_ANS, (OGEL(K,J),J=1,8)
            ENDIF
          ENDIF
 
-         IF (DEBUG(200) > 0) THEN
+         IF (PRTANS == 'Y') THEN
          ENDIF
 
       ENDDO
@@ -220,7 +221,7 @@
       WRITE(F06,9108) (MAX_ANS_CHAR(J),J=1,7), MAX_ANS(8), (MAX_ANS_CHAR(J),J=9,15), MAX_ANS(16),                                  &
                       (MIN_ANS_CHAR(J),J=1,7), MIN_ANS(8), (MIN_ANS_CHAR(J),J=9,15), MIN_ANS(16),                                  &
                       (ABS_ANS_CHAR(J),J=1,7), ABS_ANS(8), (ABS_ANS_CHAR(J),J=9,15), ABS_ANS(16)
-      IF (DEBUG(200) > 0) THEN
+      IF (PRTANS == 'Y') THEN
          WRITE(ANS,9118) (MAX_ANS(J),J=1,16),(MIN_ANS(J),J=1,16), (ABS_ANS(J),J=1,16)
       ENDIF
 

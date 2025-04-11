@@ -34,7 +34,7 @@
                                          WARN_ERR
       USE TIMDAT, ONLY                :  TSEC
       USE DEBUG_PARAMETERS, ONLY      :  DEBUG
-      USE PARAMS, ONLY                :  ART_MASS, ART_ROT_MASS, ART_TRAN_MASS, DARPACK, SOLLIB, SUPINFO, SUPWARN
+      USE PARAMS, ONLY                :  ART_MASS, ART_ROT_MASS, ART_TRAN_MASS, DARPACK, SOLLIB, SUPINFO, SUPWARN, PRTANS
       USE SUBR_BEGEND_LEVELS, ONLY    :  EIG_SUMMARY_BEGEND
       USE CONSTANTS_1, ONLY           :  ZERO, TWO, PI
       USE EIGEN_MATRICES_1, ONLY      :  GEN_MASS, MODE_NUM, EIGEN_VAL
@@ -72,7 +72,7 @@
       OUNT(1) = ERR
       OUNT(2) = F06
 
-      IF (DEBUG(200) > 0) THEN
+      IF (PRTANS == 'Y') THEN
          INQUIRE (FILE=ANSFIL, OPENED=FILE_OPND)
          IF (.NOT.FILE_OPND) THEN                          ! Otherwise we assume it is positioned at its end and ready for write
             CALL FILE_OPEN ( ANS, ANSFIL, OUNT, 'OLD', ANS_MSG, 'WRITE_STIME', 'FORMATTED', 'READWRITE', 'REWIND', 'Y', 'Y', 'Y' )
@@ -142,7 +142,7 @@
          WRITE(F06,94201)
          WRITE(F06,94202)
       ENDIF
-      IF (DEBUG(200) > 0) THEN
+      IF (PRTANS == 'Y') THEN
          IF (SOL_NAME(1:8) == 'BUCKLING') THEN
             WRITE(ANS,94301)
             WRITE(ANS,94302)
@@ -164,7 +164,7 @@
             ELSE
                WRITE(F06,95302) MODE_NUM(I),I,EIGEN_VAL(I),ASTERISK,RADS1,CYCLES1,GEN_MASS(I),GEN_STIFF1
             ENDIF
-            IF (DEBUG(200) > 0) THEN
+            IF (PRTANS == 'Y') THEN
                IF (SOL_NAME(1:8) == 'BUCKLING') THEN
                   WRITE(ANS,95311) MODE_NUM(I),I,EIGEN_VAL(I),ASTERISK
                ELSE
@@ -177,7 +177,7 @@
             ELSE
                WRITE(F06,95402) MODE_NUM(I),I,EIGEN_VAL(I),         RADS1,CYCLES1,GEN_MASS(I),GEN_STIFF1
             ENDIF
-            IF (DEBUG(200) > 0) THEN
+            IF (PRTANS == 'Y') THEN
                IF (SOL_NAME(1:8) == 'BUCKLING') THEN
                   WRITE(ANS,95411) MODE_NUM(I),I,EIGEN_VAL(I)
                ELSE
@@ -235,7 +235,7 @@
          ENDIF
       ENDIF
 
-      IF (DEBUG(200) > 0) THEN
+      IF (PRTANS == 'Y') THEN
          WRITE(ANS,*)
       ENDIF
 
@@ -246,7 +246,7 @@
       WRITE(F06,*)
       WRITE(F06,*)
 
-      IF (DEBUG(200) > 0) THEN
+      IF (PRTANS == 'Y') THEN
          WRITE(ANS,*)
          WRITE(ANS,*)
       ENDIF

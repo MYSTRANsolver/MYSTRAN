@@ -43,7 +43,7 @@
                                          GROUT, LABEL, PLY_NUM, PEG, PTE, SCNUM, STITLE, SUBLOD, TITLE, TYPE
       USE LINK9_STUFF, ONLY           :  GID_OUT_ARRAY
       USE COL_VECS, ONLY              :  FG_COL, PG_COL, QGm_COL, QGs_COL, QGr_COL, UG_COL
-      USE PARAMS, ONLY                :  EPSIL, NOCOUNTS
+      USE PARAMS, ONLY                :  EPSIL, NOCOUNTS, PRTANS
       USE CC_OUTPUT_DESCRIBERS, ONLY  :  GPFO_OUT
 
       USE GP_FORCE_BALANCE_PROC_USE_IFs
@@ -148,7 +148,7 @@
       ! Write problem answers (displs, etc) to filename.ANS as well as to filename.F06
       ! (where filename is the name of the DAT data file submitted to MYSTRAN).
       ! This feature is generally only useful to the author when performing checkout of test problem answers
-      WRITE_ANS = (DEBUG(200) > 0)
+      WRITE_ANS = (PRTANS == 'Y')
 
       IS_THERMAL = (SUBLOD(INT_SC_NUM,2) > 0)
       IS_MODES = ((SOL_NAME(1:5) == 'MODES') .OR. (SOL_NAME(1:12) == 'GEN CB MODEL'))

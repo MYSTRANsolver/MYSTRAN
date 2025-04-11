@@ -31,7 +31,7 @@
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
       USE IOUNT1, ONLY                :  WRT_ERR, WRT_LOG, ANS, ERR, F04, F06
       USE SCONTR, ONLY                :  BLNK_SUB_NAM, INT_SC_NUM, NDOFR, NUM_CB_DOFS, MOGEL, NVEC, SOL_NAME
-      USE PARAMS, ONLY                :  ELFORCEN
+      USE PARAMS, ONLY                :  ELFORCEN, PRTANS
       USE TIMDAT, ONLY                :  TSEC
       USE CONSTANTS_1, ONLY           :  ZERO
       USE DEBUG_PARAMETERS, ONLY      :  DEBUG
@@ -146,7 +146,7 @@
          WRITE(F06,212) ONAME
          WRITE(F06,213)
 
-         IF (DEBUG(200) > 0) THEN
+         IF (PRTANS == 'Y') THEN
             WRITE(ANS,*)
             WRITE(ANS,*)
             IF    ((SOL_NAME(1:7) == 'STATICS') .OR. (SOL_NAME(1:8) == 'NLSTATIC')) THEN
@@ -267,12 +267,12 @@
 
             IF (J == 1) THEN
                WRITE(F06,221) EID_OUT_ARRAY(I,1),GID_OUT_ARRAY(I,J),(OGEL_CHAR(K),K=1,6)
-               IF (DEBUG(200) > 0) THEN
+               IF (PRTANS == 'Y') THEN
                   WRITE(ANS,291) EID_OUT_ARRAY(I,1),GID_OUT_ARRAY(I,J),(OGEL(L,K),K=1,6)
                ENDIF
             ELSE
                WRITE(F06,222) GID_OUT_ARRAY(I,J),(OGEL_CHAR(K),K=1,6)        
-               IF (DEBUG(200) > 0) THEN
+               IF (PRTANS == 'Y') THEN
                   WRITE(ANS,292) GID_OUT_ARRAY(I,J),(OGEL(L,K),K=1,6)        
                ENDIF
             ENDIF
@@ -280,7 +280,7 @@
          ENDDO
  
          WRITE(F06,*)
-         IF (DEBUG(200) > 0) THEN
+         IF (PRTANS == 'Y') THEN
             WRITE(ANS,*)
          ENDIF
 
@@ -291,7 +291,7 @@
       ENDDO
 
       WRITE(F06,9111) (MAX_ANS_CHAR(J),J=1,6),(MIN_ANS_CHAR(J),J=1,6),(ABS_ANS_CHAR(J),J=1,6)
-      IF (DEBUG(200) > 0) THEN
+      IF (PRTANS == 'Y') THEN
          WRITE(ANS,9191) (MAX_ANS(J),J=1,6),(MIN_ANS(J),J=1,6),(ABS_ANS (J),J=1,6)
       ENDIF
 

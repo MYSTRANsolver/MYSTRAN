@@ -35,6 +35,7 @@
       USE TIMDAT, ONLY                :  TSEC
       USE SUBR_BEGEND_LEVELS, ONLY    :  WRITE_GRD_PRT_OUTPUTS_BEGEND
       USE CONSTANTS_1, ONLY           :  ZERO
+      USE PARAMS, ONLY                :  PRTANS
       USE DEBUG_PARAMETERS, ONLY      :  DEBUG
       USE NONLINEAR_PARAMS, ONLY      :  LOAD_ISTEP
       USE LINK9_STUFF, ONLY           :  GID_OUT_ARRAY, MAXREQ, OGEL
@@ -189,13 +190,10 @@
             ELSE
                WRITE(F06,9351)
             ENDIF
-
          ENDIF
-
          WRITE(F06,9501)
          
-         IF (DEBUG(200) > 0) THEN
-
+         IF (PRTANS == 'Y') THEN
             WRITE(ANS,*)
             WRITE(ANS,*)
             IF    ((SOL_NAME(1:7) == 'STATICS') .OR. (SOL_NAME(1:8) == 'NLSTATIC')) THEN
@@ -334,7 +332,7 @@
                ENDDO
             ENDIF
 
-            IF (DEBUG(200) > 0) THEN
+            IF (PRTANS == 'Y') THEN
                WRITE(ANS,9901) GID_OUT_ARRAY(I,1),GID_OUT_ARRAY(I,2),(OGEL(I,J),J=1,6)
             ENDIF
 
@@ -346,7 +344,7 @@
  
       IF (LINES_WRITTEN > 2) THEN
          WRITE(F06,9601) (MAX_ANS_CHAR(J),J=1,6), (MIN_ANS_CHAR(J),J=1,6), (ABS_ANS_CHAR(J),J=1,6)
-         IF (DEBUG(200) > 0) THEN
+         IF (PRTANS == 'Y') THEN
             WRITE(ANS,9611) (MAX_ANS(J),J=1,6), (MIN_ANS(J),J=1,6), (ABS_ANS(J),J=1,6)
          ENDIF
       ENDIF
@@ -361,34 +359,34 @@
          IF (PRINT_TOTALS == 'Y') THEN
             IF (WHAT == 'OLOAD') THEN
                WRITE(F06,9701) (TOTALS_CHAR(J),J=1,6)
-               IF (DEBUG(200) > 0) THEN
+               IF (PRTANS == 'Y') THEN
                   WRITE(ANS,9791) (TOTALS(J),J=1,6)
                ENDIF
             ELSE IF (WHAT == 'SPCF' ) THEN
                WRITE(F06,9702) (TOTALS_CHAR(J),J=1,6)
-               IF (DEBUG(200) > 0) THEN
+               IF (PRTANS == 'Y') THEN
                   WRITE(ANS,9792) (TOTALS(J),J=1,6)
                ENDIF
             ELSE IF (WHAT == 'MPCF' ) THEN
                WRITE(F06,9703) (TOTALS_CHAR(J),J=1,6)
-               IF (DEBUG(200) > 0) THEN
+               IF (PRTANS == 'Y') THEN
                   WRITE(ANS,9793) (TOTALS(J),J=1,6)
                ENDIF
             ENDIF
          ELSE
             IF (WHAT == 'OLOAD') THEN
                WRITE(F06,9711)
-               IF (DEBUG(200) > 0) THEN
+               IF (PRTANS == 'Y') THEN
                   WRITE(ANS,9711)
                ENDIF
             ELSE IF (WHAT == 'SPCF' ) THEN
                WRITE(F06,9712)
-               IF (DEBUG(200) > 0) THEN
+               IF (PRTANS == 'Y') THEN
                   WRITE(ANS,9712)
                ENDIF
             ELSE IF (WHAT == 'MPCF' ) THEN
                WRITE(F06,9713)
-               IF (DEBUG(200) > 0) THEN
+               IF (PRTANS == 'Y') THEN
                   WRITE(ANS,9713)
                ENDIF
             ENDIF

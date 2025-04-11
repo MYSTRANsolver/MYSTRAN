@@ -35,7 +35,7 @@
       USE TIMDAT, ONLY                :  TSEC
       USE SUBR_BEGEND_LEVELS, ONLY    :  OFP1_BEGEND
       USE CONSTANTS_1, ONLY           :  ZERO
-      USE PARAMS, ONLY                :  OTMSKIP, POST
+      USE PARAMS, ONLY                :  OTMSKIP, POST, PRTANS
       USE DOF_TABLES, ONLY            :  TDOF, TDOF_ROW_START
       USE MODEL_STUF, ONLY            :  ANY_ACCE_OUTPUT, ANY_DISP_OUTPUT, ANY_OLOA_OUTPUT, GROUT, GRID, GRID_ID
       USE LINK9_STUFF, ONLY           :  GID_OUT_ARRAY, MAXREQ, OGEL
@@ -86,7 +86,7 @@
       INTRINSIC IAND
       WRITE(ERR,9000) "OFP1 - disp, accel and applied force output"
  9000 FORMAT(' *DEBUG:    RUNNING=', A)
-      WRITE_ANS = (DEBUG(200) > 0)
+      WRITE_ANS = (PRTANS == 'Y')
 
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN

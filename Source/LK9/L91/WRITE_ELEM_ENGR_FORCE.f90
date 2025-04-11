@@ -33,6 +33,7 @@
       USE IOUNT1, ONLY                :  WRT_ERR, WRT_LOG, ANS, ERR, F04, F06, OP2
       USE SCONTR, ONLY                :  BLNK_SUB_NAM, INT_SC_NUM, NDOFR, NUM_CB_DOFS, NVEC, SOL_NAME
       USE TIMDAT, ONLY                :  TSEC
+      USE PARAMS, ONLY                :  PRTANS
       USE DEBUG_PARAMETERS, ONLY      :  DEBUG
       USE NONLINEAR_PARAMS, ONLY      :  LOAD_ISTEP
       USE LINK9_STUFF, ONLY           :  EID_OUT_ARRAY, OGEL
@@ -110,7 +111,7 @@
 
       WRITE_F06 = (FORC_OUT(1:1) == 'Y')
       WRITE_OP2 = (FORC_OUT(2:2) == 'Y')
-      WRITE_ANS = (DEBUG(200) > 0)
+      WRITE_ANS = (PRTANS == 'Y')
 
 
 headr:IF (IHDR == 'Y') THEN

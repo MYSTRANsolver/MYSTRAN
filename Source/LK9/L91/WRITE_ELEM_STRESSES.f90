@@ -34,6 +34,7 @@
                                          NVEC, SOL_NAME
       USE TIMDAT, ONLY                :  TSEC
       USE CONSTANTS_1, ONLY           :  ZERO
+      USE PARAMS, ONLY                :  PRTANS
       USE DEBUG_PARAMETERS, ONLY      :  DEBUG
       USE NONLINEAR_PARAMS, ONLY      :  LOAD_ISTEP
       USE SUBR_BEGEND_LEVELS, ONLY    :  WRITE_ELEM_STRESSES_BEGEND
@@ -144,7 +145,7 @@
       FIELD6_EIGENVALUE = 0.0
       WRITE_F06 = (STRE_OUT(1:1) == 'Y')
       WRITE_OP2 = (STRE_OUT(2:2) == 'Y')
-      WRITE_ANS = (DEBUG(200) > 0)
+      WRITE_ANS = (PRTANS == 'Y')
 
       IF (IHEADER == 'Y') THEN
          IF (WRITE_F06) THEN
