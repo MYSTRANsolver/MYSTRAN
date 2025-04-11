@@ -186,9 +186,12 @@ pcom0:IF (PCOMP_PROPS == 'N') THEN                         ! Element is not a co
          ENDDO
 
          DO I=1,3
-            ALPM(I) = ALPVEC(I,1)
             ALPB(I) = ALPVEC(I,2)
          ENDDO
+
+         ALPM(1) = ALPVEC(1,1)                             ! xx
+         ALPM(2) = ALPVEC(2,1)                             ! yy
+         ALPM(3) = ALPVEC(4,1)*2                           ! xy
  
          CALL MATMULT_FFF ( EB, ALPB, 3, 3, 1, DUM )
          DO I=1,3
@@ -385,7 +388,7 @@ ply_do:  DO K=1,NUM_PLIES_TO_PROC
                CALL BUG_SHELL_ABD_MATRICES ( K, 21 )
             ENDIF
 
-            CALL ROT_COMP_ELEM_AXES ( K, THETA_PLY, '1-2' )
+            CALL ROT_COMP_ELEM_AXES ( INT_ELEM_ID, K, THETA_PLY, '1-2' )
 
             ZTK = ZBK + TPLY    ;    ZTK2 = ZTK*ZTK    ;    ZTK3 = ZTK2*ZTK    ;    ZBK2 = ZBK*ZBK    ;    ZBK3 = ZBK2*ZBK
 

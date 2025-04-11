@@ -28,7 +28,7 @@
 
    INTERFACE
 
-      SUBROUTINE ROT_COMP_ELEM_AXES ( IPLY, THETA, DIRECTION )
+      SUBROUTINE ROT_COMP_ELEM_AXES ( INT_ELEM_ID, IPLY, THETA, DIRECTION )
 
 
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
@@ -43,6 +43,7 @@
 
       IMPLICIT NONE
 
+      INTEGER(LONG), INTENT(IN)       :: INT_ELEM_ID       ! Internal element ID
       CHARACTER(LEN=*), INTENT(IN)    :: DIRECTION         ! =1-2, rotate from ply to elem mat'l axes (when gen ABD matrices)
       INTEGER(LONG), INTENT(IN)       :: IPLY              ! Ply number
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = ROT_COMP_ELEM_AXES_BEGEND
