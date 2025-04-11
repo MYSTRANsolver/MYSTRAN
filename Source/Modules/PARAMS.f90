@@ -386,7 +386,7 @@
 !                                                              'SPLITD', use angle that splits the 2 diags to define the elem x axis
 
 ! ----------------------------------------------------------------------------------------------------------------------------------
-      CHARACTER(  5*BYTE)      :: QUAD4TYP       =  'MIN4T'  ! Which element to use in MYSTRAN as the QUAD4 element
+      CHARACTER(  5*BYTE)      :: QUAD4TYP       =  'MIN4 '  ! Which element to use in MYSTRAN as the QUAD4 element
 !                                                              'MIN4T': Use Tessler's MIN4T element made up of 4 MIN3 triangles
 !                                                              'MIN4 ': Use Tessler's MIN4 element 
 
