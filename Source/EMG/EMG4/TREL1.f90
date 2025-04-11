@@ -202,11 +202,9 @@
 
             IF ((PCOMP_PROPS == 'Y') .AND. (PCOMP_LAM == 'NON')) THEN
 
-               if (type == 'QUAD4K  ') then
+               if (type == 'TRIA3K  ') then
                   WRITE(ERR,*) ' *ERROR: Code not written for SHELL_B effect on KE yet for TRIA3K elements'
-                  WRITE(ERR,*) '         Or, if QUAD4, make sure that the element has nonzero transverse shear moduli, G1Z, G2Z'
                   WRITE(F06,*) ' *ERROR :Code not written for SHELL_B effect on KE yet for TRIA3K elements'
-                  WRITE(F06,*) '         Or, if QUAD4, make sure that the element has nonzero transverse shear moduli, G1Z, G2Z'
                   call outa_here ( 'Y' )
                endif
 
