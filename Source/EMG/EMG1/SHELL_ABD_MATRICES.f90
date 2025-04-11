@@ -388,7 +388,7 @@ ply_do:  DO K=1,NUM_PLIES_TO_PROC
                CALL BUG_SHELL_ABD_MATRICES ( K, 21 )
             ENDIF
 
-            CALL ROT_COMP_ELEM_AXES ( K, THETA_PLY, '1-2' )
+            CALL ROT_COMP_ELEM_AXES ( INT_ELEM_ID, K, THETA_PLY, '1-2' )
 
             ZTK = ZBK + TPLY    ;    ZTK2 = ZTK*ZTK    ;    ZTK3 = ZTK2*ZTK    ;    ZBK2 = ZBK*ZBK    ;    ZBK3 = ZBK2*ZBK
 

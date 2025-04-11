@@ -24,7 +24,7 @@
                                                                                                       
 ! End MIT license text.                                                                                      
 
-      SUBROUTINE ROT_COMP_ELEM_AXES ( IPLY, THETA, DIRECTION )
+      SUBROUTINE ROT_COMP_ELEM_AXES ( INT_ELEM_ID, IPLY, THETA, DIRECTION )
 
 ! Rotates axes of a ply material and CTE matrices in ply coords to coords along and perpendicular to element material axes, or
 ! vice versa, depending on input arg DIRECTION
@@ -57,12 +57,12 @@
 
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
       USE IOUNT1, ONLY                :  ERR, F04, F06, WRT_LOG
-      USE SCONTR, ONLY                :  BLNK_SUB_NAM, FATAL_ERR, MEMATC 
+      USE SCONTR, ONLY                :  BLNK_SUB_NAM, FATAL_ERR, MEMATC, DEDAT_Q4_MATANG_KEY, DEDAT_T3_MATANG_KEY
       USE TIMDAT, ONLY                :  TSEC
       USE CONSTANTS_1, ONLY           :  CONV_DEG_RAD, ZERO, HALF, ONE, TWO, FOUR
       USE DEBUG_PARAMETERS, ONLY      :  DEBUG
-      USE MODEL_STUF, ONLY            :  ALPVEC, EB, EM, ET, EBM, INTL_MID, MTRL_TYPE, STRESS, STRAIN, T1P, T1M, T1T, T2P, T2M, T2T
-
+      USE MODEL_STUF, ONLY            :  ALPVEC, EB, EM, ET, EBM, INTL_MID, MTRL_TYPE, STRESS, STRAIN, T1P, T1M, T1T, T2P, T2M, T2T, &
+                                         QUAD_DELTA, THETAM, TYPE, EDAT, MATANGLE, EPNT
       USE SUBR_BEGEND_LEVELS, ONLY    :  ROT_COMP_ELEM_AXES_BEGEND
 
       USE ROT_COMP_ELEM_AXES_USE_IFs
@@ -73,6 +73,7 @@
       CHARACTER(LEN=*), INTENT(IN)    :: DIRECTION         ! =1-2, rotate from ply to elem mat'l axes (when gen ABD matrices)
 !                                                            =2-1, rotate stress from elem mat'l to ply axes (when recov stresses)
 
+      INTEGER(LONG), INTENT(IN)       :: INT_ELEM_ID       ! Internal element ID
       INTEGER(LONG), INTENT(IN)       :: IPLY              ! Ply number
       INTEGER(LONG)                   :: I,J               ! DO loop indices
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = ROT_COMP_ELEM_AXES_BEGEND
@@ -98,6 +99,11 @@
       REAL(DOUBLE)                    :: T1Tt(2,2)         ! Transpose of T1T
       REAL(DOUBLE)                    :: T1T3(3,3)         ! T1T expanded to 3x3
       REAL(DOUBLE)                    :: T2T3(3,3)         ! T2T expanded to 3x3
+      REAL(DOUBLE)                    :: MATL_AXES_ROTATE  ! Angle in radians to rotate material axes to coincide with local elem x axis
+      INTEGER(LONG)                   :: INT41,INT42       ! An integer used in getting MATANGLE
+      CHARACTER( 2*BYTE)              :: LOC               ! Location where THETAM is calculated (for DEBUG output purposes)
+      INTEGER(LONG)                   :: EPNTK             ! Value from array EPNT at the row for this internal elem ID.
+ 
  
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
@@ -111,6 +117,76 @@
 ! the 6 position for xy stress whereas it is the 4th position here) 
 
       RADIANS_ROT = CONV_DEG_RAD*THETA                     ! THETA is angle (deg) from elem matl axis to ply K longitudinal axis
+
+
+! **********************************************************************************************************************************
+! Add material axes angle to ply angle.
+
+
+      EPNTK = EPNT(INT_ELEM_ID)
+
+      !----- Copy and pasted from EMG.f90 -----
+      THETAM = ZERO
+
+      IF      (TYPE(1:5) == 'QUAD4') THEN
+         INT41 = EDAT(EPNTK+DEDAT_Q4_MATANG_KEY)     ! Key to say whether matl angle is an actual angle or a coord ID
+         INT42 = EDAT(EPNTK+DEDAT_Q4_MATANG_KEY+1)   ! Key to say (if INT41 is neg) whether coord ID is basic or otherwise
+         IF      (INT41 >  0) THEN                   ! Angle is defined in array MATANGLE at row INT41
+            LOC = '#1'
+            THETAM = CONV_DEG_RAD*MATANGLE( INT41 )
+         ELSE IF (INT41 <  0) THEN                   ! Angle is defined by a coord sys ID whose value is -INT41
+            LOC = '#2'
+            CALL GET_MATANGLE_FROM_CID ( -INT41 )
+         ELSE IF (INT41 ==  0) THEN                  ! Angle is either specified as defined by basic coord sys or angle is 0.
+            IF      (INT42 == 1) THEN
+               LOC = '#3'
+               CALL GET_MATANGLE_FROM_CID ( 0 )
+            ELSE IF (INT42 == 0) THEN
+               LOC = '#4'
+               THETAM = ZERO
+            ENDIF
+         ENDIF
+
+      ELSE IF (TYPE(1:5) == 'TRIA3') THEN
+         INT41 = EDAT(EPNTK+DEDAT_T3_MATANG_KEY)     ! Key to say whether matl angle is an actual angle or a coord ID
+         INT42 = EDAT(EPNTK+DEDAT_T3_MATANG_KEY+1)   ! Key to say (if INT41 is neg) whether coord ID is basic or otherwise
+         IF      (INT41 >  0) THEN                   ! Angle is defined in array MATANGLE at row INT41
+            LOC = '#1'
+            THETAM = CONV_DEG_RAD*MATANGLE( INT41 )
+         ELSE IF (INT41 <  0) THEN                   ! Angle is defined by a coord sys ID whose value is -INT41
+            LOC = '#2'
+            CALL GET_MATANGLE_FROM_CID ( -INT41 )
+         ELSE IF (INT41 ==  0) THEN                  ! Angle is either specified as defined by basic coord sys or angle is 0.
+            IF      (INT42 == 1) THEN
+               LOC = '#3'
+               CALL GET_MATANGLE_FROM_CID ( 0 )
+            ELSE IF (INT42 == 0) THEN
+               LOC = '#4'
+               THETAM = ZERO
+            ENDIF
+         ENDIF
+
+      ENDIF
+      !----- Copy and pasted from EMG.f90 -----
+
+      IF      (TYPE(1:5) == 'QUAD4') THEN
+
+         MATL_AXES_ROTATE = THETAM - QUAD_DELTA         ! We need angle which would rotate local elem x axis to mat'l axis,
+!                                                            NOT the opposite (since we want a transform matrix that will take
+!                                                            a vector in elem coords and convert it into a vector in mat'l coords
+      ELSE IF (TYPE(1:5) == 'TRIA3') THEN
+
+         MATL_AXES_ROTATE = THETAM
+
+      ENDIF
+
+      RADIANS_ROT = RADIANS_ROT + MATL_AXES_ROTATE
+
+! **********************************************************************************************************************************
+
+
+
+
       C  = DCOS(RADIANS_ROT)
       S  = DSIN(RADIANS_ROT)
       SC = S*C

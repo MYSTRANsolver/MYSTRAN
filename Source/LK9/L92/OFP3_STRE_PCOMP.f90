@@ -169,7 +169,7 @@ do_plies_4:          DO M=1,NUM_PLIES                         ! Cycle over numbe
                            CALL SUSER1
                         ELSE                                  ! Get ply stresses in ply coords (also need strains for failure index)
                            CALL ELEM_STRE_STRN_ARRAYS ( 1 )
-                           CALL ROT_COMP_ELEM_AXES ( M, THETA_PLY, '2-1' )
+                           CALL ROT_COMP_ELEM_AXES ( J, M, THETA_PLY, '2-1' )
                            CALL CALC_ELEM_STRESSES ( MAXREQ, NUM_OGEL, J, 'Y', 'N' )
                         ENDIF
                                                               ! If CB soln, write rows of OGEL, from CALC_ELEM_STRESSES, to OTM_STRE
@@ -274,7 +274,7 @@ do_plies_4:          DO M=1,NUM_PLIES                         ! Cycle over numbe
                            CALL ELMDIS_PLY
                         ENDIF
                         CALL ELEM_STRE_STRN_ARRAYS ( 1 )
-                        CALL ROT_COMP_ELEM_AXES ( M, THETA_PLY, '2-1' )
+                        CALL ROT_COMP_ELEM_AXES ( J, M, THETA_PLY, '2-1' )
                         CALL CALC_ELEM_STRESSES ( NCTRIA3, NDUM, NUM_FROWS, 'N', 'Y' )
                      ENDDO
                   ENDIF            
@@ -325,7 +325,7 @@ do_plies_4:          DO M=1,NUM_PLIES                         ! Cycle over numbe
                            CALL ELMDIS_PLY
                         ENDIF
                         CALL ELEM_STRE_STRN_ARRAYS ( 1 )
-                        CALL ROT_COMP_ELEM_AXES ( M, THETA_PLY, '2-1' )
+                        CALL ROT_COMP_ELEM_AXES ( J, M, THETA_PLY, '2-1' )
                         CALL CALC_ELEM_STRESSES ( NCQUAD4, NDUM, NUM_FROWS, 'N', 'Y' )
                      ENDDO
                   ENDIF
@@ -376,7 +376,7 @@ do_plies_4:          DO M=1,NUM_PLIES                         ! Cycle over numbe
                            CALL ELMDIS_PLY
                         ENDIF
                         CALL ELEM_STRE_STRN_ARRAYS ( 1 )
-                        CALL ROT_COMP_ELEM_AXES ( M, THETA_PLY, '2-1' )
+                        CALL ROT_COMP_ELEM_AXES ( J, M, THETA_PLY, '2-1' )
                         CALL CALC_ELEM_STRESSES ( NCSHEAR, NDUM, NUM_FROWS, 'N', 'Y' )
                      ENDDO
                   ENDIF            
