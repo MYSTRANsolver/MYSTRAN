@@ -169,7 +169,7 @@ do_plies_6:          DO M=1,NUM_PLIES                         ! Cycle over numbe
                            CALL SUSER1
                         ELSE                                  ! Get ply strains inply coords
                            CALL ELEM_STRE_STRN_ARRAYS ( 1 )
-                           CALL ROT_COMP_ELEM_AXES ( M, THETA_PLY, '2-1' )
+                           CALL ROT_COMP_ELEM_AXES ( J, M, THETA_PLY, '2-1' )
                            CALL CALC_ELEM_STRAINS ( MAXREQ, NUM_OGEL, J, 'Y', 'N' )
                         ENDIF
                                                               ! If CB soln, write rows of OGEL, from CALC_ELEM_STRAINS, to OTM_STRN
@@ -274,7 +274,7 @@ do_plies_6:          DO M=1,NUM_PLIES                         ! Cycle over numbe
                            CALL ELMDIS_PLY
                         ENDIF
                         CALL ELEM_STRE_STRN_ARRAYS ( 1 )
-                        CALL ROT_COMP_ELEM_AXES ( M, THETA_PLY, '2-1' )
+                        CALL ROT_COMP_ELEM_AXES ( J, M, THETA_PLY, '2-1' )
                         CALL CALC_ELEM_STRAINS ( NCTRIA3, NDUM, NUM_FROWS, 'N', 'Y' )
                      ENDDO
                   ENDIF            
@@ -325,7 +325,7 @@ do_plies_6:          DO M=1,NUM_PLIES                         ! Cycle over numbe
                            CALL ELMDIS_PLY
                         ENDIF
                         CALL ELEM_STRE_STRN_ARRAYS ( 1 )
-                        CALL ROT_COMP_ELEM_AXES ( M, THETA_PLY, '2-1' )
+                        CALL ROT_COMP_ELEM_AXES ( J, M, THETA_PLY, '2-1' )
                         CALL CALC_ELEM_STRAINS ( NCQUAD4, NDUM, NUM_FROWS, 'N', 'Y' )
                      ENDDO
                   ENDIF            
@@ -376,7 +376,7 @@ do_plies_6:          DO M=1,NUM_PLIES                         ! Cycle over numbe
                            CALL ELMDIS_PLY
                         ENDIF
                         CALL ELEM_STRE_STRN_ARRAYS ( 1 )
-                        CALL ROT_COMP_ELEM_AXES ( M, THETA_PLY, '2-1' )
+                        CALL ROT_COMP_ELEM_AXES ( J, M, THETA_PLY, '2-1' )
                         CALL CALC_ELEM_STRAINS ( NCSHEAR, NDUM, NUM_FROWS, 'N', 'Y' )
                      ENDDO
                   ENDIF            
