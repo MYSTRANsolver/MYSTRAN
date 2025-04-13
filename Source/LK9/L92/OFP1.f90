@@ -35,7 +35,7 @@
       USE TIMDAT, ONLY                :  TSEC
       USE SUBR_BEGEND_LEVELS, ONLY    :  OFP1_BEGEND
       USE CONSTANTS_1, ONLY           :  ZERO
-      USE PARAMS, ONLY                :  OTMSKIP, POST, PRTANS
+      USE PARAMS, ONLY                :  OTMSKIP, PRTANS, PRTNEU
       USE DOF_TABLES, ONLY            :  TDOF, TDOF_ROW_START
       USE MODEL_STUF, ONLY            :  ANY_ACCE_OUTPUT, ANY_DISP_OUTPUT, ANY_OLOA_OUTPUT, GROUT, GRID, GRID_ID
       USE LINK9_STUFF, ONLY           :  GID_OUT_ARRAY, MAXREQ, OGEL
@@ -82,11 +82,14 @@
       INTEGER(LONG)                   :: ROW_NUM_START     ! DOF number where TDOF data begins for a grid
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = OFP1_BEGEND
       INTEGER(LONG)                   :: TDOF_ROW          ! Row no. in array TDOF to find GDOF DOF number
+      LOGICAL                         :: WRITE_NEU
 
       INTRINSIC IAND
       WRITE(ERR,9000) "OFP1 - disp, accel and applied force output"
  9000 FORMAT(' *DEBUG:    RUNNING=', A)
+
       WRITE_ANS = (PRTANS == 'Y')
+      WRITE_NEU = (PRTNEU == 'Y')
 
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
@@ -282,7 +285,7 @@
             ENDIF
          ENDDO
 
-         IF ((POST /= 0) .AND. (ANY_DISP_OUTPUT > 0)) THEN
+         IF (WRITE_NEU .AND. (ANY_DISP_OUTPUT > 0)) THEN
             CALL WRITE_FEMAP_GRID_VECS ( UG_COL, FEMAP_SET_ID, 'DISP' )
          ENDIF
 
@@ -357,7 +360,7 @@
             ENDIF
          ENDDO
 
-         IF ((POST /= 0) .AND. (ANY_OLOA_OUTPUT > 0)) THEN  ! No need to transform PG_COL to basic for FEMAP (handles it as-is)
+         IF (WRITE_NEU .AND. (ANY_OLOA_OUTPUT > 0)) THEN  ! No need to transform PG_COL to basic for FEMAP (handles it as-is)
             CALL WRITE_FEMAP_GRID_VECS ( PG_COL, FEMAP_SET_ID, 'OLOA' )
          ENDIF
 

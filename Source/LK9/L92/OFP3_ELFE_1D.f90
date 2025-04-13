@@ -37,7 +37,7 @@
       USE SUBR_BEGEND_LEVELS, ONLY    :  OFP3_ELFE_1D_BEGEND
       USE CONSTANTS_1, ONLY           :  ZERO, HALF
       USE FEMAP_ARRAYS, ONLY          :  FEMAP_EL_NUMS, FEMAP_EL_VECS
-      USE PARAMS, ONLY                :  OTMSKIP, POST
+      USE PARAMS, ONLY                :  OTMSKIP, PRTNEU
       USE MODEL_STUF, ONLY            :  ANY_ELFE_OUTPUT, BUSH_CID, BUSH_VVEC, EDAT, ELAS_COMP, ELEM_LEN_12, ELEM_LEN_AB, EPNT,    &
                                          ETYPE, EID, ELMTYP, ELOUT, FCONV, METYPE, NUM_EMG_FATAL_ERRS, OFFDIS_GA_GB, OFFDIS_L,     &
                                          PE_GA_GB, PEL, PLY_NUM, STRESS, TE, TE_GA_GB, TYPE, XEL
@@ -91,6 +91,7 @@
 
       REAL(DOUBLE)                    :: TET(3,3)          ! Transpose of TE
       REAL(DOUBLE)                    :: TET_GA_GB(3,3)    ! Transpose of TE_GA_GB
+      LOGICAL                         :: WRITE_NEU
  
       INTRINSIC IAND
   
@@ -105,6 +106,7 @@
          WRITE(F04,9001) SUBR_NAME,TSEC
  9001    FORMAT(1X,A,' BEGN ',F10.3)
       ENDIF
+      WRITE_NEU = (PRTNEU == 'Y')
 
 ! **********************************************************************************************************************************
 ! Process element engineering force requests for BAR, BUSH, ELAS, ROD. Use subr CALC_ELEM_NODE_FORCES and then convert the node
@@ -383,7 +385,7 @@ elems_2: DO J = 1,NELE
         CALL END_OP2_TABLE(ITABLE)
       ENDIF
 
-      IF ((POST /= 0) .AND. (ANY_ELFE_OUTPUT > 0)) THEN
+      IF (WRITE_NEU .AND. (ANY_ELFE_OUTPUT > 0)) THEN
 
 ! bar    ---------------------------------------------------------------------------------------------------------------------------
          NUM_FROWS= 0

@@ -41,7 +41,7 @@
       USE DOF_TABLES, ONLY            :  TDOF, TDOF_ROW_START, TDOFI
       USE EIGEN_MATRICES_1, ONLY      :  EIGEN_VAL, GEN_MASS, MEFFMASS, MPFACTOR_N6
       USE MODEL_STUF, ONLY            :  ANY_SPCF_OUTPUT, ANY_MPCF_OUTPUT, GRID, GRID_ID, GROUT, MEFFMASS_CALC, MPFACTOR_CALC
-      USE PARAMS, ONLY                :  AUTOSPC_SPCF, EPSIL, MEFMCORD, OTMSKIP, POST
+      USE PARAMS, ONLY                :  AUTOSPC_SPCF, EPSIL, MEFMCORD, OTMSKIP, PRTNEU
 
       USE NONLINEAR_PARAMS, ONLY      :  LOAD_ISTEP
       USE SPARSE_MATRICES, ONLY       :  I_GMN  , J_GMN  , GMN    , I_GMNt  , J_GMNt , GMNt   , I_HMN, J_HMN, HMN,                 &
@@ -117,6 +117,7 @@
       REAL(DOUBLE)                    :: QGs_MEFM_SUM(6)   ! QGs_COL transformed from global to coord system MEMFCORD
       REAL(DOUBLE)                    :: QSA_MAX_ABS(6)    ! Max abs value of any QS force on an AUTOSPC'd DOF
       REAL(DOUBLE)                    :: QSA_SUM(6)        ! Sum of all QS forces on AUTOSPC'd DOF's
+      LOGICAL                         :: WRITE_NEU
 
       INTRINSIC IAND
       WRITE(ERR,9000) "OFP2 - SPC and MPC force"
@@ -129,6 +130,7 @@
          WRITE(F04,9001) SUBR_NAME,TSEC
  9001    FORMAT(1X,A,' BEGN ',F10.3)
       ENDIF
+      WRITE_NEU = (PRTNEU == 'Y')
 
 ! **********************************************************************************************************************************
       DO I=1,MAXREQ
@@ -425,7 +427,7 @@
 
          ENDIF
 
-         IF ((POST /= 0) .AND. (ANY_SPCF_OUTPUT > 0)) THEN
+         IF (WRITE_NEU .AND. (ANY_SPCF_OUTPUT > 0)) THEN
             CALL WRITE_FEMAP_GRID_VECS ( QGs_COL, FEMAP_SET_ID, 'SPCF' )
          ENDIF
 
@@ -615,7 +617,7 @@
 
          ENDDO
 
-         IF ((POST /= 0) .AND. (ANY_MPCF_OUTPUT > 0)) THEN
+         IF (WRITE_NEU .AND. (ANY_MPCF_OUTPUT > 0)) THEN
             CALL WRITE_FEMAP_GRID_VECS ( QGm_COL, FEMAP_SET_ID, 'MPCF' )
          ENDIF
 

@@ -88,51 +88,46 @@
 
       REAL(DOUBLE)                    :: EPS1                ! Small number to compare variables against zero.
       REAL(DOUBLE)                    :: EIGEN_VEC_COL(NDOFL)! One eigenvector put into a 1-D array.
-
+      LOGICAL                         :: WRITE_MLL           ! write the MLL matrix
 ! **********************************************************************************************************************************
       LINKNO = 4
 
       EPS1   = EPSIL(1)
+      WRITE_MLL = (DEBUG(42) == 2)
 
-! Set time initializing parameters
 
+      ! Set time initializing parameters
       CALL TIME_INIT
 
-! Initialize WRT_BUG
-
+      ! Initialize WRT_BUG
       DO I=0,MBUG-1
          WRT_BUG(I) = 0
       ENDDO
 
-! Get date and time, write to screen
-
+      ! Get date and time, write to screen
       CALL OURDAT
       CALL OURTIM
       WRITE(SC1,152) LINKNO
 
-! Make units for writing errors the screen until we open output files
-
+      ! Make units for writing errors the screen until we open output files
       OUNT(1) = SC1
       OUNT(2) = SC1
 
-! Make units for writing errors the error file and output file
-
+      ! Make units for writing errors the error file and output file
       OUNT(1) = ERR
       OUNT(2) = F06
 
-! Write info to text files
-  
+      ! Write info to text files
       WRITE(F06,150) LINKNO
       IF (WRT_LOG > 0) THEN
          WRITE(F04,150) LINKNO
       ENDIF
       WRITE(ERR,150) LINKNO
 
-! Read LINK1A file
-
+      ! Read LINK1A file
       CALL READ_L1A ( 'KEEP', 'Y' )
-! Check COMM for successful completion of prior LINKs
 
+      ! Check COMM for successful completion of prior LINKs
       IF (COMM(P_LINKNO) /= 'C') THEN
          WRITE(ERR,9998) P_LINKNO,P_LINKNO,LINKNO
          WRITE(F06,9998) P_LINKNO,P_LINKNO,LINKNO
@@ -140,8 +135,7 @@
          CALL OUTA_HERE ( 'Y' )                            ! Prior LINK's didn't complete, so quit
       ENDIF
 
-! Make sure we have correct SOL
-
+      ! Make sure we have correct SOL
       IF ((SOL_NAME(1:5) /= 'MODES') .AND. (SOL_NAME(1:12) /= 'GEN CB MODEL') .AND. (SOL_NAME(1:8) /= 'BUCKLING')) THEN
          WRITE(ERR,999) 'MODES or BUCKLING or GEN CB MODEL', SOL_NAME
          WRITE(F06,999) 'MODES or BUCKLING or GEN CB MODEL', SOL_NAME
@@ -150,8 +144,7 @@
       ENDIF
 
 ! **********************************************************************************************************************************
-! Read data from file LINK1M
-
+      ! Read data from file LINK1M
       CALL READ_L1M ( IERROR )
 
       IF (DEBUG(184) > 0) THEN
@@ -183,9 +176,9 @@
          CALL OUTA_HERE ( 'Y' )
       ENDIF 
 
-! NUM_MLL_DIAG_ZEROS will be used for a message written when the eigen summary is printed in subr EIG_SUMMARY (if more than this
-! number of eigens are requested)
-
+      ! NUM_MLL_DIAG_ZEROS will be used for a message written
+      ! when the eigen summary is printed in subr EIG_SUMMARY
+      ! (if more than this number of eigens are requested)
       IF (SOL_NAME(1:8) == 'BUCKLING') THEN
          CONTINUE
       ELSE
@@ -273,8 +266,8 @@
 
          ENDIF
 
-      ELSE                                           !      Error - incorrect SPARSTOR
-
+      ELSE
+         !      Error - incorrect SPARSTOR
          WRITE(ERR,932) SUBR_NAME, SPARSTOR
          WRITE(F06,932) SUBR_NAME, SPARSTOR
          FATAL_ERR = FATAL_ERR + 1
@@ -282,24 +275,20 @@
 
       ENDIF
 
-      IF (DEBUG(42) == 2) THEN
+      IF (WRITE_MLL) THEN
          CALL WRITE_SPARSE_CRS ( ' MLLn', 'A ', 'A ', NTERM_MLLn, NDOFL, I_MLLn, J_MLLn, MLLn )
       ENDIF
 
 
 ! **********************************************************************************************************************************
-! Solve eigenvalue problem
-
+      ! Solve eigenvalue problem
       IF ((EIG_METH(1:3) == 'GIV') .OR. (EIG_METH(1:4) == 'MGIV')) THEN
-
          CALL EIG_GIV_MGIV
 
       ELSE IF (EIG_METH(1:3) == 'INV') THEN
-
          CALL EIG_INV_PWR
 
       ELSE IF (EIG_METH(1:7) == 'LANCZOS') THEN
-
          CALL EIG_LANCZOS_ARPACK
 
       ELSE
@@ -320,8 +309,7 @@
          ENDIF
       ENDIF
 
-! Calc generalized masses and renorm eigenvectors to mass (users renorm is done in LINK5) 
-
+      ! Calc generalized masses and renorm eigenvectors to mass (users renorm is done in LINK5) 
       NUM_FAIL_CRIT = 0
       MAXMIJ        = 0
       MIJ_ROW       = 0
@@ -330,7 +318,6 @@
       CALL ALLOCATE_EIGEN1_MAT ( 'GEN_MASS', NUM_EIGENS, 1, SUBR_NAME )
 
       IF (NVEC > 0) THEN 
-
          CALL OURTIM                                       ! Calc gen mass
          MODNAM = 'CALCULATE GENERALIZED MASS'
          WRITE(SC1,4092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
@@ -358,12 +345,11 @@
          WRITE(SC1,12345,ADVANCE='NO') '       Deallocate MLLn ', CR13   ;   CALL DEALLOCATE_SPARSE_MAT ( 'MLLn' )
       ENDIF
 
-! Write data to L1M
-
+      ! Write data to L1M
       CALL WRITE_L1M
 
-! Write eigenvalue analysis summary to output file, if DEBUG requested them or if renormalization is on 'MASS' or 'NONE'
-
+      ! Write eigenvalue analysis summary to output file
+      ! if DEBUG requested them or if renormalization is on 'MASS' or 'NONE'
       MODNAM = 'WRITE EIGENVALUE SUMMARY TO OUTFIL'
       IF ((EIG_NORM == 'MASS    ') .OR. (EIG_NORM == 'NONE')) THEN
          CALL OURTIM
@@ -371,12 +357,10 @@
          CALL EIG_SUMMARY
       ENDIF
 
-! Open and set up file L3A (used to hold eigenvectors)
-
+      ! Open and set up file L3A (used to hold eigenvectors)
       CALL FILE_OPEN ( L3A, LINK3A, OUNT, 'REPLACE', L3A_MSG, 'WRITE_STIME', 'UNFORMATTED', 'WRITE', 'REWIND', 'Y', 'N', 'Y' )
 
-! Write out computed eigenvectors to L3A
-
+      ! Write out computed eigenvectors to L3A
       CALL OURTIM
       MODNAM = 'WRITE EIGENVECTORS TO DISK FILE'
       WRITE(SC1,4092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
@@ -387,8 +371,7 @@
       ENDDO 
       CALL FILE_CLOSE ( L3A, LINK3A, 'KEEP', 'Y' )  
 
-! Optional eigenvector debug output
-
+      ! Optional eigenvector debug output
       IF (DEBUG(43) == 1) THEN
          DO J=1,NVEC
             DO I=1,NDOFL
@@ -399,8 +382,7 @@
          ENDDO 
       ENDIF
 
-! Call OUTPUT4 processor to process output requests for OUTPUT4 matrices generated in this link
-
+      ! Call OUTPUT4 processor to process output requests for OUTPUT4 matrices generated in this link
       IF (NUM_OU4_REQUESTS > 0) THEN
          CALL OURTIM
          MODNAM = 'WRITE OUTPUT4 NATRICES      '
@@ -409,10 +391,10 @@
          CALL OUTPUT4_PROC ( SUBR_NAME )
       ENDIF
 
-! Deallocate arrays (leave EIGEN_VAL until LINK9 since it may be needed there
-
+      ! Deallocate arrays
       CALL DEALLOCATE_LAPACK_MAT ( 'RFAC' )
 
+      ! leave EIGEN_VAL until LINK9 since it may be needed there
 !xx   CALL DEALLOCATE_EIGEN1_MAT ( 'EIGEN_VAL' )  
       CALL DEALLOCATE_EIGEN1_MAT ( 'GEN_MASS' )
       CALL DEALLOCATE_EIGEN1_MAT ( 'EIGEN_VEC' )  
@@ -421,16 +403,13 @@
       CALL DEALLOCATE_LAPACK_MAT ( 'ABAND' )
       CALL DEALLOCATE_LAPACK_MAT ( 'BBAND' )
 
-! Process is now complete so set COMM(LINKNO)
-
+      ! Process is now complete so set COMM(LINKNO)
       COMM(LINKNO) = 'C'
 
-! Write data to L1A
-
+      ! Write data to L1A
       CALL WRITE_L1A ( 'KEEP', 'Y', 'Y' )
 
-! Check allocation status of allocatable arrays, if requested
-
+      ! Check allocation status of allocatable arrays, if requested
       IF (DEBUG(100) > 0) THEN
          CALL CHK_ARRAY_ALLOC_STAT
          IF (DEBUG(100) > 1) THEN
@@ -438,21 +417,19 @@
          ENDIF
       ENDIF
 
-! Write LINK4 end to F04, F06
-
+      ! Write LINK4 end to F04, F06
       CALL OURTIM
       IF (WRT_LOG > 0) THEN
          WRITE(F04,151) LINKNO
       ENDIF
       WRITE(F06,151) LINKNO
 
-! Close files
-
+      ! Close files
       IF (( DEBUG(193) == 4) .OR. (DEBUG(193) == 999)) THEN
          CALL FILE_INQUIRE ( 'near end of LINK4' )
       ENDIF
 
-! Write LINK4 end to screen
+      ! Write LINK4 end to screen
       WRITE(SC1,153) LINKNO
 
       RETURN

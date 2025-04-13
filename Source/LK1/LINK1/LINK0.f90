@@ -69,7 +69,7 @@
       USE DOF_TABLES, ONLY            :  TDOFI
       USE PARAMS, ONLY                :  CHKGRDS, EPSIL, EQCHK_OUTPUT, GRDPNT, GRDPNT_IN, GRIDSEQ, MEFMGRID, MEFMLOC, PRTCONN,     &
                                          PRTBASIC, PRTCORD, PRTDOF, PRTTSET, PRTSTIFD, PRTSTIFF, SETLKTK, SETLKTM, SUPINFO,        &
-                                         SUPWARN, WTMASS, NOCOUNTS
+                                         SUPWARN, WTMASS, NOCOUNTS, PRTANS, PRTF06, PRTOP2
       USE NONLINEAR_PARAMS, ONLY      :  LOAD_ISTEP
       USE MACHINE_PARAMS, ONLY        :  MACH_PREC
       USE MODEL_STUF, ONLY            :  ANY_GPFO_OUTPUT, EIG_METH, ELDT, ETYPE, MEFFMASS_CALC, NUM_EMG_FATAL_ERRS, PLY_NUM, OELDT
@@ -117,6 +117,9 @@
 
       REAL(DOUBLE)                    :: KGG_DIAG(NDOFG)   ! Diagonal of KGG (needed for equil check on RESTART)
       REAL(DOUBLE)                    :: KGG_MAX_DIAG      ! Max diag term from KGG (needed for equil check on RESTART)
+      !LOGICAL                        :: WRITE_F06  ! flag
+      !LOGICAL                        :: WRITE_OP2  ! flag
+      LOGICAL                         :: WRITE_ANS  ! flag
 
       INTRINSIC                       :: IAND
    
@@ -124,44 +127,37 @@
       LINKNO = 0
       POST = -1
 
-! Initialize WRT_BUG
-
+      ! Initialize WRT_BUG
       DO I=0,MBUG-1
          WRT_BUG(I) = 0
       ENDDO
 
       RBG_GSET_ALLOCATED = 'N'
 
-! Set default values for SETLKT from values in module PARAMS
-
+      ! Set default values for SETLKT from values in module PARAMS
       SETLKTK_DEF = SETLKTK
       SETLKTM_DEF = SETLKTM
 
-! Set time initializing parameters
-
+      ! Set time initializing parameters
       CALL TIME_INIT
 
-! Get date and time, write to screen
-
+      ! Get date and time, write to screen
       CALL OURDAT
       CALL OURTIM
       WRITE(SC1,152) LINKNO
 
-! Write logo, date and copyright info to text files
-  
+      ! Write logo, date and copyright info to text files
       WRITE(F06,150) LINKNO
       IF (WRT_LOG > 0) THEN
          WRITE(F04,150) LINKNO
       ENDIF
       WRITE(ERR,150) LINKNO
 
-! Reset units for error output (were set to SC1 in MAIN1)
-
+      ! Reset units for error output (were set to SC1 in MAIN1)
       OUNT(1) = ERR
       OUNT(2) = F06
 
-! Read input data to count sizes of arrays (no. GRID's, elems, etc.)
-  
+      ! Read input data to count sizes of arrays (no. GRID's, elems, etc.)
       CALL OURTIM
       MODNAM = 'DETERMINE ARRAY SIZES - CASE CONTROL        '
       WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
@@ -176,12 +172,11 @@ res11:IF (RESTART == 'N') THEN
          CALL LOADB0
       ENDIF res11
 
-! Start back at beginnng of input file to read Exec, Case Control and Bulk Data decks 
-
+      ! Start back at beginnng of input file to read
+      ! Exec, Case Control and Bulk Data decks 
       REWIND (IN1)
   
-! Processes the EXEC CONTROL DECK
-
+      ! Processes the EXEC CONTROL DECK
       CALL OURTIM
       MODNAM = 'READ EXEC CONTROL DECK                      '
       WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
@@ -200,8 +195,7 @@ res11:IF (RESTART == 'N') THEN
 
 ! pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp
 
-! If CHKPNT was in the Exec Control deck, reset file close status' to KEEP
-
+      ! If CHKPNT was in the Exec Control deck, reset file close status' to KEEP
       IF (CHKPNT == 'Y') THEN
          IF (SOL_NAME(1:8) /= 'NLSTATIC') THEN
             CALL SET_FILE_CLOSE_STAT ( 'KEEP' )
@@ -214,15 +208,15 @@ res11:IF (RESTART == 'N') THEN
          ENDIF
       ENDIF
 
-! If nonlinear we need to keep files for iterations
-
+      ! If nonlinear we need to keep files for iterations
       IF (SOL_NAME(1:8) == 'NLSTATIC') THEN
          CALL SET_FILE_CLOSE_STAT ( 'KEEP' )
       ENDIF
 
-! Processes the Case Control deck and write check-point data to L1Z if this is NOT a restart or verify that the check-pointed data
-! agrees between the original run and this restart run
- 
+      ! Processes the Case Control deck and write
+      ! check-point data to L1Z if this is NOT a restart or
+      ! verify that the check-pointed data
+      ! agrees between the original run and this restart run
       CALL OURTIM
       MODNAM = 'ALLOCATE MEMORY FOR SOME MODEL DATA ARRAYS  '
       WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
@@ -319,15 +313,14 @@ res13:IF (RESTART == 'N') THEN
 !xx         CALL FILE_OPEN ( L1M, LINK1M, OUNT, 'REPLACE', L1M_MSG, 'WRITE_STIME', 'UNFORMATTED', 'WRITE', 'REWIND', 'Y', 'N', 'Y' )
 !xx      ENDIF
   
-! Get machine parameters and set EPSIL(1). This may change later if user inputs a value on a PARAM EPSIL entry.
-
+         ! Get machine parameters and set EPSIL(1).
+         ! This may change later if user inputs a value on a PARAM EPSIL entry.
          CALL GET_MACHINE_PARAMS
          IF (EPSIL1_SET == 'N') THEN
             EPSIL(1) = MACH_PREC
          ENDIF
 
-! Processes the Bulk Data deck
-
+         ! Processes the Bulk Data deck
          CALL OURTIM
          MODNAM = 'ALLOCATE MEMORY FOR SOME MODEL DATA ARRAYS  '
 !        WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
@@ -366,22 +359,20 @@ res13:IF (RESTART == 'N') THEN
          CALL DEALLOCATE_MODEL_STUF ( 'SPC_MPC_SET' )
          WRITE(F06,*)
 
-! Write EDAT table, if requested
-
+         ! Write EDAT table, if requested
          IF (DEBUG(108) > 0) THEN
             CALL WRITE_EDAT
          ENDIF
 
-! Make sure we have a finite WTMASS (need to divide by it in several places later in the code)
-
+         ! Make sure we have a finite WTMASS
+         ! (need to divide by it in several places later in the code)
          IF (DABS(WTMASS) < EPSIL(1)) THEN
             FATAL_ERR = FATAL_ERR + 1
             WRITE(ERR,1804) WTMASS
             WRITE(F06,1804) WTMASS
          ENDIF
 
-! Quit if FATAL_ERR > 0
-
+         ! Quit if FATAL_ERR > 0
          IF (FATAL_ERR > 0) THEN
             CALL OUTA_HERE ( 'Y' )
          ENDIF
@@ -397,9 +388,10 @@ res13:IF (RESTART == 'N') THEN
             MEFMGRID = GRDPNT
          ENDIF
 
-! Allocate file names, unit numbers, etc for the USERIN elements whose matrices will be on In4 files.
-! First check that there is a 1 to 1 correspondence of number of CUSERIN and PUSERIN B.D. entries
-
+         ! Allocate file names, unit numbers, etc for the
+         ! USERIN elements whose matrices will be on In4 files.
+         ! First check that there is a 1 to 1 correspondence of
+         ! number of CUSERIN and PUSERIN B.D. entries
          IF (NPUSERIN /= NCUSERIN) THEN
             FATAL_ERR = FATAL_ERR + 1
             WRITE(ERR,1802) NCUSERIN, NPUSERIN
@@ -407,14 +399,13 @@ res13:IF (RESTART == 'N') THEN
             CALL OUTA_HERE ( 'Y' )
          ENDIF
 
-! If ENFORCED = 'Y' then all DOF's are SE and we will read their values from ENFFIL and use that to create LINK1O
-
+         ! If ENFORCED = 'Y' then all DOF's are SE and we will
+         ! read their values from ENFFIL and use that to create LINK1O
          IF (ENFORCED == 'Y') THEN
             CALL WRITE_ENF_TO_L1O
          ENDIF
 
-! Make sure that there is at least 1 grid
-
+         ! Make sure that there is at least 1 grid
          IF (NGRID < 1) THEN
             WRITE(ERR,1827) NDOFG
             WRITE(F06,1827) NDOFG
@@ -422,8 +413,7 @@ res13:IF (RESTART == 'N') THEN
             CALL OUTA_HERE ( 'Y' )                         ! No G-set, so quit
          ENDIF
 
-! Make sure that there is at least 1 element
-
+         ! Make sure that there is at least 1 element
          IF (NELE < 1) THEN
             WRITE(ERR,1820) NELE
             WRITE(F06,1820) NELE
@@ -431,8 +421,7 @@ res13:IF (RESTART == 'N') THEN
             CALL OUTA_HERE ( 'Y' )                         ! No G-set, so quit
          ENDIF
 
-! Close files opened for writing Bulk data info to
-
+         ! Close files opened for writing Bulk data info to
          IF (NRIGEL > 0) THEN 
             CALL FILE_CLOSE ( L1F, LINK1F, 'KEEP', 'Y' )
          ELSE
@@ -511,7 +500,8 @@ res13:IF (RESTART == 'N') THEN
             CALL FILE_CLOSE ( L1X, LINK1X, 'DELETE', 'Y' )
          ENDIF
 
-         IF (DEBUG(200) == 0) THEN                         ! ANS was opened in subr MYSTRAN_FILES. We only need it if DEBUG(200) > 0
+         IF (WRITE_ANS) THEN
+            ! ANS was opened in subr MYSTRAN_FILES. We only need it if DEBUG(200) > 0
             CALL FILE_CLOSE ( ANS, ANSFIL, 'DELETE', 'Y' )
          ENDIF
  
@@ -542,8 +532,7 @@ res14:IF (RESTART == 'N') THEN
          CALL ELESORT
          CALL DEALLOCATE_MODEL_STUF ( 'RIGID_ELEM_IDS' )
   
-! Open L1B, OP2 for writing grid and coord data to.
-
+         ! Open L1B, OP2 for writing grid and coord data to.
          CALL FILE_OPEN ( L1B, LINK1B, OUNT, 'REPLACE', L1B_MSG, 'WRITE_STIME', 'UNFORMATTED', 'WRITE', 'REWIND', 'Y', 'N', 'Y' )
 
          CALL FILE_OPEN ( OP2, OP2FIL, OUNT, 'REPLACE', OP2_MSG, 'NEITHER', 'UNFORMATTED', 'WRITE', 'REWIND', 'Y', 'N', 'Y' )
@@ -551,15 +540,13 @@ res14:IF (RESTART == 'N') THEN
          CALL WRITE_OP2_HEADER(POST)
          
 
-! Element processing to convert external PID's to internal.
-  
+         ! Element processing to convert external PID's to internal.
          CALL OURTIM
          MODNAM = 'ELEM PROCESSOR                              '
          WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
          CALL ELEM_PROP_MATL_IIDS
   
-! Grid and coordinate system processing
-  
+         ! Grid and coordinate system processing
          CALL OURTIM
          MODNAM = 'ALLOCATE MEMORY FOR SOME MODEL DATA ARRAYS  '
 !        WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
@@ -591,8 +578,7 @@ res14:IF (RESTART == 'N') THEN
          ENDIF
          WRITE(SC1,*) CR13
 
-! Run Bandit, if requested
-
+         ! Run Bandit, if requested
          REWIND (IN1)
          IF (GRIDSEQ(1:6) == 'BANDIT') THEN
             CALL OURTIM
@@ -623,8 +609,7 @@ res14:IF (RESTART == 'N') THEN
          ENDIF
          CALL FILE_CLOSE ( IN1, INFILE, 'KEEP', 'Y' )
 
-! Grid point sequencing
-
+         ! Grid point sequencing
          CALL OURTIM
          MODNAM = 'GRID SEQUENCE PROCESSOR                     '
          WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
@@ -634,8 +619,7 @@ res14:IF (RESTART == 'N') THEN
 
       ENDIF res14
 
-! Subcase processing
-
+      ! Subcase processing
       CALL ALLOCATE_MODEL_STUF ( 'GROUT, ELOUT', SUBR_NAME )
       CALL ALLOCATE_MODEL_STUF ( 'ELDT', SUBR_NAME )
       CALL FILE_OPEN ( L1D, LINK1D, OUNT, 'REPLACE', L1D_MSG, 'WRITE_STIME', 'UNFORMATTED', 'WRITE', 'REWIND', 'Y', 'N', 'Y' )
@@ -669,8 +653,7 @@ res14:IF (RESTART == 'N') THEN
          CALL FILE_OPEN ( F25, F25FIL, OUNT, 'REPLACE', F25_MSG, 'WRITE_STIME', 'UNFORMATTED', 'WRITE', 'REWIND', 'Y', 'N', 'Y' )
       ENDIF
 
-! Print table showing the elements connected to each grid if requested  
-
+      ! Print table showing the elements connected to each grid if requested
       IF (RESTART == 'N') THEN
          IF ((ANY_GPFO_OUTPUT > 0) .OR. (PRTCONN > 0)) THEN
             CALL OURTIM
@@ -835,8 +818,7 @@ res16:IF (RESTART == 'N') THEN
          TDOF_MSG(56:) = '(Before any AUTOSPC)'
          CALL DOF_PROC ( TDOF_MSG )
 
-! Call subr to write any possible USETSTR output requests
-
+         ! Call subr to write any possible USETSTR output requests
          CALL WRITE_USETSTR
 
          CALL DEALLOCATE_MODEL_STUF ( 'SPCADD_SIDS' )
@@ -866,8 +848,7 @@ res16:IF (RESTART == 'N') THEN
             CALL FILE_CLOSE ( L1N, LINK1N, L1NSTAT, 'Y' )
          ENDIF
 
-! CONM2 processing to get CONM2 data in basic coords at the mass
-  
+         ! CONM2 processing to get CONM2 data in basic coords at the mass
          CALL FILE_OPEN ( L1Y, LINK1Y, OUNT, 'REPLACE', L1Y_MSG, 'WRITE_STIME', 'UNFORMATTED', 'WRITE', 'REWIND', 'Y', 'N', 'Y' )
          CALL OURTIM
          MODNAM = 'CONM2 PROCESSOR #1                          '
@@ -875,8 +856,7 @@ res16:IF (RESTART == 'N') THEN
          CALL CONM2_PROC_1
          CALL FILE_CLOSE ( L1Y, LINK1Y, L1YSTAT, 'Y' )
   
-! Grid point weight generator (model weight, c.g., etc.)
-
+         ! Grid point weight generator (model weight, c.g., etc.)
          CALL OURTIM
          MODNAM = 'ALLOCATE MEMORY FOR RBGLOBAL ARRAY          '
          WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
@@ -902,7 +882,6 @@ res16:IF (RESTART == 'N') THEN
             ENDIF
 
             CALL GPWG ( 'OA MODEL    ' )
-
             WRITE(SC1,*) CR13
 
          ENDIF
@@ -955,15 +934,13 @@ res17:IF (RESTART == 'Y') THEN
 
 res18:IF (RESTART == 'N') THEN
 
-! CONM2 processing to get CONM2 data in global coords at the grid
-  
+         ! CONM2 processing to get CONM2 data in global coords at the grid
          CALL OURTIM
          MODNAM = 'CONM2 PROCESSOR #2                          '
          WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
          CALL CONM2_PROC_2
   
-! Temperature data processing
-
+         ! Temperature data processing
          IF ((SOL_NAME(1:7) == 'STATICS') .OR. (SOL_NAME(1:8) == 'NLSTATIC') .OR.                                                  &
             ((SOL_NAME(1:8) == 'BUCKLING') .AND. (LOAD_ISTEP == 1))) THEN
             CALL OURTIM
@@ -992,8 +969,8 @@ res18:IF (RESTART == 'N') THEN
          CALL DEALLOCATE_MODEL_STUF ( 'CGTEMP' )
          CALL DEALLOCATE_MODEL_STUF ( 'CETEMP' )
   
-! Element pressure data processing. Open L1Q which contains element pressure Bulk Data
-        
+         ! Element pressure data processing.
+         ! Open L1Q which contains element pressure Bulk Data
          IF ((SOL_NAME(1:7) == 'STATICS') .OR. (SOL_NAME(1:8) == 'NLSTATIC') .OR.                                                  &
             ((SOL_NAME(1:8) == 'BUCKLING') .AND. (LOAD_ISTEP == 1))) THEN
             CALL OURTIM
@@ -1075,8 +1052,8 @@ res18:IF (RESTART == 'N') THEN
 
          ENDIF
 
-! Generate rigid body displ matrix for the G-set if requested by user (if it has been, some EQCHK_OUTPUT(i) will be > 0)
-
+         ! Generate rigid body displ matrix for the G-set
+         ! if requested by user (if it has been, some EQCHK_OUTPUT(i) will be > 0)
          IF((EQCHK_OUTPUT(1) > 0) .OR. (EQCHK_OUTPUT(2) > 0) .OR. (EQCHK_OUTPUT(3) > 0) .OR. (EQCHK_OUTPUT(4) > 0) .OR.            &
             (EQCHK_OUTPUT(5) > 0)) THEN
             IF (RBG_GSET_ALLOCATED == 'N') THEN
@@ -1091,10 +1068,8 @@ res18:IF (RESTART == 'N') THEN
             CALL RB_DISP_MATRIX_PROC ( 'EQCHK REF GRID', 0 )
          ENDIF
 
-! Calculate YSe enforced displ array
-
+         ! Calculate YSe enforced displ array
          IF (NDOFSE > 0) THEN
-
             IF ((SOL_NAME(1:7) == 'STATICS') .OR. (SOL_NAME(1:8) == 'NLSTATIC') .OR.                                               &
                ((SOL_NAME(1:8) == 'BUCKLING') .AND. (LOAD_ISTEP == 1))) THEN
 
@@ -1118,8 +1093,7 @@ res18:IF (RESTART == 'N') THEN
 
          ENDIF
 
-! Write problem size parameters
-
+         ! Write problem size parameters
          WRITE(ERR,144) NGRID
          WRITE(ERR,145) NDOFG
          IF (SUPINFO == 'N') THEN
@@ -1134,8 +1108,10 @@ res18:IF (RESTART == 'N') THEN
             WRITE(F06,146) NELE
          ENDIF
 
-! Write data to L1Z for restart (only need it if CHKPNT was in CC but write it anyway in case user changes their mind)
-
+         ! Write data to L1Z for restart
+         !
+         ! only need it if CHKPNT was in CC but write it anyways
+         ! in case user changes their mind
          CALL WRITE_L1Z
 
       ENDIF res18
@@ -1146,8 +1122,7 @@ res18:IF (RESTART == 'N') THEN
 
       CALL DEALLOCATE_MODEL_STUF ( 'SINGLE ELEMENT ARRAYS' )
 
-! Write messages on what OUTPUT4 matrices were requested and open the OU4 files
-
+      ! Write messages on what OUTPUT4 matrices were requested and open the OU4 files
       IF (NUM_OU4_REQUESTS > 0) THEN
 
          CALL OUTPUT4_MATRIX_MSGS ( OUNT )                 ! Write the messages on what OUTPUT4 matrices were requested
@@ -1169,15 +1144,15 @@ res18:IF (RESTART == 'N') THEN
 
       ENDIF
 
-! Write data to L1A (this rewrites L1A if this a restart - needed to tell LINK9 that this is a restart)
-
+      ! Write data to L1A
+      !
+      ! rewrites L1A if this a restart - needed to tell LINK9 that this is a restart
       COMM(LINKNO) = 'C'
 res20:IF (RESTART == 'N') THEN
          CALL WRITE_L1A ( 'KEEP', 'Y', 'Y' )
       ENDIF res20
 
-! Check allocation status of allocatable arrays, if requested
-
+      ! Check allocation status of allocatable arrays, if requested
       IF (DEBUG(100) > 0) THEN
          CALL CHK_ARRAY_ALLOC_STAT
          IF (DEBUG(100) > 1) THEN
@@ -1185,8 +1160,7 @@ res20:IF (RESTART == 'N') THEN
          ENDIF
       ENDIF
 
-! Write LINK0 end to F04, F06
-
+      ! Write LINK0 end to F04, F06
       CALL OURTIM
       IF (WRT_LOG > 0) THEN
          WRITE(F04,151) LINKNO
@@ -1197,8 +1171,7 @@ res20:IF (RESTART == 'N') THEN
          CALL FILE_INQUIRE ( 'Near end of LINK0' )
       ENDIF
 
-! Write LINK0 end to screen
-
+      ! Write LINK0 end to screen
       WRITE(SC1,154) LINKNO
 
 ! **********************************************************************************************************************************

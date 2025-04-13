@@ -38,7 +38,7 @@
       USE CC_OUTPUT_DESCRIBERS, ONLY  :  STRN_OPT
       USE LINK9_STUFF, ONLY           :  OGEL
       USE FEMAP_ARRAYS, ONLY          :  FEMAP_EL_VECS
-      USE PARAMS, ONLY                :  POST
+      USE PARAMS, ONLY                :  PRTNEU
  
       USE SOLID_STRAIN_OUTPUTS_USE_IFs
 
@@ -59,6 +59,7 @@
       REAL(DOUBLE)                    :: SIG_OCT            ! Octrahedral normal strain
       REAL(DOUBLE)                    :: TAU_OCT            ! Octrahedral shear  strain
       REAL(DOUBLE)                    :: VONMISES           ! von Mises strain
+      LOGICAL                         :: WRITE_NEU
 
       INTRINSIC DMAX1,DMIN1
  
@@ -68,6 +69,7 @@
          WRITE(F04,9001) SUBR_NAME,TSEC
  9001    FORMAT(1X,A,' BEGN ',F10.3)
       ENDIF
+      WRITE_NEU = (PRTNEU == 'Y')
 
 ! **********************************************************************************************************************************
 ! Calc engineering strains from array STRAIN and put into array OGEL
@@ -97,7 +99,7 @@
             OGEL(NUM1,11) = PRINCIPAL_STRAIN(3)
             OGEL(NUM1,12) = MEAN
          ENDIF
-         IF ((POST /= 0) .AND. (WRITE_FEMAP == 'Y')) THEN
+         IF (WRITE_NEU .AND. (WRITE_FEMAP == 'Y')) THEN
             DO J=1,6
                FEMAP_EL_VECS(NUM_FEMAP_ROWS,J) = STRAIN(J)
             ENDDO

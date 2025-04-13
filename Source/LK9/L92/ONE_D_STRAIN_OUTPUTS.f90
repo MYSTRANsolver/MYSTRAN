@@ -38,7 +38,7 @@
       USE MODEL_STUF, ONLY            :  STRAIN, TYPE, ZS
       USE LINK9_STUFF, ONLY           :  MSPRNT, OGEL
       USE FEMAP_ARRAYS, ONLY          :  FEMAP_EL_VECS
-      USE PARAMS, ONLY                :  POST
+      USE PARAMS, ONLY                :  PRTNEU
       USE SUBR_BEGEND_LEVELS, ONLY    :  ONE_D_STRAIN_OUTPUTS_BEGEND
 
       USE ONE_D_STRAIN_OUTPUTS_USE_IFs
@@ -66,6 +66,7 @@
       REAL(DOUBLE)                    :: SA,ST              ! Strains input to subrs that calc margins of safety
       REAL(DOUBLE)                    :: SAMAX,SAMIN        ! Max & min strains from points "C", "D", "E" and "F" at end-a of CBAR
       REAL(DOUBLE)                    :: SBMAX,SBMIN        ! Max & min strains from points "C", "D", "E" and "F" at end-b of CBAR
+      LOGICAL                         :: WRITE_NEU
 
       INTRINSIC DMAX1,DMIN1
  
@@ -75,7 +76,7 @@
          WRITE(F04,9001) SUBR_NAME,TSEC
  9001    FORMAT(1X,A,' BEGN ',F10.3)
       ENDIF
-
+      WRITE_NEU = (PRTNEU == 'Y')
 ! **********************************************************************************************************************************
 ! Calc engineering strains from array STRAIN and put into array OGEL
  
@@ -141,7 +142,7 @@
             MSPRNT(NUM1,2) = MSP2
             MSPRNT(NUM1,3) = MSP3
          ENDIF
-         IF ((POST /= 0) .AND. (WRITE_FEMAP == 'Y')) THEN
+         IF (WRITE_NEU .AND. (WRITE_FEMAP == 'Y')) THEN
             FEMAP_EL_VECS(NUM_FEMAP_ROWS, 1) = SA + SA1
             FEMAP_EL_VECS(NUM_FEMAP_ROWS, 2) = SA + SB1
             FEMAP_EL_VECS(NUM_FEMAP_ROWS, 3) = SA + SA2
@@ -172,7 +173,7 @@
             OGEL(NUM1,5) = STRAIN(5)
             OGEL(NUM1,6) = STRAIN(6)
          ENDIF
-         IF ((POST /= 0) .AND. (WRITE_FEMAP == 'Y')) THEN
+         IF (WRITE_NEU .AND. (WRITE_FEMAP == 'Y')) THEN
             FEMAP_EL_VECS(NUM_FEMAP_ROWS,1) = STRAIN(1)
             FEMAP_EL_VECS(NUM_FEMAP_ROWS,2) = STRAIN(2)
             FEMAP_EL_VECS(NUM_FEMAP_ROWS,3) = STRAIN(3)
@@ -191,7 +192,7 @@
             ENDIF   
             OGEL(NUM1,1) = STRAIN(1)
          ENDIF
-         IF ((POST /= 0) .AND. (WRITE_FEMAP == 'Y')) THEN
+         IF (WRITE_NEU .AND. (WRITE_FEMAP == 'Y')) THEN
             FEMAP_EL_VECS(NUM_FEMAP_ROWS,1) = STRAIN(1)
             FEMAP_EL_VECS(NUM_FEMAP_ROWS,2) = STRAIN(1)
          ENDIF
@@ -217,7 +218,7 @@
             MSPRNT(NUM1,1) = MSP1
             MSPRNT(NUM1,2) = MSP2
          ENDIF
-         IF ((POST /= 0) .AND. (WRITE_FEMAP == 'Y')) THEN
+         IF (WRITE_NEU .AND. (WRITE_FEMAP == 'Y')) THEN
             FEMAP_EL_VECS(NUM_FEMAP_ROWS,1) = SA
             FEMAP_EL_VECS(NUM_FEMAP_ROWS,2) = SA
             FEMAP_EL_VECS(NUM_FEMAP_ROWS,3) = ST

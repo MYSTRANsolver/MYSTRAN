@@ -26,14 +26,14 @@
  
       SUBROUTINE WRITE_MEFFMASS
  
-! Writes output for modal effective mass
- 
+      ! Writes output for modal effective mass
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
       USE IOUNT1, ONLY                :  WRT_ERR, WRT_LOG, ANS, ERR, F04, F06
       USE SCONTR, ONLY                :  BLNK_SUB_NAM, NVEC
       USE TIMDAT, ONLY                :  TSEC
       USE SUBR_BEGEND_LEVELS, ONLY    :  WRITE_MEFFMASS_BEGEND
       USE CONSTANTS_1, ONLY           :  ZERO, ONE, TWO, ONE_HUNDRED, PI
+      USE PARAMS, ONLY                :  PRTANS, PRTF06, PRTOP2
       USE DEBUG_PARAMETERS, ONLY      :  DEBUG
       USE EIGEN_MATRICES_1, ONLY      :  EIGEN_VAL, MEFFMASS
       USE MODEL_STUF, ONLY            :  MEFM_RB_MASS, LABEL, STITLE, TITLE
@@ -54,6 +54,11 @@
       REAL(DOUBLE)                    :: EPS1              ! Small number to compare against zero
       REAL(DOUBLE)                    :: MEFM_TOTALS(6)    ! Totals for the 6 modal effective masses over all modes
       REAL(DOUBLE)                    :: MODES_PCT(6)      ! Modal mass as % of total mass
+      !LOGICAL                        :: WRITE_F06  ! flag
+      !LOGICAL                        :: WRITE_OP2  ! flag
+      LOGICAL                         :: WRITE_ANS  ! flag
+      LOGICAL                         :: IS_LOW_PRECISION  ! Print MPFACTOR, MEFFMASS values with 2 decimal places of accuracy rather than 6
+
 
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
@@ -63,24 +68,23 @@
       ENDIF
 
 ! **********************************************************************************************************************************
+      WRITE_ANS = (PRTANS == 'Y')
+      IS_LOW_PRECISION = (DEBUG(174) == 0)
+      !--------------------------------------------------
+
       EPS1 = EPSIL(1)
 
-! Write output headers.
-
+      ! Write output headers.
       IF (IHDR == 'Y') THEN
-
          WRITE(F06,900)
-
-         WRITE(F06,909) TITLE(1)                           ! There is always a TITLE(1), etc (even if they are blank)
+         ! There is always a TITLE(1), etc (even if they are blank)
+         WRITE(F06,909) TITLE(1)
          WRITE(F06,909) STITLE(1)
          WRITE(F06,909) LABEL(1)
-
-         WRITE(F06,*)
- 
+         WRITE(F06,*) 
       ENDIF
 
-! Write modal effective masses
-  
+      ! Write modal effective masses
       WRITE(F06,9102) MEFMCORD
       
       IF      (MEFMLOC == 'GRDPNT') THEN
@@ -95,13 +99,13 @@
          WRITE(F06,9106) MEFMGRID
       ENDIF
       
-      IF (DEBUG(174) == 0) THEN
+      IF (IS_LOW_PRECISION) THEN
          WRITE(F06,9107)
       ELSE
          WRITE(F06,9108)
       ENDIF
 
-      IF (DEBUG(200) > 0) THEN
+      IF (WRITE_ANS) THEN
          WRITE(ANS,*)
          WRITE(ANS,9202) MEFMCORD
          WRITE(ANS,9207)
@@ -112,16 +116,15 @@
       ENDDO   
  
       DO I=1,NVEC
-
          CYCLES = DSQRT(DABS(EIGEN_VAL(I)))/(TWO*PI)
 
-         IF (DEBUG(174) == 0) THEN
+         IF (IS_LOW_PRECISION) THEN ! 6 digits
             WRITE(F06,9110) I, CYCLES, (MEFFMASS(I,J)/WTMASS,J=1,6)
-         ELSE
+         ELSE ! low precision (2 digits)
             WRITE(F06,9111) I, CYCLES, (MEFFMASS(I,J)/WTMASS,J=1,6)
          ENDIF
 
-         IF (DEBUG(200) > 0) THEN
+         IF (WRITE_ANS) THEN
             WRITE(ANS,9210) I, CYCLES, (MEFFMASS(I,J)/WTMASS,J=1,6)
          ENDIF
 
@@ -131,32 +134,35 @@
 
       ENDDO
 
-      IF (DEBUG(174) == 0) THEN
+      IF (IS_LOW_PRECISION) THEN
          WRITE(F06,9112) (MEFM_TOTALS(J),J=1,6)
       ELSE
          WRITE(F06,9113) (MEFM_TOTALS(J),J=1,6)
       ENDIF
                                                            ! MEFM_RB_MASS is in the same units as in the DAT file
-      IF (DEBUG(174) == 0) THEN
+      IF (IS_LOW_PRECISION) THEN
          WRITE(F06,9116) (MEFM_RB_MASS(I,I),I=1,6)
       ELSE
          WRITE(F06,9117) (MEFM_RB_MASS(I,I),I=1,6)
       ENDIF
 
-      IF (DEBUG(200) > 0) THEN
+      IF (WRITE_ANS) THEN
          WRITE(ANS,9212) (MEFM_TOTALS(J),J=1,6)
          WRITE(ANS,9216) (MEFM_RB_MASS(I,I),I=1,6)
       ENDIF
    
-! For each of the 6 modal masses, calc % of total mass. A character variable is used to store the % so that blank percentages can
-! be printed if zero modal mass exists for a component (T1 - R3) or if a denominator in the % expression is zero
-
+      ! For each of the 6 modal masses, calc % of total mass.
+      ! A character variable is used to store the % so that blank percentages can
+      ! be printed if zero modal mass exists for a component (T1 - R3) or 
+      ! if a denominator in the % expression is zero
       IF (DABS(MEFM_RB_MASS(1,1)) > EPS1) THEN
          MODES_PCT(1) = ONE_HUNDRED*MEFM_TOTALS(1)/MEFM_RB_MASS(1,1)
          WRITE(CHAR_PCT(1),1001) MODES_PCT(1), '%'
-      ELSE                                                 ! Denominator is zero so leave % blank
+      ELSE
+         ! Denominator is zero so leave % blank
          CHAR_PCT(1)(1:) = ' '
-         IF (MEFM_TOTALS(1) > EPS1) THEN                   ! Error: denominator is zero but numerator is not, so write message
+         IF (MEFM_TOTALS(1) > EPS1) THEN
+            ! Error: denominator is zero but numerator is not, so write message
             WRITE(ERR,2001)
             IF (SUPINFO == 'N') THEN
                WRITE(F06,2001)
@@ -167,9 +173,11 @@
       IF (DABS(MEFM_RB_MASS(2,2)) > EPS1) THEN
          MODES_PCT(2) = ONE_HUNDRED*MEFM_TOTALS(2)/MEFM_RB_MASS(2,2)
          WRITE(CHAR_PCT(2),1001) MODES_PCT(2), '%'
-      ELSE                                                 ! Denominator is zero so leave % blank
+      ELSE
+         ! Denominator is zero so leave % blank
          CHAR_PCT(2)(1:) = ' '
-         IF (MEFM_TOTALS(2) > EPS1) THEN                   ! Error: denominator is zero but numerator is not, so write message
+         IF (MEFM_TOTALS(2) > EPS1) THEN
+            ! Error: denominator is zero but numerator is not, so write message
             WRITE(ERR,2002)
             IF (SUPINFO == 'N') THEN
                WRITE(F06,2002)
@@ -180,9 +188,11 @@
       IF (DABS(MEFM_RB_MASS(3,3)) > EPS1) THEN
          MODES_PCT(3) = ONE_HUNDRED*MEFM_TOTALS(3)/MEFM_RB_MASS(3,3)
          WRITE(CHAR_PCT(3),1001) MODES_PCT(3), '%'
-      ELSE                                                 ! Denominator is zero so leave % blank
+      ELSE
+         ! Denominator is zero so leave % blank
          CHAR_PCT(3)(1:) = ' '
-         IF (MEFM_TOTALS(3) > EPS1) THEN                   ! Error: denominator is zero but numerator is not, so write message
+         IF (MEFM_TOTALS(3) > EPS1) THEN
+            ! Error: denominator is zero but numerator is not, so write message
             WRITE(ERR,2003)
             IF (SUPINFO == 'N') THEN
                WRITE(F06,2003)
@@ -193,9 +203,11 @@
       IF (DABS(MEFM_RB_MASS(4,4)) > EPS1) THEN
          MODES_PCT(4) = ONE_HUNDRED*MEFM_TOTALS(4)/MEFM_RB_MASS(4,4)
          WRITE(CHAR_PCT(4),1001) MODES_PCT(4), '%'
-      ELSE                                                 ! Denominator is zero so leave % blank
+      ELSE
+         ! Denominator is zero so leave % blank
          CHAR_PCT(4)(1:) = ' '
-         IF (MEFM_TOTALS(4) > EPS1) THEN                   ! Error: denominator is zero but numerator is not, so write message
+         IF (MEFM_TOTALS(4) > EPS1) THEN
+            ! Error: denominator is zero but numerator is not, so write message
             WRITE(ERR,2004)
             IF (SUPINFO == 'N') THEN
                WRITE(F06,2004)
@@ -206,9 +218,11 @@
       IF (DABS(MEFM_RB_MASS(5,5)) > EPS1) THEN
          MODES_PCT(5) = ONE_HUNDRED*MEFM_TOTALS(5)/MEFM_RB_MASS(5,5)
          WRITE(CHAR_PCT(5),1001) MODES_PCT(5), '%'
-      ELSE                                                 ! Denominator is zero so leave % blank
+      ELSE
+         ! Denominator is zero so leave % blank
          CHAR_PCT(5)(1:) = ' '
-         IF (MEFM_TOTALS(5) > EPS1) THEN                   ! Error: denominator is zero but numerator is not, so write message
+         IF (MEFM_TOTALS(5) > EPS1) THEN
+            ! Error: denominator is zero but numerator is not, so write message
             WRITE(ERR,2005)
             IF (SUPINFO == 'N') THEN
                WRITE(F06,2005)
@@ -219,9 +233,11 @@
       IF (DABS(MEFM_RB_MASS(6,6)) > EPS1) THEN
          MODES_PCT(6) = ONE_HUNDRED*MEFM_TOTALS(6)/MEFM_RB_MASS(6,6)
          WRITE(CHAR_PCT(6),1001) MODES_PCT(6), '%'
-      ELSE                                                 ! Denominator is zero so leave % blank
+      ELSE
+         ! Denominator is zero so leave % blank
          CHAR_PCT(6)(1:) = ' '
-         IF (MEFM_TOTALS(6) > EPS1) THEN                   ! Error: denominator is zero but numerator is not, so write message
+         IF (MEFM_TOTALS(6) > EPS1) THEN
+            ! Error: denominator is zero but numerator is not, so write message
             WRITE(ERR,2006)
             IF (SUPINFO == 'N') THEN
                WRITE(F06,2006)

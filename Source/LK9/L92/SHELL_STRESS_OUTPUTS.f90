@@ -39,7 +39,7 @@
       USE CC_OUTPUT_DESCRIBERS, ONLY  :  STRE_OPT
       USE LINK9_STUFF, ONLY           :  FTNAME, OGEL
       USE FEMAP_ARRAYS, ONLY          :  FEMAP_EL_VECS
-      USE PARAMS, ONLY                :  POST
+      USE PARAMS, ONLY                :  PRTNEU
  
       USE SHELL_STRESS_OUTPUTS_USE_IFs
 
@@ -68,6 +68,7 @@
       REAL(DOUBLE)                    :: SXZ,SYZ            ! Transverse shear stresses in plate elements
       REAL(DOUBLE)                    :: SXYMAX             ! Max shear stress in plate elems (calc'd in subr PRINCIPAL_2D)
       REAL(DOUBLE)                    :: VONMISES           ! von Mises stress
+      LOGICAL                         :: WRITE_NEU
 
       INTRINSIC DMAX1,DMIN1
  
@@ -77,6 +78,7 @@
          WRITE(F04,9001) SUBR_NAME,TSEC
  9001    FORMAT(1X,A,' BEGN ',F10.3)
       ENDIF
+      WRITE_NEU = (PRTNEU == 'Y')
 
 ! **********************************************************************************************************************************
 ! Calc engineering stresses from array STRESS and put into array OGEL
@@ -153,7 +155,7 @@
 
                ENDIF
 
-               IF ((POST /= 0) .AND. (WRITE_FEMAP == 'Y')) THEN
+               IF (WRITE_NEU .AND. (WRITE_FEMAP == 'Y')) THEN
                   FEMAP_EL_VECS(NUM_FEMAP_ROWS,1) = SX
                   FEMAP_EL_VECS(NUM_FEMAP_ROWS,2) = SY
                   FEMAP_EL_VECS(NUM_FEMAP_ROWS,3) = SXY
@@ -222,7 +224,7 @@
                   OGEL(NUM1,10) = SYZ
                ENDIF
 
-               IF ((POST /= 0) .AND. (WRITE_FEMAP == 'Y')) THEN
+               IF (WRITE_NEU .AND. (WRITE_FEMAP == 'Y')) THEN
                   FEMAP_EL_VECS(NUM_FEMAP_ROWS,11*(I-1)+ 1) = SX
                   FEMAP_EL_VECS(NUM_FEMAP_ROWS,11*(I-1)+ 2) = SY
                   FEMAP_EL_VECS(NUM_FEMAP_ROWS,11*(I-1)+ 3) = SXY
@@ -253,7 +255,7 @@
                OGEL(NUM1,J) = STRESS(J)
             ENDDO
          ENDIF
-         IF ((POST /= 0) .AND. (WRITE_FEMAP == 'Y')) THEN
+         IF (WRITE_NEU .AND. (WRITE_FEMAP == 'Y')) THEN
             DO J=1,9
                FEMAP_EL_VECS(NUM_FEMAP_ROWS,J) = STRESS(J)
             ENDDO

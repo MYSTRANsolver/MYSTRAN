@@ -39,7 +39,7 @@
       USE MODEL_STUF, ONLY            :  STRAIN, TYPE, ZS
       USE LINK9_STUFF, ONLY           :  MSPRNT, OGEL
       USE FEMAP_ARRAYS, ONLY          :  FEMAP_EL_VECS
-      USE PARAMS, ONLY                :  POST
+      USE PARAMS, ONLY                :  PRTNEU
       USE SUBR_BEGEND_LEVELS, ONLY    :  ONE_D_STRAIN_OUTPUTS_BEGEND
 
       IMPLICIT NONE

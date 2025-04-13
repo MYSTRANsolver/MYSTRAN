@@ -40,7 +40,7 @@
       USE SUBR_BEGEND_LEVELS, ONLY    :  OFP3_STRN_NO_PCOMP_BEGEND
       USE CONSTANTS_1, ONLY           :  ZERO
       USE FEMAP_ARRAYS, ONLY          :  FEMAP_EL_NUMS
-      USE PARAMS, ONLY                :  OTMSKIP, POST
+      USE PARAMS, ONLY                :  OTMSKIP, PRTNEU
       USE MODEL_STUF, ONLY            :  AGRID, ANY_STRN_OUTPUT, EDAT, EPNT, ETYPE, EID, ELGP, ELMTYP, ELOUT,                      &
                                          METYPE, NUM_SEi, NUM_EMG_FATAL_ERRS, PCOMP_PROPS, PLY_NUM, STRAIN, TYPE
       USE CC_OUTPUT_DESCRIBERS, ONLY  :  STRN_LOC, STRN_OPT
@@ -97,6 +97,7 @@
       ! OP2 stuff
       CHARACTER(8*BYTE)               :: TABLE_NAME   ! name of the op2 table name
       INTEGER(LONG)                   :: ITABLE       ! the subtable
+      LOGICAL                         :: WRITE_NEU
 
       INTRINSIC IAND
       ITABLE = 0
@@ -107,6 +108,7 @@
          WRITE(F04,9001) SUBR_NAME,TSEC
  9001    FORMAT(1X,A,' BEGN ',F10.3)
       ENDIF
+      WRITE_NEU = (PRTNEU == 'Y')
 
 ! **********************************************************************************************************************************
 ! Process element strain output (STRAIN) requests for all elems except composite shells
@@ -290,7 +292,7 @@ do_strain_pts:    DO M=1,NUM_PTS(I)
         CALL END_OP2_TABLE(ITABLE)
       ENDIF
 !===========================
-      IF ((POST /= 0) .AND. (ANY_STRN_OUTPUT > 0)) THEN
+      IF (WRITE_NEU .AND. (ANY_STRN_OUTPUT > 0)) THEN
                     
          NDUM = 0
          NUM_FROWS= 0                                      ! Write out BUSH strains

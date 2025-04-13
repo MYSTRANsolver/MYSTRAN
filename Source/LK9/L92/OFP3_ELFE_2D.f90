@@ -37,7 +37,7 @@
       USE SUBR_BEGEND_LEVELS, ONLY    :  OFP3_ELFE_2D_BEGEND
       USE CONSTANTS_1, ONLY           :  ZERO
       USE FEMAP_ARRAYS, ONLY          :  FEMAP_EL_NUMS, FEMAP_EL_VECS
-      USE PARAMS, ONLY                :  OTMSKIP, POST
+      USE PARAMS, ONLY                :  OTMSKIP, PRTNEU
       use model_stuf, only            :  pcomp_props
       USE MODEL_STUF, ONLY            :  ANY_ELFE_OUTPUT, EDAT, EPNT, ETYPE, FCONV, EID, ELMTYP, ELOUT, METYPE, NUM_EMG_FATAL_ERRS,&
                                          PLY_NUM, TYPE, STRESS
@@ -80,6 +80,7 @@
       INTEGER(LONG)                   :: ITABLE            ! the op2 subtable number
       CHARACTER(8*BYTE)               :: TABLE_NAME        ! the op2 table name
 
+      LOGICAL                         :: WRITE_NEU
       INTRINSIC IAND
   
 ! **********************************************************************************************************************************
@@ -92,6 +93,7 @@
          WRITE(F04,9001) SUBR_NAME,TSEC
  9001    FORMAT(1X,A,' BEGN ',F10.3)
       ENDIF
+      WRITE_NEU = (PRTNEU == 'Y')
 
 ! **********************************************************************************************************************************
 ! Process element engineering force requests for plate and USERIN elements.
@@ -234,7 +236,7 @@ elems_3: DO J = 1,NELE
         CALL END_OP2_TABLE(ITABLE)
       ENDIF
 
-      IF ((POST /= 0) .AND. (ANY_ELFE_OUTPUT > 0)) THEN
+      IF (WRITE_NEU .AND. (ANY_ELFE_OUTPUT > 0)) THEN
 
          NUM_FROWS= 0
          CALL ALLOCATE_FEMAP_DATA ( 'FEMAP ELEM ARRAYS', NCTRIA3K, 8, SUBR_NAME )

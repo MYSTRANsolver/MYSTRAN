@@ -41,7 +41,7 @@
       USE CC_OUTPUT_DESCRIBERS, ONLY  :  STRN_OPT
       USE LINK9_STUFF, ONLY           :  OGEL
       USE FEMAP_ARRAYS, ONLY          :  FEMAP_EL_VECS
-      USE PARAMS, ONLY                :  POST
+      USE PARAMS, ONLY                :  PRTNEU
  
       IMPLICIT NONE
 
