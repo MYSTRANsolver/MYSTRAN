@@ -1,6 +1,41 @@
-## Dev (2024/x/x)
+## 15.3.0-dev (2024/x/x)
 
-lorem ipsum
+
+Added:
+ - Additional Output Flags: https://github.com/MYSTRANsolver/MYSTRAN/issues/72
+
+Fixed:
+ - 
+
+
+Highlighted Changes
+-------------------
+Reworked output file management to make it easier to output everything:
+ - PARAM,PRTALL/FILES,YES/NO (default=NO)
+ - PARAM,PRTOP2/OP2,YES/NO (default=NO)
+ - PARAM,PRTANS/ANS,YES/NO (default=NO)
+   - alias for DEBUG,200,1
+ - PARAM,PRTNEU/NEU,YES/NO (default=NO)
+   - previously done with PARAM,POST,-1
+     - PARAM,POST,-1 is no longer used (and will be used by the OP2 for MSC/NX compatibility)
+
+ - Case 1:
+    - PARAM,PRTALL,YES
+    - PARAM,PRTOP2,YES
+    -> OP2 will be written with all results (as well as F06, ANS, NEU)
+ - Case 2:
+    - PARAM,PRTALL,NO
+    - PARAM,PRTOP2,YES
+    -> OP2 will be written with all op2 results
+ - Case 3:
+    - PARAM,PRTALL,NO
+    - PARAM,PRTOP2,NO
+    -> Case Control will dictate what the OP2 writes
+
+
+## 15.2.1 (2024/x/x)
+
+See the release notes.
 
 Added:
 - asdf
