@@ -133,6 +133,10 @@
       ENDIF
 
 jdo:  DO J=1,NFIELD                                        ! Load element data into array EDAT
+
+! Testing for (1:6) == 'CBUSH ' or 'CBUSH*' instead of just (1:5) == 'CBUSH' may help protect against 
+! matching keywords such as CBUSH1D and CBUSH2D that could be added in the future. It's also
+! used in BD_CQUAD, BD_CTRIA, BD_PLOAD2, and LOADB_RESTART.
  
          IF ((J == 3) .AND. ((JCARD(1)(1:6) == 'CBUSH ') .OR. (JCARD(1)(1:6) == 'CBUSH*'))) THEN
             NEDAT = NEDAT + 1
