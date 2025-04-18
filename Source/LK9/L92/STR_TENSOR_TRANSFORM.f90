@@ -83,7 +83,7 @@
       REAL(DOUBLE)                    :: TS0(3,3)          ! Transform matrix from basic coords to stress output coords
       REAL(DOUBLE)                    :: T0S(3,3)          ! TS0'
       REAL(DOUBLE)                    :: TES(3,3)          ! Transform matrix from local elem coords to stress output coords
-      REAL(DOUBLE)                    :: TSE(3,3)          ! TEO'
+      REAL(DOUBLE)                    :: TSE(3,3)          ! TES'
 
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
@@ -93,54 +93,58 @@
       ENDIF
 
 ! **********************************************************************************************************************************
-! Get transformation matrix TS0 from stress coord sys to basic if it exists
+! Get transformation matrix T0S from stress coord sys to basic if it exists
 
-      IF (STRESS_CORD_SYS == 0) THEN                       ! STRESS_CORD_SYS was basic so set T0o to the identity matrix
+      IF (STRESS_CORD_SYS == 0) THEN                       ! STRESS_CORD_SYS was basic so set T0S to the identity matrix
 
-         DO I=1,3
-            DO J=1,3
-               T0S(I,J) = ZERO
-            ENDDO
-            T0S(I,I) = ONE
-         ENDDO
+        DO I=1,3
+          DO J=1,3
+            T0S(I,J) = ZERO
+          ENDDO
+          T0S(I,I) = ONE
+        ENDDO
 
       ELSE                                                 ! Need to transform ES mat'l matrix to basic coords
 
-         ICORD = 0
-         DO I=1,NCORD                                      ! Get the internal coord system ID for STRESS_CORD_SYS
-            IF (STRESS_CORD_SYS == CORD(I,2)) THEN
-               ICORD = I
-               EXIT
-            ENDIF
-         ENDDO
+        ICORD = 0
+        DO I=1,NCORD                                       ! Get the internal coord system ID for STRESS_CORD_SYS
+          IF (STRESS_CORD_SYS == CORD(I,2)) THEN
+            ICORD = I
+            EXIT
+          ENDIF
+        ENDDO
+
+        IF (ICORD > 0) THEN                                ! STRESS_CORD_SYS was found so do transformation
+
+          DO I=1,3                                         ! Get TOS from RCORD array        
+            DO J=1,3
+              K = 3 + 3*(I-1) + J
+              TS0(I,J) = RCORD(ICORD,K)
+              T0S(J,I) = TS0(I,J)
+            ENDDO
+          ENDDO
+
+        ELSE                                               ! STRESS_CORD_SYS was not found leave tensor in local elem system
+
+          WRITE(F06,9101) STRESS_CORD_SYS
+
+        ENDIF
 
       ENDIF
 
-      IF (ICORD > 0) THEN                                  ! STRESS_CORD_SYS was found so do transformation
+! **********************************************************************************************************************************
 
-         DO I=1,3                                          ! Get TO0 from RCORD array        
-            DO J=1,3
-               K = 3 + 3*(I-1) + J
-               TS0(I,J) = RCORD(ICORD,K)
-               T0S(J,I) = TS0(I,J)
-            ENDDO
-         ENDDO
 
-         CALL MATMULT_FFF ( TE , T0S  , 3, 3, 3, TES )     ! Calc TES then transform to get TSE
-         DO I=1,3
-            DO J=1,3
-               TSE(I,J) = TES(J,I)
-            ENDDO
-         ENDDO
+      CALL MATMULT_FFF ( TE , T0S  , 3, 3, 3, TES )        ! Calc TES then transform to get TSE
+      DO I=1,3
+        DO J=1,3
+          TSE(I,J) = TES(J,I)
+        ENDDO
+      ENDDO
                                                            ! Transform input stress tensor from e coords to o coords
-         CALL MATMULT_FFF (STRESS_TENSOR, TES, 3, 3, 3, DUM33 )
-         CALL MATMULT_FFF (TSE, DUM33, 3, 3, 3, STRESS_TENSOR )
+      CALL MATMULT_FFF (STRESS_TENSOR, TES, 3, 3, 3, DUM33 )
+      CALL MATMULT_FFF (TSE, DUM33, 3, 3, 3, STRESS_TENSOR )
 
-      ELSE                                                 ! STRESS_CORD_SYS was not found leave tensor in local elem system
-
-         WRITE(F06,9101) STRESS_CORD_SYS
-
-      ENDIF
 
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN

@@ -335,7 +335,18 @@
 
       IF (STR_CID /= -1) THEN                              ! User req diff stress/strain/engr force output coord sys than elem local
 
+! Warning. The titles of stress and strain in .f06 still say L O C A L   E L E M E N T   C O O R D I N A T E   S Y S T E M
+! even when it's transformed here.
+
          IF      ((TYPE (1:5) == 'QUAD4') .OR. (TYPE(1:5) == 'TRIA3')) THEN         
+
+! Shells don't work because STR_TENSOR_TRANSFORM should be between setting STR_TENSOR and setting stress
+! and shear strain may need factor of 2 before transforming.
+            WRITE(ERR,9303)
+            WRITE(F06,9303)
+            FATAL_ERR = FATAL_ERR + 1
+            CALL OUTA_HERE ( 'Y' )
+
                                                            ! Transform 2D membrane and transverse shear stresses
             STR_TENSOR(1,1) = STRESS(1)   ;   STR_TENSOR(1,2) = STRESS(3)   ;   STR_TENSOR(1,3) = STRESS(7)
             STR_TENSOR(2,1) = STRESS(3)   ;   STR_TENSOR(2,2) = STRESS(2)   ;   STR_TENSOR(2,3) = STRESS(8)
@@ -381,11 +392,14 @@
 
             CALL STR_TENSOR_TRANSFORM ( STR_TENSOR, STR_CID )
 
+
          ELSE IF ((TYPE(1:4) == 'HEXA') .OR. (TYPE(1:5) == 'PENTA') .OR. (TYPE(1:5) == 'TETRA')) THEN
                                                            ! Transform 3D stresses
             STR_TENSOR(1,1) = STRESS(1)   ;   STR_TENSOR(1,2) = STRESS(4)   ;   STR_TENSOR(1,3) = STRESS(6)
             STR_TENSOR(2,1) = STRESS(4)   ;   STR_TENSOR(2,2) = STRESS(2)   ;   STR_TENSOR(2,3) = STRESS(5)
             STR_TENSOR(3,1) = STRESS(6)   ;   STR_TENSOR(3,2) = STRESS(5)   ;   STR_TENSOR(3,3) = STRESS(3)
+
+            CALL STR_TENSOR_TRANSFORM ( STR_TENSOR, STR_CID )
 
             STRESS(1) = STR_TENSOR(1,1)
             STRESS(2) = STR_TENSOR(2,2)
@@ -394,20 +408,19 @@
             STRESS(5) = STR_TENSOR(2,3)
             STRESS(6) = STR_TENSOR(1,3)
 
-            CALL STR_TENSOR_TRANSFORM ( STR_TENSOR, STR_CID )
                                                            ! Transform 3D strains
-            STR_TENSOR(1,1) = STRAIN(1)   ;   STR_TENSOR(1,2) = STRAIN(4)   ;   STR_TENSOR(1,3) = STRAIN(6)
-            STR_TENSOR(2,1) = STRAIN(4)   ;   STR_TENSOR(2,2) = STRAIN(2)   ;   STR_TENSOR(2,3) = STRAIN(5)
-            STR_TENSOR(3,1) = STRAIN(6)   ;   STR_TENSOR(3,2) = STRAIN(5)   ;   STR_TENSOR(3,3) = STRAIN(3)
+            STR_TENSOR(1,1) = STRAIN(1)   ;   STR_TENSOR(1,2) = STRAIN(4)/2 ;   STR_TENSOR(1,3) = STRAIN(6)/2
+            STR_TENSOR(2,1) = STRAIN(4)/2 ;   STR_TENSOR(2,2) = STRAIN(2)   ;   STR_TENSOR(2,3) = STRAIN(5)/2
+            STR_TENSOR(3,1) = STRAIN(6)/2 ;   STR_TENSOR(3,2) = STRAIN(5)/2 ;   STR_TENSOR(3,3) = STRAIN(3)
+
+            CALL STR_TENSOR_TRANSFORM ( STR_TENSOR, STR_CID )
 
             STRAIN(1) = STR_TENSOR(1,1)
             STRAIN(2) = STR_TENSOR(2,2)
             STRAIN(3) = STR_TENSOR(3,3)
-            STRAIN(4) = STR_TENSOR(1,2)
-            STRAIN(5) = STR_TENSOR(2,3)
-            STRAIN(6) = STR_TENSOR(1,3)
-
-            CALL STR_TENSOR_TRANSFORM ( STR_TENSOR, STR_CID )
+            STRAIN(4) = STR_TENSOR(1,2)*2
+            STRAIN(5) = STR_TENSOR(2,3)*2
+            STRAIN(6) = STR_TENSOR(1,3)*2
 
          ELSE
 
@@ -433,6 +446,7 @@
  9203 FORMAT(' *ERROR  9203: PROGRAMMING ERROR IN SUBROUTINE ',A                                                                   &
                     ,/,14X,' INCORRECT ELEMENT TYPE = "',A,'"')
  
+ 9303 FORMAT(' *ERROR  9303: PARAM,STR_CID not implemented for QUAD and TRIA elements.' )
 
 
 

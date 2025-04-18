@@ -133,8 +133,12 @@
       ENDIF
 
 jdo:  DO J=1,NFIELD                                        ! Load element data into array EDAT
+
+! Testing for (1:6) == 'CBUSH ' or 'CBUSH*' instead of just (1:5) == 'CBUSH' may help protect against 
+! matching keywords such as CBUSH1D and CBUSH2D that could be added in the future. It's also
+! used in BD_CQUAD, BD_CTRIA, BD_PLOAD2, and LOADB_RESTART.
  
-         IF ((J == 3) .AND. (JCARD(1)(1:6) == 'CBUSH ')) THEN
+         IF ((J == 3) .AND. ((JCARD(1)(1:6) == 'CBUSH ') .OR. (JCARD(1)(1:6) == 'CBUSH*'))) THEN
             NEDAT = NEDAT + 1
             IF (JCARD(5)(1:) == ' ') THEN                  ! CBUSH has G2 blank so BUSH elem has only G1 grid. Other end is grounded
                EDAT(NEDAT) = 1
@@ -147,7 +151,7 @@ jdo:  DO J=1,NFIELD                                        ! Load element data i
          IF (IERRFL(J+1) == 'N') THEN
             IF (CHK_FLD_ARRAY(J+1) == 'Y') THEN
                IF (I4INP <= 0) THEN                        ! No error if BUSH and G2 field is blank (BUSH grounded at end G2)
-                  IF ((JCARD(1)(1:8) == 'CBUSH   ') .AND. (JCARD(5)(1:) == ' ')) THEN
+                  IF (((JCARD(1)(1:8) == 'CBUSH   ') .OR. (JCARD(1)(1:8) == 'CBUSH*  ')) .AND. (JCARD(5)(1:) == ' ')) THEN
                      EXIT jdo
                   ENDIF
                   WRITE(ERR,1021) JCARD(1), JCARD(2), I4INP, JF(J+1)
