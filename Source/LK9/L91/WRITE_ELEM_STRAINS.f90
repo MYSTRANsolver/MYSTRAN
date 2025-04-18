@@ -346,11 +346,11 @@
 
              ELSE IF((TYPE(1:4) == 'HEXA') .OR. (TYPE(1:5) == 'PENTA') .OR. (TYPE(1:5) == 'TETRA')) THEN
                 IF (STRN_OPT == 'VONMISES') THEN
-                   IF (WRITE_F06) WRITE(F06,1301) FILL(1:20), FILL(1:20)
-                   IF (WRITE_ANS) WRITE(ANS,1301) FILL(1:17), FILL(1:17)
+                   IF (WRITE_F06) WRITE(F06,1301) FILL(1: 1), FILL(1: 1)
+                   IF (WRITE_ANS) WRITE(ANS,1301) FILL(1:16), FILL(1:16)
                 ELSE
-                   IF (WRITE_F06) WRITE(F06,1302) FILL(1:20), FILL(1:20)
-                   IF (WRITE_ANS) WRITE(ANS,1302) FILL(1:17), FILL(1:17)
+                   IF (WRITE_F06) WRITE(F06,1302) FILL(1: 1), FILL(1: 1)
+                   IF (WRITE_ANS) WRITE(ANS,1302) FILL(1:16), FILL(1:16)
                 ENDIF
 
              ELSE IF (TYPE(1:5) == 'QUAD4') THEN
@@ -781,14 +781,28 @@
  1104 FORMAT(A,I8,1ES14.6)
 
 ! 3D Elems >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
- 1301 FORMAT(A,'Element   Epsilon-xx    Epsilon-yy    Epsilon-zz     Gamma-xy      Gamma-yz      Gamma-zx     von Mises'           &
-          ,/,A,'   ID')
+ 1301 FORMAT(1X,A,'  Elem  Location            Epsilon-xx    Epsilon-yy    Epsilon-zz     Gamma-xy      Gamma-yz      Gamma-zx  ', &
+             '   von Mises'                                                                                                        &
+          ,/,1X,A,'   ID')
   
- 1302 FORMAT(A,'Element   Epsilon-xx    Epsilon-yy    Epsilon-zz     Gamma-xy      Gamma-yz      Gamma-zx        ',                &
-             'Octahedral Strain'                                                                                                   &
-          ,/,A,'   ID',91X,'Direct        Shear')
+ 1302 FORMAT(1X,A,'  Elem  Location            Epsilon-xx    Epsilon-yy    Epsilon-zz     Gamma-xy      Gamma-yz      Gamma-zx  ', &
+             '      Octahedral Strain'                                                                                             &
+          ,/,1X,A,'   ID',109X,'Direct        Shear')
   
- 1303 FORMAT(19X,I8,8(1ES14.6))
+ 1303 FORMAT(1X,I8,2X,'CENTER  ',8X,8(1ES14.6))
+
+
+ ! 1301 FORMAT(A,'Element   Epsilon-xx    Epsilon-yy    Epsilon-zz     Gamma-xy      Gamma-yz      Gamma-zx     von Mises'           &
+          ! ,/,A,'   ID')
+  
+ ! 1302 FORMAT(A,'Element   Epsilon-xx    Epsilon-yy    Epsilon-zz     Gamma-xy      Gamma-yz      Gamma-zx        ',                &
+             ! 'Octahedral Strain'                                                                                                   &
+          ! ,/,A,'   ID',91X,'Direct        Shear')
+  
+ ! 1303 FORMAT(19X,I8,8(1ES14.6))
+
+
+
 
  1304 FORMAT(28X,'------------- ------------- ------------- ------------- ------------- ------------- -------------',/,            &
              16X,'MAX* :     ',7(ES14.6),/,                                                                                        &

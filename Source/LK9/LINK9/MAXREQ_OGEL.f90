@@ -266,6 +266,8 @@
                   NUMBER_ROWS(K) = 2*NUM_SEi(LETYPE)
                ENDIF
             ENDIF
+         ELSE IF ((TYPE(1:4) == 'HEXA' ) .OR. (TYPE(1:5) == 'PENTA') .OR. (TYPE(1:5) == 'TETRA')) THEN
+            NUMBER_ROWS(K) = NUM_SEi(LETYPE)
          ENDIF
 
       ELSE IF (K == 3) THEN                                ! K = 3 is elem strain output requests
@@ -287,6 +289,8 @@
                   NUMBER_ROWS(K) = 2*NUM_SEi(LETYPE)
                ENDIF
             ENDIF
+         ELSE IF ((TYPE(1:4) == 'HEXA' ) .OR. (TYPE(1:5) == 'PENTA') .OR. (TYPE(1:5) == 'TETRA')) THEN
+            NUMBER_ROWS(K) = NUM_SEi(LETYPE)
          ENDIF
 
       ENDIF

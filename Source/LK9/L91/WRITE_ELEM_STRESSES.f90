@@ -365,11 +365,11 @@
 
          ELSE IF((TYPE(1:4) == 'HEXA') .OR. (TYPE(1:5) == 'PENTA') .OR. (TYPE(1:5) == 'TETRA')) THEN
             IF (STRE_OPT == 'VONMISES') THEN
-               IF (WRITE_F06) WRITE(F06,1301) FILL(1:20), FILL(1:20)
-               IF (WRITE_ANS) WRITE(ANS,1301) FILL(1:17), FILL(1:17)
+               IF (WRITE_F06) WRITE(F06,1301) FILL(1: 1), FILL(1: 1)
+               IF (WRITE_ANS) WRITE(ANS,1301) FILL(1:16), FILL(1:16)
             ELSE
-               IF (WRITE_F06) WRITE(F06,1302) FILL(1:20), FILL(1:20)
-               IF (WRITE_ANS) WRITE(ANS,1302) FILL(1:17), FILL(1:17)
+               IF (WRITE_F06) WRITE(F06,1302) FILL(1: 1), FILL(1: 1)
+               IF (WRITE_ANS) WRITE(ANS,1302) FILL(1:16), FILL(1:16)
             ENDIF
 
          ELSE IF (TYPE(1:5) == 'QUAD4') THEN
@@ -501,6 +501,7 @@
             NCOLS = 8
          ENDIF
 
+!Victor writing solid stress values for f06 and ans
          DO I=1,NUM
             WRITE(F06,1303) EID_OUT_ARRAY(I,1),(OGEL(I,J),J=1,NCOLS)
             IF (WRITE_ANS) WRITE(ANS,1313) EID_OUT_ARRAY(I,1), (OGEL(I,J),J=1,NCOLS)
@@ -582,11 +583,13 @@
            ENDIF
          ENDIF  ! end of op2
 
+!Victor shell stress output. Use this as a guide for solid corner stress
          K = 0
          DO I=1,NUM,NUM_PTS
  4          FORMAT(' *DEBUG:  WRITE_CQUAD4-144:  I=',I4, " K=", I4)
             K = K + 1
             WRITE(ERR,4) I,K
+! Center stress. 1+2 lines
             WRITE(F06,*)
             IF (WRITE_ANS) WRITE(ANS,*)
             WRITE(F06,1403) FILL(1: 0), EID_OUT_ARRAY(I,1),(OGEL(K,J),J=1,10)
@@ -595,7 +598,7 @@
             WRITE(F06,1404) FILL(1: 0), (OGEL(K,J),J=1,8)
             IF (WRITE_ANS) WRITE(ANS,1414) (OGEL(K,J),J=1,8)
 
-
+! Corner stress. 1+2 lines per grid point.
             DO L=1,NUM_PTS-1
                K = K + 1
                WRITE(ERR,4) I,K
@@ -783,14 +786,16 @@
  1104 FORMAT(A,I8,1ES14.6)
 
 ! 3D Elems >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
- 1301 FORMAT(A,'Element    Sigma-xx      Sigma-yy      Sigma-zz       Tau-xy        Tau-yz        Tau-zx      von Mises'           &
-          ,/,A,'   ID')
+
+ 1301 FORMAT(1X,A,'  Elem  Location            Sigma-xx      Sigma-yy      Sigma-zz       Tau-xy        Tau-yz        Tau-zx    ', &
+             '   von Mises'                                                                                                        &
+          ,/,1X,A,'   ID')
   
- 1302 FORMAT(A,'Element    Sigma-xx      Sigma-yy      Sigma-zz       Tau-xy        Tau-yz        Tau-zx         ',                &
-             'Octahedral Stress'                                                                                                   &
-          ,/,A,'   ID',91X,'Direct        Shear')
+ 1302 FORMAT(1X,A,'  Elem  Location            Sigma-xx      Sigma-yy      Sigma-zz       Tau-xy        Tau-yz        Tau-zx    ', &
+             '      Octahedral Stress'                                                                                             &
+          ,/,1X,A,'   ID',109X,'Direct        Shear')
   
- 1303 FORMAT(19X,I8,8(1ES14.6))
+ 1303 FORMAT(1X,I8,2X,'CENTER  ',8X,8(1ES14.6))
 
  1304 FORMAT(28X,'------------- ------------- ------------- ------------- ------------- ------------- -------------',/,            &
              16X,'MAX* :     ',7(ES14.6),/,                                                                                        &
@@ -805,7 +810,7 @@
              16X,'ABS* :     ',8(ES14.6),/                                                                                         &
              16X,'* for output set')
 
- 1313 FORMAT(16X,I8,8(1ES14.6))
+ 1313 FORMAT(16X,I8,8(1ES14.6)) !todo ANS solid stress row
 
  1314 FORMAT(28X,'------------- ------------- ------------- ------------- ------------- ------------- -------------',/,            &
              1X,'MAX (for output set):  ',7(ES14.6),/,                                                                             &

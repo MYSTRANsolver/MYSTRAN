@@ -440,7 +440,7 @@
 ! Calculate SEi, STEi, matrices for stress data recovery and BE matrices for strain recovery. All stresses calc at center of element
  
       IF ((OPT(3) == 'Y') .OR. (OPT(6) == 'Y')) THEN
- 
+ !Victor 3rd index in SEi, STEi, BEi is stress point number. It nly uses 1 here becuase center. But make it do 1-5 (center + corners)
          DO K=1,6
             DO L=1,3*ELGP
                DUM2(K,L) = ZERO

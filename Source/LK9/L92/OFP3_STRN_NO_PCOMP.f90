@@ -135,7 +135,11 @@
                CALL IS_ELEM_PCOMP_PROPS ( J )
                IF (PCOMP_PROPS == 'N') THEN
                   IF (ETYPE(J) == ELMTYP(I)) THEN
-                     IF ((STRN_LOC == 'CORNER  ') .OR. (STRN_LOC == 'GAUSS   ')) THEN
+                  IF ((STRN_LOC == 'CORNER  ') .OR.                                                                                & 
+                      (STRN_LOC == 'GAUSS   ') .OR.                                                                                &
+                      (ETYPE(J)(1:4) == 'HEXA') .OR.                                                                               &
+                      (ETYPE(J)(1:5) == 'PENTA') .OR.                                                                              &
+                      (ETYPE(J)(1:5) == 'TETRA')) THEN
                         NUM_PTS(I) = NUM_SEi(I)
                      ELSE
                         NUM_PTS(I) = 1

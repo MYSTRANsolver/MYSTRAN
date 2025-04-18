@@ -133,7 +133,11 @@
             CALL IS_ELEM_PCOMP_PROPS ( J )
             IF (PCOMP_PROPS == 'N') THEN
                IF (ETYPE(J) == ELMTYP(I)) THEN
-                  IF ((STRE_LOC == 'CORNER  ') .OR. (STRE_LOC == 'GAUSS   ')) THEN
+                  IF ((STRE_LOC == 'CORNER  ') .OR.                                                                                & 
+                      (STRE_LOC == 'GAUSS   ') .OR.                                                                                &
+                      (ETYPE(J)(1:4) == 'HEXA') .OR.                                                                               &
+                      (ETYPE(J)(1:5) == 'PENTA') .OR.                                                                              &
+                      (ETYPE(J)(1:5) == 'TETRA')) THEN
                      NUM_PTS(I) = NUM_SEi(I)
                   ELSE
                      NUM_PTS(I) = 1
@@ -201,6 +205,7 @@ do_stress_pts:    DO M=1,NUM_PTS(I)
                      DO K=1,9
                         STRESS(K) = STRESS_OUT(K,M)
                      ENDDO
+
                      CALL CALC_ELEM_STRESSES ( MAXREQ, NUM_OGEL, J, 'Y', 'N' )
                                                            ! If CB soln, write rows of OGEL, from CALC_ELEM_STRESSES, to OTM_STRE
                      IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN

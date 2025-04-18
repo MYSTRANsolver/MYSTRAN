@@ -300,8 +300,13 @@
 
          DO I=1,3
             DO J=1,ELDOF
-               STRAIN(I)   = STRAIN(I  ) + BE1(I,J,STR_PT_NUM)*UEL(J)
-               STRAIN(I+3) = STRAIN(I+3) + BE2(I,J,STR_PT_NUM)*UEL(J)
+!Victor. Temporarily using 1 as STR_PT_NUM so it only gets center stress because corner stresses aren't right yet.
+!However each stress point doens't have the smae values for some reason. But the first one for each element seems OK.
+               !STRAIN(I)   = STRAIN(I  ) + BE1(I,J,STR_PT_NUM)*UEL(J)
+               !STRAIN(I+3) = STRAIN(I+3) + BE2(I,J,STR_PT_NUM)*UEL(J)
+
+               STRAIN(I)   = STRAIN(I  ) + BE1(I,J,1)*UEL(J)
+               STRAIN(I+3) = STRAIN(I+3) + BE2(I,J,1)*UEL(J)
             ENDDO
          ENDDO
 
