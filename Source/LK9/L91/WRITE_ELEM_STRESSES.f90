@@ -501,11 +501,19 @@
             NCOLS = 8
          ENDIF
 
-!Victor writing solid stress values for f06 and ans
-         DO I=1,NUM
-            WRITE(F06,1303) EID_OUT_ARRAY(I,1),(OGEL(I,J),J=1,NCOLS)
-            IF (WRITE_ANS) WRITE(ANS,1313) EID_OUT_ARRAY(I,1), (OGEL(I,J),J=1,NCOLS)
+!Victor todo ans file too.
+         K = 0
+         DO I=1,NUM,NUM_PTS
+            K = K + 1
+            ! Center
+            WRITE(F06,1303) EID_OUT_ARRAY(I,1),(OGEL(K,J),J=1,NCOLS)
+            ! Corner
+            DO L=1,NUM_PTS-1
+               K = K + 1
+               WRITE(F06,1306) FILL(1: 0), GID_OUT_ARRAY(I,L+1),(OGEL(K,J),J=1,NCOLS)
+            ENDDO
          ENDDO
+
 
          CALL GET_MAX_MIN_ABS_STR ( NUM, NCOLS, 'N', MAX_ANS, MIN_ANS, ABS_ANS )
 
@@ -583,13 +591,11 @@
            ENDIF
          ENDIF  ! end of op2
 
-!Victor shell stress output. Use this as a guide for solid corner stress
          K = 0
          DO I=1,NUM,NUM_PTS
  4          FORMAT(' *DEBUG:  WRITE_CQUAD4-144:  I=',I4, " K=", I4)
             K = K + 1
             WRITE(ERR,4) I,K
-! Center stress. 1+2 lines
             WRITE(F06,*)
             IF (WRITE_ANS) WRITE(ANS,*)
             WRITE(F06,1403) FILL(1: 0), EID_OUT_ARRAY(I,1),(OGEL(K,J),J=1,10)
@@ -598,7 +604,6 @@
             WRITE(F06,1404) FILL(1: 0), (OGEL(K,J),J=1,8)
             IF (WRITE_ANS) WRITE(ANS,1414) (OGEL(K,J),J=1,8)
 
-! Corner stress. 1+2 lines per grid point.
             DO L=1,NUM_PTS-1
                K = K + 1
                WRITE(ERR,4) I,K
@@ -809,6 +814,8 @@
              16X,'MIN* :     ',8(ES14.6),//,                                                                                       &
              16X,'ABS* :     ',8(ES14.6),/                                                                                         &
              16X,'* for output set')
+
+ 1306 FORMAT(1X,A,10X,'GRD',I8,5X,8(1ES14.6))
 
  1313 FORMAT(16X,I8,8(1ES14.6)) !todo ANS solid stress row
 

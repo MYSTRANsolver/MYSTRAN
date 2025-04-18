@@ -195,10 +195,24 @@ elems_7: DO J = 1,NELE
                   DO K=1,9                                 ! Set STRAIN_OUT for NUM_PTS(I) = 1
                      STRAIN_OUT(K,1) = STRAIN(K)
                   ENDDO
-                  IF ((STRN_LOC == 'CORNER  ') .OR. (STRN_LOC == 'GAUSS   ')) THEN
+                  IF ((STRN_LOC == 'CORNER  ') .OR.                                                                                & 
+                      (STRN_LOC == 'GAUSS   ') .OR.                                                                                &
+                      (TYPE(1:4) == 'HEXA') .OR.                                                                                   &
+                      (TYPE(1:5) == 'PENTA') .OR.                                                                                  &
+                      (TYPE(1:5) == 'TETRA')) THEN
                      IF (TYPE(1:5) == 'QUAD4') THEN        ! Calc STRAIN_OUT for QUAD4
                         CALL POLYNOM_FIT_STRE_STRN ( STRAIN_RAW, 9, NUM_PTS(I), STRAIN_OUT, STRAIN_OUT_PCT_ERR,                    &
                                                      STRAIN_OUT_ERR_INDEX, PCT_ERR_MAX )
+                     ELSE IF ((TYPE(1:4) == 'HEXA') .OR.                                                                           &
+                              (TYPE(1:5) == 'PENTA') .OR.                                                                          &
+                              (TYPE(1:5) == 'TETRA')) THEN
+! Victor Copy gauss point strains to corners for now. It should really extrapolate maybe in POLYNOM_FIT_STRE_STRN
+! do similar for OFP3_STRE_NO_PCOMP
+                        DO M=1,NUM_PTS(I)
+                          DO K=1,9
+                             STRAIN_OUT(K,M) = STRAIN_RAW(K,M)
+                          ENDDO
+                        ENDDO
                      ENDIF
                   ENDIF
 

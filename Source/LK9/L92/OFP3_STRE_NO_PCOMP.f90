@@ -193,10 +193,23 @@ elems_5: DO J = 1,NELE
                   DO K=1,9                                 ! Set STRESS_OUT for NUM_PTS(I) = 1
                      STRESS_OUT(K,1) = STRESS(K)
                   ENDDO
-                  IF ((STRE_LOC == 'CORNER  ') .OR. (STRE_LOC == 'GAUSS   ')) THEN
+                  IF ((STRE_LOC == 'CORNER  ') .OR.                                                                                & 
+                      (STRE_LOC == 'GAUSS   ') .OR.                                                                                &
+                      (TYPE(1:4) == 'HEXA') .OR.                                                                                   &
+                      (TYPE(1:5) == 'PENTA') .OR.                                                                                  &
+                      (TYPE(1:5) == 'TETRA')) THEN
                      IF (TYPE(1:5) == 'QUAD4') THEN        ! Calc STRESS_OUT for QUAD4
                         CALL POLYNOM_FIT_STRE_STRN ( STRESS_RAW, 9, NUM_PTS(I), STRESS_OUT, STRESS_OUT_PCT_ERR,                    &
                                                      STRESS_OUT_ERR_INDEX, PCT_ERR_MAX )
+                     ELSE IF ((TYPE(1:4) == 'HEXA') .OR.                                                                           &
+                              (TYPE(1:5) == 'PENTA') .OR.                                                                          &
+                              (TYPE(1:5) == 'TETRA')) THEN
+! Victor Copy gauss point strains to corners for now. It should really extrapolate maybe in POLYNOM_FIT_STRE_STRN
+                        DO M=1,NUM_PTS(I)
+                          DO K=1,9
+                             STRESS_OUT(K,M) = STRESS_RAW(K,M)
+                          ENDDO
+                        ENDDO
                      ENDIF
                   ENDIF
 

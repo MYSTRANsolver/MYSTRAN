@@ -489,12 +489,20 @@
             NCOLS = 8
          ENDIF
 
-         CALL GET_MAX_MIN_ABS_STR ( NUM, NCOLS, 'N', MAX_ANS, MIN_ANS, ABS_ANS )
-         DO I=1,NUM
-            WRITE(F06,1303) EID_OUT_ARRAY(I,1),(OGEL(I,J),J=1,NCOLS)
-            IF (WRITE_ANS) WRITE(ANS,1313) EID_OUT_ARRAY(I,1),    &
-                                                                                                            (OGEL(I,J),J=1,NCOLS)
+!Victor todo ans file too.
+         K = 0
+         DO I=1,NUM,NUM_PTS
+            K = K + 1
+            ! Center
+            WRITE(F06,1303) EID_OUT_ARRAY(I,1),(OGEL(K,J),J=1,NCOLS)
+            ! Corner
+            DO L=1,NUM_PTS-1
+               K = K + 1
+               WRITE(F06,1306) FILL(1: 0), GID_OUT_ARRAY(I,L+1),(OGEL(K,J),J=1,NCOLS)
+            ENDDO
          ENDDO
+
+         CALL GET_MAX_MIN_ABS_STR ( NUM, NCOLS, 'N', MAX_ANS, MIN_ANS, ABS_ANS )
 
          IF (STRN_OPT == 'VONMISES') THEN
             WRITE(F06,1304) (MAX_ANS(J),J=1,7), (MIN_ANS(J),J=1,7), (ABS_ANS(J),J=1,7)
@@ -816,6 +824,8 @@
              16X,'MIN* :     ',8(ES14.6),//,                                                                                       &
              16X,'ABS* :     ',8(ES14.6),/                                                                                         &
              16X,'* for output set')
+
+ 1306 FORMAT(1X,A,10X,'GRD',I8,5X,8(1ES14.6))
 
  1313 FORMAT(16X,I8,8(1ES14.6))
 

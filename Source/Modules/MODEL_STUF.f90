@@ -1237,31 +1237,6 @@
                                                                    4,             & ! USER1   21
                                                                    0/)              ! USERIN  22
 
-!Victor
-                                                             ! ! Array of number of stress recovery points for various elem types
-      ! INTEGER(LONG)                   :: NUM_SEi(METYPE)     =  (/ 1,             & ! BAR      1
-                                                                   ! 1,             & ! BEAM     2
-                                                                   ! 1,             & ! BUSH     3
-                                                                   ! 1,             & ! ELAS1    4
-                                                                   ! 1,             & ! ELAS2    5
-                                                                   ! 1,             & ! ELAS3    6
-                                                                   ! 1,             & ! ELAS4    7
-                                                                   ! 1,             & ! HEXA8    8
-                                                                   ! 1,             & ! HEXA20   9
-                                                                   ! 1,             & ! PENTA6  10
-                                                                   ! 1,             & ! PENTA15 11
-                                                                   ! 0,             & ! PLOTEL  12
-                                                                   ! 5,             & ! QUAD4   13
-                                                                   ! 5,             & ! QUAD4K  14
-                                                                   ! 1,             & ! ROD     15
-                                                                   ! 1,             & ! SHEAR   16
-                                                                   ! 1,             & ! TETRA4  17
-                                                                   ! 1,             & !,TETRA10 18
-                                                                   ! 1,             & ! TRIA3K  19
-                                                                   ! 1,             & ! TRIA3   20
-                                                                   ! 1,             & ! USER1   21
-                                                                   ! 0/)              ! USERIN  22
-
                                                              ! Array of number of stress recovery points for various elem types
       INTEGER(LONG)                   :: NUM_SEi(METYPE)     =  (/ 1,             & ! BAR      1
                                                                    1,             & ! BEAM     2
