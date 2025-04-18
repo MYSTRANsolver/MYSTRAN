@@ -440,7 +440,14 @@
 ! Calculate SEi, STEi, matrices for stress data recovery and BE matrices for strain recovery. All stresses calc at center of element
  
       IF ((OPT(3) == 'Y') .OR. (OPT(6) == 'Y')) THEN
- !Victor 3rd index in SEi, STEi, BEi is stress point number. It nly uses 1 here becuase center. But make it do 1-5 (center + corners)
+ !Victor 3rd index in SEi, STEi, BEi is stress point number. It nly uses 1 here becuase center. But make it do 1-9 (center + corners)
+!OPT(6) is going to use DETJ again and expects it to be at gauss point as calculated above, not at corners as calculated here.
+!OPT(4) also reuses DETJ, so be careufl if that is every used together with OPT(3) or OPT(6).
+!so use a different variable here.
+!0,0,0 for SHP3DH and JAC3D are the gauss point coordiantes. Pass corner coordinates for corners. 
+!maybe later it can use gauss points and extrapolate but it's tricky to store them becuas there are a different number.
+!similar for CPENTA and CTETRA
+
          DO K=1,6
             DO L=1,3*ELGP
                DUM2(K,L) = ZERO

@@ -300,12 +300,8 @@
 
          DO I=1,3
             DO J=1,ELDOF
-!Victor. Temporarily using 1 as STR_PT_NUM so it only gets center stress because corner stresses aren't right yet.
-               !STRAIN(I)   = STRAIN(I  ) + BE1(I,J,STR_PT_NUM)*UEL(J)
-               !STRAIN(I+3) = STRAIN(I+3) + BE2(I,J,STR_PT_NUM)*UEL(J)
-
-               STRAIN(I)   = STRAIN(I  ) + BE1(I,J,1)*UEL(J)
-               STRAIN(I+3) = STRAIN(I+3) + BE2(I,J,1)*UEL(J)
+               STRAIN(I)   = STRAIN(I  ) + BE1(I,J,STR_PT_NUM)*UEL(J)
+               STRAIN(I+3) = STRAIN(I+3) + BE2(I,J,STR_PT_NUM)*UEL(J)
             ENDDO
          ENDDO
 
