@@ -98,10 +98,8 @@
       REAL(DOUBLE)                    :: CBAR(3,3*ELGP)         ! Derivatives of shape fcns wrt x,y,z used in diff stiff matrix
 !                                                                 (contains terms from DPSHX matrices for each grid of the HEXA)
 
-      REAL(DOUBLE)                    :: DETJ(IORD*IORD*IORD)
-                                                                ! Determinant of JAC for all Gauss points
+      REAL(DOUBLE)                    :: DETJ(IORD*IORD*IORD)   ! Determinant of JAC for all Gauss points
       REAL(DOUBLE)                    :: DUM_DETJ
-
       REAL(DOUBLE)                    :: DPSHG(3,ELGP)          ! Output from subr SHP3DH. Derivatives of PSH wrt elem isopar coords
       REAL(DOUBLE)                    :: DPSHX(3,ELGP)          ! Derivatives of PSH wrt elem x, y coords.
       REAL(DOUBLE)                    :: DUM0(3*ELGP)           ! Intermediate matrix used in solving for elem matrices
@@ -448,8 +446,6 @@
 !  OPT(6) is going to use DETJ later and probably expects it to be at gauss points as calculated above.
 !  OPT(4) also reuses DETJ.
 
-!victor do similar for CPENTA and CTETRA
-
         DO STR_PT_NUM=1,9
 
                                                            ! Isoparametric coordinates of the point
@@ -485,7 +481,7 @@
           CALL SHP3DH ( 0, 0, 0, ELGP, SUBR_NAME, IORD_MSG, 1, SSI, SSJ, SSK, 'N', PSH, DPSHG )
           CALL JAC3D ( SSI, SSJ, SSK, DPSHG, 'N', JAC, JACI, DUM_DETJ )
           CALL MATMULT_FFF ( JACI, DPSHG, 3, 3, ELGP, DPSHX )
-          CALL B3D_ISOPARAMETRIC ( DPSHX, GAUSS_PT, 1, 1, 1, 'all strains', 'N', BI )
+          CALL B3D_ISOPARAMETRIC ( DPSHX, 0, 1, 1, 1, 'all strains', 'N', BI )
           CALL MATMULT_FFF ( ES, BI, 6, 6, 3*ELGP, DUM2 )
 
           DO I=1,3                                         ! Stress-displ matrices
