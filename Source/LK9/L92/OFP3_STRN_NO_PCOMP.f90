@@ -206,8 +206,8 @@ elems_7: DO J = 1,NELE
                      ELSE IF ((TYPE(1:4) == 'HEXA') .OR.                                                                           &
                               (TYPE(1:5) == 'PENTA') .OR.                                                                          &
                               (TYPE(1:5) == 'TETRA')) THEN
-! Victor Copy gauss point strains to corners for now. It should really extrapolate maybe in POLYNOM_FIT_STRE_STRN
-! do similar for OFP3_STRE_NO_PCOMP
+! Strains are directly evaluated at the corner grid points. If they are going to be evaluated at gauss points
+! then extrapolated to grid points, that should be done here or in POLYNOM_FIT_STRE_STRN
                         DO M=1,NUM_PTS(I)
                           DO K=1,9
                              STRAIN_OUT(K,M) = STRAIN_RAW(K,M)
