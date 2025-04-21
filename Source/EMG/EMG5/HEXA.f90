@@ -86,7 +86,8 @@
       INTEGER(LONG)                   :: K5,K6,K7,K8            ! Array indices
                                                                 ! Indicator of no output of elem data to BUG file
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = HEXA_BEGEND
-  
+      INTEGER(LONG)                   :: STR_PT_NUM             ! Stress point number. 1 is center, 2+ are element nodes 1+.
+      
       REAL(DOUBLE)                    :: ALP(6)                 ! First col of ALPVEC
 
       REAL(DOUBLE)                    :: B(6,3*ELGP,IORD*IORD*IORD)
@@ -97,9 +98,8 @@
       REAL(DOUBLE)                    :: CBAR(3,3*ELGP)         ! Derivatives of shape fcns wrt x,y,z used in diff stiff matrix
 !                                                                 (contains terms from DPSHX matrices for each grid of the HEXA)
 
-      REAL(DOUBLE)                    :: DETJ(IORD*IORD*IORD)
-                                                                ! Determinant of JAC for all Gauss points
-
+      REAL(DOUBLE)                    :: DETJ(IORD*IORD*IORD)   ! Determinant of JAC for all Gauss points
+      REAL(DOUBLE)                    :: DUM_DETJ
       REAL(DOUBLE)                    :: DPSHG(3,ELGP)          ! Output from subr SHP3DH. Derivatives of PSH wrt elem isopar coords
       REAL(DOUBLE)                    :: DPSHX(3,ELGP)          ! Derivatives of PSH wrt elem x, y coords.
       REAL(DOUBLE)                    :: DUM0(3*ELGP)           ! Intermediate matrix used in solving for elem matrices
@@ -140,6 +140,7 @@
       REAL(DOUBLE)                    :: TREF1                  ! TREF(1)
       REAL(DOUBLE)                    :: TGAUSS(1,NTSUB)        ! Temp at a Gauss point for a theral subcase
       REAL(DOUBLE)                    :: VOLUME                 ! 3D element volume
+      REAL(DOUBLE)                    :: SSI,SSJ,SSK            ! Isoparametric coordinates of a point.
  
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
@@ -437,43 +438,73 @@
       ENDIF
 
 ! **********************************************************************************************************************************
-! Calculate SEi, STEi, matrices for stress data recovery and BE matrices for strain recovery. All stresses calc at center of element
+! Calculate SEi, STEi, matrices for stress data recovery and BE matrices for strain recovery.
  
       IF ((OPT(3) == 'Y') .OR. (OPT(6) == 'Y')) THEN
- 
-         DO K=1,6
+
+! This block previously calculated DETJ(1) at the center which looks wrong because:
+!  OPT(6) is going to use DETJ later and probably expects it to be at gauss points as calculated above.
+!  OPT(4) also reuses DETJ.
+
+        DO STR_PT_NUM=1,9
+
+                                                           ! Isoparametric coordinates of the point
+! These coordinates are also defined in SHP3DH. Could try to put them somewhere common.
+          SELECT CASE (STR_PT_NUM)
+            CASE (1)                                       ! Center
+              SSI = 0; SSJ = 0; SSK = 0
+            CASE (2)                                       ! Node 1
+              SSI = -1; SSJ = -1; SSK = -1
+            CASE (3)                                       ! Node 2
+              SSI = +1; SSJ = -1; SSK = -1
+            CASE (4)                                       ! Node 3
+              SSI = +1; SSJ = +1; SSK = -1
+            CASE (5)                                       ! Node 4
+              SSI = -1; SSJ = +1; SSK = -1
+            CASE (6)                                       ! Node 5
+              SSI = -1; SSJ = -1; SSK = +1
+            CASE (7)                                       ! Node 6
+              SSI = +1; SSJ = -1; SSK = +1
+            CASE (8)                                       ! Node 7
+              SSI = +1; SSJ = +1; SSK = +1
+            CASE (9)                                       ! Node 8
+              SSI = -1; SSJ = +1; SSK = +1
+          END SELECT
+
+          DO K=1,6
             DO L=1,3*ELGP
                DUM2(K,L) = ZERO
             ENDDO
-         ENDDO
+          ENDDO
+                                                           ! Calc SE1,2,3
+          IORD_MSG = 'for 3-D solid strains,                      = '
+          CALL SHP3DH ( 0, 0, 0, ELGP, SUBR_NAME, IORD_MSG, 1, SSI, SSJ, SSK, 'N', PSH, DPSHG )
+          CALL JAC3D ( SSI, SSJ, SSK, DPSHG, 'N', JAC, JACI, DUM_DETJ )
+          CALL MATMULT_FFF ( JACI, DPSHG, 3, 3, ELGP, DPSHX )
+          CALL B3D_ISOPARAMETRIC ( DPSHX, 0, 1, 1, 1, 'all strains', 'N', BI )
+          CALL MATMULT_FFF ( ES, BI, 6, 6, 3*ELGP, DUM2 )
 
-         GAUSS_PT = 1                                      ! Calc SE1,2,3
-         IORD_MSG = 'for 3-D solid strains,                      = '
-         CALL SHP3DH ( 0, 0, 0, ELGP, SUBR_NAME, IORD_MSG, 1, ZERO, ZERO, ZERO, 'N', PSH, DPSHG )
-         CALL JAC3D ( ZERO, ZERO, ZERO, DPSHG, 'N', JAC, JACI, DETJ(GAUSS_PT) )
-         CALL MATMULT_FFF ( JACI, DPSHG, 3, 3, ELGP, DPSHX )
-         CALL B3D_ISOPARAMETRIC ( DPSHX, GAUSS_PT, 1, 1, 1, 'all strains', 'N', BI )
-         CALL MATMULT_FFF ( ES, BI, 6, 6, 3*ELGP, DUM2 )
-
-         DO I=1,3                                          ! Stress-displ matrices
+          DO I=1,3                                         ! Stress-displ matrices
             DO J=1,3*ELGP
-               SE1(I,ID(J),1) = DUM2(I  ,J)
-               SE2(I,ID(J),1) = DUM2(I+3,J)
+               SE1(I,ID(J),STR_PT_NUM) = DUM2(I  ,J)
+               SE2(I,ID(J),STR_PT_NUM) = DUM2(I+3,J)
             ENDDO 
-         ENDDO
+          ENDDO
 
-         DO J=1,NTSUB                                      ! STE thermal stress terms
-            STE1(1,J,1) = EALP(1)*TBAR(J)
-            STE1(2,J,1) = EALP(2)*TBAR(J)
-            STE1(3,J,1) = EALP(3)*TBAR(J)
-         ENDDO   
-      
-         DO I=1,3                                          ! Strain-displ matrices
+          DO J=1,NTSUB                                     ! STE thermal stress terms
+            STE1(1,J,STR_PT_NUM) = EALP(1)*TBAR(J)
+            STE1(2,J,STR_PT_NUM) = EALP(2)*TBAR(J)
+            STE1(3,J,STR_PT_NUM) = EALP(3)*TBAR(J)
+          ENDDO   
+
+          DO I=1,3                                         ! Strain-displ matrices
             DO J=1,3*ELGP
-               BE1(I,ID(J),1) = BI(I  ,J)
-               BE2(I,ID(J),1) = BI(I+3,J)
+               BE1(I,ID(J),STR_PT_NUM) = BI(I  ,J)
+               BE2(I,ID(J),STR_PT_NUM) = BI(I+3,J)
             ENDDO 
-         ENDDO   
+          ENDDO   
+
+        ENDDO
 
       ENDIF
 

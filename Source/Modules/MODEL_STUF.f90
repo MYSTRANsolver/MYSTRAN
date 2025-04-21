@@ -1245,17 +1245,17 @@
                                                                    1,             & ! ELAS2    5
                                                                    1,             & ! ELAS3    6
                                                                    1,             & ! ELAS4    7
-                                                                   1,             & ! HEXA8    8
-                                                                   1,             & ! HEXA20   9
-                                                                   1,             & ! PENTA6  10
-                                                                   1,             & ! PENTA15 11
+                                                                   9,             & ! HEXA8    8
+                                                                   9,             & ! HEXA20   9
+                                                                   7,             & ! PENTA6  10
+                                                                   7,             & ! PENTA15 11
                                                                    0,             & ! PLOTEL  12
                                                                    5,             & ! QUAD4   13
                                                                    5,             & ! QUAD4K  14
                                                                    1,             & ! ROD     15
                                                                    1,             & ! SHEAR   16
-                                                                   1,             & ! TETRA4  17
-                                                                   1,             & !,TETRA10 18
+                                                                   5,             & ! TETRA4  17
+                                                                   5,             & !,TETRA10 18
                                                                    1,             & ! TRIA3K  19
                                                                    1,             & ! TRIA3   20
                                                                    1,             & ! USER1   21

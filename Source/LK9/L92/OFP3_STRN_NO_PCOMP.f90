@@ -135,7 +135,11 @@
                CALL IS_ELEM_PCOMP_PROPS ( J )
                IF (PCOMP_PROPS == 'N') THEN
                   IF (ETYPE(J) == ELMTYP(I)) THEN
-                     IF ((STRN_LOC == 'CORNER  ') .OR. (STRN_LOC == 'GAUSS   ')) THEN
+                  IF ((STRN_LOC == 'CORNER  ') .OR.                                                                                & 
+                      (STRN_LOC == 'GAUSS   ') .OR.                                                                                &
+                      (ETYPE(J)(1:4) == 'HEXA') .OR.                                                                               &
+                      (ETYPE(J)(1:5) == 'PENTA') .OR.                                                                              &
+                      (ETYPE(J)(1:5) == 'TETRA')) THEN
                         NUM_PTS(I) = NUM_SEi(I)
                      ELSE
                         NUM_PTS(I) = 1
@@ -191,10 +195,24 @@ elems_7: DO J = 1,NELE
                   DO K=1,9                                 ! Set STRAIN_OUT for NUM_PTS(I) = 1
                      STRAIN_OUT(K,1) = STRAIN(K)
                   ENDDO
-                  IF ((STRN_LOC == 'CORNER  ') .OR. (STRN_LOC == 'GAUSS   ')) THEN
+                  IF ((STRN_LOC == 'CORNER  ') .OR.                                                                                & 
+                      (STRN_LOC == 'GAUSS   ') .OR.                                                                                &
+                      (TYPE(1:4) == 'HEXA') .OR.                                                                                   &
+                      (TYPE(1:5) == 'PENTA') .OR.                                                                                  &
+                      (TYPE(1:5) == 'TETRA')) THEN
                      IF (TYPE(1:5) == 'QUAD4') THEN        ! Calc STRAIN_OUT for QUAD4
                         CALL POLYNOM_FIT_STRE_STRN ( STRAIN_RAW, 9, NUM_PTS(I), STRAIN_OUT, STRAIN_OUT_PCT_ERR,                    &
                                                      STRAIN_OUT_ERR_INDEX, PCT_ERR_MAX )
+                     ELSE IF ((TYPE(1:4) == 'HEXA') .OR.                                                                           &
+                              (TYPE(1:5) == 'PENTA') .OR.                                                                          &
+                              (TYPE(1:5) == 'TETRA')) THEN
+! Strains are directly evaluated at the corner grid points. If they are going to be evaluated at gauss points
+! then extrapolated to grid points, that should be done here or in POLYNOM_FIT_STRE_STRN
+                        DO M=1,NUM_PTS(I)
+                          DO K=1,9
+                             STRAIN_OUT(K,M) = STRAIN_RAW(K,M)
+                          ENDDO
+                        ENDDO
                      ENDIF
                   ENDIF
 
