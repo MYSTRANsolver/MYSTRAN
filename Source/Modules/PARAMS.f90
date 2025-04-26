@@ -382,8 +382,11 @@
       INTEGER(LONG)            :: PRTYS          =     0     ! Print YS   matrix of enforced displs
 
 ! ----------------------------------------------------------------------------------------------------------------------------------
-      INTEGER(LONG)            :: Q4SURFIT       =     6     ! Polynomial order for the surface fit of QUAD4 stress/strain when
-!                                                              stresses are requested for other than corner
+      INTEGER(LONG)            :: Q4SURFIT       =     3     ! Number of terms in the polynomial surface fit for extrapolating
+!                                                              QUAD4 stress/strain to element corners.
+!                                                                    Q4SURFIT = 1: Constant fit
+!                                                                    Q4SURFIT = 3: Bi-linear function without a cross term
+!                                                                    Q4SURFIT = 6: Bi-quadratic function
 
 ! ----------------------------------------------------------------------------------------------------------------------------------
       CHARACTER(  6*BYTE)      :: QUADAXIS       = 'SPLITD'  ! 'SIDE12', use side 1-2 as the local elem x axis.
