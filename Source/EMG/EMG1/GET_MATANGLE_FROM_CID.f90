@@ -34,7 +34,7 @@
       USE TIMDAT, ONLY                :  TSEC
       USE CONSTANTS_1, ONLY           :  CONV_DEG_RAD, ZERO, ONE
       USE PARAMS, ONLY                :  EPSIL
-      USE MODEL_STUF, ONLY            :  CORD, EID, NUM_EMG_FATAL_ERRS, NUM_EMG_FATAL_ERRS, RCORD, TE, THETAM, TYPE
+      USE MODEL_STUF, ONLY            :  CORD, EID, NUM_EMG_FATAL_ERRS, NUM_EMG_FATAL_ERRS, RCORD, TE, THETAM, TYPE, QUAD_DELTA
       USE SUBR_BEGEND_LEVELS, ONLY    :  GET_MATANGLE_FROM_CID_BEGEND
  
       USE GET_MATANGLE_FROM_CID_USE_IFs
@@ -50,10 +50,10 @@
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = GET_MATANGLE_FROM_CID_BEGEND
  
       REAL(DOUBLE)                    :: DOT_XM            ! Dot product of VEC_XE and VEC_ME
+      REAL(DOUBLE)                    :: CROSS_XM(3)       ! Cross product of VEC_XE and VEC_ME
+      REAL(DOUBLE)                    :: Y                 ! First parameter for ATAN2 function
       REAL(DOUBLE)                    :: EPS1              ! A small number to comapre to zero
-      REAL(DOUBLE)                    :: MAG2_XE           ! Magnitude squared of VEC_XE
       REAL(DOUBLE)                    :: MAG2_ME           ! Magnitude squared of VEC_ME
-      REAL(DOUBLE)                    :: MAG_XE            ! Magnitude of VEC_XE
       REAL(DOUBLE)                    :: MAG_ME            ! Magnitude of VEC_ME
       REAL(DOUBLE)                    :: VEC_XE(3)         ! Vector in x direction in element coord sys
       REAL(DOUBLE)                    :: VEC_XM(3)         ! Vector in x direction in material angle coord sys
@@ -98,35 +98,40 @@ i_do1:   DO I=1,NCORD
          VEC_XM(1) = ONE
       ENDIF
 
-
       DO I=1,3
          VEC_XE(I) = TE(1,I)
          VEC_ZE(I) = TE(3,I)
       ENDDO
 
-
       CALL PROJ_VEC_ONTO_PLANE ( VEC_XM, VEC_ZE, VEC_ME )
 
-      MAG2_XE = ZERO
+                                                           ! Check for the MCID x direction being normal to the element.
       MAG2_ME = ZERO
-      DOT_XM  = ZERO
       DO I=1,3
-         MAG2_XE = MAG2_XE + VEC_XE(I)*VEC_XE(I)
          MAG2_ME = MAG2_ME + VEC_ME(I)*VEC_ME(I)
-         DOT_XM  = DOT_XM  + VEC_XE(I)*VEC_ME(I)
       ENDDO
-      MAG_XE = DSQRT(MAG2_XE)
       MAG_ME = DSQRT(MAG2_ME)
       
-      IF ((DABS(MAG_XE) > EPS1) .AND. (DABS(MAG_ME) > EPS1)) THEN
-         THETAM = ACOS( DOT_XM/(MAG_XE*MAG_ME) )
-      ELSE
+      IF (MAG_ME <= EPS1) THEN
          FATAL_ERR = FATAL_ERR + 1
          NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
-         WRITE(ERR,1829) TYPE, EID, ACID, MAG_XE, MAG_ME
-         WRITE(F06,1829) TYPE, EID, ACID, MAG_XE, MAG_ME
+         WRITE(ERR,1829) TYPE, EID, ACID, MAG_ME
+         WRITE(F06,1829) TYPE, EID, ACID, MAG_ME
          THETAM = ZERO
       ENDIF
+
+                                                           ! Find the angle of ME from XE about ZE.
+                                                           ! THETAM = atan2(ZE dot (XE cross ME) , XE dot ME )
+      
+      CALL CROSS(VEC_XE, VEC_ME, CROSS_XM)                 ! XE cross ME
+      DOT_XM = VEC_XE(1)*VEC_ME(1) + VEC_XE(2)*VEC_ME(2) + VEC_XE(3)*VEC_ME(3)  ! XE dot ME
+      Y = VEC_ZE(1)*CROSS_XM(1) + VEC_ZE(2)*CROSS_XM(2) + VEC_ZE(3)*CROSS_XM(3) ! ZE dot (CROSS_XM) 
+      THETAM = ATAN2(Y, DOT_XM)
+
+      IF (TYPE(1:5) == 'QUAD4') THEN     
+        THETAM = THETAM + QUAD_DELTA                       ! Convert angle from element x axis to angle from 1-2 edge.
+      ENDIF
+
 
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
@@ -140,10 +145,9 @@ i_do1:   DO I=1,NCORD
 ! **********************************************************************************************************************************
  1822 FORMAT(' *ERROR  1822: ',A,I8,' ON ',A,I8,' IS UNDEFINED')
 
- 1829 FORMAT(' *ERROR  1829: CANNOT FIND MATERIAL ANGLE FOR ',A,I8,' USING COORD SYSTEM ',I8,'. EITHER THE VECTOR IN THE',         &
-                           ' ELEM X DIRECTION'                                                                                     &
-                    ,/,14X,' (VEC_XE) OR THE PROJECTION (VEC_ME) OF THE VECTOR IN THE X DIR OF THE ABOVE COORD SYSTEM IS NULL:'    &
-                    ,/,14X,' MAG VEC_XE = ',1ES9.2,' AND MAG VEC_ME = ',1ES9.2)
+ 1829 FORMAT(' *ERROR  1829: CANNOT FIND MATERIAL ANGLE FOR ',A,I8,' USING COORD SYSTEM ',I8,'. '                                  &
+                    ,/,14X,' THE PROJECTION (VEC_ME) OF THE VECTOR IN THE X DIR OF THE ABOVE COORD SYSTEM IS NULL:'                &
+                    ,/,14X,' MAG VEC_ME = ',1ES9.2)
 
 ! **********************************************************************************************************************************
 
