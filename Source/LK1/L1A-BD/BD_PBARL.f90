@@ -669,6 +669,7 @@ D_do1:   DO J=2,9                                          ! --- Read cross-sect
       REAL(DOUBLE)                    :: TW                ! Web thickness
       REAL(DOUBLE)                    :: TF                ! Flange thickness
       REAL(DOUBLE)                    :: ZSHR              ! Z location of shear center relative to center line of vertical web
+      REAL(DOUBLE)                    :: ZCG               ! Z location of C.G. relative to center line of vertical web
 
 ! **********************************************************************************************************************************
       JERR = 0
@@ -681,6 +682,8 @@ D_do1:   DO J=2,9                                          ! --- Read cross-sect
       DEN  = SIX*(B - HALF*TW)*TF + (H - TF)*TW
       IF (DEN > ZERO) THEN
          ZSHR = -THREE*TF*(B - HALF*TW)*(B - HALF*TW)/DEN
+         AREA =  (H - TWO*TF)*TW + TWO*B*TF
+         ZCG = TWO*TF*(B - TW) * HALF*B / AREA
       ELSE
          JERR = 1
       ENDIF
@@ -688,14 +691,15 @@ D_do1:   DO J=2,9                                          ! --- Read cross-sect
       IF (H - TWO*TF < ZERO) JERR = 1
       IF (JERR > 0) RETURN
 
-      AREA =  (H - TWO*TF)*TW + TWO*B*TF
       I1   =  TW*H*H*H/TWELVE + TWO*((B - TW)*TF*TF*TF/TWELVE + (B - TW)*TF*QUARTER*(H - TF)*(H - TF))
 
-      I2   =  H*TW*TW*TW/TWELVE + H*TW*ZSHR*ZSHR                                                                                   &
-            + TF*(B - TW)*(B - TW)*(B - TW) + TWO*TF*(B - TW)*(-ZSHR + HALF*(B + TW))*(-ZSHR + HALF*(B + TW))
+      I2   =  H*TW*TW*TW/TWELVE + H*TW*ZCG*ZCG                                                                                     &
+            + TF*(B - TW)*(B - TW)*(B - TW)/TWELVE + TF*(B - TW)*(-ZCG + HALF*B)*(-ZCG + HALF*B)                                   &
+            + TF*(B - TW)*(B - TW)*(B - TW)/TWELVE + TF*(B - TW)*(-ZCG + HALF*B)*(-ZCG + HALF*B)
+
 
       I12  =  ZERO
-      JTOR =  ALPHA*THIRD*(H*TW*TW*TW + (B - TF)*TF*TF*TF)
+      JTOR =  ALPHA*THIRD*(H*TW*TW*TW + (B - TW)*TF*TF*TF + (B - TW)*TF*TF*TF)
       Y(1) =  HALF*H   ;   Z(1) = -ZSHR - HALF*TW + B 
       Y(2) = -Y(1)     ;   Z(2) =  Z(1) 
       Y(3) = -Y(1)     ;   Z(3) = -ZSHR - HALF*TW 
@@ -1108,7 +1112,7 @@ D_do1:   DO J=2,9                                          ! --- Read cross-sect
       TB = HALF*(D(4) - D(3))
       TT = TB
       TW = D(2)
-      WB = TWO*D(1) + D(2)
+      WB = D(1) + D(2)
       WT = WB
 
       IF (HW < ZERO) JERR = 1
@@ -1122,9 +1126,9 @@ D_do1:   DO J=2,9                                          ! --- Read cross-sect
 
       YCG  =  ZERO
                                                            ! Calc I1 as I for each of parts about own C.G + part area times D^2
-      I1   =  WT*TT*TT*TT/TWELVE + WT*TT*(H0 - HALF*TT - YCG)*(H0 - HALF*TT - YCG)                                                 &
-            + WB*TB*TB*TB/TWELVE + WB*TB*(YCG  - HALF*TB)*(YCG  - HALF*TB)                                                         &
-            + HW*TW*TW*TW/TWELVE + HW*TW*(TB + HALF*HW - YCG)*(TB + HALF*HW - YCG)
+      I1   =  WT*TT*TT*TT/TWELVE + WT*TT*(HALF*HW + HALF*TT)*(HALF*HW + HALF*TT)                                                   &
+            + WB*TB*TB*TB/TWELVE + WB*TB*(HALF*HW + HALF*TB)*(HALF*HW + HALF*TB)                                                   &
+            + TW*HW*HW*HW/TWELVE
                                                            ! Due to sym about Y only need B*H^3/12 for 2 flanges + web
       I2   =  (TT*WT*WT*WT + HW*TW*TW*TW + TB*WB*WB*WB)/TWELVE
 
