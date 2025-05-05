@@ -615,10 +615,8 @@ bdf:  DO
       !  If they want to continue put DEBUG 201 w/val /= 0 entry in the BDF
 
       IF ((SOL_NAME(1:8) == 'DIFFEREN') .OR. (SOL_NAME(1:8) == 'BUCKLING')) THEN
-         IF((NCTRIA3   > 0) .OR. (NCTRIA3K  > 0) .OR. (NCQUAD4   > 0) .OR. (NCQUAD4K  > 0) .OR. (NCSHEAR   > 0) .OR.               &
-            (NCHEXA8   > 0) .OR. (NCHEXA20  > 0) .OR. (NCPENTA6  > 0) .OR. (NCPENTA15 > 0) .OR. (NCTETRA4  > 0) .OR.               &
-            (NCTETRA10 > 0)) THEN
-            MESSAG1= ' *WARNING: BUCKLING and DIFFERN SOL are only coded for the BAR and BEAM elements'
+         IF((NCTRIA3   > 0) .OR. (NCTRIA3K  > 0) .OR. (NCQUAD4   > 0) .OR. (NCQUAD4K  > 0) .OR. (NCSHEAR   > 0)) THEN
+            MESSAG1= ' *WARNING: BUCKLING and DIFFERN SOL are only coded for the BAR, HEXA, PENTA, and TETRA elements'
             MESSAG2= '           Either remove all other elements or include a Bulk Data entry: DEBUG   201, with value /= 0'
             IF (DEBUG(201) == 0) THEN 
                WRITE(F06,*) MESSAG1

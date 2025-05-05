@@ -1,32 +1,32 @@
 ! ##################################################################################################################################
-! Begin MIT license text.                                                                                    
+! Begin MIT license text.
 ! _______________________________________________________________________________________________________
-                                                                                                         
-! Copyright 2022 Dr William R Case, Jr (mystransolver@gmail.com)                                              
-                                                                                                         
-! Permission is hereby granted, free of charge, to any person obtaining a copy of this software and      
+
+! Copyright 2022 Dr William R Case, Jr (mystransolver@gmail.com)
+
+! Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 ! associated documentation files (the "Software"), to deal in the Software without restriction, including
 ! without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-! copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to   
-! the following conditions:                                                                              
-                                                                                                         
-! The above copyright notice and this permission notice shall be included in all copies or substantial   
-! portions of the Software and documentation.                                                                              
-                                                                                                         
-! THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS                                
-! OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,                            
-! FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE                            
-! AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER                                 
-! LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,                          
-! OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN                              
-! THE SOFTWARE.                                                                                          
+! copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to
+! the following conditions:
+
+! The above copyright notice and this permission notice shall be included in all copies or substantial
+! portions of the Software and documentation.
+
+! THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+! OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+! FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+! AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+! LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+! OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+! THE SOFTWARE.
 ! _______________________________________________________________________________________________________
-                                                                                                        
-! End MIT license text.                                                                                      
-  
+
+! End MIT license text.
+
       SUBROUTINE HEXA ( OPT, INT_ELEM_ID,IORD, RED_INT_SHEAR, WRITE_WARN )
- 
-! Isoparametric hexahedron solid element (8 or 20 nodes and with full or reduced gaussian integration) 
+
+! Isoparametric hexahedron solid element (8 or 20 nodes and with full or reduced gaussian integration)
 
 ! Subroutine calculates:
 
@@ -49,11 +49,11 @@
       USE MODEL_STUF, ONLY            :  AGRID, ALPVEC, BE1, BE2, DT, EID, ELGP, NUM_EMG_FATAL_ERRS, ES, KE, KED, ME,              &
                                          NUM_EMG_FATAL_ERRS, PLOAD4_3D_DATA, PPE, PRESS, PTE, RHO, SE1, SE2, STE1, STRESS, TREF,   &
                                          TYPE, XEL
- 
+
       USE HEXA_USE_IFs
 
-      IMPLICIT NONE 
-  
+      IMPLICIT NONE
+
       CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: SUBR_NAME = 'HEXA'
       CHARACTER( 1*BYTE), INTENT(IN)  :: RED_INT_SHEAR          ! If 'Y', use Gaussian weighted avg of B matrices for shear terms
       CHARACTER( 1*BYTE), INTENT(IN)  :: OPT(6)                 ! 'Y'/'N' flags for whether to calc certain elem matrices
@@ -74,8 +74,8 @@
       INTEGER(LONG)                   :: GAUSS_PT               ! Gauss point number (used for DEBUG output in subr SHP3DH
       INTEGER(LONG)                   :: GA,GB                  ! Actual grid numbers read from array PLOAD4_3D_DATA
       INTEGER(LONG)                   :: I,J,K,L,M,N            ! DO loop indices
-      INTEGER(LONG)                   :: IDELT                  ! 
-      INTEGER(LONG)                   :: IDOF                   ! 
+      INTEGER(LONG)                   :: IDELT                  !
+      INTEGER(LONG)                   :: IDOF                   !
       INTEGER(LONG)                   :: IERR                   ! Local error count
       INTEGER(LONG)                   :: II,JJ                  ! Counters
       INTEGER(LONG)                   :: ID(3*ELGP)             ! Array which shows equivalence of DOF's in virgin element with the
@@ -87,7 +87,7 @@
                                                                 ! Indicator of no output of elem data to BUG file
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = HEXA_BEGEND
       INTEGER(LONG)                   :: STR_PT_NUM             ! Stress point number. 1 is center, 2+ are element nodes 1+.
-      
+
       REAL(DOUBLE)                    :: ALP(6)                 ! First col of ALPVEC
 
       REAL(DOUBLE)                    :: B(6,3*ELGP,IORD*IORD*IORD)
@@ -109,6 +109,10 @@
       REAL(DOUBLE)                    :: DUM4(6,3*ELGP)         ! Intermediate matrix used in solving for elem matrices
       REAL(DOUBLE)                    :: DUM5(3*ELGP,3*ELGP)    ! Intermediate matrix used in solving for KE elem matrices
       REAL(DOUBLE)                    :: DUM6(3,3*ELGP)         ! Intermediate matrix used in solving for elem matrices
+      REAL(DOUBLE)                    :: DUM7(ELGP,ELGP)        ! Intermediate matrix used in solving for elem matrices
+      REAL(DOUBLE)                    :: DUM8(ELGP,ELGP)        ! Intermediate matrix used in solving for elem matrices
+      REAL(DOUBLE)                    :: DUM9(3,ELGP)           ! Intermediate matrix used in solving for elem matrices
+
       REAL(DOUBLE)                    :: EALP(6)                ! Variable used in calc PTE therm loads & STEi therm stress coeffs
       REAL(DOUBLE)                    :: EPS1                   ! A small number to compare to real zero
       REAL(DOUBLE)                    :: FACE_AREA              ! Area of a face of the HEXA where a PLOAD4 pressure acts
@@ -124,7 +128,7 @@
       REAL(DOUBLE)                    :: KWW(3,3)               ! Portion of differential stiffness matrix
       REAL(DOUBLE)                    :: M0                     ! An intermediate variable used in calc elem mass, ME
       REAL(DOUBLE)                    :: PSH(ELGP)              ! Output from subr SHP3DH. Shape fcn at Gauss pts SSI, SSJ
-      REAL(DOUBLE)                    :: PSIGN                  ! 
+      REAL(DOUBLE)                    :: PSIGN                  !
       REAL(DOUBLE)                    :: SIGxx                  ! Normal stress in the elem x  direction
       REAL(DOUBLE)                    :: SIGyy                  ! Normal stress in the elem y  direction
       REAL(DOUBLE)                    :: SIGzz                  ! Normal stress in the elem z  direction
@@ -141,7 +145,7 @@
       REAL(DOUBLE)                    :: TGAUSS(1,NTSUB)        ! Temp at a Gauss point for a theral subcase
       REAL(DOUBLE)                    :: VOLUME                 ! 3D element volume
       REAL(DOUBLE)                    :: SSI,SSJ,SSK            ! Isoparametric coordinates of a point.
- 
+
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
          CALL OURTIM
@@ -167,24 +171,19 @@
 
 ! ALP is first col of ALPVEC
 
-		
       ALP(1) = ALPVEC(1,1)
       ALP(2) = ALPVEC(2,1)
       ALP(3) = ALPVEC(3,1)
-	  ! Victor_Mod - Thermal Strain with MAT9
-	  ALP(4) = ALPVEC(4,1) * 2
+      ALP(4) = ALPVEC(4,1) * 2
       ALP(5) = ALPVEC(5,1) * 2
       ALP(6) = ALPVEC(6,1) * 2
-      !ALP(4) = ZERO
-      !ALP(5) = ZERO
-      !ALP(6) = ZERO
-    
+
       TREF1 = TREF(1)
- 
+
 ! EALP is needed to calculate both PTE and STE2
- 
+
       CALL MATMULT_FFF ( ES, ALP, 6, 6, 1, EALP )
-  
+
 ! Calc TBAR (used for PTE, STEi)
 
       IF ((OPT(2) == 'Y') .OR. (OPT(3) == 'Y')) THEN
@@ -195,10 +194,10 @@
             ENDDO
             TBAR(J) = TBAR(J)/ELGP - TREF1
          ENDDO
-      ENDIF   
+      ENDIF
 
 ! Calculate volume by Gaussian integration
-  
+
       IORD_MSG = 'for 3-D solid strains,           input IORD = '
       VOLUME = ZERO
       GAUSS_PT = 0
@@ -213,9 +212,9 @@
             ENDDO
          ENDDO
       ENDDO
- 
+
 ! If VOLUME <= 0, write error and return
-          
+
       IF (VOLUME < EPS1) THEN
          WRITE(ERR,1925) EID, TYPE, 'VOLUME', VOLUME
          WRITE(F06,1925) EID, TYPE, 'VOLUME', VOLUME
@@ -223,10 +222,10 @@
          FATAL_ERR = FATAL_ERR + 1
          RETURN
       ENDIF
-  
+
 ! **********************************************************************************************************************************
 ! Generate the mass matrix for this element.
- 
+
       IF (OPT(1) == 'Y') THEN
 
          M0 = (RHO(1))*VOLUME/EIGHT
@@ -385,8 +384,8 @@
       ENDIF
 
 ! **********************************************************************************************************************************
-! Calculate element thermal loads. 
-  
+! Calculate element thermal loads.
+
       IF (OPT(2) == 'Y') THEN
 
          DO N=1,NTSUB
@@ -421,13 +420,13 @@
                         TEMP = TGAUSS(1,N) - TREF1
                      ELSE                                  ! Use avg element temperature for PTE
                         TEMP = TBAR(N)
-                     ENDIF 
+                     ENDIF
                      DO L=1,3*ELGP
                         DUM1(L) = DUM1(L) + DUM0(L)*TEMP*INTFAC
                      ENDDO
                   ENDDO
-               ENDDO   
-            ENDDO 
+               ENDDO
+            ENDDO
 
             DO L=1,3*ELGP
                PTE(ID(L),N) = DUM1(L)
@@ -439,12 +438,8 @@
 
 ! **********************************************************************************************************************************
 ! Calculate SEi, STEi, matrices for stress data recovery and BE matrices for strain recovery.
- 
-      IF ((OPT(3) == 'Y') .OR. (OPT(6) == 'Y')) THEN
 
-! This block previously calculated DETJ(1) at the center which looks wrong because:
-!  OPT(6) is going to use DETJ later and probably expects it to be at gauss points as calculated above.
-!  OPT(4) also reuses DETJ.
+      IF ((OPT(3) == 'Y') .OR. (OPT(6) == 'Y')) THEN
 
         DO STR_PT_NUM=1,9
 
@@ -488,21 +483,21 @@
             DO J=1,3*ELGP
                SE1(I,ID(J),STR_PT_NUM) = DUM2(I  ,J)
                SE2(I,ID(J),STR_PT_NUM) = DUM2(I+3,J)
-            ENDDO 
+            ENDDO
           ENDDO
 
           DO J=1,NTSUB                                     ! STE thermal stress terms
             STE1(1,J,STR_PT_NUM) = EALP(1)*TBAR(J)
             STE1(2,J,STR_PT_NUM) = EALP(2)*TBAR(J)
             STE1(3,J,STR_PT_NUM) = EALP(3)*TBAR(J)
-          ENDDO   
+          ENDDO
 
           DO I=1,3                                         ! Strain-displ matrices
             DO J=1,3*ELGP
                BE1(I,ID(J),STR_PT_NUM) = BI(I  ,J)
                BE2(I,ID(J),STR_PT_NUM) = BI(I+3,J)
-            ENDDO 
-          ENDDO   
+            ENDDO
+          ENDDO
 
         ENDDO
 
@@ -510,15 +505,15 @@
 
 ! **********************************************************************************************************************************
 ! Calculate element stiffness matrix KE.
- 
+
       IF (OPT(4) == 'Y') THEN
-  
+
          DO I=1,3*ELGP
             DO J=1,3*ELGP
                DUM3(I,J) = ZERO
-            ENDDO 
-         ENDDO   
- 
+            ENDDO
+         ENDDO
+
          IORD_MSG = ' '
          GAUSS_PT = 0
          DO K=1,IORD
@@ -536,34 +531,34 @@
                   DO L=1,3*ELGP
                      DO M=1,3*ELGP
                         DUM3(L,M) = DUM3(L,M) + DUM5(L,M)*INTFAC
-                     ENDDO 
+                     ENDDO
                   ENDDO
-               ENDDO   
-            ENDDO 
-         ENDDO   
-  
+               ENDDO
+            ENDDO
+         ENDDO
+
          DO I=1,3*ELGP
             DO J=1,3*ELGP
                KE(ID(I),ID(J)) = DUM3(I,J)
-            ENDDO   
-         ENDDO 
+            ENDDO
+         ENDDO
 
 ! Set lower triangular portion of KE equal to upper portion
-  
+
          DO I=2,6*ELGP
             DO J=1,I-1
                KE(I,J) = KE(J,I)
-            ENDDO 
-         ENDDO 
-  
+            ENDDO
+         ENDDO
+
 
       ENDIF
-  
+
 ! **********************************************************************************************************************************
 ! Calculate element PLOAD4 pressure loads.
- 
+
       IF (OPT(5) == 'Y') THEN                              ! PPE was init to all 0's when EMG was called prior to calling this subr
-  
+
          GENERATE_PRESS_LOAD = 'N'
          DO J=1,NSUB
             DO I=1,NPLOAD4_3D
@@ -605,7 +600,7 @@
 
                      DO K=1,4
                         IF (FACE_NUM == 1) PSIGN =  ONE   ;   IF (FACE_NUM == 1) IDELT = 1
-                        IF (FACE_NUM == 2) PSIGN = -ONE   ;   IF (FACE_NUM == 2) IDELT = 1 
+                        IF (FACE_NUM == 2) PSIGN = -ONE   ;   IF (FACE_NUM == 2) IDELT = 1
                         IF (FACE_NUM == 3) PSIGN =  ONE   ;   IF (FACE_NUM == 3) IDELT = 2
                         IF (FACE_NUM == 4) PSIGN = -ONE   ;   IF (FACE_NUM == 4) IDELT = 2
                         IF (FACE_NUM == 5) PSIGN =  ONE   ;   IF (FACE_NUM == 5) IDELT = 3
@@ -633,87 +628,153 @@
 
       IF ((OPT(6) == 'Y') .AND. (LOAD_ISTEP > 1)) THEN
 
-         CALL ELMDIS
-         CALL ELEM_STRE_STRN_ARRAYS ( 1 )
+        CALL ELMDIS
+        CALL ELEM_STRE_STRN_ARRAYS ( 1 )
 
-         SIGxx = STRESS(1)
-         SIGyy = STRESS(2)
-         SIGzz = STRESS(3)
-         SIGxy = STRESS(4)
-         SIGyz = STRESS(5)
-         SIGzx = STRESS(6)
+        SIGxx = STRESS(1)
+        SIGyy = STRESS(2)
+        SIGzz = STRESS(3)
+        SIGxy = STRESS(4)
+        SIGyz = STRESS(5)
+        SIGzx = STRESS(6)
 
-         KWW(1,1) = SIGyy + SIGzz   ;   KWW(1,2) = -SIGxy   ;   KWW(1,3) = -SIGzx
-         KWW(2,2) = SIGxx + SIGzz   ;   KWW(2,3) = -SIGyz
-         KWW(3,3) = SIGxx + SIGyy
-         KWW(2,1) = KWW(1,2)
-         KWW(3,1) = KWW(1,3)
-         KWW(3,2) = KWW(2,3)
-         DO I=1,ELGP
-            CBAR(1,3*(I-1)+1) =  ZERO             ;  CBAR(1,3*(I-1)+2) = -HALF*DPSHX(3,I)  ;  CBAR(1,3*(I-1)+3)=  HALF*DPSHX(2,I)         
-            CBAR(2,3*(I-1)+1) =  HALF*DPSHX(3,I)  ;  CBAR(2,3*(I-1)+2) =  ZERO             ;  CBAR(2,3*(I-1)+3)= -HALF*DPSHX(1,I)         
-            CBAR(3,3*(I-1)+1) = -HALF*DPSHX(2,I)  ;  CBAR(3,3*(I-1)+2) =  HALF*DPSHX(1,I)  ;  CBAR(3,3*(I-1)+3)=  ZERO
-         ENDDO
 
-! DPSHG(3,ELGP), DPSHX(3,ELGP)
-! DUM3(3*ELGP,3*ELGP)
-! DUM5(3*ELGP,3*ELGP)
-! DUM6(3,3*ELGP)
+        IF (.TRUE.) THEN
 
-         DO I=1,3*ELGP
+          KWW(1,1) = SIGyy + SIGzz   ;   KWW(1,2) = -SIGxy   ;   KWW(1,3) = -SIGzx
+          KWW(2,2) = SIGxx + SIGzz   ;   KWW(2,3) = -SIGyz
+          KWW(3,3) = SIGxx + SIGyy
+          KWW(2,1) = KWW(1,2)
+          KWW(3,1) = KWW(1,3)
+          KWW(3,2) = KWW(2,3)
+
+          DO I=1,3*ELGP
             DO J=1,3*ELGP
-               DUM3(I,J) = ZERO
-            ENDDO 
-         ENDDO   
- 
-         IORD_MSG = ' '
-         GAUSS_PT = 0
-         DO K=1,IORD
+              DUM3(I,J) = ZERO
+            ENDDO
+          ENDDO
+
+                                                           ! KED = int( CBAR^T * KWW * CBAR , dV)
+          IORD_MSG = ' '
+          GAUSS_PT = 0
+          DO K=1,IORD
+            DO J=1,IORD
+              DO I=1,IORD
+                GAUSS_PT = GAUSS_PT + 1
+                DO L=1,ELGP
+                  DPSHX(1,L) = B(1,3*(L-1)+1,GAUSS_PT)     ! Collect shape function derivatives at this Gauss point.
+                  DPSHX(2,L) = B(2,3*(L-1)+2,GAUSS_PT)
+                  DPSHX(3,L) = B(3,3*(L-1)+3,GAUSS_PT)
+                  CBAR(1,3*(L-1)+1) =  ZERO            ; CBAR(1,3*(L-1)+2) = -HALF*DPSHX(3,L) ; CBAR(1,3*(L-1)+3)=  HALF*DPSHX(2,L)
+                  CBAR(2,3*(L-1)+1) =  HALF*DPSHX(3,L) ; CBAR(2,3*(L-1)+2) =  ZERO            ; CBAR(2,3*(L-1)+3)= -HALF*DPSHX(1,L)
+                  CBAR(3,3*(L-1)+1) = -HALF*DPSHX(2,L) ; CBAR(3,3*(L-1)+2) =  HALF*DPSHX(1,L) ; CBAR(3,3*(L-1)+3)=  ZERO
+                ENDDO
+                CALL MATMULT_FFF ( KWW, CBAR, 3, 3, 3*ELGP, DUM6 )
+                CALL MATMULT_FFF_T ( CBAR, DUM6, 3, 3*ELGP, 3*ELGP, DUM5 )
+                INTFAC = DETJ(GAUSS_PT)*HHH(I)*HHH(J)*HHH(K)
+                DO L=1,3*ELGP
+                  DO M=1,3*ELGP
+                    DUM3(L,M) = DUM3(L,M) + DUM5(L,M)*INTFAC
+                  ENDDO
+                ENDDO
+              ENDDO
+            ENDDO
+          ENDDO
+
+          DO I=1,3*ELGP
+            DO J=1,3*ELGP
+              KED(ID(I),ID(J)) = DUM3(I,J)
+            ENDDO
+          ENDDO
+
+          DO I=2,6*ELGP                                    ! Set lower triangular portion of KE equal to upper portion
+            DO J=1,I-1
+              KED(I,J) = KED(J,I)
+            ENDDO
+          ENDDO
+
+        ELSE
+
+          ! Alternative method described in ANSYS's manual
+          ! "Theory Reference for the Mechanical APDL and Mechanical Applications"
+          ! section 3.4.3 Stress Stiffening Implementation.
+          ! The results are about the same as the other method so this probably isn't useful.
+
+          KWW(1,1) = SIGxx   ;   KWW(1,2) = SIGxy   ;   KWW(1,3) = SIGzx
+          KWW(2,2) = SIGyy   ;   KWW(2,3) = SIGyz
+          KWW(3,3) = SIGzz
+          KWW(2,1) = KWW(1,2)
+          KWW(3,1) = KWW(1,3)
+          KWW(3,2) = KWW(2,3)
+
+          DO I=1,ELGP
+            DO J=1,ELGP
+               DUM7(I,J) = ZERO
+            ENDDO
+          ENDDO
+
+                                                           ! KED = int( DPSHX^T * KWW * DPSHX , dV)
+          IORD_MSG = ' '
+          GAUSS_PT = 0
+          DO K=1,IORD
             DO J=1,IORD
                DO I=1,IORD
                   GAUSS_PT = GAUSS_PT + 1
-                  CALL MATMULT_FFF ( KWW, CBAR, 3, 3, 3*ELGP, DUM6 )
-                  CALL MATMULT_FFF_T ( CBAR, DUM6, 3, 3*ELGP, 3*ELGP, DUM5 )
-                  INTFAC = DETJ(GAUSS_PT)*HHH(I)*HHH(J)*HHH(K)
-                  DO L=1,3*ELGP
-                     DO M=1,3*ELGP
-                        DUM3(L,M) = DUM3(L,M) + DUM5(L,M)*INTFAC
-                     ENDDO 
+                  DO L=1,ELGP                              ! Collect shape function derivatives at this Gauss point.
+                    DPSHX(1,L) = B(1,3*(L-1)+1,GAUSS_PT)
+                    DPSHX(2,L) = B(2,3*(L-1)+2,GAUSS_PT)
+                    DPSHX(3,L) = B(3,3*(L-1)+3,GAUSS_PT)
                   ENDDO
-               ENDDO   
-            ENDDO 
-         ENDDO   
-  
-         DO I=1,3*ELGP
-            DO J=1,3*ELGP
-               KED(ID(I),ID(J)) = DUM3(I,J)
-            ENDDO   
-         ENDDO 
-  
-         DO I=2,6*ELGP                                     ! Set lower triangular portion of KE equal to upper portion
-            DO J=1,I-1
-               KED(I,J) = KED(J,I)
-            ENDDO 
-         ENDDO 
-  
-         IF (DEBUG(178) >= 1) THEN
-            WRITE(F06,2001) TRIM(SUBR_NAME), OPT(6), LOAD_ISTEP, TYPE, EID
-            K = 0
-            DO I=1,ELGP
-               K = 6*(I-1) + 1
-               WRITE(F06,2101) (KED(K  ,J),J=1,3*ELGP)
-               WRITE(F06,2101) (KED(K+1,J),J=1,3*ELGP)
-               WRITE(F06,2101) (KED(K+2,J),J=1,3*ELGP)
-               WRITE(F06,*)
-               WRITE(F06,2101) (KED(K+3,J),J=1,3*ELGP)
-               WRITE(F06,2101) (KED(K+4,J),J=1,3*ELGP)
-               WRITE(F06,2101) (KED(K+5,J),J=1,3*ELGP)
-               WRITE(F06,*)
+                  CALL MATMULT_FFF ( KWW, DPSHX, 3, 3, ELGP, DUM9)
+                  CALL MATMULT_FFF_T ( DPSHX, DUM9, 3, ELGP, ELGP, DUM8)
+                  INTFAC = DETJ(GAUSS_PT)*HHH(I)*HHH(J)*HHH(K)
+                  DO L=1,ELGP
+                     DO M=1,ELGP
+                        DUM7(L,M) = DUM7(L,M) + DUM8(L,M)*INTFAC
+                     ENDDO
+                  ENDDO
+               ENDDO
             ENDDO
-            WRITE(F06,*)
-         ENDIF
+          ENDDO
 
-      ENDIF               
+                                                           ! Initialize KED to zero
+          DO I=1,6*ELGP
+            DO J=1,6*ELGP
+               KED(I,J) = ZERO
+            ENDDO
+          ENDDO
+                                                           ! Copy submatrix into KED for each DOF.
+          DO I=1,ELGP
+            DO J=1,ELGP
+               KED(ID(3*(I-1)+1),ID(3*(J-1)+1)) = DUM7(I,J)
+               KED(ID(3*(I-1)+2),ID(3*(J-1)+2)) = DUM7(I,J)
+               KED(ID(3*(I-1)+3),ID(3*(J-1)+3)) = DUM7(I,J)
+            ENDDO
+          ENDDO
+
+
+        ENDIF
+
+
+
+        IF (DEBUG(178) >= 1) THEN
+          WRITE(F06,2001) TRIM(SUBR_NAME), OPT(6), LOAD_ISTEP, TYPE, EID
+          K = 0
+          DO I=1,ELGP
+            K = 6*(I-1) + 1
+            WRITE(F06,2101) (KED(K  ,J),J=1,3*ELGP)
+            WRITE(F06,2101) (KED(K+1,J),J=1,3*ELGP)
+            WRITE(F06,2101) (KED(K+2,J),J=1,3*ELGP)
+            WRITE(F06,*)
+            WRITE(F06,2101) (KED(K+3,J),J=1,3*ELGP)
+            WRITE(F06,2101) (KED(K+4,J),J=1,3*ELGP)
+            WRITE(F06,2101) (KED(K+5,J),J=1,3*ELGP)
+            WRITE(F06,*)
+          ENDDO
+          WRITE(F06,*)
+        ENDIF
+
+      ENDIF
 
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
@@ -726,7 +787,7 @@
 
 ! **********************************************************************************************************************************
  1921 FORMAT(' *ERROR  1921: PROGRAMMING ERROR IN SUBROUTINE ',A                                                                   &
-                    ,/,14X,' ELEMENT ID READ FROM DATA SET PLOAD4_3D_DATA WAS ',I8,' BUT SUBR IS WORKING ON ELEMENT ',I8) 
+                    ,/,14X,' ELEMENT ID READ FROM DATA SET PLOAD4_3D_DATA WAS ',I8,' BUT SUBR IS WORKING ON ELEMENT ',I8)
 
  1925 FORMAT(' *ERROR  1925: ELEMENT ',I8,', TYPE ',A,', HAS ZERO OR NEGATIVE ',A,' = ',1ES9.1)
 
@@ -739,14 +800,14 @@
 
 89216 format(2i3,7(1es14.6))
 
-91826 format('  I  J  K  Gauss Pt     SSS(I)        SSS(J)        SSS(K)') 
+91826 format('  I  J  K  Gauss Pt     SSS(I)        SSS(J)        SSS(K)')
 
 91827 format(3i3,i10,3(1es14.6))
 
 ! ##################################################################################################################################
- 
+
       CONTAINS
- 
+
 ! ##################################################################################################################################
 
       SUBROUTINE PRESS_FACE_GRIDS ( IERR )
@@ -767,11 +828,11 @@
 !              .           |           .
 !              .           |           .
 !              .           -----------------> XI     NOTE: for HEXA8, only nodes 1-4 are used in plane ZI = -1
-!              .                       .             ---- 
+!              .                       .             ----
 !              .                       .
 !              .                       .
 !              1 . . . . . . . . . . . 2
-  
+
 
 
 !                   In plane ZI = 1
@@ -785,11 +846,11 @@
 !              .           |           .
 !              .           |           .
 !              .           -----------------> XI     NOTE: for HEXA8, only nodes 5-8 are used in plane ZI = 1
-!              .                       .             ---- 
+!              .                       .             ----
 !              .                       .
 !              .                       .
-!              5 . . . . . . . . . . . 6 
-  
+!              5 . . . . . . . . . . . 6
+
 ! The 6 faces of the HEXA are defined as follows:
 
 !               1) Face 1 contains the 4 grids in the plane at  XI = -1: nodes 1-5-8-4
@@ -808,8 +869,8 @@
       INTEGER(LONG), INTENT(OUT)      :: IERR              ! Local error count
 
 ! **********************************************************************************************************************************
-! Row i of FACE_NODES has the corner node numbers for face i. 
-! Row i of FACE_AGRDS has the corner grid numbers (actual) for face i. 
+! Row i of FACE_NODES has the corner node numbers for face i.
+! Row i of FACE_AGRDS has the corner grid numbers (actual) for face i.
 
       FACE_NODES(1,1) =       4    ;   FACE_NODES(1,2) =       1    ;   FACE_NODES(1,3) =       5    ;   FACE_NODES(1,4) =       8
       FACE_NODES(2,1) =       2    ;   FACE_NODES(2,2) =       3    ;   FACE_NODES(2,3) =       7    ;   FACE_NODES(2,4) =       6
@@ -818,12 +879,12 @@
       FACE_NODES(5,1) =       2    ;   FACE_NODES(5,2) =       1    ;   FACE_NODES(5,3) =       4    ;   FACE_NODES(5,4) =       3
       FACE_NODES(6,1) =       5    ;   FACE_NODES(6,2) =       6    ;   FACE_NODES(6,3) =       7    ;   FACE_NODES(6,4) =       8
 
-      FACE_AGRDS(1,1) = AGRID(4)   ;   FACE_AGRDS(1,2) = AGRID(1)   ;   FACE_AGRDS(1,3) = AGRID(5)   ;   FACE_AGRDS(1,4) = AGRID(8) 
-      FACE_AGRDS(2,1) = AGRID(2)   ;   FACE_AGRDS(2,2) = AGRID(3)   ;   FACE_AGRDS(2,3) = AGRID(7)   ;   FACE_AGRDS(2,4) = AGRID(6) 
-      FACE_AGRDS(3,1) = AGRID(1)   ;   FACE_AGRDS(3,2) = AGRID(2)   ;   FACE_AGRDS(3,3) = AGRID(6)   ;   FACE_AGRDS(3,4) = AGRID(5) 
-      FACE_AGRDS(4,1) = AGRID(3)   ;   FACE_AGRDS(4,2) = AGRID(4)   ;   FACE_AGRDS(4,3) = AGRID(8)   ;   FACE_AGRDS(4,4) = AGRID(7) 
-      FACE_AGRDS(5,1) = AGRID(2)   ;   FACE_AGRDS(5,2) = AGRID(1)   ;   FACE_AGRDS(5,3) = AGRID(4)   ;   FACE_AGRDS(5,4) = AGRID(3) 
-      FACE_AGRDS(6,1) = AGRID(5)   ;   FACE_AGRDS(6,2) = AGRID(6)   ;   FACE_AGRDS(6,3) = AGRID(7)   ;   FACE_AGRDS(6,4) = AGRID(8) 
+      FACE_AGRDS(1,1) = AGRID(4)   ;   FACE_AGRDS(1,2) = AGRID(1)   ;   FACE_AGRDS(1,3) = AGRID(5)   ;   FACE_AGRDS(1,4) = AGRID(8)
+      FACE_AGRDS(2,1) = AGRID(2)   ;   FACE_AGRDS(2,2) = AGRID(3)   ;   FACE_AGRDS(2,3) = AGRID(7)   ;   FACE_AGRDS(2,4) = AGRID(6)
+      FACE_AGRDS(3,1) = AGRID(1)   ;   FACE_AGRDS(3,2) = AGRID(2)   ;   FACE_AGRDS(3,3) = AGRID(6)   ;   FACE_AGRDS(3,4) = AGRID(5)
+      FACE_AGRDS(4,1) = AGRID(3)   ;   FACE_AGRDS(4,2) = AGRID(4)   ;   FACE_AGRDS(4,3) = AGRID(8)   ;   FACE_AGRDS(4,4) = AGRID(7)
+      FACE_AGRDS(5,1) = AGRID(2)   ;   FACE_AGRDS(5,2) = AGRID(1)   ;   FACE_AGRDS(5,3) = AGRID(4)   ;   FACE_AGRDS(5,4) = AGRID(3)
+      FACE_AGRDS(6,1) = AGRID(5)   ;   FACE_AGRDS(6,2) = AGRID(6)   ;   FACE_AGRDS(6,3) = AGRID(7)   ;   FACE_AGRDS(6,4) = AGRID(8)
 
 
       IERR     = 0
@@ -885,11 +946,11 @@
       END SUBROUTINE PRESS_FACE_GRIDS
 
 ! ##################################################################################################################################
- 
+
       SUBROUTINE CALC_FACE_AREA
- 
+
       IMPLICIT NONE
- 
+
       INTEGER(LONG)                   :: II,JJ                ! DO loop indices
 
       REAL(DOUBLE)                    :: DETJ                 ! An output from subr JAC2D4, called herein. Determinant of JAC
@@ -902,7 +963,7 @@
 
 ! **********************************************************************************************************************************
 ! Calculate side diffs
-  
+
       XSD(1) = XEL(FACE_NODES(FACE_NUM,1),1) - XEL(FACE_NODES(FACE_NUM,2),1)
       XSD(2) = XEL(FACE_NODES(FACE_NUM,2),1) - XEL(FACE_NODES(FACE_NUM,3),1)
       XSD(3) = XEL(FACE_NODES(FACE_NUM,3),1) - XEL(FACE_NODES(FACE_NUM,4),1)
@@ -920,7 +981,7 @@
 
 
 ! Calculate area by Gaussian integration
-  
+
       FACE_AREA = ZERO
       CALL ORDER_GAUSS ( 2, SSS, HHH )
       DO II=1,2
@@ -939,9 +1000,9 @@
                CALL JAC2D ( SSS(II), SSS(JJ), XSD, YSD, 'N', JAC, JACI, DETJ )
             ENDIF
             FACE_AREA = FACE_AREA + HHH(II)*HHH(JJ)*DETJ
-         ENDDO   
-      ENDDO   
- 
+         ENDDO
+      ENDDO
+
 ! **********************************************************************************************************************************
 
 

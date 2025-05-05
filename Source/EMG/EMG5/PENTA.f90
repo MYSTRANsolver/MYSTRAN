@@ -182,13 +182,9 @@
       ALP(1) = ALPVEC(1,1)
       ALP(2) = ALPVEC(2,1)
       ALP(3) = ALPVEC(3,1)
-	  ! Victor_Mod - Thermal Strain with MAT9
       ALP(4) = ALPVEC(4,1) * 2
       ALP(5) = ALPVEC(5,1) * 2
       ALP(6) = ALPVEC(6,1) * 2
-	  !ALP(4) = ZERO
-      !ALP(5) = ZERO
-      !ALP(6) = ZERO
     
       TREF1 = TREF(1)
  
@@ -520,84 +516,82 @@ opt234:IF ((OPT(2) == 'Y') .OR. (OPT(3) == 'Y') .OR. (OPT(4) == 'Y') .OR. (OPT(6
 
       IF ((OPT(6) == 'Y') .AND. (LOAD_ISTEP > 1)) THEN
 
-         CALL ELMDIS
-         CALL ELEM_STRE_STRN_ARRAYS ( 1 )
+        CALL ELMDIS
+        CALL ELEM_STRE_STRN_ARRAYS ( 1 )
 
-         SIGxx = STRESS(1)
-         SIGyy = STRESS(2)
-         SIGzz = STRESS(3)
-         SIGxy = STRESS(4)
-         SIGyz = STRESS(5)
-         SIGzx = STRESS(6)
+        SIGxx = STRESS(1)
+        SIGyy = STRESS(2)
+        SIGzz = STRESS(3)
+        SIGxy = STRESS(4)
+        SIGyz = STRESS(5)
+        SIGzx = STRESS(6)
 
-         KWW(1,1) = SIGyy + SIGzz   ;   KWW(1,2) = -SIGxy   ;   KWW(1,3) = -SIGzx
-         KWW(2,2) = SIGxx + SIGzz   ;   KWW(2,3) = -SIGyz
-         KWW(3,3) = SIGxx + SIGyy
-         KWW(2,1) = KWW(1,2)
-         KWW(3,1) = KWW(1,3)
-         KWW(3,2) = KWW(2,3)
-         DO I=1,ELGP
-            CBAR(1,3*(I-1)+1) =  ZERO             ;  CBAR(1,3*(I-1)+2) = -HALF*DPSHX(3,I)  ;  CBAR(1,3*(I-1)+3)=  HALF*DPSHX(2,I)         
-            CBAR(2,3*(I-1)+1) =  HALF*DPSHX(3,I)  ;  CBAR(2,3*(I-1)+2) =  ZERO             ;  CBAR(2,3*(I-1)+3)= -HALF*DPSHX(1,I)         
-            CBAR(3,3*(I-1)+1) = -HALF*DPSHX(2,I)  ;  CBAR(3,3*(I-1)+2) =  HALF*DPSHX(1,I)  ;  CBAR(3,3*(I-1)+3)=  ZERO
-         ENDDO
+        KWW(1,1) = SIGyy + SIGzz   ;   KWW(1,2) = -SIGxy   ;   KWW(1,3) = -SIGzx
+        KWW(2,2) = SIGxx + SIGzz   ;   KWW(2,3) = -SIGyz
+        KWW(3,3) = SIGxx + SIGyy
+        KWW(2,1) = KWW(1,2)
+        KWW(3,1) = KWW(1,3)
+        KWW(3,2) = KWW(2,3)
 
-! DPSHG(3,ELGP), DPSHX(3,ELGP)
-! DUM3(3*ELGP,3*ELGP)
-! DUM5(3*ELGP,3*ELGP)
-! DUM6(3,3*ELGP)
+        DO I=1,3*ELGP
+          DO J=1,3*ELGP
+            DUM3(I,J) = ZERO
+          ENDDO
+        ENDDO
 
-         DO I=1,3*ELGP
-            DO J=1,3*ELGP
-               DUM3(I,J) = ZERO
-            ENDDO 
-         ENDDO   
- 
-         IORD_MSG = ' '
-         GAUSS_PT = 0
-         DO K=1,IORD_K
-            DO IJ=1,IORD_IJ
-               GAUSS_PT = GAUSS_PT + 1
-               CALL MATMULT_FFF ( KWW, CBAR, 3, 3, 3*ELGP, DUM6 )
-               CALL MATMULT_FFF_T ( CBAR, DUM6, 3, 3*ELGP, 3*ELGP, DUM5 )
-               INTFAC = DETJ(GAUSS_PT)*HH_IJ(IJ)*HH_K(K)
-               DO L=1,3*ELGP
-                  DO M=1,3*ELGP
-                     DUM3(L,M) = DUM3(L,M) + DUM5(L,M)*INTFAC
-                  ENDDO 
-               ENDDO
-            ENDDO 
-         ENDDO   
-  
-   
-         DO I=1,3*ELGP
-            DO J=1,3*ELGP
-               KED(ID(I),ID(J)) = DUM3(I,J)
-            ENDDO   
-         ENDDO 
-  
-         DO I=2,6*ELGP                                     ! Set lower triangular portion of KE equal to upper portion
-            DO J=1,I-1
-               KED(I,J) = KED(J,I)
-            ENDDO 
-         ENDDO 
-  
-         IF (DEBUG(178) >= 1) THEN
-            WRITE(F06,2001) TRIM(SUBR_NAME), OPT(6), LOAD_ISTEP, TYPE, EID
-            K = 0
-            DO I=1,ELGP
-               K = 6*(I-1) + 1
-               WRITE(F06,2101) (KED(K  ,J),J=1,3*ELGP)
-               WRITE(F06,2101) (KED(K+1,J),J=1,3*ELGP)
-               WRITE(F06,2101) (KED(K+2,J),J=1,3*ELGP)
-               WRITE(F06,*)
-               WRITE(F06,2101) (KED(K+3,J),J=1,3*ELGP)
-               WRITE(F06,2101) (KED(K+4,J),J=1,3*ELGP)
-               WRITE(F06,2101) (KED(K+5,J),J=1,3*ELGP)
-               WRITE(F06,*)
+                                                           ! KED = int( CBAR^T * KWW * CBAR , dV)
+        IORD_MSG = ' '
+        GAUSS_PT = 0
+        DO K=1,IORD_K
+          DO IJ=1,IORD_IJ
+            GAUSS_PT = GAUSS_PT + 1
+            DO L=1,ELGP
+              DPSHX(1,L) = B(1,3*(L-1)+1,GAUSS_PT)         ! Collect shape function derivatives at this Gauss point.
+              DPSHX(2,L) = B(2,3*(L-1)+2,GAUSS_PT)
+              DPSHX(3,L) = B(3,3*(L-1)+3,GAUSS_PT)
+              CBAR(1,3*(L-1)+1) =  ZERO            ; CBAR(1,3*(L-1)+2) = -HALF*DPSHX(3,L) ; CBAR(1,3*(L-1)+3)=  HALF*DPSHX(2,L)
+              CBAR(2,3*(L-1)+1) =  HALF*DPSHX(3,L) ; CBAR(2,3*(L-1)+2) =  ZERO            ; CBAR(2,3*(L-1)+3)= -HALF*DPSHX(1,L)
+              CBAR(3,3*(L-1)+1) = -HALF*DPSHX(2,L) ; CBAR(3,3*(L-1)+2) =  HALF*DPSHX(1,L) ; CBAR(3,3*(L-1)+3)=  ZERO
             ENDDO
+            CALL MATMULT_FFF ( KWW, CBAR, 3, 3, 3*ELGP, DUM6 )
+            CALL MATMULT_FFF_T ( CBAR, DUM6, 3, 3*ELGP, 3*ELGP, DUM5 )
+            INTFAC = DETJ(GAUSS_PT)*HH_IJ(IJ)*HH_K(K)
+            DO L=1,3*ELGP
+              DO M=1,3*ELGP
+                DUM3(L,M) = DUM3(L,M) + DUM5(L,M)*INTFAC
+              ENDDO
+            ENDDO
+          ENDDO
+        ENDDO
+ 
+        DO I=1,3*ELGP
+          DO J=1,3*ELGP
+            KED(ID(I),ID(J)) = DUM3(I,J)
+          ENDDO   
+        ENDDO 
+
+        DO I=2,6*ELGP                                      ! Set lower triangular portion of KE equal to upper portion
+          DO J=1,I-1
+            KED(I,J) = KED(J,I)
+          ENDDO 
+        ENDDO 
+
+        IF (DEBUG(178) >= 1) THEN
+          WRITE(F06,2001) TRIM(SUBR_NAME), OPT(6), LOAD_ISTEP, TYPE, EID
+          K = 0
+          DO I=1,ELGP
+            K = 6*(I-1) + 1
+            WRITE(F06,2101) (KED(K  ,J),J=1,3*ELGP)
+            WRITE(F06,2101) (KED(K+1,J),J=1,3*ELGP)
+            WRITE(F06,2101) (KED(K+2,J),J=1,3*ELGP)
             WRITE(F06,*)
-         ENDIF
+            WRITE(F06,2101) (KED(K+3,J),J=1,3*ELGP)
+            WRITE(F06,2101) (KED(K+4,J),J=1,3*ELGP)
+            WRITE(F06,2101) (KED(K+5,J),J=1,3*ELGP)
+            WRITE(F06,*)
+          ENDDO
+          WRITE(F06,*)
+        ENDIF
 
       ENDIF               
 
