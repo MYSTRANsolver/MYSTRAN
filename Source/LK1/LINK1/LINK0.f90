@@ -132,6 +132,9 @@
          WRT_BUG(I) = 0
       ENDDO
 
+      ! Initialize WRITE_ANS
+      WRITE_ANS = (PRTANS == 'Y')
+
       RBG_GSET_ALLOCATED = 'N'
 
       ! Set default values for SETLKT from values in module PARAMS
