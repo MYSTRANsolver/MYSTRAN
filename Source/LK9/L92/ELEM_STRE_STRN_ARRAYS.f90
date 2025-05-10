@@ -45,7 +45,7 @@
       USE SUBR_BEGEND_LEVELS, ONLY    :  ELEM_STRE_STRN_ARRAYS_BEGEND
       USE CONSTANTS_1, ONLY           :  ZERO, one, four
       USE MODEL_STUF, ONLY            :  ALPVEC, BE1, BE2, BE3, DT, EM, EB, ES, ET, ELDOF, PEL, PHI_SQ, STRAIN, STRESS, SUBLOD,    &
-                                         TREF, TYPE, UEL, SE1, SE2, SE3, STE1, STE2, STE3
+                                         TREF, TYPE, UEL, SE1, SE2, SE3, STE1, STE2, STE3, ELGP
       USE DEBUG_PARAMETERS
       USE PARAMS, ONLY                :  STR_CID
 
@@ -203,7 +203,11 @@
 
          DO I=1,3
             IF (SUBLOD(INT_SC_NUM,2) > 0) THEN
-               TBAR = (DT(1,JTSUB) + DT(2,JTSUB) + DT(3,JTSUB) + DT(4,JTSUB))/FOUR
+               TBAR = 0
+               DO J=1,ELGP
+                 TBAR = TBAR + DT(J,JTSUB)
+               ENDDO
+               TBAR = TBAR / ELGP
                ALPTM(I) = ALPVEC(I  ,1)*(TBAR - TREF(1))
                ALPTB(I) = ALPVEC(I  ,2)*DT(5,JTSUB)
                ALPTT(I) = ALPVEC(I+3,3)*(TBAR - TREF(1))
