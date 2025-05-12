@@ -134,8 +134,8 @@
 !xx   WRITE(SC1, * )
       OLD_ROW_NUM = 0
       IERROR  = 0
-      WRITE(12345, COUNTER_TEMPLATE) NAME
-      CALL COUNTER_INIT(COUNTER_TEMPLATE, NROWS)
+      !WRITE(COUNTER_TEMPLATE, 12345) NAME
+      !CALL COUNTER_INIT(COUNTER_TEMPLATE, NROWS)
       DO K = 1,NTERMS
          READ(UNT,IOSTAT=IOCHK) I2_MATOUT(K), J_MATOUT(K), MATOUT(K)
          IF (IOCHK /= 0) THEN
@@ -148,7 +148,7 @@
             IERROR = IERROR + 1
          ENDIF
          IF (I2_MATOUT(K) > OLD_ROW_NUM) THEN
-            CALL COUNTER_PROGRESS(I2_MATOUT(K))
+            !CALL COUNTER_PROGRESS(I2_MATOUT(K))
          ENDIF
       ENDDO
       WRITE(SC1,*) CR13      
@@ -179,7 +179,7 @@
 
  9996 FORMAT(/,' PROCESSING ABORTED IN SUBROUTINE ',A,' DUE TO ABOVE ',I8,' ERRORS')
 
-12345 FORMAT("       ",A,': read row ')
+12345 FORMAT("       ",A,': read row')
 
 ! **********************************************************************************************************************************
  
