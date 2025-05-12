@@ -66,7 +66,7 @@
 !                                                              For any ratio <= AUTOSPC_RAT, a component will be AUTOSPC'd. The
 !                                                              grid comp that is AUTOSPC'd is the one whose eigenvector value for
 !                                                              that eigenvalue is maximum.  
-      INTEGER(LONG)            :: AUTOSPC_NSET   =     3     !*If = 1, SPC KNN for null rows. If 2, SPC KNN for small diag terms
+      INTEGER(LONG)            :: AUTOSPC_NSET   =     1     !*If = 1, SPC KNN for null rows. If 2, SPC KNN for small diag terms
 !                                                              If = 3, do both                               
       CHARACTER(  1*BYTE)      :: AUTOSPC_INFO   =    'N'    ! If 'Y' print information on AUTOSPC's
       CHARACTER(  1*BYTE)      :: AUTOSPC_SPCF   =    'N'    ! If 'Y' write SPC forces on SA DOF's in subr OFP2
