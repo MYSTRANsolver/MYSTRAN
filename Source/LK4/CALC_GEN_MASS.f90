@@ -87,7 +87,7 @@
       MIJ_COL       = 1
       MAX           = ZERO
       MAXMIJ        = ZERO
-      CALL COUNTER_INIT('Diag term for eigenvector ', NVEC)
+      CALL COUNTER_INIT('     Diag term for eigenvector ', NVEC)
       DO I=1,NVEC
 
          DO K=1,NDOFL                                      ! Calc diag terms
@@ -106,7 +106,7 @@
          GEN_MASS(I) = ABS(GEN_MASS(I))
          IF (DEBUG(48) == 0) THEN                          ! Calc off-diag terms
 
-            CALL COUNTER_INIT('Off-diag term ', I-1)
+            !CALL COUNTER_INIT('Off-diag term ', I-1)
             DO J=1,I-1
 
                DO K=1,NDOFL
@@ -133,7 +133,7 @@
                IF (DMIJ > EIG_CRIT) THEN
                   NUM_FAIL_CRIT = NUM_FAIL_CRIT + 1
                ENDIF
-               CALL COUNTER_PROGRESS(J)
+               !CALL COUNTER_PROGRESS(J)
             ENDDO
 
          ENDIF

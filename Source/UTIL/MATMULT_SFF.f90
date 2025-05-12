@@ -131,7 +131,7 @@
 
       A_ROW_BEG      = 1
       AROW_MAX_TERMS = 0                                   ! Find the max number of nonzero terms in any row of input matrix A
-      CALL COUNTER_INIT("     setting up row ", NROWS_A)
+      !CALL COUNTER_INIT("     setting up row ", NROWS_A)
       DO I=1,NROWS_A
          A_NTERM_ROW_I = I_A(I+1) - I_A(I)
          A_ROW_END = A_ROW_BEG + A_NTERM_ROW_I - 1
@@ -150,7 +150,7 @@
             AROW_MAX_TERMS = NTERM_AROW
          ENDIF
          A_ROW_BEG = A_ROW_END + 1
-         CALL COUNTER_PROGRESS(I)
+         !CALL COUNTER_PROGRESS(I)
       ENDDO
 !xx   WRITE(SC1,*) CR13
                                                            ! Allocate  vectors long enough to hold the max terms in a row of A
