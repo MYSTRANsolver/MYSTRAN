@@ -35,7 +35,6 @@
       USE CONSTANTS_1, ONLY           :  ZERO
       USE SUBR_BEGEND_LEVELS, ONLY    :  SPARSE_CRS_SPARSE_CCS_BEGEND
       USE DEBUG_PARAMETERS, ONLY      :  DEBUG
-      USE PARAMS, ONLY                :  NOCOUNTS
  
       USE SPARSE_CRS_SPARSE_CCS_USE_IFs
 
@@ -62,6 +61,8 @@
 
       REAL(DOUBLE) , INTENT(IN)       :: A(NTERMS_A)       ! Real nonzero values in input  matrix A
       REAL(DOUBLE) , INTENT(OUT)      :: B(NTERMS_A)       ! Real nonzero values in output matrix B
+
+      CHARACTER(LEN=LEN(MAT_A_NAME)+LEN(MAT_B_NAME)+7+LEN("Extracting -> col")) :: COUNTER_TEMPLATE
 
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
@@ -102,10 +103,11 @@
 
       L = 0                                                ! Counter for terms going into B
       J_B(1) = 1
+      IF (WRT_SCREEN == 'Y') THEN
+         WRITE(COUNTER_TEMPLATE, 12345) MAT_A_NAME, MAT_B_NAME
+         CALL COUNTER_INIT(COUNTER_TEMPLATE, NCOLS_A)
+      END IF
       DO J=1,NCOLS_A
-         IF (WRT_SCREEN == 'Y' .AND. NOCOUNTS /= 'Y') THEN
-            WRITE(SC1,12345,ADVANCE='NO') J, NCOLS_A, MAT_A_NAME, MAT_B_NAME, CR13
-         ENDIF 
          COL_J_NUM_TERMS = 0 
          DO K=1,NTERMS_A
             IF (J_A(K) == J) THEN                          ! We found a term that belongs in col J
@@ -116,6 +118,9 @@
                  B(L) = A(K)
             ENDIF
          ENDDO
+         IF (WRT_SCREEN == 'Y') THEN
+            CALL COUNTER_PROGRESS(J)
+         ENDIF 
          J_B(J+1) = J_B(J) + COL_J_NUM_TERMS               ! J_B used to tell how many terms there are in each col of B
       ENDDO
       WRITE(SC1,*) CR13
@@ -132,7 +137,8 @@
       RETURN
 
 ! **********************************************************************************************************************************
-12345 FORMAT(7X,'Extracting col  ',I8,' of ',I8,' from matrix ',A,' for matrix ',A,A)
+!12345 FORMAT(7X,'Extracting col  ',I8,' of ',I8,' from matrix ',A,' for matrix ',A,A)
+ 12345 FORMAT("       Extracting ", A, "->", A, " col")
 
 ! **********************************************************************************************************************************
  

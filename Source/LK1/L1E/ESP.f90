@@ -43,7 +43,7 @@
                                          ELDT_F23_KE_BIT, ELDT_F24_SE_BIT, ELDT_BUG_BCHK_BIT, ELDT_BUG_BMAT_BIT, ELDT_BUG_SHPJ_BIT,&
                                          FATAL_ERR, IBIT, LINKNO, LTERM_KGG, LTERM_KGGD, MBUG, MELDOF, NDOFG, NELE, NGRID,         &
                                          NTERM_KGG, NTERM_KGGD, NSUB, SOL_NAME
-      USE PARAMS, ONLY                :  EPSIL, SPARSTOR, NOCOUNTS
+      USE PARAMS, ONLY                :  EPSIL, SPARSTOR
       USE TIMDAT, ONLY                :  TSEC
       USE CONSTANTS_1, ONLY           :  ZERO
       USE SUBR_BEGEND_LEVELS, ONLY    :  ESP_BEGEND
@@ -168,11 +168,8 @@
  
       IERROR = 0
 !xx   WRITE(SC1, * )                                       ! Advance 1 line for screen messages         
-elems:DO I=1,NELE
-
-         IF (NOCOUNTS /= 'Y') THEN
-            WRITE(SC1,12345,ADVANCE='NO') I, NELE, CR13
-         ENDIF
+      CALL COUNTER_INIT('     Calculating stiff matrix. Process elem  ', NELE)
+      elems:DO I=1,NELE
 
          IF ((DEBUG(10) == 12) .OR. (DEBUG(10) == 13) .OR. (DEBUG(10) == 32) .OR. (DEBUG(10) == 33)) THEN
             WRITE(F06,14001)
@@ -421,7 +418,7 @@ stfpnt0:          DO                                       ! so, run this loop u
             ENDDO kgg_cols 
 
          ENDDO kgg_rows 
- 
+         CALL COUNTER_PROGRESS(I)
       ENDDO elems 
       WRITE(SC1,*) CR13
  
@@ -580,8 +577,6 @@ stfpnt0:          DO                                       ! so, run this loop u
                     ,/,14X,' BASED ON DEBUG ',I3,' VALUE, ARRAY ',A,' SHOULD BE ALLOCATED BUT IT IS NOT')
 
  9876 FORMAT(/,' PROCESSING ABORTED DUE TO ABOVE ',I8,' ELEMENT GENERATION ERRORS')
-
-12345 FORMAT(5X,'Calculating stiff matrix. Process elem  ',I8,' of ',I8, A)
 
 14001 FORMAT(' ********************************************************************************************************************&
 &******')

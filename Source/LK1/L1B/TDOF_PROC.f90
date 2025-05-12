@@ -66,7 +66,7 @@
       USE SCONTR, ONLY                :  BLNK_SUB_NAM, FATAL_ERR, LDOFG, MTDOF, NDOFA, NDOFF, NDOFG, NDOFL, NDOFM, NDOFN, NDOFO,   &
                                          NDOFR, NDOFS, NDOFSA, NDOFSB, NDOFSE, NDOFSG, NDOFSZ, NGRID, NUM_USET_U1, NUM_USET_U2,    &
                                          SOL_NAME, WARN_ERR
-      USE PARAMS, ONLY                :  EIGESTL, PRTDOF, NOCOUNTS
+      USE PARAMS, ONLY                :  EIGESTL, PRTDOF
       USE TIMDAT, ONLY                :  TSEC
       USE SUBR_BEGEND_LEVELS, ONLY    :  DOF_PROC_BEGEND
       USE DOF_TABLES, ONLY            :  TSET, TDOF, TDOFI, TDOF_ROW_START, USET
@@ -148,10 +148,8 @@
 ! Set 1st 4 cols of TDOF (actual grid ID - component number, internal grid ID - component number)
 
       IROW = 0
+      CALL COUNTER_INIT('       Process col 1-4 of TDOF', NGRID)
       DO I = 1,NGRID
-         IF (NOCOUNTS /= 'Y') THEN
-            WRITE(SC1,22345,ADVANCE='NO') '       Process col 1-4 of TDOF', I, NGRID, CR13
-         ENDIF
          CALL GET_GRID_NUM_COMPS ( GRID_ID(INV_GRID_SEQ(I)), NUM_COMPS, SUBR_NAME )
          DO J = 1,NUM_COMPS
             IROW = IROW + 1
@@ -160,15 +158,15 @@
             TDOF(IROW,3) = GRID_SEQ(I)
             TDOF(IROW,4) = J
          ENDDO
+         CALL COUNTER_PROGRESS(I)
       ENDDO
 
 ! Calc TDOF for G-set (col 5 in TDOF). We can do this at this point since all components go in G-set.
  
       NDOFG = 0
+      CALL COUNTER_INIT('       Process G -set         ', NGRID)
+
       DO I=1,NGRID
-         IF (NOCOUNTS /= 'Y') THEN
-            WRITE(SC1,22345,ADVANCE='NO') '       Process G -set         ', I, NGRID, CR13
-         ENDIF
          IGRID = INV_GRID_SEQ(I)
          CALL GET_GRID_NUM_COMPS ( GRID_ID(INV_GRID_SEQ(I)), NUM_COMPS, SUBR_NAME )
          DO J=1,NUM_COMPS
@@ -177,6 +175,7 @@
             IF (NDOFG > LDOFG) CALL ARRAY_SIZE_ERROR_1 ( SUBR_NAME, LDOFG, 'TDOF' )
             TDOF(IROW,G_SET_COL) = NDOFG
          ENDDO
+         CALL COUNTER_PROGRESS(I)
       ENDDO
 
 ! Make sure NDOFG exactly equals LDOFG (otherwise coding error)
@@ -192,10 +191,8 @@
  
       IF (NDOFM > 0) THEN
          NDOFM = 0
+         CALL COUNTER_INIT('       Process M -set         ', NGRID)
          DO I=1,NGRID
-            IF (NOCOUNTS /= 'Y') THEN
-               WRITE(SC1,22345,ADVANCE='NO') '       Process M -set         ', I, NGRID, CR13
-            ENDIF
             IGRID = INV_GRID_SEQ(I)
             CALL GET_GRID_NUM_COMPS ( GRID_ID(INV_GRID_SEQ(I)), NUM_COMPS, SUBR_NAME )
             DO J=1,NUM_COMPS
@@ -205,6 +202,7 @@
                   TDOF(IROW,M_SET_COL) = NDOFM
                ENDIF
             ENDDO
+            CALL COUNTER_PROGRESS(I)
          ENDDO
       ENDIF
 
@@ -212,10 +210,8 @@
 
       IF (NDOFSA > 0) THEN
          NDOFSA = 0
+         CALL COUNTER_INIT('       Process SA-set         ', NGRID)
          DO I=1,NGRID
-            IF (NOCOUNTS /= 'Y') THEN
-               WRITE(SC1,22345,ADVANCE='NO') '       Process SA-set         ', I, NGRID, CR13
-            ENDIF
             IGRID = INV_GRID_SEQ(I)
             CALL GET_GRID_NUM_COMPS ( GRID_ID(INV_GRID_SEQ(I)), NUM_COMPS, SUBR_NAME )
             DO J=1,NUM_COMPS
@@ -225,6 +221,7 @@
                   TDOF(IROW,SA_SET_COL) = NDOFSA
                ENDIF
             ENDDO
+            CALL COUNTER_PROGRESS(I)
          ENDDO
       ENDIF
 
@@ -232,10 +229,8 @@
  
       IF (NDOFSB > 0) THEN
          NDOFSB = 0
+         CALL COUNTER_INIT('       Process SB-set         ', NGRID)
          DO I=1,NGRID
-            IF (NOCOUNTS /= 'Y') THEN
-               WRITE(SC1,22345,ADVANCE='NO') '       Process SB-set         ', I, NGRID, CR13
-            ENDIF
             IGRID = INV_GRID_SEQ(I)
             CALL GET_GRID_NUM_COMPS ( GRID_ID(INV_GRID_SEQ(I)), NUM_COMPS, SUBR_NAME )
             DO J=1,NUM_COMPS
@@ -245,6 +240,7 @@
                   TDOF(IROW,SB_SET_COL) = NDOFSB
                ENDIF
             ENDDO
+            CALL COUNTER_PROGRESS(I)
          ENDDO
       ENDIF
 
@@ -252,10 +248,8 @@
  
       IF (NDOFSG > 0) THEN
          NDOFSG = 0
+         CALL COUNTER_INIT('       Process SG-set         ', NGRID)
          DO I=1,NGRID
-            IF (NOCOUNTS /= 'Y') THEN
-               WRITE(SC1,22345,ADVANCE='NO') '       Process SG-set         ', I, NGRID, CR13
-            ENDIF
             IGRID = INV_GRID_SEQ(I)
             CALL GET_GRID_NUM_COMPS ( GRID_ID(INV_GRID_SEQ(I)), NUM_COMPS, SUBR_NAME )
             DO J=1,NUM_COMPS
@@ -265,6 +259,7 @@
                   TDOF(IROW,SG_SET_COL) = NDOFSG
                ENDIF
             ENDDO
+            CALL COUNTER_PROGRESS(I)
          ENDDO
       ENDIF
 
@@ -272,10 +267,8 @@
  
       IF (NDOFSE > 0) THEN
          NDOFSE = 0
+         CALL COUNTER_INIT('       Process SE-set         ', NGRID)
          DO I=1,NGRID
-            IF (NOCOUNTS /= 'Y') THEN
-               WRITE(SC1,22345,ADVANCE='NO') '       Process SE-set         ', I, NGRID, CR13
-            ENDIF
             IGRID = INV_GRID_SEQ(I)
             CALL GET_GRID_NUM_COMPS ( GRID_ID(INV_GRID_SEQ(I)), NUM_COMPS, SUBR_NAME )
             DO J=1,NUM_COMPS
@@ -285,6 +278,7 @@
                   TDOF(IROW,SE_SET_COL) = NDOFSE
                ENDIF
             ENDDO
+            CALL COUNTER_PROGRESS(I)
          ENDDO
       ENDIF
 
@@ -292,10 +286,8 @@
  
       IF (NDOFO > 0) THEN
          NDOFO = 0
+         CALL COUNTER_INIT('       Process O -set         ', NGRID)
          DO I=1,NGRID
-            IF (NOCOUNTS /= 'Y') THEN
-               WRITE(SC1,22345,ADVANCE='NO') '       Process O -set         ', I, NGRID, CR13
-            ENDIF
             IGRID = INV_GRID_SEQ(I)
             CALL GET_GRID_NUM_COMPS ( GRID_ID(INV_GRID_SEQ(I)), NUM_COMPS, SUBR_NAME )
             DO J=1,NUM_COMPS
@@ -305,6 +297,7 @@
                   TDOF(IROW,O_SET_COL) = NDOFO
                ENDIF
             ENDDO
+            CALL COUNTER_PROGRESS(I)
          ENDDO
       ENDIF
 
@@ -312,11 +305,9 @@
  
       IF (NDOFR > 0) THEN
          NDOFR = 0
+         CALL COUNTER_INIT('       Process R -set         ', NGRID)
          DO I=1,NGRID
             IGRID = INV_GRID_SEQ(I)
-            IF (NOCOUNTS /= 'Y') THEN
-               WRITE(SC1,22345,ADVANCE='NO') '       Process R -set         ', I, NGRID, CR13
-            ENDIF
             CALL GET_GRID_NUM_COMPS ( GRID_ID(INV_GRID_SEQ(I)), NUM_COMPS, SUBR_NAME )
             DO J=1,NUM_COMPS
                IF (TSET(IGRID,J) == 'R ') THEN
@@ -325,16 +316,15 @@
                   TDOF(IROW,R_SET_COL) = NDOFR
                ENDIF
             ENDDO
+            CALL COUNTER_PROGRESS(I)
          ENDDO
       ENDIF
  
 ! Calc TDOF for N-set based on G-set minus M-set = S-set + O-set + R-set + L-set
  
       NDOFN = 0
+      CALL COUNTER_INIT('       Process N -set         ', NGRID)
       DO I=1,NGRID
-         IF (NOCOUNTS /= 'Y') THEN
-            WRITE(SC1,22345,ADVANCE='NO') '       Process N -set         ', I, NGRID, CR13
-         ENDIF
          IGRID = INV_GRID_SEQ(I)
          CALL GET_GRID_NUM_COMPS ( GRID_ID(INV_GRID_SEQ(I)), NUM_COMPS, SUBR_NAME )
          DO J=1,NUM_COMPS
@@ -346,16 +336,15 @@
                TDOF(IROW,N_SET_COL) = 0
             ENDIF
          ENDDO
+         CALL COUNTER_PROGRESS(I)
       ENDDO
 
 ! Calc DOF'S in SZ-set (all zero SPC's) based on SA + SB + SG
  
       IF ((NDOFSA > 0) .OR. (NDOFSB > 0) .OR. (NDOFSG > 0)) THEN
          NDOFSZ = 0
+         CALL COUNTER_INIT('       Process SZ-set         ', NGRID)
          DO I=1,NGRID
-            IF (NOCOUNTS /= 'Y') THEN
-               WRITE(SC1,22345,ADVANCE='NO') '       Process SZ-set         ', I, NGRID, CR13
-            ENDIF
             IGRID = INV_GRID_SEQ(I)
             CALL GET_GRID_NUM_COMPS ( GRID_ID(INV_GRID_SEQ(I)), NUM_COMPS, SUBR_NAME )
             DO J=1,NUM_COMPS
@@ -367,6 +356,7 @@
                   TDOF(IROW,SZ_SET_COL) = 0
                ENDIF
             ENDDO
+            CALL COUNTER_PROGRESS(I)
          ENDDO
       ENDIF
 
@@ -374,10 +364,8 @@
  
       IF ((NDOFSZ > 0) .OR. (NDOFSE > 0)) THEN
          NDOFS = 0
+         CALL COUNTER_INIT('       Process S -set         ', NGRID)
          DO I=1,NGRID
-            IF (NOCOUNTS /= 'Y') THEN
-               WRITE(SC1,22345,ADVANCE='NO') '       Process S -set         ', I, NGRID, CR13
-            ENDIF
             IGRID = INV_GRID_SEQ(I)
             CALL GET_GRID_NUM_COMPS ( GRID_ID(INV_GRID_SEQ(I)), NUM_COMPS, SUBR_NAME )
             DO J=1,NUM_COMPS
@@ -389,16 +377,15 @@
                   TDOF(IROW,S_SET_COL) = 0
                ENDIF
             ENDDO
+            CALL COUNTER_PROGRESS(I)
          ENDDO
       ENDIF
 
 ! Calc TDOF for F-set based on N-set minus S-set
  
       NDOFF = 0
+      CALL COUNTER_INIT('       Process F -set         ', NGRID)
       DO I=1,NGRID
-         IF (NOCOUNTS /= 'Y') THEN
-            WRITE(SC1,22345,ADVANCE='NO') '       Process F -set         ', I, NGRID, CR13
-         ENDIF
          IGRID = INV_GRID_SEQ(I)
          CALL GET_GRID_NUM_COMPS ( GRID_ID(INV_GRID_SEQ(I)), NUM_COMPS, SUBR_NAME )
          DO J=1,NUM_COMPS
@@ -410,15 +397,14 @@
                TDOF(IROW,F_SET_COL) = 0
             ENDIF
          ENDDO
+         CALL COUNTER_PROGRESS(I)
       ENDDO
 
 ! Calc TDOF for A-set based on F-set minus O-set
  
       NDOFA = 0
+      CALL COUNTER_INIT('       Process A -set         ', NGRID)
       DO I=1,NGRID
-         IF (NOCOUNTS /= 'Y') THEN
-            WRITE(SC1,22345,ADVANCE='NO') '       Process A -set         ', I, NGRID, CR13
-         ENDIF
          IGRID = INV_GRID_SEQ(I)
          CALL GET_GRID_NUM_COMPS ( GRID_ID(INV_GRID_SEQ(I)), NUM_COMPS, SUBR_NAME )
          DO J=1,NUM_COMPS
@@ -430,15 +416,14 @@
                TDOF(IROW,A_SET_COL) = 0
             ENDIF
          ENDDO
+         CALL COUNTER_PROGRESS(I)
       ENDDO
 
 ! Calc TDOF for L-set based on A-set minus R-set
  
       NDOFL = 0
+      CALL COUNTER_INIT('       Process L -set         ', NGRID)
       DO I=1,NGRID
-         IF (NOCOUNTS /= 'Y') THEN
-            WRITE(SC1,22345,ADVANCE='NO') '       Process L -set         ', I, NGRID, CR13
-         ENDIF
          IGRID = INV_GRID_SEQ(I)
          CALL GET_GRID_NUM_COMPS ( GRID_ID(INV_GRID_SEQ(I)), NUM_COMPS, SUBR_NAME )
          DO J=1,NUM_COMPS
@@ -450,16 +435,15 @@
                TDOF(IROW,L_SET_COL) = 0
             ENDIF
          ENDDO
+         CALL COUNTER_PROGRESS(I)
       ENDDO
 
 ! Calc TDOF for USET U1-set and put DOF numbers into TDOF at U1_SET_COL
  
       IF (NUM_USET_U1 > 0) THEN
          I_USET_U1 = 0
+         CALL COUNTER_INIT('       Process U1-set         ', NGRID)
          DO I=1,NGRID
-            IF (NOCOUNTS /= 'Y') THEN
-               WRITE(SC1,22345,ADVANCE='NO') '       Process U1-set         ', I, NGRID, CR13
-            ENDIF
             IGRID = INV_GRID_SEQ(I)
             CALL GET_GRID_NUM_COMPS ( GRID_ID(INV_GRID_SEQ(I)), NUM_COMPS, SUBR_NAME )
             DO J=1,NUM_COMPS
@@ -469,6 +453,7 @@
                   TDOF(IROW,U1_SET_COL) = I_USET_U1
                ENDIF
             ENDDO
+            CALL COUNTER_PROGRESS(I)
          ENDDO
       ENDIF
 
@@ -476,10 +461,8 @@
  
       IF (NUM_USET_U2 > 0) THEN
          I_USET_U2 = 0
+         CALL COUNTER_INIT('       Process U2-set         ', NGRID)
          DO I=1,NGRID
-            IF (NOCOUNTS /= 'Y') THEN
-               WRITE(SC1,22345,ADVANCE='NO') '       Process U2-set         ', I, NGRID, CR13
-            ENDIF
             IGRID = INV_GRID_SEQ(I)
             CALL GET_GRID_NUM_COMPS ( GRID_ID(INV_GRID_SEQ(I)), NUM_COMPS, SUBR_NAME )
             DO J=1,NUM_COMPS
@@ -489,23 +472,21 @@
                   TDOF(IROW,U2_SET_COL) = I_USET_U2
                ENDIF
             ENDDO
+            CALL COUNTER_PROGRESS(I)
          ENDDO
       ENDIF
 
 ! Sort TDOF so that G-set DOF's are in numerical order
 
-      IF (NOCOUNTS /= 'Y') THEN
-         WRITE(SC1,12345,ADVANCE='NO') '       Setting up to get TDOFI', CR13
-      ENDIF
+
+      WRITE(SC1,12345,ADVANCE='NO') '       Setting up to get TDOFI', CR13
       DO I=1,NDOFG
          DO J=1,MTDOF
             TDOFI(I,J) = TDOF(I,J)
          ENDDO 
       ENDDO 
 
-      IF (NOCOUNTS /= 'Y') THEN
-         WRITE(SC1,12345,ADVANCE='NO') '       Sort TDOF to get TDOFI ', CR13
-      ENDIF
+      WRITE(SC1,12345,ADVANCE='NO') '       Sort TDOF to get TDOFI ', CR13
       CALL SORT_TDOF ( SUBR_NAME, 'TDOF', NDOFG, TDOFI, G_SET_COL )
 
 ! Table TDOF is printed in the F06 file if B.D. PARAM PRTDOF = 1 or 3
@@ -579,8 +560,6 @@
                     ,/,14X,' (NDOFL = ',I8,') MUST BE LESS THAT PARAM EIGESTL = ',I8,' (OR USE LARGER VALUE FOR PARAM EIGESTL)')
 
 12345 FORMAT(A, A)
-
-22345 FORMAT(A, ', I = ', I8, ' of ', I8, A)
 
 ! **********************************************************************************************************************************
 

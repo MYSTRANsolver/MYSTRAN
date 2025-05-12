@@ -39,7 +39,7 @@
       USE TIMDAT, ONLY                :  TSEC
       USE DEBUG_PARAMETERS, ONLY      :  DEBUG
       USE CONSTANTS_1, ONLY           :  ZERO
-      USE PARAMS, ONLY                :  EPSIL, SPARSTOR, NOCOUNTS
+      USE PARAMS, ONLY                :  EPSIL, SPARSTOR
       USE SUBR_BEGEND_LEVELS, ONLY    :  EMP_BEGEND
       USE DOF_TABLES, ONLY            :  TDOF, TDOF_ROW_START
       USE MODEL_STUF, ONLY            :  AGRID, ELDT, ELDOF, ELGP, GRID_ID, NUM_EMG_FATAL_ERRS, ME, OELDT, PLY_NUM, TYPE
@@ -123,10 +123,8 @@
  
       IERROR = 0
 !xx   WRITE(SC1, * )                                       ! Advance 1 line for screen messages         
-elems:DO I=1,NELE
-         IF (NOCOUNTS /= 'Y') THEN
-            WRITE(SC1,12345,ADVANCE='NO') I, NELE, CR13
-         ENDIF
+      CALL COUNTER_INIT('     Calculating mass matrix. Process elem   ', NELE)
+      elems:DO I=1,NELE
 
          DO J=0,MBUG-1
             WRT_BUG(J) = 0
@@ -277,7 +275,7 @@ emspnt0:          DO                                       ! so, run this loop u
             ENDDO mgg_cols 
 
          ENDDO mgg_rows 
- 
+         CALL COUNTER_PROGRESS(I)
       ENDDO elems 
  
       WRITE(SC1,*) CR13
@@ -340,8 +338,6 @@ emspnt0:          DO                                       ! so, run this loop u
                     ,/,14X,' TOO MANY NON-ZERO TERMS IN THE ',A,' MATRIX. LIMIT IS ',A,' = ',I12)
 
  9876 FORMAT(/,' PROCESSING ABORTED DUE TO ABOVE ',I8,' ELEMENT GENERATION ERRORS')
-
-12345 FORMAT(5X,'Calculating mass matrix. Process elem   ',I8,' of ',I8, A)
 
 14001 FORMAT(' ******************************************************************************************************************&
 &******')

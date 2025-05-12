@@ -42,5 +42,7 @@
       USE DEALLOCATE_STF_ARRAYS_Interface
       USE ALLOCATE_STF_ARRAYS_Interface
       USE READERR_Interface
+      USE COUNTER_INIT_Interface
+      USE COUNTER_PROGRESS_Interface
 
       END MODULE ESP_USE_IFs

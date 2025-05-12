@@ -43,7 +43,7 @@
                                          GROUT, LABEL, PLY_NUM, PEG, PTE, SCNUM, STITLE, SUBLOD, TITLE, TYPE
       USE LINK9_STUFF, ONLY           :  GID_OUT_ARRAY
       USE COL_VECS, ONLY              :  FG_COL, PG_COL, QGm_COL, QGs_COL, QGr_COL, UG_COL
-      USE PARAMS, ONLY                :  EPSIL, NOCOUNTS, PRTANS
+      USE PARAMS, ONLY                :  EPSIL, PRTANS
       USE CC_OUTPUT_DESCRIBERS, ONLY  :  GPFO_OUT
 
       USE GP_FORCE_BALANCE_PROC_USE_IFs
@@ -438,11 +438,8 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
 
       ENDIF  ! write_op2 allocation
       !------------------------------------------------------------------------
-
+      CALL COUNTER_INIT('Process grid ', NGRID)
       DO I=1,NGRID
-         IF (NOCOUNTS /= 'Y') THEN
-            WRITE(SC1,12345,ADVANCE='NO') I, NREQ, CR13
-         ENDIF
          IB = IAND(GROUT(I,INT_SC_NUM),IBIT(GROUT_GPFO_BIT))
          GRID_NUM  = GRID(I,1)
          CALL GET_GRID_NUM_COMPS ( GRID_NUM, NUM_COMPS, SUBR_NAME )
@@ -740,7 +737,7 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
             IF (DABS(QGm1(J)) > MAX_ABS(J)) MAX_ABS(J) = DABS(QGm1(J))
             IF (DABS(PEG1(J)) > MAX_ABS(J)) MAX_ABS(J) = DABS(PEG1(J))
          ENDDO
-
+         CALL COUNTER_PROGRESS(I)
       ENDDO
       WRITE(SC1,*) CR13
       IF (WRITE_F06 .OR. WRITE_ANS) THEN
@@ -880,8 +877,6 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
                    ' are not -Mgg*Üg)',//)
 
  9799 FORMAT(1X,A)
-
-12345 FORMAT(5X,'Process grid ',I8,' of ',I8,A)
 
 ! ##################################################################################################################################
 

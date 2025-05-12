@@ -30,5 +30,7 @@
       USE OURTIM_Interface
       USE OUTA_HERE_Interface
       USE ROW_AT_COLJ_BEGEND_Interface
+      USE COUNTER_INIT_Interface
+      USE COUNTER_PROGRESS_Interface
 
       END MODULE PARTITION_SS_USE_IFs

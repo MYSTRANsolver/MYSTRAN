@@ -41,7 +41,7 @@
       USE TIMDAT, ONLY                :  TSEC
       USE SUBR_BEGEND_LEVELS, ONLY    :  SPARSE_KGG_BEGEND
       USE CONSTANTS_1, ONLY           :  ZERO
-      USE PARAMS, ONLY                :  AUTOSPC, AUTOSPC_RAT, EPSIL, PRTTSET, PRTSTIFF, SPC1QUIT, SUPINFO, SUPWARN, NOCOUNTS
+      USE PARAMS, ONLY                :  AUTOSPC, AUTOSPC_RAT, EPSIL, PRTTSET, PRTSTIFF, SPC1QUIT, SUPINFO, SUPWARN
       USE NONLINEAR_PARAMS, ONLY      :  LOAD_ISTEP
       USE MODEL_STUF, ONLY            :  GRID, GRID_ID, GRID_SEQ, MPC_IND_GRIDS, INV_GRID_SEQ
       USE DOF_TABLES, ONLY            :  TDOF, TDOF_ROW_START, TDOFI, TSET
@@ -184,13 +184,8 @@
       CALL TDOF_COL_NUM ( 'G ', G_SET_COL )
       KGG_ROW_NUM = 0
       I_KGG(1) = 1
-
+      CALL COUNTER_INIT('     Working on grid ', NGRID)
 i_do: DO I = 1,NGRID
-
-         IF (NOCOUNTS /= 'Y') THEN
-            WRITE(SC1,12345,ADVANCE='NO') I, NGRID, CR13
-         ENDIF
-
          SKIPIT = 'N'
 
          DO K=1,6                                          ! Make KGG_II 6x6 even though for SPOINT's we only use 1-1 term
@@ -277,7 +272,7 @@ j_do4:   DO J=1,NIND_GRDS_MPCS                           ! on MPC's since they m
          IF (SKIPIT == 'N') THEN
             CALL KGG_SINGULARITY_PROC ( AGRIDI, KGG_II, NUM_ASPC_BY_COMP )
          ENDIF
-
+         CALL COUNTER_PROGRESS(I)
       ENDDO i_do
       IF (DEBUG(17) > 0) THEN                              ! Write trailing seperator for DEBUG output
          WRITE(F06,9902)
@@ -389,8 +384,6 @@ j_do4:   DO J=1,NIND_GRDS_MPCS                           ! on MPC's since they m
              '_________________',/)
 
  9991 FORMAT(' PROCESSING ABORTED IN SUBR ',A,' BASED ON PARAMETER SPC1QUIT = ',A)
-
-12345 FORMAT(5X,'Working on grid ',24X,I8,' of ',I8, A)
 
 
 

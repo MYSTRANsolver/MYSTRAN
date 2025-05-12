@@ -52,5 +52,7 @@
       USE READ_MATRIX_2_Interface
       USE SORT_INT2_REAL1_Interface
       USE READ_MATRIX_1_Interface
+      USE COUNTER_INIT_Interface
+      USE COUNTER_PROGRESS_Interface
 
       END MODULE SOLVE_GMN_USE_IFs

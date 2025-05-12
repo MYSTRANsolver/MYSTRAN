@@ -60,7 +60,6 @@
       USE SPARSE_ALG_ARRAYS, ONLY     :  ALG, J_AROW
       USE DEBUG_PARAMETERS, ONLY      :  DEBUG
       USE SUBR_BEGEND_LEVELS, ONLY    :  PARTITION_SS_NTERM_BEGEND
-      USE PARAMS, ONLY                :  NOCOUNTS
  
       USE PARTITION_SS_NTERM_USE_IFs
 
@@ -107,6 +106,8 @@
       INTEGER(LONG)                   :: ROW_AT_COLJ_BEG(NCOL_A)! jth term is row number in MATIN where col j nonzeros begin 
       INTEGER(LONG)                   :: ROW_AT_COLJ_END(NCOL_A)! jth term is row number in MATIN where col j nonzeros end
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = PARTITION_SS_NTERM_BEGEND
+
+      CHARACTER(LEN=LEN("       Det. part. size of BBBB, row")) :: COUNTER_TEMPLATE
 
       INTRINSIC                       :: DABS
        
@@ -247,6 +248,9 @@
       KBEG_MATIN   = 1
 
       L = 0
+      
+      WRITE(COUNTER_TEMPLATE, 12345) MAT_B_NAME
+      CALL COUNTER_INIT(COUNTER_TEMPLATE, NROW_A)
 i_do: DO I=1,NROW_A                                        ! Matrix partition loop. Range over the rows in MATIN
 
          MATIN_NTERM_ROW_I = I_A(I+1) - I_A(I)             ! Number of terms in matrix MATIN in row I 
@@ -255,11 +259,7 @@ i_do: DO I=1,NROW_A                                        ! Matrix partition lo
          IF (ROW_PART_VEC(I) == VAL_ROWS) THEN
 
             L = L + 1
-                                                           ! Write message to screen
-            CALL OURTIM
-            IF (NOCOUNTS /= 'Y') THEN
-               WRITE(SC1,12345,ADVANCE='NO') MAT_B_NAME, L, NROW_B, SYM_A, SYM_B, HOUR, MINUTE, SEC, SFRAC, CR13
-            ENDIF
+                                                           
 
             B_ROW_NUM = B_ROW_NUM_ARRAY(I)
 
@@ -320,6 +320,8 @@ i_do: DO I=1,NROW_A                                        ! Matrix partition lo
 
          KBEG_MATIN = KEND_MATIN + 1
 
+         CALL COUNTER_PROGRESS(I)
+
       ENDDO i_do
 !xx   WRITE(SC1,*) CR13
 
@@ -327,7 +329,7 @@ i_do: DO I=1,NROW_A                                        ! Matrix partition lo
 
       CALL DEALLOCATE_SPARSE_ALG ( 'ALG' )
       CALL DEALLOCATE_SPARSE_ALG ( 'J_AROW' )
-
+      
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
          CALL OURTIM
@@ -351,7 +353,8 @@ i_do: DO I=1,NROW_A                                        ! Matrix partition lo
                     ,/,14X,' OUTPUT MATRIX ',A,' WAS REQUESTED TO BE WRITTEN IN SYMMETRIC FORM BUT IT IS NOT SQUARE.'              &
                     ,/,14X,' IT HAS ',I8,' ROWS AND ',I8,' COLS')
 
-12345 format(7X,'Det part. size of ',A4,': row ',I8,' of ',I8,' SYM = ',A,A,4X,I2,':',I2,':',I2,'.',I3,A)
+!12345 format(7X,'Det part. size of ',A4,': row ',I8,' of ',I8,' SYM = ',A,A,4X,I2,':',I2,':',I2,'.',I3,A)
+ 12345 FORMAT("       Det. part. size of ", A4, ", row")
 
 ! ##################################################################################################################################
 

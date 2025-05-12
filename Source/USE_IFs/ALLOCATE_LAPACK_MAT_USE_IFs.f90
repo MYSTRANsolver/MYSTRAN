@@ -30,5 +30,7 @@
       USE OURTIM_Interface
       USE OUTA_HERE_Interface
       USE ALLOCATED_MEMORY_Interface
+      USE COUNTER_INIT_Interface
+      USE COUNTER_PROGRESS_Interface
 
       END MODULE ALLOCATE_LAPACK_MAT_USE_IFs

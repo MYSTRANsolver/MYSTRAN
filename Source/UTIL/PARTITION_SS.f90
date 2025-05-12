@@ -68,7 +68,6 @@
       USE CONSTANTS_1, ONLY           :  ZERO
       USE SUBR_BEGEND_LEVELS, ONLY    :  PARTITION_SS_BEGEND
       USE DEBUG_PARAMETERS, ONLY      :  DEBUG
-      USE PARAMS, ONLY                :  NOCOUNTS
  
       USE PARTITION_SS_USE_IFs
 
@@ -124,6 +123,8 @@
       REAL(DOUBLE) , INTENT(IN )      :: A(NTERM_A)             ! Input  matrix nonzero terms
       REAL(DOUBLE) , INTENT(OUT)      :: B(NTERM_B)             ! Output matrix nonzero terms
       REAL(DOUBLE)                    :: AROW(AROW_MAX_TERMS)   ! Array that will contain the nonzero terms from one row of A
+
+      CHARACTER(LEN=LEN("       Partition BBBB from AAAA, row")) :: COUNTER_TEMPLATE
 
       INTRINSIC                       :: DABS
 
@@ -237,7 +238,8 @@
       L       = 0
       I_B(1)  = 1
       KBEG_A  = 1
-
+      WRITE(COUNTER_TEMPLATE, 12345) MAT_B_NAME, MAT_A_NAME
+      CALL COUNTER_INIT(COUNTER_TEMPLATE, NROW_A)
 i_do: DO I=1,NROW_A                                        ! Matrix partition loop. Range over the rows in A
 
          A_NTERM_ROW_I = I_A(I+1) - I_A(I)                 ! Number of terms in matrix A in row I 
@@ -251,10 +253,6 @@ i_do: DO I=1,NROW_A                                        ! Matrix partition lo
             I_B(L+1) = I_B(L)                              ! Start out with next I_B equal to last.
 
                                                            ! Write message to screen
-            IF (NOCOUNTS /= 'Y') THEN
-               CALL OURTIM
-               WRITE(SC1,12345,ADVANCE='NO') MAT_B_NAME, MAT_A_NAME, L, NROW_B, SYM_A, SYM_B, HOUR, MINUTE, SEC, SFRAC, CR13
-            ENDIF
             DO K=1,AROW_MAX_TERMS                          ! Null J_AROW and AROW each time we begin a new row of A
                AROW(K)    = ZERO
                J_AROW(K)  = 0
@@ -319,10 +317,11 @@ i_do: DO I=1,NROW_A                                        ! Matrix partition lo
 
          KBEG_A = KEND_A + 1
 
+         CALL COUNTER_PROGRESS(I)
+         
          IF ((DEBUG(86) == 1) .OR. (DEBUG(86) == 3)) CALL PARTITION_SS_DEB ( '6' )
-
+         
       ENDDO i_do
-      WRITE(SC1,*) CR13
 
       IF ((DEBUG(86) == 1) .OR. (DEBUG(86) == 3)) CALL PARTITION_SS_DEB ( '7' )
 
@@ -349,8 +348,8 @@ i_do: DO I=1,NROW_A                                        ! Matrix partition lo
                     ,/,14X,' OUTPUT MATRIX ',A,' WAS REQUESTED TO BE WRITTEN IN SYMMETRIC FORM BUT IT IS NOT SQUARE.'              &
                     ,/,14X,' IT HAS ',I8,' ROWS AND ',I8,' COLS')
 
-12345 format(7X,'Part. ',A4,' from   ',A4,': row ',I8,' of ',I8,' SYM = ',A,A,4X,I2,':',I2,':',I2,'.',I3,A)
-
+!12345 format(7X,'Part. ',A4,' from   ',A4,': row ',I8,' of ',I8,' SYM = ',A,A,4X,I2,':',I2,':',I2,'.',I3,A)
+12345 FORMAT("       Partition ", A4, " from ", A4, ", row")
 
 
 

@@ -53,7 +53,7 @@
       USE TIMDAT, ONLY                :  TSEC
       USE SUBR_BEGEND_LEVELS, ONLY    :  MATMULT_SFF_BEGEND
       USE CONSTANTS_1, ONLY           :  ZERO
-      USE PARAMS, ONLY                :  EPSIL, NOCOUNTS
+      USE PARAMS, ONLY                :  EPSIL
       USE DEBUG_PARAMETERS, ONLY      :  DEBUG
       USE SPARSE_ALG_ARRAYS, ONLY     :  AROW, J_AROW
  
@@ -118,7 +118,7 @@
 
 ! Calc outputs
 
-      IF (WRITE_SC1 == 'Y') THEN
+      IF (WRITE_SC1 /= 'Y') THEN
          WRITE(SC1, * )                                    ! Advance 1 line for screen messages
       ENDIF
 
@@ -131,10 +131,8 @@
 
       A_ROW_BEG      = 1
       AROW_MAX_TERMS = 0                                   ! Find the max number of nonzero terms in any row of input matrix A
+      CALL COUNTER_INIT("     setting up row ", NROWS_A)
       DO I=1,NROWS_A
-         IF (WRITE_SC1 == 'Y' .AND. NOCOUNTS /= 'Y') THEN
-            WRITE(SC1,22345,ADVANCE='NO') I, NROWS_A, CR13
-         ENDIF
          A_NTERM_ROW_I = I_A(I+1) - I_A(I)
          A_ROW_END = A_ROW_BEG + A_NTERM_ROW_I - 1
          NTERM_AROW = 0
@@ -152,6 +150,7 @@
             AROW_MAX_TERMS = NTERM_AROW
          ENDIF
          A_ROW_BEG = A_ROW_END + 1
+         CALL COUNTER_PROGRESS(I)
       ENDDO
 !xx   WRITE(SC1,*) CR13
                                                            ! Allocate  vectors long enough to hold the max terms in a row of A
@@ -200,11 +199,8 @@ i_do: DO I=1,NROWS_A                                       ! Matrix multiply loo
             IF (DEBUG(82) == 1) CALL MATMULT_SFF_DEB ( '6', ' #1' )
          ENDDO
 
+         !CALL COUNTER_INIT("     calc col ", NCOLS_B)
 j_do:    DO J=1,NCOLS_B                                    ! J loops over the number of columns in B
-
-            IF (WRITE_SC1 == 'Y' .AND. NOCOUNTS /= 'Y') THEN
-               WRITE(SC1,12345,ADVANCE='NO') I, NROWS_A, J, NCOLS_B, CR13
-            ENDIF 
 
             C(I,J) = ZERO
 
@@ -228,6 +224,8 @@ k_do:       DO K=1,NTERM_AROW                              ! The following 2 loo
 
             NHITS = 0
 
+            !CALL COUNTER_PROGRESS(J)
+
          ENDDO j_do
 
          A_ROW_BEG = A_ROW_END + 1
@@ -236,7 +234,7 @@ k_do:       DO K=1,NTERM_AROW                              ! The following 2 loo
          ENDIF
 
       ENDDO i_do
-      WRITE(SC1,*) CR13
+      !WRITE(SC1,*) CR13
 
       CALL DEALLOCATE_SPARSE_ALG ( 'J_AROW' )
       CALL DEALLOCATE_SPARSE_ALG ( 'AROW' )
@@ -255,9 +253,6 @@ k_do:       DO K=1,NTERM_AROW                              ! The following 2 loo
 
 ! **********************************************************************************************************************************
 12345 FORMAT(5X,'calc row ',I8,' of ',I8,' col ',I8,' of ',I8,A)
- 
-22345 FORMAT(5X,'setting up row ',I8,' of ',I8,A)
-
 
 
 

@@ -42,5 +42,7 @@
       USE AUTOSPC_SUMMARY_MSGS_Interface
       USE TDOF_PROC_Interface
       USE FILE_CLOSE_Interface
+      USE COUNTER_INIT_Interface
+      USE COUNTER_PROGRESS_Interface
 
       END MODULE SPARSE_KGG_USE_IFs

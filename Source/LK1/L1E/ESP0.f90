@@ -50,7 +50,7 @@
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
       USE IOUNT1, ONLY                :  ERR, F04, F06, SC1, WRT_ERR, WRT_LOG
       USE SCONTR, ONLY                :  BLNK_SUB_NAM, KMAT_BW, KMAT_DEN, LTERM_KGG, LTERM_KGGD, SOL_NAME
-      USE PARAMS, ONLY                :  GRIDSEQ, SETLKTK, SUPINFO, USR_LTERM_KGG, NOCOUNTS
+      USE PARAMS, ONLY                :  GRIDSEQ, SETLKTK, SUPINFO, USR_LTERM_KGG
       USE NONLINEAR_PARAMS, ONLY      :  LOAD_ISTEP
       USE TIMDAT, ONLY                :  TSEC
       USE CONSTANTS_1, ONLY           :  ZERO
@@ -418,11 +418,8 @@
  
       IERROR = 0
       LTERM  = 0
+      CALL COUNTER_INIT('Estimate size of KGG: process elem  ', NELE)
 elems:DO I=1,NELE
-
-         IF (NOCOUNTS /= 'Y') THEN
-            WRITE(SC1,12345,ADVANCE='NO') I, NELE, CR13
-         ENDIF
 
          PLY_NUM = 0
          CALL EMG ( I   , OPT, 'N', SUBR_NAME, 'N' )       ! 'N' means do not write to BUG file
@@ -454,7 +451,7 @@ kgg_cols:   DO K=KSTART,ELDOF
                ENDIF
             ENDDO kgg_cols
          ENDDO kgg_rows
-
+         CALL COUNTER_PROGRESS(I)
       ENDDO elems
       WRITE(SC1,*) CR13
 
@@ -495,9 +492,6 @@ kgg_cols:   DO K=KSTART,ELDOF
                            ' BASED ON PARAM SETLKTK = ',I3)
 
  9876 FORMAT(/,' PROCESSING ABORTED DUE TO ABOVE ',I8,' ELEMENT GENERATION ERRORS')
-
-
-12345 FORMAT(5X,'Estimate size of KGG: process elem  ',I8,' of ',I8, A)
 
 ! **********************************************************************************************************************************
  

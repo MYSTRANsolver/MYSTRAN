@@ -35,5 +35,7 @@
       USE TDOF_COL_NUM_Interface
       USE ELEM_TRANSFORM_LBG_Interface
       USE OUTA_HERE_Interface
+      USE COUNTER_INIT_Interface
+      USE COUNTER_PROGRESS_Interface
 
       END MODULE EMP_USE_IFs

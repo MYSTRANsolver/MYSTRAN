@@ -54,7 +54,6 @@
       USE CONSTANTS_1, ONLY           :  ZERO
       USE DEBUG_PARAMETERS, ONLY      :  DEBUG
       USE SUBR_BEGEND_LEVELS, ONLY    :  READ_MATRIX_1_BEGEND
-      USE PARAMS, ONLY                :  NOCOUNTS
 
       USE READ_MATRIX_1_USE_IFs
 
@@ -89,6 +88,8 @@
  
       REAL(DOUBLE) , INTENT(OUT)      :: MATOUT(NTERM)     ! Real values for matrix MATOUT
       REAL(DOUBLE)                    :: RVAL              ! Real values read from FILNAM
+
+      CHARACTER(LEN=7+LEN(NAME)+LEN(": read row")) :: COUNTER_TEMPLATE
  
       INTRINSIC                       :: DABS
  
@@ -146,9 +147,8 @@
       I_MATOUT(1) = 1
 
 !xx   WRITE(SC1, * )
-      IF (NOCOUNTS /= 'Y') THEN
-         WRITE(SC1,12345,ADVANCE='NO') NAME, IROW_OLD+1, NROWS, NTERM, CR13
-      ENDIF
+      WRITE(COUNTER_TEMPLATE, 12345) NAME
+      !CALL COUNTER_INIT(COUNTER_TEMPLATE, NROWS)
 k_do1:DO K = 1,NTERM
          READ(UNT,IOSTAT=IOCHK) IROW,JCOL,RVAL
          IF (IOCHK /= 0) THEN
@@ -162,9 +162,7 @@ k_do1:DO K = 1,NTERM
             CYCLE k_do1
          ELSE
             IF (IROW > IROW_OLD) THEN
-               IF (NOCOUNTS /= 'Y') THEN
-                  WRITE(SC1,12345,ADVANCE='NO') NAME, IROW, NROWS, NTERM, CR13
-               ENDIF
+               !CALL COUNTER_PROGRESS(IROW)
                DO I=IROW_OLD+1,IROW
                   I_MATOUT(I+1) = I_MATOUT(I)
                ENDDO
@@ -244,7 +242,7 @@ k_do1:DO K = 1,NTERM
 
  9996 FORMAT(/,' PROCESSING ABORTED IN SUBROUTINE ',A,' DUE TO ABOVE ',I8,' ERRORS')
 
-12345 FORMAT(7X,A8,': read row ',i8,' of ',i8,' (matrix has ',i12,' terms)',A)
+12345 FORMAT("       ", A, ': read row')
 
 ! **********************************************************************************************************************************
  

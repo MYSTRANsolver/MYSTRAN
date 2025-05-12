@@ -29,5 +29,7 @@
 
       USE OURTIM_Interface
       USE MATMULT_SFF_Interface
+      USE COUNTER_INIT_Interface
+      USE COUNTER_PROGRESS_Interface
 
       END MODULE CALC_GEN_MASS_USE_IFs

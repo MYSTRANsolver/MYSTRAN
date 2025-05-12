@@ -176,14 +176,13 @@
                WRITE(SC1,2092) MODNAM,HOUR,MINUTE,SEC,SFRAC
 
                CALL REDUCE_KNN_TO_KFF ( PART_VEC_N_FS, PART_VEC_S_SzSe, PART_VEC_F, PART_VEC_S )
-
             ELSE
 
                NTERM_KFF = 0
                NTERM_KFS = 0
                NTERM_KSS = 0
                CALL ALLOCATE_SPARSE_MAT ( 'KFF', NDOFF, NTERM_KFF, SUBR_NAME )
-               WRITE(SC1,*) CR13
+               !WRITE(SC1,*) CR13
 
             ENDIF
 

@@ -281,7 +281,7 @@
       USE CONSTANTS_1, ONLY           :  ZERO, ONE
       USE IOUNT1, ONLY                :  FILE_NAM_MAXLEN, WRT_ERR, WRT_LOG, ERR, F04, F06
       USE SCONTR, ONLY                :  NDOFG, NDOFM, NDOFN, NTERM_GMN, NTERM_RMM, NTERM_RMN, BLNK_SUB_NAM
-      USE PARAMS, ONLY                :  EPSIL, SOLLIB, SPARSE_FLAVOR, NOCOUNTS
+      USE PARAMS, ONLY                :  EPSIL, SOLLIB, SPARSE_FLAVOR
       USE TIMDAT, ONLY                :  HOUR, MINUTE, SEC, SFRAC, TSEC
       USE SUBR_BEGEND_LEVELS, ONLY    :  SOLVE_GMN_BEGEND
       USE SPARSE_MATRICES, ONLY       :  I_RMN, J_RMN, RMN, I_RMM, J_RMM, RMM, I2_GMN, I_GMN, J_GMN, GMN
@@ -424,13 +424,13 @@
 !xx   WRITE(SC1, * )                                       ! Advance 1 line for screen messages
 
       NTERM_GMN = 0
+      CALL COUNTER_INIT('      Solve for GMN col ', NDOFN)
       DO J = 1,NDOFN
 
-         CALL OURTIM
-         MODNAM1 = '      Solve for GMN col '
-         IF (NOCOUNTS /= 'Y') THEN
-            WRITE(SC1,22345,ADVANCE='NO') MODNAM1,J,NDOFN, CR13
-         ENDIF
+         !CALL OURTIM
+         !MODNAM1 = '      Solve for GMN col '
+         
+
 
 ! Set RMN_COL to the negative of i-th col of array RMN. First, initialize RMN_COL to zero
 ! Keep track of whether this col is null, so we can avoid FBS if it is.
@@ -498,7 +498,7 @@
                ENDIF
             ENDDO
          ENDIF
-
+         CALL COUNTER_PROGRESS(J)
       ENDDO
 
       WRITE(SC1,*) CR13
@@ -586,8 +586,6 @@ FreeS:IF (SOLLIB == 'SPARSE  ') THEN                       ! Last, free the stor
                     ,/,14X,A, ' = ',A,' NOT PROGRAMMED ',A)
 
 12345 FORMAT(A,10X,A)
-
-22345 FORMAT(3X,A,I8,' of ',I8)
 
 
 

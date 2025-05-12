@@ -94,5 +94,7 @@
       USE WRITE_ALLOC_MEM_TABLE_Interface
       USE FILE_INQUIRE_Interface
       USE WRITE_FIJFIL_Interface
+      USE COUNTER_INIT_Interface
+      USE COUNTER_PROGRESS_Interface
 
       END MODULE LINK0_USE_IFs

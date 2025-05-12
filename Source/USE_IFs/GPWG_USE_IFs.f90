@@ -35,5 +35,7 @@
       USE GET_GRID_NUM_COMPS_Interface
       USE OUTA_HERE_Interface
       USE GPWG_PMOI_Interface
+      USE COUNTER_INIT_Interface
+      USE COUNTER_PROGRESS_Interface
 
       END MODULE GPWG_USE_IFs

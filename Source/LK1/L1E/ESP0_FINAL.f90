@@ -34,7 +34,7 @@
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
       USE IOUNT1, ONLY                :  ERR, F04, F06, SC1, WRT_LOG
       USE SCONTR, ONLY                :  BLNK_SUB_NAM, FATAL_ERR, IBIT, LTERM_KGG, MELDOF, NELE, NGRID, NTERM_KGG, NSUB
-      USE PARAMS, ONLY                :  EPSIL, SPARSTOR, SUPINFO, NOCOUNTS
+      USE PARAMS, ONLY                :  EPSIL, SPARSTOR, SUPINFO
       USE TIMDAT, ONLY                :  TSEC
       USE CONSTANTS_1, ONLY           :  ZERO
       USE SUBR_BEGEND_LEVELS, ONLY    :  ESP0_FINAL_BEGEND
@@ -109,12 +109,8 @@
       IS  = 0
       ISS = IS
       LTERM_KGG = 0
- 
+      CALL COUNTER_INIT('Estimate size of KGG: process elem  ', NELE)
 elems:DO I=1,NELE
-
-         IF (NOCOUNTS /= 'Y') THEN
-            WRITE(SC1,12345,ADVANCE='NO') I, NELE, CR13
-         ENDIF
 
          PLY_NUM = 0
          CALL EMG ( I   , OPT, 'N', SUBR_NAME, 'N' )       ! 'N' means do not write to BUG file
@@ -209,7 +205,7 @@ stfpnt0:          DO                                       ! so, run this loop u
             ENDDO kgg_cols 
 
          ENDDO kgg_rows 
- 
+         CALL COUNTER_PROGRESS(I)
       ENDDO elems 
       WRITE(SC1,*) CR13
  
@@ -234,8 +230,6 @@ stfpnt0:          DO                                       ! so, run this loop u
 
 ! **********************************************************************************************************************************
  4321 FORMAT(' *INFORMATION: FINAL   LTERM_KGG EST OF THE NUMBER OF NONZEROS IN STIFF MATRIX KGG IS = ',I12)
-
-12345 FORMAT(5X,'Estimate size of KGG: process elem  ',I8,' of ',I8, A)
 
 ! **********************************************************************************************************************************
  

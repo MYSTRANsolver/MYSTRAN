@@ -45,7 +45,7 @@
       USE TIMDAT, ONLY                :  TSEC
       USE CONSTANTS_1, ONLY           :  ZERO, ONE
       USE DEBUG_PARAMETERS, ONLY      :  DEBUG
-      USE PARAMS, ONLY                :  EPSIL, NOCOUNTS
+      USE PARAMS, ONLY                :  EPSIL
       USE SUBR_BEGEND_LEVELS, ONLY    :  CALC_GEN_MASS_BEGEND
       USE EIGEN_MATRICES_1, ONLY      :  GEN_MASS, EIGEN_VEC
       USE MODEL_STUF, ONLY            :  EIG_CRIT, MAXMIJ, MIJ_COL, MIJ_ROW, NUM_FAIL_CRIT
@@ -87,12 +87,8 @@
       MIJ_COL       = 1
       MAX           = ZERO
       MAXMIJ        = ZERO
-
+      CALL COUNTER_INIT('Diag term for eigenvector ', NVEC)
       DO I=1,NVEC
-
-         IF (NOCOUNTS /= 'Y') THEN
-            WRITE(SC1,12345,ADVANCE='NO') I, NVEC, CR13
-         ENDIF
 
          DO K=1,NDOFL                                      ! Calc diag terms
             OUTVECI(K,1) = EIGEN_VEC(K,I)
@@ -110,11 +106,8 @@
          GEN_MASS(I) = ABS(GEN_MASS(I))
          IF (DEBUG(48) == 0) THEN                          ! Calc off-diag terms
 
+            CALL COUNTER_INIT('Off-diag term ', I-1)
             DO J=1,I-1
-
-               IF (NOCOUNTS /= 'Y') THEN
-                  WRITE(SC1,22345,ADVANCE='NO') J, NVEC, I, NVEC, CR13
-               ENDIF
 
                DO K=1,NDOFL
                   OUTVECJ(K,1) = EIGEN_VEC(K,J)
@@ -140,11 +133,11 @@
                IF (DMIJ > EIG_CRIT) THEN
                   NUM_FAIL_CRIT = NUM_FAIL_CRIT + 1
                ENDIF
-               
+               CALL COUNTER_PROGRESS(J)
             ENDDO
 
          ENDIF
-
+         CALL COUNTER_PROGRESS(I)
       ENDDO
 
 ! **********************************************************************************************************************************
@@ -157,9 +150,7 @@
       RETURN
 
 ! **********************************************************************************************************************************
-12345 format(5X,'Diag term for eigenvector ',i5,' of ',i5,'                                  ',A)
 
-22345 format(5X,'Off-diag term ',i5,' of ',i5,' for vector ',i5,' of ',i5,'                    ',A)
 
 ! **********************************************************************************************************************************
 

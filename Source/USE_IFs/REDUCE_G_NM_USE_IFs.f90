@@ -51,5 +51,7 @@
       USE TDOF_PROC_Interface
       USE FILE_OPEN_Interface
       USE WRITE_DOF_TABLES_Interface
+      USE COUNTER_INIT_Interface
+      USE COUNTER_PROGRESS_Interface
 
       END MODULE REDUCE_G_NM_USE_IFs

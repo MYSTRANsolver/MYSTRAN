@@ -34,7 +34,7 @@
       USE SCONTR, ONLY                :  BLNK_SUB_NAM, FATAL_ERR, TOT_MB_MEM_ALLOC
       USE TIMDAT, ONLY                :  TSEC
       USE DEBUG_PARAMETERS, ONLY      :  DEBUG
-      USE PARAMS, ONLY                :  WINAMEM, NOCOUNTS
+      USE PARAMS, ONLY                :  WINAMEM
       USE SUBR_BEGEND_LEVELS, ONLY    :  ALLOCATE_LAPACK_MAT_BEGEND
       USE ARPACK_MATRICES_1 , ONLY    :  IWORK, RFAC, RESID, SELECT, VBAS, WORKD, WORKL
       USE LAPACK_DPB_MATRICES, ONLY   :  ABAND, BBAND, LAPACK_S, RES
@@ -100,13 +100,12 @@
             ALLOCATE (ABAND(NROWS,NCOLS),STAT=IERR)
             IF (IERR == 0) THEN
          !xx   WRITE(SC1, * )                              ! Advance 1 line for screen messages
+               CALL COUNTER_INIT("Init ABAND row", NROWS)
                DO I=1,NROWS
-                  IF (NOCOUNTS /= 'Y') THEN
-                     WRITE(SC1,12345,ADVANCE='NO') NAME, I, NROWS, NCOLS, CR13
-                  ENDIF
                   DO J=1,NCOLS
                      ABAND(I,J) = ZERO
                   ENDDO
+                  CALL COUNTER_PROGRESS(I)
                ENDDO
                WRITE(SC1,*) CR13
             ELSE
@@ -130,13 +129,12 @@
             ALLOCATE (BBAND(NROWS,NCOLS),STAT=IERR)
             IF (IERR == 0) THEN
          !xx   WRITE(SC1, * )                              ! Advance 1 line for screen messages
+               CALL COUNTER_INIT("Init BBAND row", NROWS)
                DO I=1,NROWS
-                  IF (NOCOUNTS /= 'Y') THEN
-                     WRITE(SC1,12345,ADVANCE='NO') NAME, I, NROWS, NCOLS, CR13 
-                  ENDIF
                   DO J=1,NCOLS
                      BBAND(I,J) = ZERO
                   ENDDO
+                  CALL COUNTER_PROGRESS(I)
                ENDDO
                WRITE(SC1,*) CR13
             ELSE
@@ -272,13 +270,12 @@
             ALLOCATE (RFAC(NROWS,NCOLS),STAT=IERR)
             IF (IERR == 0) THEN
          !xx   WRITE(SC1, * )                              ! Advance 1 line for screen messages
+               CALL COUNTER_INIT("Init RFAC row", NROWS)
                DO I=1,NROWS
-                  IF (NOCOUNTS /= 'Y') THEN
-                     WRITE(SC1,12345,ADVANCE='NO') NAME, I, NROWS, NCOLS, CR13
-                  ENDIF
                   DO J=1,NCOLS
                      RFAC(I,J) = ZERO
                   ENDDO
+                  CALL COUNTER_PROGRESS(I)
                ENDDO
                WRITE(SC1,*) CR13
             ELSE
@@ -302,13 +299,12 @@
             ALLOCATE (VBAS(NROWS,NCOLS),STAT=IERR)
             IF (IERR == 0) THEN
          !xx   WRITE(SC1, * )                              ! Advance 1 line for screen messages
+               CALL COUNTER_INIT("Init VBAS row", NROWS)
                DO I=1,NROWS
-                  IF (NOCOUNTS /= 'Y') THEN
-                     WRITE(SC1,12345,ADVANCE='NO') NAME, I, NROWS, NCOLS, CR13
-                  ENDIF
                   DO J=1,NCOLS
                      VBAS(I,J) = ZERO
                   ENDDO
+                  CALL COUNTER_PROGRESS(I)
                ENDDO
                WRITE(SC1,*) CR13
             ELSE
@@ -412,8 +408,6 @@
  1699 FORMAT('               THE SUBR IN WHICH THESE ERRORS WERE FOUND (',A,') WAS CALLED BY SUBR ',A)
 
  9199 FORMAT('      Memory needed for ',A,' = ',F13.6,' MB')
-
-12345 FORMAT(5X,'Init ',A5,' row ',I8,' of ',I8,', with ',I8,' cols ',A)
 
  9002 FORMAT(1X,A,' END  ',F10.3,F13.3,' MB ',A15,':',I12,' row,',I12,' col    , T:',F10.3)
 
