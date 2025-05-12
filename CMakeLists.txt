@@ -154,9 +154,6 @@ endif()
 # collect all fortran source files
 file(GLOB_RECURSE ALL_FORTRAN_FILES "${CMAKE_SOURCE_DIR}/*.f*")
 
-# collect superlu dgssv
-add_library(dgssv "${SUPERLU_DIR}/FORTRAN/c_fortran_dgssv.c")
-
 # same BLAS-finding subroutine as SuperLU
 if(NOT enable_internal_blaslib)
   if (TPL_BLAS_LIBRARIES)
@@ -202,11 +199,8 @@ if (NOT BLAS_FOUND)
         "BLAS subr ${missing_blas_fns} is absent and will be built locally."
       )
     endif()
-    add_library(my_blas OBJECT ${missing_blas_src})
-    target_link_libraries(dgssv my_blas)
   endif()
 else()
-  target_link_libraries(dgssv blas)
   message(STATUS "Using system BLAS (${TPL_BLAS_LIBRARIES})")
 endif()
 
@@ -218,13 +212,11 @@ endif()
 add_executable(
   mystran
   ${ALL_FORTRAN_FILES}
+  ${missing_blas_src}
+  "${SUPERLU_DIR}/FORTRAN/c_fortran_dgssv.c"
 )
 #target_link_libraries(mystran MODULES ${modules_names})
-target_link_libraries(mystran dgssv superlu f2c)
-if (MISSING_FNS_TOTAL GREATER 0)
-  message(STATUS "Linking against local BLAS")
-  target_link_libraries(mystran my_blas)
-endif()
+target_link_libraries(mystran superlu f2c)
 #if (MISSING_FNS_TOTAL GREATER 0)
 #  target_link_libraries(mystran my_blas)
 #endif()
