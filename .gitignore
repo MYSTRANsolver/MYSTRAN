@@ -28,3 +28,9 @@ install_manifest.txt
 compile_commands.json
 CTestTestfile.cmake
 _deps
+
+# doxygen stuff
+CMakeDoxy*
+
+# temp unit files
+fort.*
