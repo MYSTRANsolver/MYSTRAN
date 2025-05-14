@@ -172,6 +172,7 @@
                   CALL MATMULT_FFF ( T0G, DUM1, NROWA, NCOLA, NCOLB, DUM2 )
                   CALL MATPUT ( DUM2, 6*MELGP, 1, PROW, PCOL, NROW, NCOL, UEB )
                ENDDO   
+               I2 = I2 + NUM_COMPS
             ELSE                                           ! If global is basic, get UEB terms directly from UEG
                CALL GET_GRID_NUM_COMPS ( AGRID(I), NUM_COMPS, SUBR_NAME )
                DO J=1,NUM_COMPS
