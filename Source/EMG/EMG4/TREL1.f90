@@ -170,9 +170,9 @@
 ! **********************************************************************************************************************************
 ! If TYPE is 'TRMEM' or 'TRIA3K' or 'TRIA3' generate the membrane stiffness
 ! If TYPE is 'TRPLT1', 'TRPLT2', 'TRIA3K', or 'TRIA3' generate the bending stiffness
-  
-      IF ((OPT(2) == 'Y') .OR. (OPT(3) == 'Y') .OR. (OPT(4) == 'Y') .OR. (OPT(5) == 'Y')) THEN
- 
+
+      IF ((OPT(2) == 'Y') .OR. (OPT(3) == 'Y') .OR. (OPT(4) == 'Y') .OR. (OPT(5) == 'Y') .OR. (OPT(6) == 'Y')) THEN
+
          IF (TYPE(1:5) == 'TRIA3') THEN 
             IF (INTL_MID(1) /= 0) THEN
                CALL TMEM1 ( OPT, AREA, X2E, X3E, Y3E, 'Y', BIG_BM )

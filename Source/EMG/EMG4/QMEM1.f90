@@ -46,9 +46,10 @@
       USE TIMDAT, ONLY                :  TSEC
       USE SUBR_BEGEND_LEVELS, ONLY    :  QMEM1_BEGEND
       USE CONSTANTS_1, ONLY           :  ZERO, FOUR
-      USE MODEL_STUF, ONLY            :  ALPVEC, BE1, BMEANT, DT, EID, ELDOF, ELGP, EM, ERR_SUB_NAM, HBAR, KE, MXWARP,             &
+      USE NONLINEAR_PARAMS, ONLY      :  LOAD_ISTEP
+      USE MODEL_STUF, ONLY            :  ALPVEC, BE1, BMEANT, DT, EID, ELDOF, ELGP, EM, ERR_SUB_NAM, HBAR, KE, KED, MXWARP,        &
                                          NUM_EMG_FATAL_ERRS, PCOMP_LAM, PCOMP_PROPS, PPE, PRESS, PTE,                              &
-                                         SE1, STE1, SHELL_AALP, SHELL_A, TREF, TYPE
+                                         SE1, STE1, SHELL_AALP, SHELL_A, TREF, TYPE, FCONV, STRESS
       USE DEBUG_PARAMETERS, ONLY      :  DEBUG
  
       USE QMEM1_USE_IFs
@@ -104,6 +105,7 @@
       REAL(DOUBLE)                    :: ALP(3)            ! Col of ALPVEC
       REAL(DOUBLE)                    :: BI(3,2*ELGP)      ! Strain-displ matrix for this element for one Gauss point
       REAL(DOUBLE)                    :: BIT(3,3*ELGP)     ! BI*BMEANT for one Gauss point
+      REAL(DOUBLE)                    :: KS(ELGP,ELGP)     ! KED matrix for one DOF
 
                                                            ! Strain-displ matrix for this element for all Gauss points
       REAL(DOUBLE)                    :: BM(3,2*ELGP,IORD*IORD)
@@ -121,6 +123,9 @@
       REAL(DOUBLE)                    :: DUM8(12)          ! Intermediate matrix used in solving for PTE thermal loads
       REAL(DOUBLE)                    :: DUM9(3,8)         ! Intermediate matrix used in solving for SEi stress recovery matrices
       REAL(DOUBLE)                    :: DUM10(2,8)        ! Intermediate matrix used in solving for PPE matrices
+      REAL(DOUBLE)                    :: DUM11(2,2)        ! Intermediate matrix used in solving for KED matrices
+      REAL(DOUBLE)                    :: DUM12(ELGP,2)     ! Intermediate matrix used in solving for KED matrices
+      REAL(DOUBLE)                    :: DUM13(ELGP,ELGP)  ! Intermediate matrix used in solving for KED matrices
       REAL(DOUBLE)                    :: EALP(3)           ! Intermed var used in calc PTE therm loads & STEi therm stress coeffs
 
                                                            ! An output from subr ORDER, called herein.  Gauss weights.
@@ -133,6 +138,9 @@
       REAL(DOUBLE)                    :: NBAR(2,8)         ! Matrix of shape functions (used in PPE calc)
       REAL(DOUBLE)                    :: PQ(8,NSUB)        ! Element pressure load matrix for the 8 local emenent DOF's.
       REAL(DOUBLE)                    :: PSH(4)            ! Output from subr SHP2DQ, called herein.
+      REAL(DOUBLE)                    :: FORCEx            ! Engineering force in the elem x direction
+      REAL(DOUBLE)                    :: FORCEy            ! Engineering force in the elem x direction
+      REAL(DOUBLE)                    :: FORCExy           ! Engineering force in the elem xy direction
       REAL(DOUBLE)                    :: QLOAD(2,NSUB)     ! 2 components of the element pressure load (from PRESS) in 1 array
       REAL(DOUBLE)                    :: SSS(MAX_ORDER_GAUSS)
                                                            ! An output from subr ORDER, called herein. Gauss abscissa's.
@@ -513,6 +521,92 @@
   
          ENDIF
           
+      ENDIF
+  
+! **********************************************************************************************************************************
+! Calculate linear differential stiffness matrix
+  
+      IF ((OPT(6) == 'Y') .AND. (LOAD_ISTEP > 1)) THEN
+
+! Accoring to:
+!   Robert D. Cook, David S. Malkus, Michael E. Plesha Concepts and Applications of Finite Element Analysis, 3rd Edition  1989
+!   Section 14.3 Stress Stiffness Matrix Of A Plate Element
+
+!         +1  +1
+! [  ]   ⌠   ⌠  [   ]T [   ]-T [ Nx  Nxy ] [   ]-1 [   ] 
+! [k ] = |   |  [ G ]  [ J ]   [ Nxy Ny  ] [ J ]   [ G ]  |J|  dξ dη
+! [ σ]   ⌡   ⌡  [  I]  [   ]               [   ]   [  I]
+!        -1  -1
+
+! k_σ is the stress stiffness (differential stiffness) matrix
+! Nx, Ny, Nxy are membrane engineering forces
+! |J| is the Jacobian determinant
+! G_I is a 2xELGP matrix of shape function derivatives with respect to isoparametric coordinates ξ  and η.
+
+! DPSHX = J^-1 G_I is the 2 x ELGP matrix of shape function derivatives with respect to element coordinates x and y.
+
+!        +1  +1
+! [k ]   ⌠   ⌠        T [ Nx  Nxy ]   
+! [ σ] = ⌡   ⌡   DPSHX  [ Nxy Ny  ]  DPSHX  |J|  dξ dη
+!        -1  -1  
+
+        CALL ELMDIS
+
+        CALL ORDER_GAUSS ( IORD_STRESS_Q4, SSS, HHH )
+
+        DO K=1,ELGP
+          DO L=1,ELGP
+            KS(K,L) = ZERO
+          ENDDO   
+        ENDDO 
+
+        GAUSS_PT = 0
+        DO I=1,IORD_STRESS_Q4
+          DO J=1,IORD_STRESS_Q4
+            GAUSS_PT = GAUSS_PT + 1
+
+            CALL ELEM_STRE_STRN_ARRAYS (GAUSS_PT+1)        ! Stress at this Gauss point
+                                                           
+            FORCEx  = FCONV(1)*STRESS(1)                   ! Engineering forces at this Gauss point
+            FORCEy  = FCONV(1)*STRESS(2)
+            FORCExy = FCONV(1)*STRESS(3)
+            DUM11(1,1) = FORCEx  ; DUM11(1,2) = FORCExy
+            DUM11(2,1) = FORCExy ; DUM11(2,2) = FORCEy
+
+            DO L=1,ELGP                                    ! Shape function derivatives at this Gauss point.
+              DPSHX(1,L) = BE1(1,ID1(2*(L-1)+1),GAUSS_PT+1)     
+              DPSHX(2,L) = BE1(2,ID1(2*(L-1)+2),GAUSS_PT+1)
+            ENDDO
+
+            CALL MATMULT_FFF_T ( DPSHX, DUM11, 2, ELGP, 2, DUM12 )
+            CALL MATMULT_FFF ( DUM12, DPSHX, ELGP, 2, ELGP, DUM13 )
+
+            INTFAC = DETJ(GAUSS_PT)*HHH(I)*HHH(J)
+                               
+                                                           ! Accumulate integrand into the result
+            DO K=1,ELGP
+              DO L=1,ELGP
+                KS(K,L) = KS(K,L) + DUM13(K,L) * INTFAC
+              ENDDO   
+            ENDDO 
+
+          ENDDO
+        ENDDO
+                                                           ! Copy KS into KED for each translational DOF.
+        DO I=1,6*ELGP
+          DO J=1,6*ELGP
+            KED(I,J) = 0
+          ENDDO   
+        ENDDO 
+        DO I=1,ELGP
+          DO J=1,ELGP
+            KED(ID2(3*(I-1) + 1),ID2(3*(J-1) + 1)) = KS(I,J)
+            KED(ID2(3*(I-1) + 2),ID2(3*(J-1) + 2)) = KS(I,J)
+            KED(ID2(3*(I-1) + 3),ID2(3*(J-1) + 3)) = KS(I,J)
+          ENDDO   
+        ENDDO 
+
+
       ENDIF
   
 ! **********************************************************************************************************************************
