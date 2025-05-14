@@ -35,7 +35,7 @@
       USE SCONTR, ONLY                :  BLNK_SUB_NAM, FATAL_ERR
       USE TIMDAT, ONLY                :  TSEC
       USE CONSTANTS_1, ONLY           :  ZERO
-      USE PARAMS, ONLY                :  SPARSTOR, NOCOUNTS
+      USE PARAMS, ONLY                :  SPARSTOR
       USE SUBR_BEGEND_LEVELS, ONLY    :  BANDGEN_BEGEND
 
       USE BANDGEN_LAPACK_DGB_USE_IFs
@@ -79,11 +79,9 @@
 ! scheme (required by ARPACK Lanczos subr's) has the first KD rows unused in MATOUT.
 
       K  = 0
+      CALL COUNTER_INIT("       Orig matrix row", N)
       DO I=1,N
          NUM_TERMS_ROW_I = I_MATIN(I+1) - I_MATIN(I)       ! Number of terms in row I
-         IF (NOCOUNTS /= 'Y') THEN
-            WRITE(SC1,12345,ADVANCE='NO') I, N, NUM_TERMS_ROW_I, CR13
-         ENDIF
          DO J=1,NUM_TERMS_ROW_I
             K = K + 1
             IF (K > NTERM_MATIN) THEN
@@ -104,6 +102,7 @@
             ENDIF
             MATOUT(ROW_NO,COL_NO) = MATIN(K)
          ENDDO 
+         CALL COUNTER_PROGRESS(I)
       ENDDO
       WRITE(SC1,*) CR13
 
@@ -113,11 +112,10 @@
    !xx   WRITE(SC1, * )
          MATOUT_DIAG_ROW_NUM = 2*KD + 1
          DO I=1,KD
-            DO J=1,N-I 
-               IF (NOCOUNTS /= 'Y') THEN
-                  WRITE(SC1,22345,ADVANCE='NO') I, KD, N-I, CR13
-               ENDIF
+            CALL COUNTER_INIT("       Band matrix row", N-I)
+            DO J=1,N-I
                MATOUT(MATOUT_DIAG_ROW_NUM+I,J) = MATOUT(MATOUT_DIAG_ROW_NUM-I,J+I)
+               CALL COUNTER_PROGRESS(J)
             ENDDO
          ENDDO
          WRITE(SC1,*) CR13
@@ -133,9 +131,6 @@
       RETURN
 
 ! **********************************************************************************************************************************
-12345 format(7X,'Row ',I8,' of ',I8,' of orig matrix with ',I8,' term(s)',10X,A)
-
-22345 format(7X,'Row ',I8,' of ',I8,' of band matrix with ',I8,' term(s)',10X,A)
 
   923 FORMAT(' *ERROR   923: PROGRAMMING ERROR IN SUBROUTINE ',A                                                                   &
                     ,/,14X,' INDEX K = ',I12,' IS GREATER THAN NTERM_MATIN = ',I12)

@@ -69,7 +69,7 @@
       USE DOF_TABLES, ONLY            :  TDOFI
       USE PARAMS, ONLY                :  CHKGRDS, EPSIL, EQCHK_OUTPUT, GRDPNT, GRDPNT_IN, GRIDSEQ, MEFMGRID, MEFMLOC, PRTCONN,     &
                                          PRTBASIC, PRTCORD, PRTDOF, PRTTSET, PRTSTIFD, PRTSTIFF, SETLKTK, SETLKTM, SUPINFO,        &
-                                         SUPWARN, WTMASS, NOCOUNTS, PRTANS, PRTF06, PRTOP2
+                                         SUPWARN, WTMASS, PRTANS, PRTF06, PRTOP2
       USE NONLINEAR_PARAMS, ONLY      :  LOAD_ISTEP
       USE MACHINE_PARAMS, ONLY        :  MACH_PREC
       USE MODEL_STUF, ONLY            :  ANY_GPFO_OUTPUT, EIG_METH, ELDT, ETYPE, MEFFMASS_CALC, NUM_EMG_FATAL_ERRS, PLY_NUM, OELDT
@@ -572,11 +572,11 @@ res14:IF (RESTART == 'N') THEN
             CALL OURTIM
             MODNAM = 'CHECK THAT ALL GRIDS FOR ELEMS EXIST        '
             WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+            
+            CALL COUNTER_INIT('       Process element', NELE)
             DO I=1,NELE
-               IF (NOCOUNTS /= 'Y') THEN
-                  WRITE(SC1,12345,ADVANCE='NO') '       Process element', I, NELE, CR13
-               ENDIF
                CALL GET_ELEM_AGRID_BGRID ( I, 'Y' )
+               CALL COUNTER_PROGRESS(I)
             ENDDO
          ENDIF
          WRITE(SC1,*) CR13

@@ -57,7 +57,6 @@
       USE TIMDAT, ONLY                :  TSEC
       USE CONSTANTS_1, ONLY           :  ZERO
       USE SUBR_BEGEND_LEVELS, ONLY    :  CRS_SYM_TO_CRS_NONSYM_BEGEND
-      USE PARAMS, ONLY                :  NOCOUNTS
  
       USE CRS_SYM_TO_CRS_NONSYM_USE_IFs
 
@@ -86,6 +85,8 @@
 
       REAL(DOUBLE) , INTENT(IN)       :: A(NTERM_A)        ! Real nonzero values in input  matrix A
       REAL(DOUBLE) , INTENT(OUT)      :: B(NTERM_B)        ! Real nonzero values in output matrix B
+
+      CHARACTER(LEN=LEN(NAME_A)+7+LEN("Calculating : row")) :: COUNTER_TEMPLATE
 
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
@@ -124,11 +125,10 @@
       I_B(1) = 1
       K      = 0
       A_ROW_BEG = 1
-i_do: DO I=1,NROW_A                                        ! Matrix multiply loop. Range over the rows in A
 
-         IF (WRT_SCREEN == 'Y' .AND. NOCOUNTS /= 'Y') THEN
-            WRITE(SC1,12345,ADVANCE='NO') I, NROW_A, NAME_B, CR13
-         ENDIF 
+      WRITE(COUNTER_TEMPLATE, 12345) NAME_B
+      CALL COUNTER_INIT(COUNTER_TEMPLATE, NROW_A)
+i_do: DO I=1,NROW_A                                        ! Matrix multiply loop. Range over the rows in A
 
          I_B(I+1) = I_B(I)
 
@@ -153,6 +153,7 @@ i_do: DO I=1,NROW_A                                        ! Matrix multiply loo
 
          A_ROW_BEG = A_ROW_END + 1
 
+         CALL COUNTER_PROGRESS(I)
       ENDDO i_do
       WRITE(SC1,*) CR13
          
@@ -166,7 +167,7 @@ i_do: DO I=1,NROW_A                                        ! Matrix multiply loo
       RETURN
 
 ! **********************************************************************************************************************************
-12345 FORMAT(7X,'Calculating        : row  ',I8,' of ',I8,' matrix ',A,A)
+12345 FORMAT("       Calculating ", A, ": row")
 
 ! **********************************************************************************************************************************
 

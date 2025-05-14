@@ -39,7 +39,7 @@
                                          PROG_NAME , SOL_NAME, BLNK_SUB_NAM
       USE TIMDAT, ONLY                :  HOUR, MINUTE, SEC, SFRAC, TSEC
       USE PARAMS, ONLY                :  AUTOSPC, AUTOSPC_NSET, EQCHK_OUTPUT, MATSPARS, PRTSTIFD, PRTSTIFF, PRTMASS, PRTFOR,       &
-                                         SUPINFO, NOCOUNTS
+                                         SUPINFO
       USE NONLINEAR_PARAMS, ONLY      :  LOAD_ISTEP
       USE DOF_TABLES, ONLY            :  TDOF, TDOFI
       USE MODEL_STUF, ONLY            :  GRID_ID
@@ -636,10 +636,8 @@
       NUM_N_SET_ROWS_NULL = 0
       JSTART = 1
 !xx   WRITE(SC1, * )                                       ! Advance 1 line for screen messages         
+      CALL COUNTER_INIT('       Proc N-set DOF ', NDOFN)
 i_do: DO I=1,NDOFN
-         IF (NOCOUNTS /= 'Y') THEN
-            WRITE(SC1,12345,ADVANCE='NO') I, NDOFN, CR13
-         ENDIF
          IF (I_KNN(I+1) == I_KNN(I)) THEN                  ! If true, row i is null
 j_do:       DO J=JSTART,NDOFG                              ! Loop over rows of TDOFI to find where this N-set row is null
                IF (TDOFI(J,N_SET_COL) == I) THEN
@@ -667,6 +665,7 @@ j_do:       DO J=JSTART,NDOFG                              ! Loop over rows of T
                ENDIF
             ENDDO j_do
          ENDIF
+         CALL COUNTER_PROGRESS(I)
       ENDDO i_do
       WRITE(SC1,*) CR13
 
@@ -740,8 +739,6 @@ j_do:       DO J=JSTART,NDOFG                              ! Loop over rows of T
 
   109 FORMAT('SPC1    ',3I8)
 
-12345 FORMAT('       Proc N-set DOF ',I8,' of ',I8,A)
-
 ! **********************************************************************************************************************************
 
       END SUBROUTINE N_SET_AUTOSPC_PROC_1
@@ -756,7 +753,7 @@ j_do:       DO J=JSTART,NDOFG                              ! Loop over rows of T
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
       USE SCONTR, ONLY                :  DATA_NAM_LEN, NDOFN, NDOFG, NDOFSA, NGRID, NUM_PCHD_SPC1, PROG_NAME
       USE IOUNT1, ONLY                :  WRT_ERR, WRT_LOG, ERR, F04, F06, L1C, L1C_MSG, LINK1C, SPC, SPCFIL
-      USE PARAMS, ONLY                :  AUTOSPC, AUTOSPC_INFO, AUTOSPC_NSET, AUTOSPC_RAT, PCHSPC1, PRTTSET, SPC1SID, NOCOUNTS
+      USE PARAMS, ONLY                :  AUTOSPC, AUTOSPC_INFO, AUTOSPC_NSET, AUTOSPC_RAT, PCHSPC1, PRTTSET, SPC1SID
       USE CONSTANTS_1, ONLY           :  ZERO
       USE DOF_TABLES, ONLY            :  TDOF, TDOFI, TSET
       USE MODEL_STUF, ONLY            :  GRID, GRID_ID, GRID_SEQ
@@ -817,11 +814,9 @@ j_do:       DO J=JSTART,NDOFG                              ! Loop over rows of T
 
       NUM_NSET_DOFS_SPCD = 0
       JSTART = 1
-!xx   WRITE(SC1, * )                                       ! Advance 1 line for screen messages         
+!xx   WRITE(SC1, * )                                       ! Advance 1 line for screen messages      
+      CALL COUNTER_INIT('       Proc N-set DOF ', NDOFN)   
 i_do: DO I=1,NDOFN
-         IF (NOCOUNTS /= 'Y') THEN
-            WRITE(SC1,22345,ADVANCE='NO') I, NDOFN, CR13
-         ENDIF
          IF ((DABS(KNN_DIAG(I)/KNN_MAX_DIAG) < AUTOSPC_RAT) .OR. (KNN_DIAG(I) < ZERO)) THEN
 j_do:       DO J=JSTART,NDOFG                               ! Loop over rows of TDOFI to find where this N-set row is null
                IF (TDOFI(J,N_SET_COL) == I) THEN
@@ -849,6 +844,7 @@ j_do:       DO J=JSTART,NDOFG                               ! Loop over rows of 
                ENDIF
             ENDDO j_do
          ENDIF
+         CALL COUNTER_PROGRESS(I)
       ENDDO i_do
       WRITE(SC1,*) CR13
 
@@ -928,8 +924,6 @@ j_do:       DO J=JSTART,NDOFG                               ! Loop over rows of 
   105 FORMAT('               AUTOSPC_RAT = ',1ES13.6)
 
   109 FORMAT('SPC1    ',3I8)
-
-22345 FORMAT('       Proc N-set DOF ',I8,' of ',I8,A)
 
 ! **********************************************************************************************************************************
 

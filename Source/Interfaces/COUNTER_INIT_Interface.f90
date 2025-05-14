@@ -1,3 +1,4 @@
+! ###############################################################################################################################
 ! Begin MIT license text.                                                                                    
 ! _______________________________________________________________________________________________________
                                                                                                          
@@ -23,17 +24,24 @@
                                                                                                         
 ! End MIT license text.                                                                                      
 
-      MODULE ESP0_FINAL_USE_IFs
+MODULE COUNTER_INIT_Interface
 
-! USE Interface statements for all subroutines called by SUBROUTINE ESP0_FINAL
+   INTERFACE
 
-      USE OURTIM_Interface
-      USE EMG_Interface
-      USE GET_ARRAY_ROW_NUM_Interface
-      USE GET_GRID_NUM_COMPS_Interface
-      USE TDOF_COL_NUM_Interface
-      USE ELEM_TRANSFORM_LBG_Interface
-      USE COUNTER_INIT_Interface
-      USE COUNTER_PROGRESS_Interface
+   SUBROUTINE COUNTER_INIT(PREFIX, TOTAL)
 
-      END MODULE ESP0_FINAL_USE_IFs
+      USE PENTIUM_II_KIND, ONLY : LONG
+      USE SCONTR, ONLY : COUNTER_VALUE, COUNTER_PERC, COUNTER_TOTAL, &
+                         COUNTER_STARTED, COUNTER_PREFIX, FATAL_ERR
+      USE IOUNT1, ONLY: ERR, F06
+   
+      IMPLICIT NONE
+   
+      CHARACTER(LEN=*), INTENT(IN) :: PREFIX
+      INTEGER(LONG),    INTENT(IN) :: TOTAL
+
+   END SUBROUTINE COUNTER_INIT
+
+   END INTERFACE
+
+END MODULE COUNTER_INIT_Interface

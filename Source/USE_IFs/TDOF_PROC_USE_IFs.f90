@@ -35,5 +35,7 @@
       USE OUTA_HERE_Interface
       USE SORT_TDOF_Interface
       USE WRITE_TDOF_Interface
+      USE COUNTER_INIT_Interface
+      USE COUNTER_PROGRESS_Interface
 
       END MODULE TDOF_PROC_USE_IFs

@@ -39,5 +39,7 @@
       USE ELMDIS_Interface
       USE CALC_ELEM_NODE_FORCES_Interface
       USE TRANSFORM_NODE_FORCES_Interface
+      USE COUNTER_INIT_Interface
+      USE COUNTER_PROGRESS_Interface
 
       END MODULE GP_FORCE_BALANCE_PROC_USE_IFs

@@ -33,5 +33,7 @@
       USE OUTA_HERE_Interface
       USE FILE_CLOSE_Interface
       USE WRITE_SPARSE_CRS_Interface
+      USE COUNTER_INIT_Interface
+      USE COUNTER_PROGRESS_Interface
 
       END MODULE SPARSE_PG_USE_IFs

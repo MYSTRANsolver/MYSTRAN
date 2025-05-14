@@ -1,3 +1,4 @@
+! ###############################################################################################################################
 ! Begin MIT license text.                                                                                    
 ! _______________________________________________________________________________________________________
                                                                                                          
@@ -23,17 +24,29 @@
                                                                                                         
 ! End MIT license text.                                                                                      
 
-      MODULE ESP0_FINAL_USE_IFs
+MODULE UNIX_TIME_Interface
 
-! USE Interface statements for all subroutines called by SUBROUTINE ESP0_FINAL
+   INTERFACE
 
-      USE OURTIM_Interface
-      USE EMG_Interface
-      USE GET_ARRAY_ROW_NUM_Interface
-      USE GET_GRID_NUM_COMPS_Interface
-      USE TDOF_COL_NUM_Interface
-      USE ELEM_TRANSFORM_LBG_Interface
-      USE COUNTER_INIT_Interface
-      USE COUNTER_PROGRESS_Interface
+      SUBROUTINE UNIX_TIME(T)
+         
+         USE PENTIUM_II_KIND, ONLY: LONG
 
-      END MODULE ESP0_FINAL_USE_IFs
+         IMPLICIT NONE
+         
+         INTEGER(LONG), INTENT(OUT) :: T
+         CHARACTER(LEN=8)     :: DATE_C
+         CHARACTER(LEN=10)    :: TIME_C
+         CHARACTER(LEN=5)     :: ZONE_C
+         INTEGER              :: VALUES(8)
+         INTEGER              :: Y, MO, DA, HH, MM, SS
+         INTEGER              :: ZH, ZM, SIGN
+         INTEGER(LONG)        :: TZ_MIN, Y0, M0, A, B, JDN, EPOCH
+
+      END SUBROUTINE UNIX_TIME
+
+   END INTERFACE
+
+END MODULE UNIX_TIME_Interface
+   
+   

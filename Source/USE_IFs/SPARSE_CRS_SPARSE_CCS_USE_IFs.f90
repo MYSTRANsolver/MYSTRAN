@@ -29,5 +29,7 @@
 
       USE OURTIM_Interface
       USE ARRAY_SIZE_ERROR_1_Interface
+      USE COUNTER_INIT_Interface
+      USE COUNTER_PROGRESS_Interface
 
       END MODULE SPARSE_CRS_SPARSE_CCS_USE_IFs

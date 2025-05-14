@@ -30,7 +30,7 @@
 ! Reference Manual for the derivation of the reduction equations.
 
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
-      USE IOUNT1, ONLY                :  WRT_ERR, WRT_LOG, ERR, F04, F06, L2B, LINK2B, L2B_MSG
+      USE IOUNT1, ONLY                :  WRT_ERR, WRT_LOG, ERR, F04, F06, L2B, LINK2B, L2B_MSG, SC1
       USE SCONTR, ONLY                :  FATAL_ERR, NDOFN, NDOFF, NDOFS, NDOFSE, NTERM_KNN, NTERM_KFF, NTERM_KFS, NTERM_KSS,       &
                                          NTERM_KFSe, NTERM_KSSe, BLNK_SUB_NAM
       USE TIMDAT, ONLY                :  TSEC
@@ -81,7 +81,7 @@
 
          CALL PARTITION_SS_NTERM ( 'KNN', NTERM_KNN, NDOFN, NDOFN, SYM_KNN, I_KNN, J_KNN,      PART_VEC_N_FS, PART_VEC_N_FS,       &
                                     NUM1, NUM1, KFF_ROW_MAX_TERMS, 'KFF', NTERM_KFF, SYM_KFF ) 
-
+         
          CALL ALLOCATE_SPARSE_MAT ( 'KFF', NDOFF, NTERM_KFF, SUBR_NAME )
 
          IF (NTERM_KFF > 0) THEN      
@@ -97,7 +97,6 @@
 
          CALL PARTITION_SS_NTERM ( 'KNN', NTERM_KNN, NDOFN, NDOFN, SYM_KNN, I_KNN, J_KNN,      PART_VEC_N_FS, PART_VEC_N_FS,       &
                                     NUM1, NUM2, KFS_ROW_MAX_TERMS, 'KFS', NTERM_KFS, SYM_KFS ) 
-
          CALL ALLOCATE_SPARSE_MAT ( 'KFS', NDOFF, NTERM_KFS, SUBR_NAME )
 
          IF (NTERM_KFS > 0) THEN

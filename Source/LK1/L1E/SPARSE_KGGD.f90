@@ -36,7 +36,7 @@
       USE TIMDAT, ONLY                :  TSEC
       USE SUBR_BEGEND_LEVELS, ONLY    :  SPARSE_KGGD_BEGEND
       USE CONSTANTS_1, ONLY           :  ZERO
-      USE PARAMS, ONLY                :  AUTOSPC, AUTOSPC_RAT, EPSIL, PRTSTIFF, SPC1QUIT, SUPINFO, SUPWARN, NOCOUNTS
+      USE PARAMS, ONLY                :  AUTOSPC, AUTOSPC_RAT, EPSIL, PRTSTIFF, SPC1QUIT, SUPINFO, SUPWARN
       USE NONLINEAR_PARAMS, ONLY      :  LOAD_ISTEP
       USE MODEL_STUF, ONLY            :  GRID, GRID_ID, GRID_SEQ, MPC_IND_GRIDS, INV_GRID_SEQ
       USE DOF_TABLES, ONLY            :  TDOF, TDOF_ROW_START, TDOFI, TSET
@@ -143,11 +143,8 @@
       I_KGGD(1) = 1
 
 !xx   WRITE(SC1, * )
+      CALL COUNTER_INIT('     Working on grid ', NGRID)
 i_do: DO I = 1,NGRID
-
-         IF (NOCOUNTS /= 'Y') THEN
-            WRITE(SC1,12345,ADVANCE='NO') I, NGRID, CR13
-         ENDIF
 
          DO K=1,6                                          ! Make KGGD_II 6x6 even though for SPOINT's we only use 1-1 term
             DO L=1,6
@@ -221,7 +218,7 @@ j_do3:      DO J=1,NUM_NONZERO_IN_ROW
             ENDDO
          ENDDO 
 
-
+         CALL COUNTER_PROGRESS(I)
       ENDDO i_do
 
       WRITE(SC1,*) CR13
@@ -254,8 +251,6 @@ j_do3:      DO J=1,NUM_NONZERO_IN_ROW
  1625 FORMAT(' *ERROR  1625: PROGRAMMING ERROR IN SUBROUTINE ',A                                                                   &
                     ,/,14X,' 1ST COL OF ARRAY STF3 INDICATES THERE IS MORE DATA IN ARRAY STF3 FOR ROW ',I12,' OF THE KGGD STIFF'   &
                     ,/,14X,' MATRIX ALTHOUGH THE DOF COUNT IS AT THE END OF THE ROW')
-
-12345 FORMAT(5X,'Working on grid ',24X,I8,' of ',I8, A)
 
 ! **********************************************************************************************************************************
 

@@ -555,6 +555,13 @@
       REAL(SINGLE)             :: KMAT_DEN            = ZERO     ! Stiffness matrix density from BANDIT
       REAL(DOUBLE)             :: TOT_MB_MEM_ALLOC    = ZERO     ! The total amount of memory, in MB, allocated at any time
 
+      INTEGER(LONG)            :: COUNTER_VALUE       = ZERO     ! Current value of the counter
+      INTEGER(LONG)            :: COUNTER_PERC        = ZERO     ! Current percentage of the counter.
+      INTEGER(LONG)            :: COUNTER_TOTAL       = ZERO     ! Max value of the counter
+      INTEGER(LONG)            :: COUNTER_STARTED     = ZERO     ! Timestamp of counter start
+      CHARACTER(:), ALLOCATABLE :: COUNTER_PREFIX
+      CHARACTER(LEN=20) :: COUNTER_FMT
+
 !   Notes:
 !    (1) The max limits are only used to check that the dimensions of arrays have been set high enough
 !        They are initialized here to 0 and are counted when the input deck is read in subrs LOADC0, LOADB0

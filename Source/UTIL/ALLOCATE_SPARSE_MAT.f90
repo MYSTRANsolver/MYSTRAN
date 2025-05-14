@@ -1881,7 +1881,7 @@
          ENDIF
 
       ELSE IF (NAME == 'KFS') THEN                         ! Allocate arrays for KFS
-
+         
          NAME1 = 'I_KFS'
          IF (ALLOCATED(I_KFS)) THEN
             WRITE(ERR,990) SUBR_NAME, NAME1
@@ -7027,7 +7027,7 @@
          JERR = JERR + 1
 
       ENDIF
-      WRITE(SC1,*) CR13
+      !WRITE(SC1,*) CR13
  
 ! Quit if there were errors
 
@@ -7078,4 +7078,3 @@
 ! **********************************************************************************************************************************
  
       END SUBROUTINE ALLOCATE_SPARSE_MAT
-

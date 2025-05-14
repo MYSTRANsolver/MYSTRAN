@@ -32,5 +32,8 @@
       USE READERR_Interface
       USE OUTA_HERE_Interface
       USE FILE_CLOSE_Interface
+      USE COUNTER_INIT_Interface
+      USE COUNTER_PROGRESS_Interface
+
 
       END MODULE READ_MATRIX_1_USE_IFs

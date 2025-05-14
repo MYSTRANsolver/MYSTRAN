@@ -1,3 +1,4 @@
+! ##################################################################################################################################
 ! Begin MIT license text.                                                                                    
 ! _______________________________________________________________________________________________________
                                                                                                          
@@ -21,19 +22,58 @@
 ! THE SOFTWARE.                                                                                          
 ! _______________________________________________________________________________________________________
                                                                                                         
-! End MIT license text.                                                                                      
+! End MIT license text.
 
-      MODULE ESP0_FINAL_USE_IFs
+! This subroutine inits a counter so you can use COUNTER_PROGRESS.
+! It's an alternative to way MYSTRAN used to do counters, which badly affect
+! performance due to the blocking nature of terminal output.
 
-! USE Interface statements for all subroutines called by SUBROUTINE ESP0_FINAL
+! Arguments:
+!   PREFIX: a string printed before the progress (e.g. "PROCESSING K-SET")
+!    TOTAL: the maximum number this counter will reach.
+SUBROUTINE COUNTER_INIT(PREFIX, TOTAL)
 
-      USE OURTIM_Interface
-      USE EMG_Interface
-      USE GET_ARRAY_ROW_NUM_Interface
-      USE GET_GRID_NUM_COMPS_Interface
-      USE TDOF_COL_NUM_Interface
-      USE ELEM_TRANSFORM_LBG_Interface
-      USE COUNTER_INIT_Interface
-      USE COUNTER_PROGRESS_Interface
+   USE PENTIUM_II_KIND, ONLY : LONG
+   USE SCONTR, ONLY : COUNTER_VALUE, COUNTER_PERC, COUNTER_TOTAL, &
+                      COUNTER_STARTED, COUNTER_PREFIX, FATAL_ERR, COUNTER_FMT
+   USE IOUNT1, ONLY : ERR, F06
+   USE PARAMS, ONLY : NOCOUNTS 
+   
+   USE COUNTER_INIT_USE_IFs
 
-      END MODULE ESP0_FINAL_USE_IFs
+   IMPLICIT NONE
+
+   CHARACTER(LEN=*), INTENT(IN) :: PREFIX
+   INTEGER(LONG),    INTENT(IN) :: TOTAL
+
+   ! Do nothing if NOCOUNTS is set
+   IF (NOCOUNTS == 'Y') THEN
+      RETURN
+   END IF
+
+   ! Check if the last counter was done
+   IF (COUNTER_VALUE /= COUNTER_TOTAL) THEN
+      FATAL_ERR = FATAL_ERR + 1
+      WRITE(ERR,1414)
+      WRITE(F06,1414)
+      CALL OUTA_HERE ( 'Y' )
+   END IF
+
+   ! Reset everything
+   COUNTER_VALUE = 0
+   COUNTER_PERC = 0
+   COUNTER_TOTAL = TOTAL
+   
+   ALLOCATE(CHARACTER(LEN(PREFIX)) :: COUNTER_PREFIX)
+
+   ! Set the timestamp and the prefix
+   CALL UNIX_TIME(COUNTER_STARTED)
+   COUNTER_PREFIX = PREFIX
+   WRITE(COUNTER_FMT, "(A, I0, A)") "(I", CEILING(LOG10(REAL(TOTAL))), ")"
+
+   ! Call the progress subroutine and force printing
+   CALL COUNTER_PROGRESS(0)
+
+   1414 FORMAT(' *ERROR  1414: A COUNTER WAS STARTED BEFORE THE CURRENT ONE WAS DONE' &
+                        ,/,14X,' THIS IS A DEVELOPER ERROR. PLEASE REPORT IT.')
+END SUBROUTINE COUNTER_INIT

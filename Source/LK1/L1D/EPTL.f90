@@ -36,7 +36,7 @@
       USE SCONTR, ONLY                :  BLNK_SUB_NAM, ELDT_BUG_P_T_BIT, ELDT_F21_P_T_BIT, IBIT, LINKNO, MBUG, MELDOF, NCORD,      &
                                          NELE, NGRID, NSUB, NTSUB
       USE CONSTANTS_1, ONLY           :  ZERO
-      USE PARAMS, ONLY                :  EPSIL, NOCOUNTS
+      USE PARAMS, ONLY                :  EPSIL
       USE TIMDAT, ONLY                :  TSEC
       USE DOF_TABLES, ONLY            :  TDOF, TDOF_ROW_START
       USE SUBR_BEGEND_LEVELS, ONLY    :  EPTL_BEGEND
@@ -134,6 +134,7 @@
  
       IERROR = 0
 !xx   WRITE(SC1, * )                                       ! Advance 1 line for screen messages         
+      CALL COUNTER_INIT('Calculating load matrix for element', NELE)
       DO I = 1,NELE
  
          DO J=0,MBUG-1
@@ -151,9 +152,6 @@
          OPT(1) = 'N'                                      ! OPT(1) is for calc of ME
          OPT(3) = 'N'                                      ! OPT(3) is for calc of SEi, STEi
          OPT(4) = 'N'                                      ! OPT(4) is for calc of KE
-         IF (NOCOUNTS /= 'Y') THEN
-            WRITE(SC1,12345,ADVANCE='NO') I, NELE, CR13
-         ENDIF
          PLY_NUM = 0
          CALL EMG ( I   , OPT, 'N', SUBR_NAME, 'Y' )       ! 'Y' means write to BUG file
 
@@ -210,7 +208,7 @@ k_do123:       DO K = 1,NSUB
             ENDDO 
  
          ENDIF
- 
+         CALL COUNTER_PROGRESS(I)
       ENDDO 
 
       WRITE(SC1,*) CR13
@@ -239,8 +237,6 @@ k_do123:       DO K = 1,NSUB
 
 ! **********************************************************************************************************************************
  9876 FORMAT(/,' PROCESSING ABORTED DUE TO ABOVE ',I8,' ELEMENT GENERATION ERRORS')
-
-12345 FORMAT(5X,'Calculating load matrix for element     ',I8,' of ',I8,A)
 
 98712 format('J, PPE(J) = ',i8,10(1es15.6))
 

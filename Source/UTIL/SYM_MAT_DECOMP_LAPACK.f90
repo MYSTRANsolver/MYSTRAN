@@ -37,7 +37,7 @@
       USE SCONTR, ONLY                :  BLNK_SUB_NAM, FACTORED_MATRIX, FATAL_ERR, LINKNO
       USE TIMDAT, ONLY                :  HOUR, MINUTE, SEC, SFRAC, STIME, TSEC       
       USE CONSTANTS_1, ONLY           :  ZERO, ONE, ONEPP6
-      USE PARAMS, ONLY                :  BAILOUT, EPSIL, MAXRATIO, SUPINFO, NOCOUNTS
+      USE PARAMS, ONLY                :  BAILOUT, EPSIL, MAXRATIO, SUPINFO
       USE LAPACK_DPB_MATRICES, ONLY   :  ABAND, LAPACK_S
       USE DEBUG_PARAMETERS, ONLY      :  DEBUG, NDEBUG
       USE MACHINE_PARAMS, ONLY        :  MACH_LARGE_NUM  
@@ -340,27 +340,24 @@
       MODNAM = 'CALC MAX RATIO OF MATRIX DIAGONAL TO FACTOR DIAGONAL'
       WRITE(SC1,3092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
 
+      CALL COUNTER_INIT("     Getting diagonal of matrix, row", NROWS)
       DO I=1,NROWS                                         ! First, get diagonal terms from MATIN
-         IF (NOCOUNTS /= 'Y') THEN
-            WRITE(SC1,12345,ADVANCE='NO') I, NROWS, CR13
-         ENDIF
          IF (I_MATIN(I) == I_MATIN(I+1)) THEN
             MATIN_DIAG(I) = ZERO
          ELSE
             MATIN_DIAG(I) = MATIN(I_MATIN(I))
          ENDIF
+         CALL COUNTER_PROGRESS(I)
       ENDDO
       WRITE(SC1,*) CR13
 
       MAXIMAX_RATIO = -MACH_LARGE_NUM                                  ! Calc ratio of MATIN diag to factor diag
       NONPOS_DEF    = 'N'
+      CALL COUNTER_INIT("     Calc ratios of matrix diag to factor diag: row", NROWS)
       DO I=1,NROWS
 
          CALL GET_GRID_AND_COMP ( MATIN_SET, I, GRIDV, COMPV  )
 
-         IF (NOCOUNTS /= 'Y') THEN
-            WRITE(SC1,22345,ADVANCE='NO') I, NROWS, CR13
-         ENDIF
          FAC_DIAG = ABAND(MATIN_SDIA+1,I)
 
          IF (FAC_DIAG <= EPS1) THEN                        ! Zero or negative factor diagonal. (MATIN is nonpositive definite)
@@ -400,7 +397,7 @@
             ENDIF
 
          ENDIF
-
+         CALL COUNTER_PROGRESS(I)
       ENDDO
       WRITE(SC1,*) CR13  
 
@@ -491,9 +488,6 @@
 
  3094 FORMAT(5X,' Bandwidth of ',A,'  = ',I8,' and requires ',F10.3,' MB of memory')
 
-12345 FORMAT(5X,'Getting diagonal of matrix, row ',I8,' of ',I8,A)
-
-22345 FORMAT(5X,'Calc ratios of matrix diag to factor diag: row ',I8,' of ',I8,A)
 
 99999 FORMAT(/,' PROCESSING TERMINATED DUE TO ABOVE MESSAGES AND BULK DATA PARAMETER BAILOUT = ',I7)
 

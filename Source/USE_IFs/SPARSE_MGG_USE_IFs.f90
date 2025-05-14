@@ -44,5 +44,7 @@
       USE WRITE_SPARSE_CRS_Interface
       USE FILE_CLOSE_Interface
       USE GET_GRID_6X6_MASS_Interface
+      USE COUNTER_INIT_Interface
+      USE COUNTER_PROGRESS_Interface
 
       END MODULE SPARSE_MGG_USE_IFs

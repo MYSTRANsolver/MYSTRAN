@@ -6,11 +6,12 @@
 cmake_minimum_required(VERSION 3.18)
 include(CheckFunctionExists)
 
-enable_language(Fortran)
 project(Mystran)
+enable_language(Fortran)
 
 # basic compiler and output options
 set(CMAKE_SOURCE_DIR "${PROJECT_SOURCE_DIR}/Source")
+set(BLAS_SOURCE_DIR "${PROJECT_SOURCE_DIR}/BLAS")
 set(PROJECT_BINARY_DIR "${PROJECT_SOURCE_DIR}/Binaries")
 set(CMAKE_FLAGS "-c -fbacktrace")
 # set(CMAKE_BUILD_TYPE Debug)
@@ -57,13 +58,22 @@ endif()
 
 # check for SuperLU
 set(SUPERLU_DIR "${PROJECT_SOURCE_DIR}/superlu")
-include_directories("${SUPERLU_DIR}/SRC")
 if(NOT EXISTS "${SUPERLU_DIR}/CMakeLists.txt")
   message(
     FATAL_ERROR
     "The submodules were not downloaded. You have to do it manually!"
   )
 endif()
+
+# set some SuperLU settings
+set(enable_examples OFF)
+set(enable_tests OFF)
+#set(enable_internal_blaslib "yes")
+
+
+# include & build it
+include_directories("${SUPERLU_DIR}/SRC")
+add_subdirectory(${SUPERLU_DIR})
 
 
 # f2c stuff
@@ -141,97 +151,89 @@ if (WIN32)
   set(CMAKE_EXE_LINKER_FLAGS "-static")
 endif()
 
-# build the SuperLU (and CBLAS if needed) static libs!
-add_subdirectory(${SUPERLU_DIR})
+# collect all fortran source files
+file(GLOB_RECURSE ALL_FORTRAN_FILES "${CMAKE_SOURCE_DIR}/*.f*")
 
-# collect modules and interfaces into a module called MODULES
-# the overuse of the word MODULE is brain-twisting, but bear with me
-set(Modules_DIR "${CMAKE_SOURCE_DIR}/Modules")
-file(GLOB_RECURSE Modules_ARPACK_FILES "${Modules_DIR}/ARPACK/*.f*")
-file(GLOB_RECURSE Modules_LAPACK_FILES "${Modules_DIR}/LAPACK/*.f*")
-file(GLOB_RECURSE Modules_BANDIT_FILES "${Modules_DIR}/BANDIT/*.f*")
-file(GLOB_RECURSE Modules_FILES "${Modules_DIR}/*.f*")
-file(GLOB_RECURSE Interfaces_FILES "${CMAKE_SOURCE_DIR}/Interfaces/*.f*")
-file(GLOB_RECURSE USE_IFs_FILES "${CMAKE_SOURCE_DIR}/USE_IFs/*.f*")
-# MODULES_ALL_FILES shall contain all the sources for the base modules lib
-set(
-  MODULES_ALL_FILES ${USE_IFs_FILES} ${Interfaces_FILES} ${Modules_FILES}
-  ${Modules_LAPACK_FILES} ${Modules_ARPACK_FILES}
-)
-add_library(MODULES OBJECT ${MODULES_ALL_FILES})
-
-# collect modules
-list(APPEND modules_names ARPACK LK1 LK2 LK3 LK4 LK5 LK6 LK9 EMG)
-foreach (modname IN LISTS modules_names)
-  file(GLOB_RECURSE TMP_MOD_FILES "${CMAKE_SOURCE_DIR}/${modname}/*.f*")
-  add_library(${modname} OBJECT ${TMP_MOD_FILES} ${TMP_MOD_FILES_PP})
-  target_link_libraries(${modname} MODULES)
-endforeach()
-
-# add the DGSSV C module from SuperLU and link it against SuperLU's BLAS
-add_library(dgssv "${SUPERLU_DIR}/FORTRAN/c_fortran_dgssv.c")
-target_link_libraries(dgssv blas)
-
-# if (and only if) SuperLU is compiled with its internal CBLAS, some subrs will
-# be missing, so we compile our own.
-# first, we check for the missing subroutines
-list(
-  APPEND blas_fns dgemm dgemv dlamch dlanst dscal dsteqr dsterf dswap dtrsm
-  dtrtri ilaenv lsame xerbla
-)
-foreach (fname IN LISTS blas_fns)
-  check_function_exists(${fname} BLAS_FN_EXISTS)
-  if (NOT BLAS_FN_EXISTS)
-    string(TOUPPER ${fname} fname_upper)
-    list(APPEND missing_blas_src "${CMAKE_SOURCE_DIR}/BLAS/${fname_upper}.f")
-    list(APPEND missing_blas_fns ${fname})
-  endif()
-endforeach()
-# if any subroutines have bene found, create an inner blas library
-list(LENGTH missing_blas_fns MISSING_FNS_TOTAL)
-if (MISSING_FNS_TOTAL GREATER 0)
-  if (MISSING_FNS_TOTAL GREATER 1)
-    message(
-      STATUS
-      "BLAS subrs (${missing_blas_fns}) are absent and will be built locally."
-    )
+# same BLAS-finding subroutine as SuperLU
+if(NOT enable_internal_blaslib)
+  if (TPL_BLAS_LIBRARIES)
+    set(BLAS_FOUND TRUE)
   else()
-    message(
-      STATUS
-      "BLAS subr ${missing_blas_fns} is absent and will be built locally."
-    )
+    find_package(BLAS)
+    if (BLAS_FOUND)
+      set(TPL_BLAS_LIBRARIES "${BLAS_LIBRARIES}" CACHE FILEPATH
+        "Set from FindBLAS.cmake BLAS_LIBRARIES." FORCE)
+    endif()
   endif()
-  add_library(my_blas OBJECT ${missing_blas_src})
-  target_link_libraries(my_blas MODULES)
 endif()
+
+if (NOT BLAS_FOUND)
+  message(STATUS "BLAS not found, building local BLAS")
+  list(
+    APPEND blas_fns dgemm dgemv dlamch dlanst dscal dsteqr dsterf dswap dtrsm
+    dtrtri ilaenv lsame xerbla
+  )
+  foreach (fname IN LISTS blas_fns)
+    #message(STATUS "Checking for BLAS subr ${fname}")
+    check_function_exists("${fname}" BLAS_FN_EXISTS)
+    set(BLAS_FN_EXISTS CACHE "1" STRING)
+    if (NOT BLAS_FN_EXISTS)
+      #message(STATUS "BLAS subr ${fname} not found")
+      string(TOUPPER ${fname} fname_upper)
+      list(APPEND missing_blas_src "${BLAS_SOURCE_DIR}/${fname_upper}.f")
+      list(APPEND missing_blas_fns ${fname})
+    endif()
+    unset(BLAS_FN_EXISTS CACHE)
+  endforeach()
+  # if any subroutines have bene found, create an inner blas library
+  list(LENGTH missing_blas_fns MISSING_FNS_TOTAL)
+  if (MISSING_FNS_TOTAL GREATER 0)
+    if (MISSING_FNS_TOTAL GREATER 1)
+      message(
+        STATUS
+        "BLAS subrs (${missing_blas_fns}) are absent and will be built locally."
+      )
+    else()
+      message(
+        STATUS
+        "BLAS subr ${missing_blas_fns} is absent and will be built locally."
+      )
+    endif()
+  endif()
+else()
+  message(STATUS "Using system BLAS (${TPL_BLAS_LIBRARIES})")
+endif()
+
 
 # prepare the main executable, linked against the specifics and the m
 # it appears utils used to be a module, but that is no longer the case?
-file(GLOB_RECURSE UTIL_FILES "${CMAKE_SOURCE_DIR}/UTIL/*.f*")
-file(GLOB_RECURSE MAIN_FILES "${CMAKE_SOURCE_DIR}/MAIN/*.[fF]*")
-add_executable(mystran ${MAIN_FILES} ${MODULES_ALL_FILES} ${UTIL_FILES})
-target_link_libraries(mystran ${modules_names})
-target_link_libraries(mystran dgssv superlu f2c blas)
-if (MISSING_FNS_TOTAL GREATER 0)
-  target_link_libraries(mystran my_blas)
-endif()
+# file(GLOB UTIL_FILES "${CMAKE_SOURCE_DIR}/UTIL/*.f*")
+# file(GLOB MAIN_FILES "${CMAKE_SOURCE_DIR}/MAIN/*.[fF]*")
+add_executable(
+  mystran
+  ${ALL_FORTRAN_FILES}
+  ${missing_blas_src}
+  "${SUPERLU_DIR}/FORTRAN/c_fortran_dgssv.c"
+)
+#target_link_libraries(mystran MODULES ${modules_names})
+target_link_libraries(mystran superlu f2c)
+#if (MISSING_FNS_TOTAL GREATER 0)
+#  target_link_libraries(mystran my_blas)
+#endif()
 set_target_properties(
   mystran PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}
 )
 if (CMAKE_COMPILER_IS_GNUCC)
-  target_compile_options(
-    mystran PRIVATE
-    -Wall -Wextra
-    -Wno-unused-variable -Wno-unused-label -Wno-unused-parameter -Wno-tabs
-    -Wno-compare-reals -Wno-character-truncation -Wno-unused-dummy-argument
-    -Wmaybe-uninitialized -Wrealloc-lhs -fcheck=all
-  )
+  set(CMAKE_Fortran_FLAGS "-Wall -Wextra \
+    -Wno-unused-variable -Wno-unused-label -Wno-unused-parameter -Wno-tabs \
+    -Wno-compare-reals -Wno-character-truncation -Wno-unused-dummy-argument \
+    -Wmaybe-uninitialized -Wrealloc-lhs -fcheck=all")
 endif()
 
 # issue a couple messages about compilation
 include(ProcessorCount)
 ProcessorCount(NCPU)
-message(STATUS "You can now compile MYSTRAN with ${RECOMMENDED_MAKE}.")
+message(STATUS "You can now compile MYSTRAN with `cmake --build .`")
 if (NOT NCPU EQUAL 0)
-  message(STATUS "Compile faster by passing -j${NCPU} to ${RECOMMENDED_MAKE}.")
+  message(STATUS "Compile faster by passing the -j${NCPU} flag.")
 endif()

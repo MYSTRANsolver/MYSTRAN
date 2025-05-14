@@ -52,7 +52,6 @@
       USE TIMDAT, ONLY                :  TSEC
       USE CONSTANTS_1, ONLY           :  ZERO
       USE SUBR_BEGEND_LEVELS, ONLY    :  READ_MATRIX_2_BEGEND
-      USE PARAMS, ONLY                :  NOCOUNTS
  
       USE READ_MATRIX_2_USE_IFs
 
@@ -83,6 +82,8 @@
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = READ_MATRIX_2_BEGEND
 
       REAL(DOUBLE) , INTENT(OUT)      :: MATOUT(NTERMS)    ! Real values for matrix MATOUT
+
+      CHARACTER(LEN=7+LEN(NAME)+LEN(": read row")) :: COUNTER_TEMPLATE
 
       INTRINSIC DABS
  
@@ -133,9 +134,8 @@
 !xx   WRITE(SC1, * )
       OLD_ROW_NUM = 0
       IERROR  = 0
-      IF (NOCOUNTS /= 'Y') THEN
-         WRITE(SC1,12345,ADVANCE='NO') NAME, OLD_ROW_NUM+1, NROWS, NTERMS, CR13
-      ENDIF
+      !WRITE(COUNTER_TEMPLATE, 12345) NAME
+      !CALL COUNTER_INIT(COUNTER_TEMPLATE, NROWS)
       DO K = 1,NTERMS
          READ(UNT,IOSTAT=IOCHK) I2_MATOUT(K), J_MATOUT(K), MATOUT(K)
          IF (IOCHK /= 0) THEN
@@ -148,9 +148,7 @@
             IERROR = IERROR + 1
          ENDIF
          IF (I2_MATOUT(K) > OLD_ROW_NUM) THEN
-            IF (NOCOUNTS /= 'Y') THEN
-               WRITE(SC1,12345,ADVANCE='NO') NAME, I2_MATOUT(K), NROWS, NTERMS, CR13
-            ENDIF
+            !CALL COUNTER_PROGRESS(I2_MATOUT(K))
          ENDIF
       ENDDO
       WRITE(SC1,*) CR13      
@@ -181,7 +179,7 @@
 
  9996 FORMAT(/,' PROCESSING ABORTED IN SUBROUTINE ',A,' DUE TO ABOVE ',I8,' ERRORS')
 
-12345 FORMAT(7X,A8,': read row ',i8,' of ',i8,' (matrix has ',i12,' terms)',A)
+12345 FORMAT("       ",A,': read row')
 
 ! **********************************************************************************************************************************
  

@@ -31,7 +31,7 @@
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
       USE IOUNT1, ONLY                :  ERR, F04, F06, OP2, SC1, WRT_BUG, WRT_ERR, WRT_LOG
       USE SCONTR, ONLY                :  BLNK_SUB_NAM, ELDT_BUG_ME_BIT, IBIT, MBUG, NCONM2, NCORD, NELE, NGRID, SOL_NAME, WARN_ERR
-      USE PARAMS, ONLY                :  EPSIL, GRDPNT, MEFMGRID, MEFMLOC, SUPWARN, WTMASS, NOCOUNTS
+      USE PARAMS, ONLY                :  EPSIL, GRDPNT, MEFMGRID, MEFMLOC, SUPWARN, WTMASS
       USE DEBUG_PARAMETERS, ONLY      :  DEBUG
       USE TIMDAT, ONLY                :  TSEC
       USE SUBR_BEGEND_LEVELS, ONLY    :  GPWG_BEGEND
@@ -176,11 +176,8 @@
       OPT(6) = 'N'                                         ! OPT(6) is for calc of KE-diff stiff
 
       IERROR = 0
+      CALL COUNTER_INIT('    Working on element', NELE)
 elems:DO I = 1,NELE
-         IF (NOCOUNTS /= 'Y') THEN
-            WRITE(SC1,12345,ADVANCE='NO') I, NELE, CR13
-         ENDIF
-
          PLY_NUM = 0
          CALL EMG ( I   , OPT, 'N', SUBR_NAME, 'N' )       ! 'N' means do not write to BUG file
 
@@ -283,6 +280,7 @@ userin:        IF ((WHICH(1:8) == 'OA MODEL') .OR. (WHICH(1:6) == 'USERIN')) THE
             CYCLE
 
          ENDIF
+         CALL COUNTER_PROGRESS(I)
 
       ENDDO elems
 
@@ -641,8 +639,6 @@ userin:        IF ((WHICH(1:8) == 'OA MODEL') .OR. (WHICH(1:6) == 'USERIN')) THE
  1402 FORMAT(' *WARNING    : PARAM GRDPNT (OR PARAM MEFMGRID) REFERENCES NONEXISTENT GRID POINT ',I8,'. BASIC ORIGIN WILL BE USED')
 
  9876 FORMAT(/,' PROCESSING ABORTED DUE TO ABOVE ',I8,' ELEMENT GENERATION ERRORS')
-
-12345 FORMAT('    Working on element ',I8,' of ',I8,A)
 
 
 ! **********************************************************************************************************************************

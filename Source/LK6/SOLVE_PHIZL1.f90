@@ -37,7 +37,7 @@
       USE SCONTR, ONLY                :  BLNK_SUB_NAM, FACTORED_MATRIX, FATAL_ERR, KLL_SDIA, NDOFR, NDOFL, NTERM_DLR,              &
                                          NTERM_PHIZL1, NTERM_KLL, NTERM_KLLs
       USE TIMDAT, ONLY                :  HOUR, MINUTE, SEC, SFRAC, TSEC
-      USE PARAMS, ONLY                :  EPSIL, SOLLIB, SPARSE_FLAVOR, SPARSTOR, NOCOUNTS
+      USE PARAMS, ONLY                :  EPSIL, SOLLIB, SPARSE_FLAVOR, SPARSTOR
       USE SUBR_BEGEND_LEVELS, ONLY    :  SOLVE_PHIZL1_BEGEND
       USE CONSTANTS_1, ONLY           :  ZERO, ONE
       USE SCRATCH_MATRICES, ONLY      :  I_CRS3, J_CRS3, CRS3
@@ -116,13 +116,8 @@
 !xx   WRITE(SC1, * )                                       ! Advance 1 line for screen messages
 
       NTERM_PHIZL1   = 0
+      CALL COUNTER_INIT('   Solve for PHIZL1 col ', NDOFR)
       DO J = 1,NDOFR
-
-         CALL OURTIM
-         MODNAM1 = '   Solve for PHIZL1 col '
-         IF (NOCOUNTS /= 'Y') THEN
-            WRITE(SC1,12345,ADVANCE='NO') MODNAM1, J, NDOFR, CR13
-         ENDIF
 
 ! To solve for the j-th col of PHIZL1, use the j-th col of CRS3 (= MLR + MLL*DLR) as a rhs vector. Get the j-th col of CRS3 and put
 ! the negative of it into array INOUT_COL:
@@ -177,7 +172,7 @@
                ENDIF
             ENDDO 
          ENDIF
-  
+         CALL COUNTER_PROGRESS(J)
       ENDDO
   
       call deallocate_sparse_mat ( 'KLLs' )

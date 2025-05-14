@@ -30,5 +30,7 @@
       USE OURTIM_Interface
       USE ALLOCATE_SPARSE_ALG_Interface
       USE DEALLOCATE_SPARSE_ALG_Interface
+      USE COUNTER_INIT_Interface
+      USE COUNTER_PROGRESS_Interface
 
       END MODULE MATMULT_SFF_USE_IFs

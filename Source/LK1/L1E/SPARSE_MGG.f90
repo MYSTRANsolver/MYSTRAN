@@ -39,7 +39,7 @@
       USE CONSTANTS_1, ONLY           :  ZERO, ONE
       USE DOF_TABLES,ONLY             :  TDOF_ROW_START
       USE MODEL_STUF, ONLY            :  GRID_ID
-      USE PARAMS, ONLY                :  EPSIL, PRTMASS, SUPINFO, WTMASS, NOCOUNTS
+      USE PARAMS, ONLY                :  EPSIL, PRTMASS, SUPINFO, WTMASS
       USE EMS_ARRAYS, ONLY            :  EMS, EMSCOL, EMSKEY, EMSPNT
       USE SPARSE_MATRICES, ONLY       :  I2_MGG, I_MGG, J_MGG, MGG, I_MGGC, J_MGGC, MGGC, I_MGGE, J_MGGE, MGGE,                    &
                                          I_MGGS, J_MGGS, MGGS,  SYM_MGGC, SYM_MGGE, SYM_MGGS
@@ -138,11 +138,8 @@ j_do0:   DO J = 1,NDOFG
       KTERM_MGGE = 0
       I_MGGE(1) = 1
       WRITE(SC1, * )
+      CALL COUNTER_INIT('     Working on grid ', NGRID)
 i_do: DO I = 1,NGRID
-
-         IF (NOCOUNTS /= 'Y') THEN
-            WRITE(SC1,12345,ADVANCE='NO') I, NGRID, CR13
-         ENDIF
 
          GRID_NUM = GRID_ID(I)
 
@@ -194,6 +191,7 @@ j_do3:      DO J = 1,NUM
             ENDDO j_do3
 
          ENDDO k_do
+         CALL COUNTER_PROGRESS(I)
       ENDDO i_do
 
       WRITE(SC1,*) CR13
@@ -386,8 +384,6 @@ j_do3:      DO J = 1,NUM
                     ,/,14X,' THE NUMBER OF G-SET MASS MATRIX RECORDS WRITTEN TO FILE:'                                             &
                     ,/,15X,A                                                                                                       &
                     ,/,14X,' WAS KTERM_MGGE = ',I12,'. IT SHOULD HAVE BEEN NTERM_MGGE = ',I12)
-
-12345 FORMAT(5X,'Working on grid ',24X,I8,' of ',I8, A)
 
 
 

@@ -43,7 +43,7 @@
       USE IOUNT1, ONLY                :  ERR, F04, F06, SC1, WRT_ERR, WRT_LOG
       USE SCONTR, ONLY                :  LTERM_MGGE, BLNK_SUB_NAM
       USE TIMDAT, ONLY                :  TSEC
-      USE PARAMS, ONLY                :  GRIDSEQ, SETLKTM, USR_LTERM_MGG, NOCOUNTS
+      USE PARAMS, ONLY                :  GRIDSEQ, SETLKTM, USR_LTERM_MGG
       USE SUBR_BEGEND_LEVELS, ONLY    :  EMP0_BEGEND
 
       USE EMP0_USE_IFs
@@ -225,10 +225,8 @@
  
       IERROR = 0
       LTERM_MGGE = 0
+      CALL COUNTER_INIT('     Estimate size of MGG: process elem  ', NELE)
 elems:DO I=1,NELE
-         IF (NOCOUNTS /= 'Y') THEN
-            WRITE(SC1,12345,ADVANCE='NO') I, NELE, CR13
-         ENDIF
 
          PLY_NUM = 0
          CALL EMG ( I   , OPT, 'N', SUBR_NAME, 'N' )       ! 'N' means do not write to BUG file
@@ -260,7 +258,7 @@ elems:DO I=1,NELE
                ENDIF
             ENDDO
          ENDDO
-
+         CALL COUNTER_PROGRESS(I)
       ENDDO elems
 
       WRITE(SC1,*) CR13
@@ -292,9 +290,6 @@ elems:DO I=1,NELE
                            ' BASED ON PARAM SETLKTM = ',I3)
 
  9876 FORMAT(/,' PROCESSING ABORTED DUE TO ABOVE ',I8,' ELEMENT GENERATION ERRORS')
-
-
-12345 FORMAT(5X,'Estimate size of MGG: process elem  ',I8,' of ',I8, A)
 
 ! **********************************************************************************************************************************
  

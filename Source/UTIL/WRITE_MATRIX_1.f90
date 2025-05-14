@@ -37,7 +37,6 @@
       USE SCONTR, ONLY                :  BLNK_SUB_NAM
       USE TIMDAT, ONLY                :  TSEC
       USE SUBR_BEGEND_LEVELS, ONLY    :  WRITE_MATRIX_1_BEGEND
-      USE PARAMS, ONLY                :  NOCOUNTS
 
       USE WRITE_MATRIX_1_USE_IFs
 
@@ -62,6 +61,8 @@
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = WRITE_MATRIX_1_BEGEND
 
       REAL(DOUBLE) , INTENT(IN)       :: MATIN(NTERM)      ! Real values for matrix MATIN
+      
+      CHARACTER(LEN=LEN(NAME)+7+LEN(": writing row")) :: COUNTER_TEMPLATE
 
       INTRINSIC DABS
 
@@ -83,19 +84,17 @@
       WRITE(UNT) NTERM
       K = 0
 !xx   WRITE(SC1, * )
+      WRITE(COUNTER_TEMPLATE, 12345) NAME
+      CALL COUNTER_INIT(COUNTER_TEMPLATE, NROWS)
       DO I=1,NROWS
          NTERM_ROW_I = I_MATIN(I+1) - I_MATIN(I)
-         IF (NOCOUNTS /= 'Y') THEN
-            WRITE(SC1,12345,ADVANCE='NO') NAME, I, NROWS, CR13
-         ENDIF
          DO J=1,NTERM_ROW_I
             K = K + 1
             IF (K > NTERM) CALL ARRAY_SIZE_ERROR_1( SUBR_NAME, NTERM, NAME) 
             WRITE(UNT) I,J_MATIN(K),MATIN(K)
-
          ENDDO 
+         CALL COUNTER_PROGRESS(I)
       ENDDO
-      WRITE(SC1,*) CR13
 
       IF (CLOSE_IT == 'Y') THEN
          CALL FILE_CLOSE ( UNT, FILNAM, CLOSE_STAT, 'Y' )
@@ -111,7 +110,7 @@
       RETURN
 
 ! **********************************************************************************************************************************
-12345 FORMAT(7X,A,': writing row  ',i8,' of ',i8,A)
+12345 FORMAT("       ",A,': writing row')
 
 ! **********************************************************************************************************************************
 
