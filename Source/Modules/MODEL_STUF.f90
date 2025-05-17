@@ -1352,7 +1352,13 @@
                                                              ! The ply number in a composite layup defined by a PCOMP
 
       REAL(DOUBLE)                    :: ALPVEC(6,MEMATC)    = RESHAPE ( (/(ZERO, I=1,6*MEMATC)/), (/6,MEMATC/) )
-                                                             ! Vector of CTE's.
+                                                             ! Vector of CTE's. x,y,z,xy,yz,zx in material coordinates.
+                                                             ! For shells, column i is for material MIDi. i=1..4.
+                                                             ! For solids, only the column 1 is used.
+                                                             ! They are engineering strain per unit temperature change
+                                                             ! rather than tensor components so the shear components 
+                                                             ! must be divided by 2 before transforming and used as-is
+                                                             ! for multiplying by elasticity.
 
       REAL(DOUBLE)                    :: BENSUM              = ZERO   
                                                              ! Sum of diag stiffness from KB for rotation DOF's

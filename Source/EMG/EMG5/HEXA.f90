@@ -170,13 +170,9 @@
       ENDDO
 
 ! ALP is first col of ALPVEC
-
-      ALP(1) = ALPVEC(1,1)
-      ALP(2) = ALPVEC(2,1)
-      ALP(3) = ALPVEC(3,1)
-      ALP(4) = ALPVEC(4,1) * 2
-      ALP(5) = ALPVEC(5,1) * 2
-      ALP(6) = ALPVEC(6,1) * 2
+      DO I=1,6
+        ALP(I) = ALPVEC(I,1)
+      ENDDO
 
       TREF1 = TREF(1)
 

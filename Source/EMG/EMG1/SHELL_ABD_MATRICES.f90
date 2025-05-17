@@ -191,7 +191,7 @@ pcom0:IF (PCOMP_PROPS == 'N') THEN                         ! Element is not a co
 
          ALPM(1) = ALPVEC(1,1)                             ! xx
          ALPM(2) = ALPVEC(2,1)                             ! yy
-         ALPM(3) = ALPVEC(4,1)*2                           ! xy
+         ALPM(3) = ALPVEC(4,1)                             ! xy
  
          CALL MATMULT_FFF ( EB, ALPB, 3, 3, 1, DUM )
          DO I=1,3
@@ -432,8 +432,11 @@ ply_do:  DO K=1,NUM_PLIES_TO_PROC
                ENDDO
             ENDDO
 
+            ALPM(1) = ALPVEC(1,1)
+            ALPM(2) = ALPVEC(2,1)
+            ALPM(3) = ALPVEC(4,1)
+
             DO I=1,3
-               ALPM(I) = ALPVEC(I,1)
                ALPD(I) = ALPVEC(I,2)
                ALPB(I) = ALPVEC(I,4)
             ENDDO

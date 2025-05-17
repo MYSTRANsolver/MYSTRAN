@@ -257,10 +257,10 @@
             ENDDO
          ENDDO
 
-         DO I=1,3                                          ! Transform ALPVEC rows for ply membrane from ply to elem axes
-            DO J=1,MEMATC
-               ALP3(I,J) = ALPVEC(I,J)
-            ENDDO
+         DO J=1,MEMATC                                     ! Transform ALPVEC rows for ply membrane from ply to elem axes
+            ALP3(1,J) = ALPVEC(1,J)
+            ALP3(2,J) = ALPVEC(2,J)
+            ALP3(3,J) = ALPVEC(4,J)
          ENDDO
 
          CALL MATMULT_FFF ( T1M   , EM  , 3, 3, 3, DUM33 ) ! (1) Transform EM  membrane matl matrix from ply to elem coords
@@ -277,15 +277,13 @@
 
          CALL MATMULT_FFF_T ( T2M, ALP3, 3, 3, MEMATC, DUM3M )
 
-         DO I=1,6
-            DO J=1,MEMATC
-               ALPVEC(I,J) = ZERO
-            ENDDO
-         ENDDO
-         DO I=1,3
-            DO J=1,MEMATC
-               ALPVEC(I,J) = DUM3M(I,J)
-            ENDDO
+         DO J=1,MEMATC
+            ALPVEC(1,J) = DUM3M(1,J)
+            ALPVEC(2,J) = DUM3M(2,J)
+            ALPVEC(3,J) = ZERO
+            ALPVEC(4,J) = DUM3M(3,J)
+            ALPVEC(5,J) = ZERO
+            ALPVEC(6,J) = ZERO
          ENDDO
 
 

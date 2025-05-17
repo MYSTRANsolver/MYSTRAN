@@ -201,22 +201,26 @@
             STRAIN3(I) = STRAIN(I+6)
          ENDDO
 
-         DO I=1,3
-            IF (SUBLOD(INT_SC_NUM,2) > 0) THEN
-               TBAR = 0
-               DO J=1,ELGP
-                 TBAR = TBAR + DT(J,JTSUB)
-               ENDDO
-               TBAR = TBAR / ELGP
-               ALPTM(I) = ALPVEC(I  ,1)*(TBAR - TREF(1))
-               ALPTB(I) = ALPVEC(I  ,2)*DT(5,JTSUB)
-               ALPTT(I) = ALPVEC(I+3,3)*(TBAR - TREF(1))
-            ELSE
-               ALPTM(I) = ZERO
-               ALPTB(I) = ZERO
-               ALPTT(I) = ZERO
-            ENDIF
-         ENDDO
+         IF (SUBLOD(INT_SC_NUM,2) > 0) THEN
+           TBAR = 0
+           DO J=1,ELGP
+             TBAR = TBAR + DT(J,JTSUB)
+           ENDDO
+           TBAR = TBAR / ELGP
+           ALPTM(1) = ALPVEC(1  ,1)*(TBAR - TREF(1))
+           ALPTM(2) = ALPVEC(2  ,1)*(TBAR - TREF(1))
+           ALPTM(3) = ALPVEC(4  ,1)*(TBAR - TREF(1))
+           DO I=1,3
+             ALPTB(I) = ALPVEC(I  ,2)*DT(5,JTSUB)
+             ALPTT(I) = ALPVEC(I+3,3)*(TBAR - TREF(1))
+           ENDDO
+         ELSE
+           DO I=1,3
+             ALPTM(I) = ZERO
+             ALPTB(I) = ZERO
+             ALPTT(I) = ZERO
+           ENDDO
+         ENDIF
       
 
          DO I=1,3
