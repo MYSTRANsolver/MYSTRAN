@@ -224,7 +224,7 @@
          Ksita = 0.0
          ! restrict to QUAD4 and TRIA3 shell elements
          IF (TYPE(1:5) == "QUAD4" .OR. TYPE(1:5) == "TRIA3") THEN
-            IF (NPSHEL > 0) THEN
+            IF (NPSHEL > 0 .AND. K6ROT > 0) THEN
                ! Here begins the code copied from QDEL
   
                XSD(1) = XEL(1,1) - XEL(2,1)                         ! x coord diffs (in local elem coords)
