@@ -28,7 +28,7 @@
 
    INTERFACE
 
-      SUBROUTINE QMEM1 ( OPT, IORD, RED_INT_SHEAR, AREA, XSD, YSD, BIG_BM )
+      SUBROUTINE QMEM1 ( OPT, INT_ELEM_ID, IORD, RED_INT_SHEAR, AREA, XSD, YSD, BIG_BM )
 
  
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
@@ -48,6 +48,7 @@
       CHARACTER( 1*BYTE), INTENT(IN)  :: RED_INT_SHEAR     ! If 'Y', use Gaussian weighted average of B matrices for shear terms
       CHARACTER(46*BYTE)              :: IORD_MSG          ! Character name of the integration order (used for debug output)
 
+      INTEGER(LONG), INTENT(IN)       :: INT_ELEM_ID       ! Internal element ID
       INTEGER(LONG), INTENT(IN)       :: IORD              ! Gaussian integration order for element
       INTEGER(LONG)                   :: GAUSS_PT          ! Gauss point number (used for output in subr SHP2DQ
       INTEGER(LONG), PARAMETER        :: ID1( 8) = (/ 1, & ! ID1(1) =  1 means virgin  8X8  elem DOF  1 is MYSTRAN 24X24 elem DOF  1

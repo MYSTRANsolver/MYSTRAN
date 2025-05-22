@@ -265,6 +265,7 @@
   
          GAUSS_PT = 0
          IORD_MSG = 'for plate bending strains,           IORQ2B = '
+
          DO I=1,IORQ2B
             DO J=1,IORQ2B
                SSI = SSS(I)
@@ -307,7 +308,6 @@
          ENDDO 
 
          IF (IORQ2T > 0) THEN
-
             GAUSS_PT = 0
             IORD_MSG = 'for transverse shear strains,        IORQ2T = '
             DO I=1,IORDXX
@@ -564,7 +564,7 @@
       ENDDO
   
       IF ((PCOMP_PROPS == 'Y') .AND. (PCOMP_LAM == 'NON')) THEN
-
+         CALL ORDER_GAUSS ( IORQ2B, SSS, HHH )
          GAUSS_PT = 0
          IORD_MSG = 'for plate bending strains,           IORQ2B = '
          DO I=1,IORQ2B

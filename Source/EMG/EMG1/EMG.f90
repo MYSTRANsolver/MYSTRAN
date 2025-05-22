@@ -84,6 +84,7 @@
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = EMG_BEGEND
  
 ! **********************************************************************************************************************************
+WRITE(F06,*) "### EMG A" !victor todo remove
       EPNTK = EPNT(INT_ELEM_ID)
       EID   = EDAT(EPNTK)
       TYPE  = ETYPE(INT_ELEM_ID)
@@ -96,6 +97,7 @@
       ENDIF
 ! **********************************************************************************************************************************
       NUM_EMG_FATAL_ERRS = 0
+
 
       CALL EMG_INIT
 
@@ -343,7 +345,7 @@
          IF (NUM_EMG_FATAL_ERRS > 0)   CALL EMG_QUIT
 
       ELSE IF ((TYPE(1:5) == 'QUAD4') .OR. (TYPE == 'SHEAR   ')) THEN
-         CALL QDEL1 ( OPT, WRITE_WARN )
+         CALL QDEL1 ( OPT, INT_ELEM_ID, WRITE_WARN )
          IF (NUM_EMG_FATAL_ERRS > 0)   CALL EMG_QUIT
 
       ELSE IF ((TYPE == 'HEXA8   ') .OR. (TYPE == 'HEXA20  ') .OR.                                                                 &

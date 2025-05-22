@@ -24,7 +24,7 @@
                                                                                                         
 ! End MIT license text.                                                                                      
   
-      SUBROUTINE QMEM1 ( OPT, IORD, RED_INT_SHEAR, AREA, XSD, YSD, BIG_BM )
+      SUBROUTINE QMEM1 ( OPT, INT_ELEM_ID, IORD, RED_INT_SHEAR, AREA, XSD, YSD, BIG_BM )
  
 ! Isoparametric membrane quadrilateral. Default iorq1s = 1 gives reduced integration for shear terms. User can override
 ! this with Bulk Data PARAM iorq1s 2. Element can be nonplanar. HBAR is the dist that the nodes are away from the mean
@@ -42,14 +42,16 @@
  
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
       USE IOUNT1, ONLY                :  ERR, F04, F06, WRT_ERR, WRT_LOG
-      USE SCONTR, ONLY                :  BLNK_SUB_NAM, FATAL_ERR, MAX_ORDER_GAUSS, MAX_STRESS_POINTS, MEFE, NSUB, NTSUB
+      USE SCONTR, ONLY                :  BLNK_SUB_NAM, FATAL_ERR, MAX_ORDER_GAUSS, MAX_STRESS_POINTS, MEFE, NSUB, NTSUB,           &
+                                         MRPCOMP_PLIES, MRPCOMP0
       USE TIMDAT, ONLY                :  TSEC
       USE SUBR_BEGEND_LEVELS, ONLY    :  QMEM1_BEGEND
       USE CONSTANTS_1, ONLY           :  ZERO, FOUR
       USE NONLINEAR_PARAMS, ONLY      :  LOAD_ISTEP
       USE MODEL_STUF, ONLY            :  ALPVEC, BE1, BMEANT, DT, EID, ELDOF, ELGP, EM, ERR_SUB_NAM, HBAR, KE, KED, MXWARP,        &
-                                         NUM_EMG_FATAL_ERRS, PCOMP_LAM, PCOMP_PROPS, PPE, PRESS, PTE,                              &
-                                         SE1, STE1, SHELL_AALP, SHELL_A, TREF, TYPE, FCONV, STRESS
+                                         NUM_EMG_FATAL_ERRS, PCOMP_LAM, PCOMP_PROPS, RPCOMP, PPE, PRESS, PTE,                      &
+                                         SE1, STE1, SHELL_AALP, SHELL_A, TREF, TYPE, FCONV, STRESS, NUM_PLIES, INTL_PID, TPLY,     &
+                                         EPROP, PLY_NUM
       USE DEBUG_PARAMETERS, ONLY      :  DEBUG
  
       USE QMEM1_USE_IFs
@@ -60,10 +62,13 @@
       CHARACTER(1*BYTE) , INTENT(IN)  :: OPT(6)            ! 'Y'/'N' flags for whether to calc certain elem matrices
       CHARACTER( 1*BYTE), INTENT(IN)  :: RED_INT_SHEAR     ! If 'Y', use Gaussian weighted average of B matrices for shear terms
       CHARACTER(46*BYTE)              :: IORD_MSG          ! Character name of the integration order (used for debug output)
+      CHARACTER(1*BYTE)               :: PLY_OPT(6)        ! OPT for calling EMG to calcualte differential stiffness matrix.
 
+      INTEGER(LONG), INTENT(IN)       :: INT_ELEM_ID       ! Internal element ID
       INTEGER(LONG), INTENT(IN)       :: IORD              ! Gaussian integration order for element
       INTEGER(LONG)                   :: GAUSS_PT          ! Gauss point number (used for output in subr SHP2DQ
       INTEGER(LONG)                   :: I,J,K,L,M         ! DO loop indices
+      INTEGER(LONG)                   :: JPLY              ! PLY_NUM in a DO loop
       INTEGER(LONG), PARAMETER        :: ID1( 8) = (/ 1, & ! ID1(1) =  1 means virgin  8X8  elem DOF  1 is MYSTRAN 24X24 elem DOF  1
                                                       2, & ! ID1(2) =  2 means virgin  8X8  elem DOF  2 is MYSTRAN 24X24 elem DOF  2
                                                       7, & ! ID1(3) =  7 means virgin  8X8  elem DOF  3 is MYSTRAN 24X24 elem DOF  7
@@ -95,7 +100,8 @@
       INTEGER(LONG), PARAMETER        :: NUM_NODES = 4     ! Quad has 4 nodes
                                                            ! Indicator of no output of elem data to BUG file
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = QMEM1_BEGEND
-  
+      INTEGER(LONG)                   :: PLY_RPCOMP_INDEX  ! Index in array RPCOMP where data for ply K begins
+
       REAL(DOUBLE) , INTENT(IN)       :: AREA              ! Element area
       REAL(DOUBLE) , INTENT(IN)       :: XSD(4)            ! Diffs in x coords of quad sides in local coords
       REAL(DOUBLE) , INTENT(IN)       :: YSD(4)            ! Diffs in y coords of quad sides in local coords
@@ -138,9 +144,9 @@
       REAL(DOUBLE)                    :: NBAR(2,8)         ! Matrix of shape functions (used in PPE calc)
       REAL(DOUBLE)                    :: PQ(8,NSUB)        ! Element pressure load matrix for the 8 local emenent DOF's.
       REAL(DOUBLE)                    :: PSH(4)            ! Output from subr SHP2DQ, called herein.
-      REAL(DOUBLE)                    :: FORCEx            ! Engineering force in the elem x direction
-      REAL(DOUBLE)                    :: FORCEy            ! Engineering force in the elem x direction
-      REAL(DOUBLE)                    :: FORCExy           ! Engineering force in the elem xy direction
+      REAL(DOUBLE)                    :: FORCEx(IORD_STRESS_Q4*IORD_STRESS_Q4) ! Engineering force in the elem x direction at Gauss points
+      REAL(DOUBLE)                    :: FORCEy(IORD_STRESS_Q4*IORD_STRESS_Q4) ! Engineering force in the elem x direction at Gauss points
+      REAL(DOUBLE)                    :: FORCExy(IORD_STRESS_Q4*IORD_STRESS_Q4)! Engineering force in the elem xy direction at Gauss points
       REAL(DOUBLE)                    :: QLOAD(2,NSUB)     ! 2 components of the element pressure load (from PRESS) in 1 array
       REAL(DOUBLE)                    :: SSS(MAX_ORDER_GAUSS)
                                                            ! An output from subr ORDER, called herein. Gauss abscissa's.
@@ -528,6 +534,60 @@
   
       IF ((OPT(6) == 'Y') .AND. (LOAD_ISTEP > 1)) THEN
 
+                                                           ! Find membrane engineering forces at each Gauss point
+                                                           ! by summing the forces in each ply.
+        DO GAUSS_PT=1,IORD_STRESS_Q4*IORD_STRESS_Q4
+          FORCEx(GAUSS_PT)  = 0
+          FORCEy(GAUSS_PT)  = 0
+          FORCExy(GAUSS_PT) = 0
+        ENDDO
+
+        CALL GET_ELEM_NUM_PLIES (INT_ELEM_ID)              ! Get NUM_PLIES
+        CALL IS_ELEM_PCOMP_PROPS(INT_ELEM_ID)              ! Get PCOMP_PROPS
+ 
+        DO JPLY=1,NUM_PLIES
+                                                           ! Get UEL, BE1, EM, TPLY for this ply.
+          IF (PCOMP_PROPS == 'N') THEN
+                                                           ! BE1, EM are already set above.
+
+            TPLY = EPROP(1)                                ! Element thickness
+            CALL ELMDIS
+
+          ELSE
+
+!todo might not need OPT(3). No OPTs already does BE1, EM, ALPVEC
+            PLY_OPT(1) = 'N'
+            PLY_OPT(2) = 'N'
+            PLY_OPT(3) = 'Y'                               ! OPT(3) is for calc of SEi, STEi
+            PLY_OPT(4) = 'N'
+            PLY_OPT(5) = 'N'
+            PLY_OPT(6) = 'N'
+            PLY_NUM = JPLY                                 ! Used by EMG
+                                                           ! Get BE1, EM, ZPLY, TPLY, ALPVEC
+WRITE(F06,*) "### QMEM1 calling EMG" !victor todo remove stuck here. it won't call EMG
+!maybe need to add EMG to QMEM1_USE_IFs  ?? Also the other subs I'm calling from here.
+            CALL EMG (INT_ELEM_ID, PLY_OPT, 'N', SUBR_NAME, 'N' )    
+            CALL ELMDIS
+            CALL ELMDIS_PLY                                ! Adjust UEL using ZPLY
+
+          ENDIF
+
+          GAUSS_PT = 0
+          DO I=1,IORD_STRESS_Q4
+            DO J=1,IORD_STRESS_Q4
+              GAUSS_PT = GAUSS_PT + 1
+
+              CALL ELEM_STRE_STRN_ARRAYS (GAUSS_PT+1)      ! Stress at this Gauss point
+                                                             
+              FORCEx(GAUSS_PT)  = FORCEx(GAUSS_PT)  + TPLY*STRESS(1)
+              FORCEy(GAUSS_PT)  = FORCEy(GAUSS_PT)  + TPLY*STRESS(2)
+              FORCExy(GAUSS_PT) = FORCExy(GAUSS_PT) + TPLY*STRESS(3)
+            ENDDO
+          ENDDO
+          
+        ENDDO
+
+
 ! Accoring to:
 !   Robert D. Cook, David S. Malkus, Michael E. Plesha Concepts and Applications of Finite Element Analysis, 3rd Edition  1989
 !   Section 14.3 Stress Stiffness Matrix Of A Plate Element
@@ -550,28 +610,21 @@
 ! [ σ] = ⌡   ⌡   DPSHX  [ Nxy Ny  ]  DPSHX  |J|  dξ dη
 !        -1  -1  
 
-        CALL ELMDIS
-
-        CALL ORDER_GAUSS ( IORD_STRESS_Q4, SSS, HHH )
-
         DO K=1,ELGP
           DO L=1,ELGP
             KS(K,L) = ZERO
           ENDDO   
         ENDDO 
 
+        CALL ORDER_GAUSS ( IORD_STRESS_Q4, SSS, HHH )
+
         GAUSS_PT = 0
         DO I=1,IORD_STRESS_Q4
           DO J=1,IORD_STRESS_Q4
             GAUSS_PT = GAUSS_PT + 1
 
-            CALL ELEM_STRE_STRN_ARRAYS (GAUSS_PT+1)        ! Stress at this Gauss point
-                                                           
-            FORCEx  = FCONV(1)*STRESS(1)                   ! Engineering forces at this Gauss point
-            FORCEy  = FCONV(1)*STRESS(2)
-            FORCExy = FCONV(1)*STRESS(3)
-            DUM11(1,1) = FORCEx  ; DUM11(1,2) = FORCExy
-            DUM11(2,1) = FORCExy ; DUM11(2,2) = FORCEy
+            DUM11(1,1) = FORCEx(GAUSS_PT)  ; DUM11(1,2) = FORCExy(GAUSS_PT)
+            DUM11(2,1) = FORCExy(GAUSS_PT) ; DUM11(2,2) = FORCEy(GAUSS_PT)
 
             DO L=1,ELGP                                    ! Shape function derivatives at this Gauss point.
               DPSHX(1,L) = BE1(1,ID1(2*(L-1)+1),GAUSS_PT+1)     
@@ -592,6 +645,7 @@
 
           ENDDO
         ENDDO
+
                                                            ! Copy KS into KED for each translational DOF.
         DO I=1,6*ELGP
           DO J=1,6*ELGP
@@ -605,7 +659,6 @@
             KED(ID2(3*(I-1) + 3),ID2(3*(J-1) + 3)) = KS(I,J)
           ENDDO   
         ENDDO 
-
 
       ENDIF
   
