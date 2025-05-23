@@ -24,7 +24,7 @@
                                                                                                         
 ! End MIT license text.                                                                                      
   
-      RECURSIVE SUBROUTINE QMEM1 ( OPT, INT_ELEM_ID, IORD, RED_INT_SHEAR, AREA, XSD, YSD, BIG_BM )
+      SUBROUTINE QMEM1 ( OPT, INT_ELEM_ID, IORD, RED_INT_SHEAR, AREA, XSD, YSD, BIG_BM )
  
 ! Isoparametric membrane quadrilateral. Default iorq1s = 1 gives reduced integration for shear terms. User can override
 ! this with Bulk Data PARAM iorq1s 2. Element can be nonplanar. HBAR is the dist that the nodes are away from the mean
@@ -62,7 +62,6 @@
       CHARACTER(1*BYTE) , INTENT(IN)  :: OPT(6)            ! 'Y'/'N' flags for whether to calc certain elem matrices
       CHARACTER( 1*BYTE), INTENT(IN)  :: RED_INT_SHEAR     ! If 'Y', use Gaussian weighted average of B matrices for shear terms
       CHARACTER(46*BYTE)              :: IORD_MSG          ! Character name of the integration order (used for debug output)
-      CHARACTER(1*BYTE)               :: PLY_OPT(6)        ! OPT for calling EMG to calcualte differential stiffness matrix.
 
       INTEGER(LONG), INTENT(IN)       :: INT_ELEM_ID       ! Internal element ID
       INTEGER(LONG), INTENT(IN)       :: IORD              ! Gaussian integration order for element
@@ -555,20 +554,7 @@
           ELSE
 
             PLY_NUM = JPLY                                 ! Used by SHELL_ABD_MATRICES
-
-            ! PLY_OPT(1) = 'N'
-            ! PLY_OPT(2) = 'N'
-            ! PLY_OPT(3) = 'Y'                               ! OPT(3) is for BE1
-            ! PLY_OPT(4) = 'N'
-            ! PLY_OPT(5) = 'N'
-            ! PLY_OPT(6) = 'N'
-                                                           ! ! Get EM, ZPLY, TPLY, ALPVEC
-                                                           ! ! Recursive call.
-            ! CALL EMG (INT_ELEM_ID, PLY_OPT, 'N', SUBR_NAME, 'N' )    
-
-!todo ABD directly means we can turn off RECURSIVE on EMG,QDEL1,QMEM1, and remove PLY_OPT and remove EMG from USE_IFs
             CALL SHELL_ABD_MATRICES ( INT_ELEM_ID, 'N' )   ! Get EM, ZPLY, TPLY, ALPVEC
-
             CALL ELMDIS
             CALL ELMDIS_PLY                                ! Adjust UEL using ZPLY
 

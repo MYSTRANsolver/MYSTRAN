@@ -24,7 +24,7 @@
                                                                                                       
 ! End MIT license text.                                                                                      
 
-      RECURSIVE SUBROUTINE EMG ( INT_ELEM_ID, OPT, WRITE_WARN, CALLING_SUBR, WRT_BUG_THIS_TIME )
+      SUBROUTINE EMG ( INT_ELEM_ID, OPT, WRITE_WARN, CALLING_SUBR, WRT_BUG_THIS_TIME )
  
 ! Main driver routine for calculation of matrices for all elements. This routine initializes appropriate arrays and calls
 ! other routines to calculate element matrices:
