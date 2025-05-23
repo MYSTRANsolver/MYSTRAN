@@ -24,7 +24,7 @@
                                                                                                         
 ! End MIT license text.                                                                                      
  
-      SUBROUTINE QDEL1 ( OPT, INT_ELEM_ID, WRITE_WARN )
+      RECURSIVE SUBROUTINE QDEL1 ( OPT, INT_ELEM_ID, WRITE_WARN )
  
 ! Calculates, or calls subr's to calculate, quadrilateral element matrices:
 

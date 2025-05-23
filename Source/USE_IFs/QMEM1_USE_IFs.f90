@@ -35,12 +35,9 @@
       USE BMQMEM_Interface
       USE MATMULT_FFF_T_Interface
       USE OUTA_HERE_Interface
-
-!victor todo trying this
-USE GET_ELEM_NUM_PLIES
-USE IS_ELEM_PCOMP_PROPS
-USE ELMDIS
-USE EMG
-USE ELMDIS_PLY
+      USE GET_ELEM_NUM_PLIES_Interface
+      USE ELMDIS_Interface
+      USE EMG_Interface
+      USE ELMDIS_PLY_Interface
 
       END MODULE QMEM1_USE_IFs

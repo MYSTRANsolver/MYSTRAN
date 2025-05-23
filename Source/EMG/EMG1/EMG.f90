@@ -24,7 +24,7 @@
                                                                                                       
 ! End MIT license text.                                                                                      
 
-      SUBROUTINE EMG ( INT_ELEM_ID, OPT, WRITE_WARN, CALLING_SUBR, WRT_BUG_THIS_TIME )
+      RECURSIVE SUBROUTINE EMG ( INT_ELEM_ID, OPT, WRITE_WARN, CALLING_SUBR, WRT_BUG_THIS_TIME )
  
 ! Main driver routine for calculation of matrices for all elements. This routine initializes appropriate arrays and calls
 ! other routines to calculate element matrices:
@@ -84,7 +84,6 @@
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = EMG_BEGEND
  
 ! **********************************************************************************************************************************
-WRITE(F06,*) "### EMG A" !victor todo remove
       EPNTK = EPNT(INT_ELEM_ID)
       EID   = EDAT(EPNTK)
       TYPE  = ETYPE(INT_ELEM_ID)

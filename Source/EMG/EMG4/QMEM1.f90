@@ -24,7 +24,7 @@
                                                                                                         
 ! End MIT license text.                                                                                      
   
-      SUBROUTINE QMEM1 ( OPT, INT_ELEM_ID, IORD, RED_INT_SHEAR, AREA, XSD, YSD, BIG_BM )
+      RECURSIVE SUBROUTINE QMEM1 ( OPT, INT_ELEM_ID, IORD, RED_INT_SHEAR, AREA, XSD, YSD, BIG_BM )
  
 ! Isoparametric membrane quadrilateral. Default iorq1s = 1 gives reduced integration for shear terms. User can override
 ! this with Bulk Data PARAM iorq1s 2. Element can be nonplanar. HBAR is the dist that the nodes are away from the mean
@@ -153,7 +153,7 @@
       REAL(DOUBLE)                    :: SUMB              ! An intermediate variable used in calc B matrix for reduced integration
       REAL(DOUBLE)                    :: SUMD              ! An intermediate variable used in calc B matrix for reduced integration
       REAL(DOUBLE)                    :: TBAR              ! Average elem temperature 
- 
+
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
          CALL OURTIM
@@ -542,31 +542,33 @@
           FORCExy(GAUSS_PT) = 0
         ENDDO
 
-        CALL GET_ELEM_NUM_PLIES (INT_ELEM_ID)              ! Get NUM_PLIES
-        CALL IS_ELEM_PCOMP_PROPS(INT_ELEM_ID)              ! Get PCOMP_PROPS
+        CALL GET_ELEM_NUM_PLIES ( INT_ELEM_ID )            ! Get NUM_PLIES
  
         DO JPLY=1,NUM_PLIES
-                                                           ! Get UEL, BE1, EM, TPLY for this ply.
+                                                           ! Get UEL, EM, TPLY for this ply.
           IF (PCOMP_PROPS == 'N') THEN
-                                                           ! BE1, EM are already set above.
+                                                           ! EM is already set above.
 
             TPLY = EPROP(1)                                ! Element thickness
             CALL ELMDIS
 
           ELSE
 
-!todo might not need OPT(3). No OPTs already does BE1, EM, ALPVEC
-            PLY_OPT(1) = 'N'
-            PLY_OPT(2) = 'N'
-            PLY_OPT(3) = 'Y'                               ! OPT(3) is for calc of SEi, STEi
-            PLY_OPT(4) = 'N'
-            PLY_OPT(5) = 'N'
-            PLY_OPT(6) = 'N'
-            PLY_NUM = JPLY                                 ! Used by EMG
-                                                           ! Get BE1, EM, ZPLY, TPLY, ALPVEC
-WRITE(F06,*) "### QMEM1 calling EMG" !victor todo remove stuck here. it won't call EMG
-!maybe need to add EMG to QMEM1_USE_IFs  ?? Also the other subs I'm calling from here.
-            CALL EMG (INT_ELEM_ID, PLY_OPT, 'N', SUBR_NAME, 'N' )    
+            PLY_NUM = JPLY                                 ! Used by SHELL_ABD_MATRICES
+
+            ! PLY_OPT(1) = 'N'
+            ! PLY_OPT(2) = 'N'
+            ! PLY_OPT(3) = 'Y'                               ! OPT(3) is for BE1
+            ! PLY_OPT(4) = 'N'
+            ! PLY_OPT(5) = 'N'
+            ! PLY_OPT(6) = 'N'
+                                                           ! ! Get EM, ZPLY, TPLY, ALPVEC
+                                                           ! ! Recursive call.
+            ! CALL EMG (INT_ELEM_ID, PLY_OPT, 'N', SUBR_NAME, 'N' )    
+
+!todo ABD directly means we can turn off RECURSIVE on EMG,QDEL1,QMEM1, and remove PLY_OPT and remove EMG from USE_IFs
+            CALL SHELL_ABD_MATRICES ( INT_ELEM_ID, 'N' )   ! Get EM, ZPLY, TPLY, ALPVEC
+
             CALL ELMDIS
             CALL ELMDIS_PLY                                ! Adjust UEL using ZPLY
 
@@ -577,7 +579,7 @@ WRITE(F06,*) "### QMEM1 calling EMG" !victor todo remove stuck here. it won't ca
             DO J=1,IORD_STRESS_Q4
               GAUSS_PT = GAUSS_PT + 1
 
-              CALL ELEM_STRE_STRN_ARRAYS (GAUSS_PT+1)      ! Stress at this Gauss point
+              CALL ELEM_STRE_STRN_ARRAYS ( GAUSS_PT+1 )    ! Stress at this Gauss point using UEL, BE1, EM, ALPVEC, DT
                                                              
               FORCEx(GAUSS_PT)  = FORCEx(GAUSS_PT)  + TPLY*STRESS(1)
               FORCEy(GAUSS_PT)  = FORCEy(GAUSS_PT)  + TPLY*STRESS(2)
