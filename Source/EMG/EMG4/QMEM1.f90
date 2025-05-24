@@ -533,6 +533,13 @@
   
       IF ((OPT(6) == 'Y') .AND. (LOAD_ISTEP > 1)) THEN
 
+        ! Things not tested or properly coded for differential stiffness matrix yet:
+        ! - Non-symmetric composite
+        ! - Offset
+        ! - Non-planar element
+        ! - Thermal loading with composite
+        ! - Differential stiffness solution type
+
                                                            ! Find membrane engineering forces at each Gauss point
                                                            ! by summing the forces in each ply.
         DO GAUSS_PT=1,IORD_STRESS_Q4*IORD_STRESS_Q4
@@ -553,8 +560,16 @@
 
           ELSE
 
+            IF (PCOMP_LAM == 'NON') THEN
+              FATAL_ERR          = FATAL_ERR + 1
+              NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
+              WRITE(ERR,*) ' *ERROR: Code not written for non-symmetric composite buckling or differential stiffness.'
+              WRITE(F06,*) ' *ERROR: Code not written for non-symmetric composite buckling or differential stiffness.'
+              CALL OUTA_HERE ( 'Y' )
+            ENDIF
+
             PLY_NUM = JPLY                                 ! Used by SHELL_ABD_MATRICES
-            CALL SHELL_ABD_MATRICES ( INT_ELEM_ID, 'N' )   ! Get EM, ZPLY, TPLY, ALPVEC
+            CALL SHELL_ABD_MATRICES ( INT_ELEM_ID, 'N' )   ! Get EM, ZPLY, TPLY, ALPVEC for this ply
             CALL ELMDIS
             CALL ELMDIS_PLY                                ! Adjust UEL using ZPLY
 
