@@ -560,7 +560,8 @@
 
           ELSE
 
-            IF (PCOMP_LAM == 'NON') THEN
+                                                           
+            IF (PCOMP_LAM == 'NON') THEN                   ! Delete this IF block to allow the LAM field set to nonsymmetric.
               FATAL_ERR          = FATAL_ERR + 1
               NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
               WRITE(ERR,*) ' *ERROR: Code not written for non-symmetric composite buckling or differential stiffness.'
