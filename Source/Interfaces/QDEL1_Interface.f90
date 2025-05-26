@@ -28,7 +28,7 @@
 
    INTERFACE
 
-      SUBROUTINE QDEL1 ( OPT, WRITE_WARN )
+      SUBROUTINE QDEL1 ( OPT, INT_ELEM_ID, WRITE_WARN )
 
  
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
@@ -46,6 +46,7 @@
       IMPLICIT NONE 
   
       CHARACTER(1*BYTE), INTENT(IN)   :: OPT(6)               ! 'Y'/'N' flags for whether to calc certain elem matrices
+      INTEGER(LONG), INTENT(IN)       :: INT_ELEM_ID          ! Internal element ID
       CHARACTER(LEN=*), INTENT(IN)    :: WRITE_WARN           ! If 'Y" write warning messages, otherwise do not
       CHARACTER( 1*BYTE)              :: RED_INT_SHEAR        ! If 'Y', use Gaussian weighted average of B matrices for shear terms
 

@@ -24,7 +24,7 @@
                                                                                                         
 ! End MIT license text.                                                                                      
  
-      SUBROUTINE QDEL1 ( OPT, WRITE_WARN )
+      SUBROUTINE QDEL1 ( OPT, INT_ELEM_ID, WRITE_WARN )
  
 ! Calculates, or calls subr's to calculate, quadrilateral element matrices:
 
@@ -54,6 +54,7 @@
 
       CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: SUBR_NAME = 'QDEL1'
       CHARACTER(1*BYTE), INTENT(IN)   :: OPT(6)               ! 'Y'/'N' flags for whether to calc certain elem matrices
+      INTEGER(LONG), INTENT(IN)       :: INT_ELEM_ID          ! Internal element ID
       CHARACTER(LEN=*), INTENT(IN)    :: WRITE_WARN           ! If 'Y" write warning messages, otherwise do not
       CHARACTER( 1*BYTE)              :: RED_INT_SHEAR        ! If 'Y', use Gaussian weighted average of B matrices for shear terms
 
@@ -219,7 +220,7 @@
                ELSE
                   RED_INT_SHEAR = 'N'
                ENDIF
-               CALL QMEM1 ( OPT, IORD, RED_INT_SHEAR, AREA, XSD, YSD, BIG_BM )
+               CALL QMEM1 ( OPT, INT_ELEM_ID, IORD, RED_INT_SHEAR, AREA, XSD, YSD, BIG_BM )
             ENDIF
          ENDIF
   

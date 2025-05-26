@@ -615,8 +615,8 @@ bdf:  DO
       !  If they want to continue put DEBUG 201 w/val /= 0 entry in the BDF
 
       IF ((SOL_NAME(1:8) == 'DIFFEREN') .OR. (SOL_NAME(1:8) == 'BUCKLING')) THEN
-         IF((NCTRIA3   > 0) .OR. (NCTRIA3K  > 0) .OR. (NCQUAD4   > 0) .OR. (NCQUAD4K  > 0) .OR. (NCSHEAR   > 0)) THEN
-            MESSAG1= ' *WARNING: BUCKLING and DIFFERN SOL are only coded for the BAR, HEXA, PENTA, and TETRA elements'
+         IF((NCSHEAR   > 0)) THEN
+            MESSAG1= ' *WARNING: BUCKLING and DIFFERN SOL are only coded for the BAR, HEXA, PENTA, TETRA, TRIA, and QUAD elements'
             MESSAG2= '           Either remove all other elements or include a Bulk Data entry: DEBUG   201, with value /= 0'
             IF (DEBUG(201) == 0) THEN 
                WRITE(F06,*) MESSAG1
@@ -642,8 +642,8 @@ bdf:  DO
              ' ++',127X,'++',/,                                                                                                    &
    ' ++', 6X,' B U C K L I N G   &   D I F F E R E N   S O L   a r e   o n l y   c o d e d   f o r   e l e m e n t s:',18X,'++',/  &
              ' ++',127X,'++',/,                                                                                                    &
-   ' ++', 6X,'                                            BAR,  HEXA,  PENTA,  TETRA', 51X, '++'                                   &
-   8X,'++',/,' ++',127X,'++',/                                                                                                     &
+             ' ++                                BAR,  HEXA,  PENTA,  TETRA,  TRIA3,  TRIA3K,  QUAD4,  QUAD4K       ' ,28X,'++',/  &
+             ' ++',127X,'++',/                                                                                                     &
    ' ++', 6X,'   A l l   o t h e r   e l e m s   i g n o r e d   i n   t h e  d i f f e r e n t i a l   s t i f f   c a l c s',    &
   10X,'++',/,' ++',127X,'++',/                                                                                                     &
              ' ++',127X,'++',/                                                                                                     &

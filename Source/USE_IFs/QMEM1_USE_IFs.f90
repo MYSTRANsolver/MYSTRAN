@@ -35,5 +35,8 @@
       USE BMQMEM_Interface
       USE MATMULT_FFF_T_Interface
       USE OUTA_HERE_Interface
+      USE GET_ELEM_NUM_PLIES_Interface
+      USE ELMDIS_Interface
+      USE ELMDIS_PLY_Interface
 
       END MODULE QMEM1_USE_IFs

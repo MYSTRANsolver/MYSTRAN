@@ -37,14 +37,15 @@
 !  5) KED       = element differen stiff matrix calc   , if OPT(6) = 'Y' = 'Y'
  
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
-      USE IOUNT1, ONLY                :  BUG, F04, WRT_BUG, WRT_LOG, F06
-      USE SCONTR, ONLY                :  BLNK_SUB_NAM, ELDT_BUG_BCHK_BIT, ELDT_BUG_BMAT_BIT, NSUB, NTSUB
+      USE IOUNT1, ONLY                :  ERR, BUG, F04, WRT_BUG, WRT_LOG, F06
+      USE SCONTR, ONLY                :  BLNK_SUB_NAM, ELDT_BUG_BCHK_BIT, ELDT_BUG_BMAT_BIT, NSUB, NTSUB, FATAL_ERR
       USE TIMDAT, ONLY                :  TSEC
       USE SUBR_BEGEND_LEVELS, ONLY    :  TMEM1_BEGEND
       USE CONSTANTS_1, ONLY           :  ZERO, ONE, THREE
       USE NONLINEAR_PARAMS, ONLY      :  LOAD_ISTEP
       USE MODEL_STUF, ONLY            :  ALPVEC, BE1, EID, DT, EM, ELDOF, KE, PCOMP_LAM, PCOMP_PROPS, PRESS, PPE, PTE, SE1, STE1,  &
-                                         SHELL_AALP, SHELL_A, SHELL_PROP_ALP, TREF, TYPE, XEB, XEL, ELGP, FCONV, STRESS, KED
+                                         SHELL_AALP, SHELL_A, SHELL_PROP_ALP, TREF, TYPE, XEB, XEL, ELGP, FCONV, STRESS, KED,      &
+                                         NUM_EMG_FATAL_ERRS
       USE DEBUG_PARAMETERS, ONLY      :  DEBUG
  
       USE TMEM1_USE_IFs
@@ -261,6 +262,14 @@
 ! Calculate linear differential stiffness matrix
  
       IF ((OPT(6) == 'Y') .AND. (LOAD_ISTEP > 1)) THEN
+
+        IF (PCOMP_PROPS == 'Y') THEN
+          FATAL_ERR          = FATAL_ERR + 1
+          NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
+          WRITE(ERR,*) ' *ERROR: Code not written for CTRIA3 composite buckling or differential stiffness.'
+          WRITE(F06,*) ' *ERROR: Code not written for CTRIA3 composite buckling or differential stiffness.'
+          CALL OUTA_HERE ( 'Y' )
+        ENDIF
 
 ! Accoring to:
 !   Robert D. Cook, David S. Malkus, Michael E. Plesha Concepts and Applications of Finite Element Analysis, 3rd Edition  1989
