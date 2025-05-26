@@ -32,7 +32,7 @@
       USE IOUNT1, ONLY                :  WRT_LOG, ERR, F04, F06
       USE SCONTR, ONLY                :  BLNK_SUB_NAM, FATAL_ERR, MEMATC, NCORD
       USE TIMDAT, ONLY                :  TSEC
-      USE CONSTANTS_1, ONLY           :  ZERO, ONE
+      USE CONSTANTS_1, ONLY           :  ZERO, ONE, TWO
       USE MODEL_STUF, ONLY            :  ALPVEC, CORD, ISOLID, EB, EBM, EM, ES, ET, MTRL_TYPE, NUM_EMG_FATAL_ERRS, QUAD_DELTA,     &
                                          RCORD, TE, THETAM, TYPE
       USE PARAMS, ONLY                :  EPSIL
@@ -171,10 +171,20 @@
                CALL MATMULT_FFF_T ( T1_MB, DUM33, 3, 3, 3, EBM   )
             ENDIF
 
+            DO I=4,6
+               DO J=1,MEMATC
+                  ALPVEC(I,J) = ALPVEC(I,J) / TWO                    ! Remove shear factor of 2 to transform.
+               ENDDO
+            ENDDO
             CALL MATMULT_FFF_T (T1, ALPVEC, 6, 6, MEMATC, DUM64 )    ! Transform CTE matrix
             DO I=1,6
                DO J=1,MEMATC
                   ALPVEC(I,J) = DUM64(I,J)
+               ENDDO
+            ENDDO
+            DO I=4,6
+               DO J=1,MEMATC
+                  ALPVEC(I,J) = ALPVEC(I,J) * TWO                     ! Reinstate shear factor of 2 after transform.
                ENDDO
             ENDDO
 
@@ -258,11 +268,20 @@
             CALL MATMULT_FFF   ( ES , T1   , 6, 6, 6, DUM66 )
             CALL MATMULT_FFF_T ( T1 , DUM66, 6, 6, 6, ES    )
 
-            CALL MATMULT_FFF_T (T1, ALPVEC, 6, 6, MEMATC, DUM64 )
-
+            DO I=4,6
+               DO J=1,MEMATC
+                  ALPVEC(I,J) = ALPVEC(I,J) / TWO                    ! Remove shear factor of 2 to transform.
+               ENDDO
+            ENDDO
+            CALL MATMULT_FFF_T (T1, ALPVEC, 6, 6, MEMATC, DUM64 )    ! Transform CTE matrix
             DO I=1,6
                DO J=1,MEMATC
                   ALPVEC(I,J) = DUM64(I,J)
+               ENDDO
+            ENDDO
+            DO I=4,6
+               DO J=1,MEMATC
+                  ALPVEC(I,J) = ALPVEC(I,J) * TWO                     ! Reinstate shear factor of 2 after transform.
                ENDDO
             ENDDO
 

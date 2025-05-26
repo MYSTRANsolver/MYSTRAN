@@ -252,9 +252,6 @@
 ! code uses EM and ALPVEC rather than SHELL_AALP
  
       IF (OPT(3) == 'Y') THEN
-         ALP(1) = ALPVEC(1,1)
-         ALP(2) = ALPVEC(2,1)
-         ALP(3) = ALPVEC(3,1)
 
          IORD_MSG = 'for in-plane direct strains                 = '
          GAUSS_PT = 1
@@ -280,7 +277,7 @@
 
          ALP(1) = ALPVEC(1,1)
          ALP(2) = ALPVEC(2,1)
-         ALP(3) = ALPVEC(3,1)
+         ALP(3) = ALPVEC(4,1)
 
          CALL MATMULT_FFF ( EM, ALP, 3, 3, 1, EALP )
          DO J=1,NTSUB

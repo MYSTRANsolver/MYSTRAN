@@ -213,7 +213,7 @@
 
          ALP(1) = ALPVEC(1,1)
          ALP(2) = ALPVEC(2,1)
-         ALP(3) = ALPVEC(3,1)
+         ALP(3) = ALPVEC(4,1)
 
          CALL MATMULT_FFF ( EM, ALP, 3, 3, 1, EALP )
          DO J=1,NTSUB
