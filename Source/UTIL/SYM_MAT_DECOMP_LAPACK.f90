@@ -37,10 +37,9 @@
       USE SCONTR, ONLY                :  BLNK_SUB_NAM, FACTORED_MATRIX, FATAL_ERR, LINKNO
       USE TIMDAT, ONLY                :  HOUR, MINUTE, SEC, SFRAC, STIME, TSEC       
       USE CONSTANTS_1, ONLY           :  ZERO, ONE, ONEPP6
-      USE PARAMS, ONLY                :  BAILOUT, EPSIL, MAXRATIO, SUPINFO
+      USE PARAMS, ONLY                :  BAILOUT, EPSIL, SUPINFO
       USE LAPACK_DPB_MATRICES, ONLY   :  ABAND, LAPACK_S
       USE DEBUG_PARAMETERS, ONLY      :  DEBUG, NDEBUG
-      USE MACHINE_PARAMS, ONLY        :  MACH_LARGE_NUM  
       USE LAPACK_LIN_EQN_DPB
       USE SUBR_BEGEND_LEVELS, ONLY    :  SYM_MAT_DECOMP_LAPACK_BEGEND
 
@@ -48,7 +47,6 @@
                       
       IMPLICIT NONE
  
-      CHARACTER, PARAMETER            :: CR13 = CHAR(13)   ! This causes a carriage return simulating the "+" action in a FORMAT
       CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: SUBR_NAME = 'SYM_MAT_DECOMP_LAPACK'
 
       CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: CALLED_SUBR = ' ' ! Name of a called subr (for output error purposes)
@@ -67,7 +65,6 @@
 
       CHARACTER( 1*BYTE), PARAMETER   :: INORM    = 'I'    ! Indicates to calculate the infinity norm via LAPACK function DLANSB
       CHARACTER(54*BYTE)              :: MODNAM            ! Name to write to screen to describe module being run
-      CHARACTER( 1*BYTE)              :: NONPOS_DEF        ! Indicates matrix was nonpositive definite
       CHARACTER( 1*BYTE)              :: QUIT_ON_POS_INFO  ! Indicator of whether to quit if output value of INFO is found to be > 0
       CHARACTER( 1*BYTE), PARAMETER   :: UPLO     = 'U'    ! Indicates upper triang part of matrix is stored
  
@@ -106,9 +103,7 @@
       REAL(DOUBLE)                    :: MAXIMAX_RATIO     ! Largest of the ratios of matrix diagonal to factor diagonal
       REAL(DOUBLE)                    :: MB_TO_ALLOCATE    ! MB of memory to allocate
       REAL(DOUBLE)                    :: MINKII            ! Minimum diagonal term in MATIN
-      REAL(DOUBLE)                    :: FAC_DIAG          ! Diagonal term in the tringular factor of MATIN
 !xx   REAL(DOUBLE)                    :: SCOND             ! Ratio of min to max scaling factors, LAPACK_S(i), if MATIN is equil'ed.
-      REAL(DOUBLE)                    :: RATIO             ! Ratio of matrix diagonal to factor diagonal
  
       LOGICAL                         :: FACTORIZATION_PROBLEM
  
@@ -370,14 +365,6 @@
 !***********************************************************************************************************************************
   981 FORMAT(' *ERROR   981: THE FACTORIZATION OF THE MATRIX ',A,' COULD NOT BE COMPLETED BY LAPACK SUBR ',A                       &
                     ,/,14X,' THE LEADING MINOR OF ORDER ',I12,' IS NOT POSITIVE DEFINITE')
-
-  982 FORMAT(' *ERROR   982: MATRIX ',A,' IS NONPOSITIVE DEFINITE. A DIAGONAL TERM IS ZERO OR NEGATIVE = ',1ES14.6)
-
-  983 FORMAT(' *ERROR   983: MATRIX ',A,' HAS AN ABSOLUTE VALUE OF THE RATIO OF MATRIX DIAG TO FACTOR DIAG = ',1ES10.2,            &
-                           ' (GREATER THAN BULK DATA PARAM MAXRATIO = ',1ES10.2,')'                                                &
-                    ,/,14X,' THIS WILL ONLY BE A FATAL ERROR IF PARAM BAILOUT > 0')
-
-  984 FORMAT(' *INFORMATION: THE MAXIMUM ABSOLUTE VALUE OF THE RATIO OF MATRIX DIAGONAL TO FACTOR DIAG FOR MATRIX ',A,' = ',1ES14.6)
 
  9811 FORMAT('               THIS IS FOR ROW AND COL IN THE MATRIX FOR GRID POINT ',I8,' COMP ',I3,'. THE CALLING SUBR WAS: ',A,/)
 
