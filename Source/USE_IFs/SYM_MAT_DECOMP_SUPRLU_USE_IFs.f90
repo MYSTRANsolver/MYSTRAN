@@ -31,5 +31,8 @@
       USE ALLOCATE_SCR_CCS_MAT_Interface
       USE SPARSE_CRS_SPARSE_CCS_Interface
       USE OUTA_HERE_Interface
-
+      USE GET_GRID_AND_COMP_Interface
+      USE COUNTER_INIT_Interface
+      USE COUNTER_PROGRESS_Interface
+      
       END MODULE SYM_MAT_DECOMP_SUPRLU_USE_IFs

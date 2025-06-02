@@ -24,49 +24,35 @@
                                                                                                         
 ! End MIT license text.                                                                                      
 
-   MODULE SYM_MAT_DECOMP_SUPRLU_Interface
+   MODULE BAILOUT_CHECK_Interface
 
    INTERFACE
 
-      SUBROUTINE SYM_MAT_DECOMP_SUPRLU ( CALLING_SUBR, MATIN_NAME, MATIN_SET, NROWS, NTERMS, I_MATIN, J_MATIN, MATIN, INFO )
+      FUNCTION BAILOUT_CHECK ( CALLING_SUBR, MATIN_NAME, MATIN_SET, NROWS, NTERMS, I_MATIN, MATIN, PRT_ERRS, FACTOR_DIAG )
 
+      USE PENTIUM_II_KIND, ONLY       :  LONG, DOUBLE
 
-      USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
-      USE IOUNT1, ONLY                :  WRT_LOG, ERR, F04, F06, SC1
-      USE SCONTR, ONLY                :  BLNK_SUB_NAM, FATAL_ERR
-      USE TIMDAT, ONLY                :  TSEC       
-      USE CONSTANTS_1, ONLY           :  ZERO
-      USE PARAMS, ONLY                :  CRS_CCS, SPARSTOR
-      USE SCRATCH_MATRICES, ONLY      :  I_CCS1, J_CCS1, CCS1
-      USE SuperLU_STUF, ONLY          :  SLU_FACTORS
-      USE SUBR_BEGEND_LEVELS, ONLY    :  SYM_MAT_DECOMP_SUPRLU_BEGEND
+      LOGICAL                         :: BAILOUT_CHECK
 
-      IMPLICIT NONE
- 
-      CHARACTER, PARAMETER            :: CR13 = CHAR(13)   ! This causes a carriage return simulating the "+" action in a FORMAT
-
-      CHARACTER(LEN=*), INTENT(IN)    :: CALLING_SUBR      ! The subr that called this subr (used for output error purposes)
-      CHARACTER(LEN=*), INTENT(IN)    :: MATIN_NAME        ! Name of matrix to be decomposed
-      CHARACTER(LEN=*), INTENT(IN)    :: MATIN_SET         ! Set designator for the input matrix. If it corresponds to a MYSTRAN
+      CHARACTER(LEN=*) , INTENT(IN)   :: CALLING_SUBR      ! The subr that called this subr (used for output error purposes)
+      CHARACTER(LEN=*) , INTENT(IN)   :: MATIN_NAME        ! Name of matrix to be decomposed
+      CHARACTER(LEN=*) , INTENT(IN)   :: MATIN_SET         ! Set designator for the input matrix. If it corresponds to a MYSTRAN
 !                                                            displ set (e.g. 'L ' set) then error messages about singulatities
 !                                                            can reference the grid/comp that is singular (otherwise the row/col
 !                                                            where the singularity occurs is referenced). If it is not a MYSTRAN
 !                                                            set designator it should be blank
+      CHARACTER(LEN=*) , INTENT(IN)   :: PRT_ERRS          ! If not 'N', print singularity errors
 
       INTEGER(LONG), INTENT(IN)       :: NROWS             ! Number of rows in sparse matrix MATIN
       INTEGER(LONG), INTENT(IN)       :: NTERMS            ! Number of nonzeros in sparse matrix MATIN
       INTEGER(LONG), INTENT(IN)       :: I_MATIN(NROWS+1)  ! Indicators of number of nonzero terms in rows of matrix MATIN
-      INTEGER(LONG), INTENT(IN)       :: J_MATIN(NTERMS)   ! Col numberts of nonzero terms in matrix MATIN
 
-      INTEGER(LONG), INTENT(INOUT)    :: INFO              ! Output from SuperLU routine
+      REAL(DOUBLE) , INTENT(IN)       :: MATIN(NTERMS)     ! Matrix values
+      REAL(DOUBLE) , INTENT(IN)       :: FACTOR_DIAG(NROWS)! The diagonal of the factor
 
-      INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = SYM_MAT_DECOMP_SUPRLU_BEGEND
-
-      REAL(DOUBLE) , INTENT(IN)       :: MATIN(NTERMS)     ! A small number to compare real zero
-
-      END SUBROUTINE SYM_MAT_DECOMP_SUPRLU
+      END FUNCTION BAILOUT_CHECK
 
    END INTERFACE
 
-   END MODULE SYM_MAT_DECOMP_SUPRLU_Interface
+   END MODULE BAILOUT_CHECK_Interface
 

@@ -37,10 +37,9 @@
       USE SCONTR, ONLY                :  BLNK_SUB_NAM, FACTORED_MATRIX, FATAL_ERR, LINKNO
       USE TIMDAT, ONLY                :  HOUR, MINUTE, SEC, SFRAC, STIME, TSEC       
       USE CONSTANTS_1, ONLY           :  ZERO, ONE, ONEPP6
-      USE PARAMS, ONLY                :  BAILOUT, EPSIL, MAXRATIO, SUPINFO
+      USE PARAMS, ONLY                :  BAILOUT, EPSIL, SUPINFO
       USE LAPACK_DPB_MATRICES, ONLY   :  ABAND, LAPACK_S
       USE DEBUG_PARAMETERS, ONLY      :  DEBUG, NDEBUG
-      USE MACHINE_PARAMS, ONLY        :  MACH_LARGE_NUM  
       USE LAPACK_LIN_EQN_DPB
       USE SUBR_BEGEND_LEVELS, ONLY    :  SYM_MAT_DECOMP_LAPACK_BEGEND
 
@@ -48,7 +47,6 @@
                       
       IMPLICIT NONE
  
-      CHARACTER, PARAMETER            :: CR13 = CHAR(13)   ! This causes a carriage return simulating the "+" action in a FORMAT
       CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: SUBR_NAME = 'SYM_MAT_DECOMP_LAPACK'
 
       CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: CALLED_SUBR = ' ' ! Name of a called subr (for output error purposes)
@@ -67,7 +65,6 @@
 
       CHARACTER( 1*BYTE), PARAMETER   :: INORM    = 'I'    ! Indicates to calculate the infinity norm via LAPACK function DLANSB
       CHARACTER(54*BYTE)              :: MODNAM            ! Name to write to screen to describe module being run
-      CHARACTER( 1*BYTE)              :: NONPOS_DEF        ! Indicates matrix was nonpositive definite
       CHARACTER( 1*BYTE)              :: QUIT_ON_POS_INFO  ! Indicator of whether to quit if output value of INFO is found to be > 0
       CHARACTER( 1*BYTE), PARAMETER   :: UPLO     = 'U'    ! Indicates upper triang part of matrix is stored
  
@@ -100,14 +97,15 @@
                                                            ! LAPACK_S values to return to calling subr
 
       REAL(DOUBLE)                    :: MATIN_DIAG(NROWS) ! Diagonal terms from MATIN matrix
+      REAL(DOUBLE)                    :: FACTOR_DIAG(NROWS)! Diagonal terms from factor
       REAL(DOUBLE)                    :: KRATIO            ! Ratio: MAXKII/MINKII
       REAL(DOUBLE)                    :: MAXKII            ! Maximum diagonal term in MATIN
       REAL(DOUBLE)                    :: MAXIMAX_RATIO     ! Largest of the ratios of matrix diagonal to factor diagonal
       REAL(DOUBLE)                    :: MB_TO_ALLOCATE    ! MB of memory to allocate
       REAL(DOUBLE)                    :: MINKII            ! Minimum diagonal term in MATIN
-      REAL(DOUBLE)                    :: FAC_DIAG          ! Diagonal term in the tringular factor of MATIN
 !xx   REAL(DOUBLE)                    :: SCOND             ! Ratio of min to max scaling factors, LAPACK_S(i), if MATIN is equil'ed.
-      REAL(DOUBLE)                    :: RATIO             ! Ratio of matrix diagonal to factor diagonal
+ 
+      LOGICAL                         :: FACTORIZATION_PROBLEM
  
       INTRINSIC                       :: DABS
 
@@ -334,89 +332,16 @@
          ENDIF
       ENDIF
 
-! Calculate and print ratios of diag to factor diag (if they are zero or negative or > MAXRATIO).
-
-      CALL OURTIM
-      MODNAM = 'CALC MAX RATIO OF MATRIX DIAGONAL TO FACTOR DIAGONAL'
-      WRITE(SC1,3092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
-
-      CALL COUNTER_INIT("     Getting diagonal of matrix, row", NROWS)
-      DO I=1,NROWS                                         ! First, get diagonal terms from MATIN
-         IF (I_MATIN(I) == I_MATIN(I+1)) THEN
-            MATIN_DIAG(I) = ZERO
-         ELSE
-            MATIN_DIAG(I) = MATIN(I_MATIN(I))
-         ENDIF
-         CALL COUNTER_PROGRESS(I)
-      ENDDO
-      WRITE(SC1,*) CR13
-
-      MAXIMAX_RATIO = -MACH_LARGE_NUM                                  ! Calc ratio of MATIN diag to factor diag
-      NONPOS_DEF    = 'N'
-      CALL COUNTER_INIT("     Calc ratios of matrix diag to factor diag: row", NROWS)
+    
       DO I=1,NROWS
-
-         CALL GET_GRID_AND_COMP ( MATIN_SET, I, GRIDV, COMPV  )
-
-         FAC_DIAG = ABAND(MATIN_SDIA+1,I)
-
-         IF (FAC_DIAG <= EPS1) THEN                        ! Zero or negative factor diagonal. (MATIN is nonpositive definite)
-
-            NONPOS_DEF = 'Y'
-            IF (PRT_ERRS /= 'N') THEN
-               WRITE(ERR,982) MATIN_NAME, FAC_DIAG
-               WRITE(F06,982) MATIN_NAME, FAC_DIAG
-               IF ((GRIDV > 0) .AND. (COMPV > 0)) THEN
-                  WRITE(ERR,9811) GRIDV, COMPV, CALLING_SUBR 
-                  WRITE(F06,9811) GRIDV, COMPV, CALLING_SUBR
-               ELSE 
-                  WRITE(ERR,9812) I, CALLING_SUBR
-                  WRITE(F06,9812) I, CALLING_SUBR
-               ENDIF
-            ENDIF
-
-         ELSE
-
-            RATIO = MATIN_DIAG(I)/FAC_DIAG
-!                                                          Ratio is greater than param MAXRATIO
-            IF ((DABS(RATIO) > MAXRATIO) .AND. (PRT_ERRS /= 'N')) THEN
-               WRITE(ERR,983) MATIN_NAME, RATIO, MAXRATIO
-               WRITE(F06,983) MATIN_NAME, RATIO, MAXRATIO
-               IF ((GRIDV > 0) .AND. (COMPV > 0)) THEN
-                  WRITE(ERR,9811) GRIDV, COMPV, CALLING_SUBR 
-                  WRITE(F06,9811) GRIDV, COMPV, CALLING_SUBR
-               ELSE 
-                  WRITE(ERR,9811) I, CALLING_SUBR 
-                  WRITE(F06,9811) I, CALLING_SUBR
-               ENDIF
-            ENDIF
-
-            IF (RATIO > MAXIMAX_RATIO) THEN                ! This is the largest of the ratios
-               MAXIMAX_RATIO = MATIN_DIAG(I)/ABAND(MATIN_SDIA+1,I)
-               IIMAX = I
-            ENDIF
-
-         ENDIF
-         CALL COUNTER_PROGRESS(I)
+         FACTOR_DIAG(I) = ABAND(MATIN_SDIA+1,I)
       ENDDO
-      WRITE(SC1,*) CR13  
 
-      IF (NONPOS_DEF == 'N') THEN
+      FACTORIZATION_PROBLEM = BAILOUT_CHECK( CALLING_SUBR, MATIN_NAME, MATIN_SET, NROWS, NTERMS, I_MATIN, MATIN, PRT_ERRS,         &
+                                             FACTOR_DIAG )
 
-         WRITE(ERR,984) MATIN_NAME, MAXIMAX_RATIO
-         WRITE(F06,984) MATIN_NAME, MAXIMAX_RATIO
-         CALL GET_GRID_AND_COMP ( MATIN_SET, IIMAX, GRIDV, COMPV  )
-         IF ((GRIDV > 0) .AND. (COMPV > 0)) THEN
-            WRITE(ERR,9811) GRIDV, COMPV, CALLING_SUBR 
-            WRITE(F06,9811) GRIDV, COMPV, CALLING_SUBR
-         ELSE 
-            WRITE(ERR,9812) IIMAX, CALLING_SUBR
-            WRITE(F06,9812) IIMAX, CALLING_SUBR
-         ENDIF
 
-      ENDIF
-
-      IF ((DABS(MAXIMAX_RATIO) > MAXRATIO) .OR. (NONPOS_DEF == 'Y') .OR. (INFO > 0)) THEN
+      IF (FACTORIZATION_PROBLEM .OR. (INFO > 0)) THEN
                                                            ! If BAILOUT >= 0 then quit. Otherwise, continue processing.
          IF ((BAILOUT >= 0) .AND. (QUIT_ON_POS_INFO == 'Y')) THEN
             FATAL_ERR = FATAL_ERR + 1
@@ -441,14 +366,6 @@
 !***********************************************************************************************************************************
   981 FORMAT(' *ERROR   981: THE FACTORIZATION OF THE MATRIX ',A,' COULD NOT BE COMPLETED BY LAPACK SUBR ',A                       &
                     ,/,14X,' THE LEADING MINOR OF ORDER ',I12,' IS NOT POSITIVE DEFINITE')
-
-  982 FORMAT(' *ERROR   982: MATRIX ',A,' IS NONPOSITIVE DEFINITE. A DIAGONAL TERM IS ZERO OR NEGATIVE = ',1ES14.6)
-
-  983 FORMAT(' *ERROR   983: MATRIX ',A,' HAS AN ABSOLUTE VALUE OF THE RATIO OF MATRIX DIAG TO FACTOR DIAG = ',1ES10.2,            &
-                           ' (GREATER THAN BULK DATA PARAM MAXRATIO = ',1ES10.2,')'                                                &
-                    ,/,14X,' THIS WILL ONLY BE A FATAL ERROR IF PARAM BAILOUT > 0')
-
-  984 FORMAT(' *INFORMATION: THE MAXIMUM ABSOLUTE VALUE OF THE RATIO OF MATRIX DIAGONAL TO FACTOR DIAG FOR MATRIX ',A,' = ',1ES14.6)
 
  9811 FORMAT('               THIS IS FOR ROW AND COL IN THE MATRIX FOR GRID POINT ',I8,' COMP ',I3,'. THE CALLING SUBR WAS: ',A,/)
 

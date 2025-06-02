@@ -72,7 +72,7 @@
       CHARACTER(  1*BYTE)      :: AUTOSPC_SPCF   =    'N'    ! If 'Y' write SPC forces on SA DOF's in subr OFP2
 
 ! ----------------------------------------------------------------------------------------------------------------------------------
-      INTEGER(LONG)            :: BAILOUT        =     1     ! If >= 0 quit if a singularity in decomposing a matrix is detected
+      INTEGER(LONG)            :: BAILOUT        =     0     ! If >= 0 quit if a singularity in decomposing a matrix is detected
 
 ! ----------------------------------------------------------------------------------------------------------------------------------
       REAL(DOUBLE)             :: CBMIN3         =  TWO      ! Trans shear factor for MIN3  triangle elems (TRIA3)

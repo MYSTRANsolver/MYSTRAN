@@ -170,7 +170,7 @@
             IF (SPARSE_FLAVOR(1:7) == 'SUPERLU') THEN
 
                INFO = 0
-               CALL SYM_MAT_DECOMP_SUPRLU ( SUBR_NAME, 'KOO', NDOFO, NTERM_KOO, I_KOO, J_KOO, KOO, INFO )
+               CALL SYM_MAT_DECOMP_SUPRLU ( SUBR_NAME, 'KOO', 'O ', NDOFO, NTERM_KOO, I_KOO, J_KOO, KOO, INFO )
 
             ELSE
 
