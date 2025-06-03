@@ -1180,14 +1180,15 @@
                                                                  'PLOTEL  ',      & !         12
                                                                  'QUAD4   ',      & !         13
                                                                  'QUAD4K  ',      & !         14
-                                                                 'ROD     ',      & !         15
-                                                                 'SHEAR   ',      & !         16
-                                                                 'TETRA4  ',      & !         17
-                                                                 'TETRA10 ',      & !         18
-                                                                 'TRIA3K  ',      & !         19
-                                                                 'TRIA3   ',      & !         20
-                                                                 'USER1   ',      & !         21
-                                                                 'USERIN  '/)       !         21
+                                                                 'QUAD8   ',      & !         15
+                                                                 'ROD     ',      & !         16
+                                                                 'SHEAR   ',      & !         17
+                                                                 'TETRA4  ',      & !         18
+                                                                 'TETRA10 ',      & !         19
+                                                                 'TRIA3K  ',      & !         20
+                                                                 'TRIA3   ',      & !         21
+                                                                 'USER1   ',      & !         22
+                                                                 'USERIN  '/)       !         23
 
                                                              ! Character name for output purposed in LINK9 WRTELi subr's
       CHARACTER(13*BYTE)              :: ELEM_ONAME(METYPE)  = (/'B A R        ', & !          1
@@ -1204,14 +1205,15 @@
                                                                  'P L O T E L  ', & !         12
                                                                  'Q U A D 4    ', & !         13
                                                                  'Q U A D 4 K  ', & !         14
-                                                                 'R O D        ', & !         15
-                                                                 'S H E A R    ', & !         16
-                                                                 'T E T R A  4 ', & !         17
-                                                                 'T E T R A  10', & !         18
-                                                                 'T R I A 3 K  ', & !         19
-                                                                 'T R I A 3    ', & !         20
-                                                                 'U S E R 1    ', & !         21
-                                                                 'U S E R I N  '/)  !         22
+                                                                 'Q U A D 8    ', & !         15
+                                                                 'R O D        ', & !         16
+                                                                 'S H E A R    ', & !         17
+                                                                 'T E T R A  4 ', & !         18
+                                                                 'T E T R A  10', & !         19
+                                                                 'T R I A 3 K  ', & !         20
+                                                                 'T R I A 3    ', & !         21
+                                                                 'U S E R 1    ', & !         22
+                                                                 'U S E R I N  '/)  !         23
 
                                                              ! Array of number of grid points for the various element types
       INTEGER(LONG)                   :: NELGP(METYPE)       =  (/ 2,             & ! BAR      1
@@ -1228,14 +1230,15 @@
                                                                    2,             & ! PLOTEL  12
                                                                    4,             & ! QUAD4   13
                                                                    4,             & ! QUAD4K  14
-                                                                   2,             & ! ROD     15
-                                                                   4,             & ! SHEAR   16
-                                                                   4,             & ! TETRA4  17
-                                                                  10,             & ! TETRA10 18
-                                                                   3,             & ! TRIA3K  19
-                                                                   3,             & ! TRIA3   20
-                                                                   4,             & ! USER1   21
-                                                                   0/)              ! USERIN  22
+                                                                   8,             & ! QUAD8   15
+                                                                   2,             & ! ROD     16
+                                                                   4,             & ! SHEAR   17
+                                                                   4,             & ! TETRA4  18
+                                                                  10,             & ! TETRA10 19
+                                                                   3,             & ! TRIA3K  20
+                                                                   3,             & ! TRIA3   21
+                                                                   4,             & ! USER1   22
+                                                                   0/)              ! USERIN  23
 
                                                              ! Array of number of stress recovery points for various elem types
       INTEGER(LONG)                   :: NUM_SEi(METYPE)     =  (/ 1,             & ! BAR      1
@@ -1252,14 +1255,15 @@
                                                                    0,             & ! PLOTEL  12
                                                                    5,             & ! QUAD4   13
                                                                    5,             & ! QUAD4K  14
-                                                                   1,             & ! ROD     15
-                                                                   1,             & ! SHEAR   16
-                                                                   5,             & ! TETRA4  17
-                                                                   5,             & !,TETRA10 18
-                                                                   1,             & ! TRIA3K  19
-                                                                   1,             & ! TRIA3   20
-                                                                   1,             & ! USER1   21
-                                                                   0/)              ! USERIN  22
+                                                                   5,             & ! QUAD8   15
+                                                                   1,             & ! ROD     16
+                                                                   1,             & ! SHEAR   17
+                                                                   5,             & ! TETRA4  18
+                                                                   5,             & !,TETRA10 19
+                                                                   1,             & ! TRIA3K  20
+                                                                   1,             & ! TRIA3   21
+                                                                   1,             & ! USER1   22
+                                                                   0/)              ! USERIN  23
 
 ! **********************************************************************************************************************************
 ! Individual element data generated one element at a time (in subr EMG)

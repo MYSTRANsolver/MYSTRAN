@@ -37,7 +37,8 @@
                                          LRIGEL, LSEQ, LSLOAD, LSPC, LSPC1, LSPCADDC, LSPCADDR, LSUSERIN, LTDAT,                   &
                                          MEDAT_CBAR, MEDAT_CBEAM, MEDAT_CBUSH,                                                     &
                                          MEDAT_CELAS1, MEDAT_CELAS2, MEDAT_CELAS3, MEDAT_CELAS4,                                   &
-                                         MEDAT_CQUAD, MEDAT_CROD, MEDAT_CSHEAR, MEDAT_CTRIA, MEDAT_CUSER1, MEDAT0_CUSERIN, MMPC,   &
+                                         MEDAT_CQUAD, MEDAT_CQUAD8, MEDAT_CROD, MEDAT_CSHEAR, MEDAT_CTRIA, MEDAT_CUSER1,           &
+                                         MEDAT0_CUSERIN, MMPC,                                                                     &
                                          MPDAT_PLOAD2, MPDAT_PLOAD4, MEDAT_PLOTEL, MRBE3, MRSPLINE, MTDAT_TEMPRB, MTDAT_TEMPP1,    &
                                          NPBARL, NSPOINT, PROG_NAME
       USE TIMDAT, ONLY                :  TSEC
@@ -298,6 +299,11 @@
             LELE  = LELE + 1
             LEDAT = LEDAT + MEDAT_CQUAD
             CALL BD_CQUAD0 ( CARD, LARGE_FLD_INP )
+
+         ELSE IF (CARD(1:6) == 'CQUAD8'  ) THEN
+            LELE  = LELE + 1
+            LEDAT = LEDAT + MEDAT_CQUAD8
+            CALL BD_CQUAD80 ( CARD, LARGE_FLD_INP )
    
          ELSE IF (CARD(1:4) == 'CROD'    )  THEN
             LELE  = LELE + 1

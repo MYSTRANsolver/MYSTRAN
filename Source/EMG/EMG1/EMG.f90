@@ -109,7 +109,7 @@
           (TYPE == 'PENTA6  ') .OR. (TYPE == 'PENTA15 ') .OR.                                                                      &
           (TYPE == 'TETRA4  ') .OR. (TYPE == 'TETRA10 ') .OR.                                                                      &
           (TYPE == 'USER1   ') .OR. (TYPE == 'USERIN  ') .OR. (TYPE == 'PLOTEL  ') .OR.                                            &
-          (TYPE == 'SHEAR   ') .OR. (TYPE(1:5) == 'TRIA3') .OR. (TYPE(1:5) == 'QUAD4'   )) THEN
+          (TYPE == 'SHEAR   ') .OR. (TYPE(1:5) == 'TRIA3') .OR. (TYPE(1:5) == 'QUAD4'   ) .OR. (TYPE(1:5) == 'QUAD8'   )) THEN
          CALL ELMDAT1 ( INT_ELEM_ID, WRITE_WARN )
       ELSE             
          WRITE(ERR,1916) SUBR_NAME,EID,TYPE

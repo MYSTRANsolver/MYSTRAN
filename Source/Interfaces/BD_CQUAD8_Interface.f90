@@ -24,35 +24,56 @@
                                                                                                         
 ! End MIT license text.                                                                                      
 
-   MODULE ELEM_PROP_MATL_IIDS_Interface
+   MODULE BD_CQUAD8_Interface
 
    INTERFACE
 
-      SUBROUTINE ELEM_PROP_MATL_IIDS
+      SUBROUTINE BD_CQUAD8 ( CARD, LARGE_FLD_INP, NUM_GRD )
 
- 
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
-      USE IOUNT1, ONLY                :  ERR, F04, F06, IN4FIL_NUM, NUM_IN4_FILES, WRT_LOG
-      USE SCONTR, ONLY                :  BLNK_SUB_NAM, DEDAT_Q4_SHELL_KEY, DEDAT_T3_SHELL_KEY, DEDAT_Q8_SHELL_KEY, FATAL_ERR,      &
-                                         MPCOMP0, MPCOMP_PLIES, NCMASS, NELE, NMATL, NPBAR, NPBEAM,                                &
-                                         NPBUSH, NPCOMP, NPELAS, NPMASS, NPROD, npshear, NPSHEL, NPSOLID, NPUSER1, NPUSERIN
-      USE TIMDAT, ONLY                :  TSEC
-      USE SUBR_BEGEND_LEVELS, ONLY    :  ELEM_PROP_MATL_IIDS_BEGEND
-      USE MODEL_STUF, ONLY            :  CMASS, ETYPE, EPNT, EDAT, PELAS, PROD, PBAR, PBEAM, PBUSH, PCOMP, PMASS, PSHEAR,          &
-                                         PSHEL, PSOLID, PUSER1, PUSERIN, MATL
+      USE IOUNT1, ONLY                :  ERR, F06
+      USE SCONTR, ONLY                :  BLNK_SUB_NAM, IERRFL, FATAL_ERR, JCARD_LEN, JF, LMATANGLE, LPLATEOFF, LPLATETHICK,        &
+                                         MEDAT_CQUAD8, NCQUAD8, NEDAT, NELE, NMATANGLE, NPLATEOFF, NPLATETHICK
+      USE CONSTANTS_1, ONLY           :  ZERO
+      USE MODEL_STUF, ONLY            :  EDAT, ETYPE, MATANGLE, PLATEOFF, PLATETHICK
  
-      IMPLICIT NONE
+      USE MKJCARD_Interface
+      USE ELEPRO_Interface
+      USE TOKCHK_Interface
+      USE OUTA_HERE_Interface
+      USE R8FLD_Interface
+      USE I4FLD_Interface
+      USE BD_IMBEDDED_BLANK_Interface
+      USE CRDERR_Interface
+      USE NEXTC_Interface
+      USE NEXTC2_Interface
+      USE CARD_FLDS_NOT_BLANK_Interface
 
-      CHARACTER( 1*BYTE)              :: FOUND             ! Used to indicate if a prop or mat'l ID was found 
-      CHARACTER( 1*BYTE)              :: FOUND_PCOMP       ! Used to indicate if a PCOMP prop ID was found 
-      CHARACTER( 1*BYTE)              :: FOUND_PSHEL       ! Used to indicate if a PSHELL prop ID was found 
-      CHARACTER( 8*BYTE)              :: NAME = 'MATERIAL' ! Used for output error message
+      IMPLICIT NONE
  
-      INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = ELEM_PROP_MATL_IIDS_BEGEND
+      CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: SUBR_NAME = 'BD_CQUAD8'
+      CHARACTER(LEN=*), INTENT(INOUT) :: CARD              ! A Bulk Data card
+      CHARACTER(LEN=*), INTENT(IN)    :: LARGE_FLD_INP     ! If 'Y', CARD is large field format
+      CHARACTER(LEN(CARD))            :: CHILD             ! "Child" card read in subr NEXTC, called herein
+      CHARACTER(LEN=JCARD_LEN)        :: JCARD(10)         ! The 10 fields of characters making up CARD
+      CHARACTER(LEN(JCARD))           :: JCARD_EDAT(10)    ! JCARD values sent to subr ELEPRO
+      CHARACTER( 8*BYTE)              :: TOKEN             ! The 1st 8 characters from a JCARD
+      CHARACTER( 8*BYTE)              :: TOKTYP            ! Indicator of the type of val found in a B.D. field (e.g. int, real,...)
+      CHARACTER(LEN=JCARD_LEN)        :: ID                ! Character value of element ID (field 2 of parent card)
+      CHARACTER(LEN=JCARD_LEN)        :: NAME              ! Field 1 of CARD
+
+      INTEGER(LONG), INTENT(OUT)      :: NUM_GRD           ! Number of GRID's + SPOINT's for the elem
+      INTEGER(LONG)                   :: I,J               ! DO loop indices
+      INTEGER(LONG)                   :: I4INP             ! A value read from input file that should be an integer
+      INTEGER(LONG)                   :: INT41,INT42        ! An integer used in getting MATANGLE
+      INTEGER(LONG)                   :: ICONT     = 0     ! Indicator of whether a cont card exists. Output from subr NEXTC
+      INTEGER(LONG)                   :: IERR      = 0     ! Error indicator returned from subr NEXTC called herein
  
-      END SUBROUTINE ELEM_PROP_MATL_IIDS
+      REAL(DOUBLE)                    :: R8INP     = ZERO  ! A value read from input file that should be a real value
+ 
+      END SUBROUTINE BD_CQUAD8
 
    END INTERFACE
 
-   END MODULE ELEM_PROP_MATL_IIDS_Interface
+   END MODULE BD_CQUAD8_Interface
 
