@@ -556,8 +556,7 @@
          ENDIF
          NUMMAT = 1
 
-!victor todo QUAD8.
-      ELSE IF ((TYPE(1:5) == 'TRIA3') .OR. (TYPE(1:5) == 'QUAD4')) THEN
+      ELSE IF ((TYPE(1:5) == 'TRIA3') .OR. (TYPE(1:5) == 'QUAD4') .OR. (TYPE(1:5) == 'QUAD8')) THEN
                                                            ! For elems that are not composites do EMAT in subr SHELL_ABD_MATRICES)
          IF (PCOMP_PROPS == 'N') THEN
             INTL_MID(1) = PSHEL(INTL_PID,2)

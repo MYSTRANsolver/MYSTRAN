@@ -102,7 +102,7 @@
 
 ! **********************************************************************************************************************************
 ! Call ELMDAT1 subr to get some of the data needed for this elem. 
- 
+
       IF ((TYPE == 'ELAS1   ') .OR. (TYPE == 'ELAS2   ') .OR. (TYPE == 'ELAS3   ') .OR. (TYPE == 'ELAS4   ') .OR.                  &
           (TYPE == 'ROD     ') .OR. (TYPE == 'BAR     ') .OR. (TYPE == 'BEAM    ') .OR. (TYPE == 'BUSH    ') .OR.                  &
           (TYPE == 'HEXA8   ') .OR. (TYPE == 'HEXA20  ') .OR.                                                                      &

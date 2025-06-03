@@ -137,7 +137,6 @@
 
         CALL ELEPRO ( 'N', JCARD_EDAT, 2, 2, 'Y', 'Y', 'N', 'N', 'N', 'N', 'N', 'N' )
 
-!Victor todo does all this logic from CQUAD4 still apply to CQUAD8?
 ! Read material property orientation angle. It takes 2 values put into EDAT to cover all of the possibilities of field 8:
 !  (a) If field 8 is a real value it is the angle of the material axis relative to the element x axis. 
 !         (1) the 2 values to put into EDAT are: the value in field 8 (this will be the row in MATANGLE to get the angle), and a 0
