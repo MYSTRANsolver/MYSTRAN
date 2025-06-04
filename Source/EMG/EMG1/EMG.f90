@@ -155,6 +155,9 @@
       ELSE IF ((TYPE(1:5) == 'QUAD4') .OR. (TYPE == 'SHEAR   ')) THEN
          CALL ELMGM2 ( WRITE_WARN )
 
+      ELSE IF (TYPE(1:5) == 'QUAD8') THEN
+         TE_IDENT = 'Y'                                    ! Stiffness matrix is calculated in basic coordinates so no transformation.
+
       ELSE IF ((TYPE == 'HEXA8   ') .OR. (TYPE == 'HEXA20  ')) THEN
          CALL ELMGM3 ( WRITE_WARN )
          FIX_EDAT = 'N'
@@ -187,7 +190,7 @@
 ! --------
 
       IF ((TYPE(1:5) == 'TRIA3') .OR. (TYPE(1:5) == 'QUAD4') .OR. (TYPE == 'SHEAR   ')) THEN
-
+!victor todo maybe get QUAD8 material matrix(es) here? Or at least THETAM if it's going to use that.
          IF (PCOMP_PROPS == 'N') THEN                      ! SHEAR elem does not use PCOMP props
 
             THETAM = ZERO
@@ -345,6 +348,10 @@
 
       ELSE IF ((TYPE(1:5) == 'QUAD4') .OR. (TYPE == 'SHEAR   ')) THEN
          CALL QDEL1 ( OPT, INT_ELEM_ID, WRITE_WARN )
+         IF (NUM_EMG_FATAL_ERRS > 0)   CALL EMG_QUIT
+
+      ELSE IF (TYPE(1:5) == 'QUAD8') THEN
+         CALL QUAD8 ( OPT, INT_ELEM_ID )
          IF (NUM_EMG_FATAL_ERRS > 0)   CALL EMG_QUIT
 
       ELSE IF ((TYPE == 'HEXA8   ') .OR. (TYPE == 'HEXA20  ') .OR.                                                                 &

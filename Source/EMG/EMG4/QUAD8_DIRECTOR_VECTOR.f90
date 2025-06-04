@@ -1,3 +1,4 @@
+! #################################################################################################################################
 ! Begin MIT license text.                                                                                    
 ! _______________________________________________________________________________________________________
                                                                                                          
@@ -20,38 +21,35 @@
 ! OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN                              
 ! THE SOFTWARE.                                                                                          
 ! _______________________________________________________________________________________________________
-                                                                                                      
+                                                                                                        
 ! End MIT license text.                                                                                      
+      FUNCTION QUAD8_DIRECTOR_VECTOR ( XI, ETA )
+ 
+! Calculates the director vector in basic coordinates at a point in isoparametric coordinates.
 
-      MODULE EMG_USE_IFs
+      USE MODEL_STUF, ONLY            :  ELGP
 
-! USE Interface statements for all subroutines called by SUBROUTINE EMG
+      REAL(DOUBLE)                    :: QUAD8_DIRECTOR_VECTOR(3)
+      REAL(DOUBLE) , INTENT(IN)       :: XI
+      REAL(DOUBLE) , INTENT(IN)       :: ETA
+      REAL(DOUBLE)                    :: DPSHG(2,ELGP)! Derivatives of shape functions with respect to xi and eta.
 
-      USE IS_ELEM_PCOMP_PROPS_Interface
-      USE OURTIM_Interface
-      USE ELMDAT1_Interface
-      USE OUTA_HERE_Interface
-      USE ELMGM1_Interface
-      USE ELMGM2_Interface
-      USE ELMGM3_Interface
-      USE GET_MATANGLE_FROM_CID_Interface
-      USE MATERIAL_PROPS_2D_Interface
-      USE ROT_AXES_MATL_TO_LOC_Interface
-      USE MATERIAL_PROPS_3D_Interface
-      USE ELMOUT_Interface
-      USE SHELL_ABD_MATRICES_Interface
-      USE ELMDAT2_Interface
-      USE ELAS1_Interface
-      USE BREL1_Interface
-      USE BUSH_Interface
-      USE TREL1_Interface
-      USE QDEL1_Interface
-      USE HEXA_Interface
-      USE PENTA_Interface
-      USE TETRA_Interface
-      USE KUSER1_Interface
-      USE USERIN_Interface
-      USE ELMOFF_Interface
-      USE QUAD8_Interface
 
-      END MODULE EMG_USE_IFs
+! **********************************************************************************************************************************
+      
+! Choose the director vector to be normal to the nodal surface everywhere.
+! This isn't required for MITC and could be averaged from adjacent elements.
+ 
+ !victor todo I don't need PSH. see if fortran allows passing some sort of nothing for an INTENT OUT parameter.
+      CALL SHP2DQ ( 0, 0, ELGP, 'QUAD8_DIRECTOR_VECTOR', '', 0, XI, ETA, 'N', PSH, DPSHG )
+
+!victor todo continue working out director vector.
+!victor todo interface
+
+
+      RETURN
+
+
+! **********************************************************************************************************************************
+  
+      END FUNCTION QUAD8_DIRECTOR_VECTOR
