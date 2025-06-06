@@ -1,4 +1,4 @@
-! ###############################################################################################################################
+! #################################################################################################################################
 ! Begin MIT license text.                                                                                    
 ! _______________________________________________________________________________________________________
                                                                                                          
@@ -23,50 +23,60 @@
 ! _______________________________________________________________________________________________________
                                                                                                         
 ! End MIT license text.                                                                                      
+      FUNCTION MITC_GP_RS ()
 
-   MODULE QUAD8_Interface
-
-   INTERFACE
-
-      SUBROUTINE QUAD8 ( OPT, INT_ELEM_ID )
-
-      USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
+! Returns the isoparametric coordinates R,S of all grid points of the element.
+! Index 1 is 1=R, 2=S
+! Index 2 is element grid point number
+ 
+      USE PENTIUM_II_KIND, ONLY       :  DOUBLE
+      USE MODEL_STUF, ONLY            :  TYPE
+      USE CONSTANTS_1, ONLY           :  ZERO, ONE
       USE IOUNT1, ONLY                :  ERR, F06
-      USE SCONTR, ONLY                :  BLNK_SUB_NAM, FATAL_ERR, MAX_ORDER_GAUSS
-      USE NONLINEAR_PARAMS, ONLY      :  LOAD_ISTEP
-      USE MODEL_STUF, ONLY            :  NUM_EMG_FATAL_ERRS, PCOMP_PROPS, ELGP, ES, KE
-      USE CONSTANTS_1, ONLY           :  ZERO
-
-      USE ORDER_GAUSS_Interface
+      USE SCONTR, ONLY                :  FATAL_ERR
+      USE MODEL_STUF, ONLY            :  ELGP
+      
       USE OUTA_HERE_Interface
-      USE MATMULT_FFF_Interface
-      USE MATMULT_FFF_T_Interface
-      USE MITC_DETJ_Interface
 
       IMPLICIT NONE 
-  
-      CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: SUBR_NAME = 'QUAD8'
-      CHARACTER(1*BYTE), INTENT(IN)   :: OPT(6)            ! 'Y'/'N' flags for whether to calc certain elem matrices
 
-      INTEGER(LONG), INTENT(IN)       :: INT_ELEM_ID       ! Internal element ID
-      INTEGER(LONG), PARAMETER        :: IORD_IJ = 3       ! Integration order for stiffness matrix
-      INTEGER(LONG), PARAMETER        :: IORD_K = 2        ! Integration order for stiffness matrix in thickness direction
-      INTEGER(LONG)                   :: GAUSS_PT          ! Gauss point number
-      INTEGER(LONG)                   :: I,J,K,L,M         ! DO loop indices
+      REAL(DOUBLE)                    :: MITC_GP_RS(2,ELGP)
+
+! **********************************************************************************************************************************
       
-      REAL(DOUBLE)                    :: HH_IJ(MAX_ORDER_GAUSS) ! Gauss weights for integration in in-layer directions
-      REAL(DOUBLE)                    :: SS_IJ(MAX_ORDER_GAUSS) ! Gauss abscissa's for integration in in-layer directions
-      REAL(DOUBLE)                    :: HH_K(MAX_ORDER_GAUSS)  ! Gauss weights for integration in thickness direction
-      REAL(DOUBLE)                    :: SS_K(MAX_ORDER_GAUSS)  ! Gauss abscissa's for integration in thickness direction
-      REAL(DOUBLE)                    :: BI(6,6*ELGP)      ! Strain-displ matrix for this element for one Gauss point
-      REAL(DOUBLE)                    :: DUM1(6,6*ELGP)    ! Intermediate matrix
-      REAL(DOUBLE)                    :: DUM2(6*ELGP,6*ELGP)    ! Intermediate matrix
-      REAL(DOUBLE)                    :: INTFAC            ! An integration factor (constant multiplier for the Gauss integration)
-      REAL(DOUBLE)                    :: DETJ              ! Jacobian determinant
 
-      END SUBROUTINE QUAD8
+      IF (TYPE(1:5) == 'QUAD8') THEN
 
-   END INTERFACE
+         MITC_GP_RS(1,1) = -ONE
+         MITC_GP_RS(1,2) =  ONE
+         MITC_GP_RS(1,3) =  ONE
+         MITC_GP_RS(1,4) = -ONE
+         MITC_GP_RS(1,5) =  ZERO
+         MITC_GP_RS(1,6) =  ONE
+         MITC_GP_RS(1,7) =  ZERO
+         MITC_GP_RS(1,8) = -ONE
+  
+         MITC_GP_RS(2,1) = -ONE
+         MITC_GP_RS(2,2) = -ONE
+         MITC_GP_RS(2,3) =  ONE
+         MITC_GP_RS(2,4) =  ONE
+         MITC_GP_RS(2,5) = -ONE
+         MITC_GP_RS(2,6) =  ZERO
+         MITC_GP_RS(2,7) =  ONE
+         MITC_GP_RS(2,8) =  ZERO
 
-   END MODULE QUAD8_Interface
+      ELSE
 
+        WRITE(ERR,*) ' *ERROR: INCORRECT ELEMENT TYPE', TYPE
+        WRITE(F06,*) ' *ERROR: INCORRECT ELEMENT TYPE', TYPE
+        FATAL_ERR = FATAL_ERR + 1
+        CALL OUTA_HERE ( 'Y' )
+
+      ENDIF
+
+      RETURN
+
+
+! **********************************************************************************************************************************
+  
+      END FUNCTION MITC_GP_RS

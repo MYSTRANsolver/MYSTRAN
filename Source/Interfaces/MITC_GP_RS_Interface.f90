@@ -1,4 +1,4 @@
-! #################################################################################################################################
+! ###############################################################################################################################
 ! Begin MIT license text.                                                                                    
 ! _______________________________________________________________________________________________________
                                                                                                          
@@ -23,33 +23,29 @@
 ! _______________________________________________________________________________________________________
                                                                                                         
 ! End MIT license text.                                                                                      
-      FUNCTION QUAD8_DIRECTOR_VECTOR ( XI, ETA )
- 
-! Calculates the director vector in basic coordinates at a point in isoparametric coordinates.
 
+   MODULE MITC_GP_RS_Interface
+
+   INTERFACE
+
+      FUNCTION MITC_GP_RS ()
+
+      USE PENTIUM_II_KIND, ONLY       :  DOUBLE
+      USE MODEL_STUF, ONLY            :  TYPE
+      USE CONSTANTS_1, ONLY           :  ZERO, ONE
+      USE IOUNT1, ONLY                :  ERR, F06
+      USE SCONTR, ONLY                :  FATAL_ERR
       USE MODEL_STUF, ONLY            :  ELGP
-
-      REAL(DOUBLE)                    :: QUAD8_DIRECTOR_VECTOR(3)
-      REAL(DOUBLE) , INTENT(IN)       :: XI
-      REAL(DOUBLE) , INTENT(IN)       :: ETA
-      REAL(DOUBLE)                    :: DPSHG(2,ELGP)! Derivatives of shape functions with respect to xi and eta.
-
-
-! **********************************************************************************************************************************
       
-! Choose the director vector to be normal to the nodal surface everywhere.
-! This isn't required for MITC and could be averaged from adjacent elements.
- 
- !victor todo I don't need PSH. see if fortran allows passing some sort of nothing for an INTENT OUT parameter.
-      CALL SHP2DQ ( 0, 0, ELGP, 'QUAD8_DIRECTOR_VECTOR', '', 0, XI, ETA, 'N', PSH, DPSHG )
+      USE OUTA_HERE_Interface
 
-!victor todo continue working out director vector.
-!victor todo interface
+      IMPLICIT NONE 
 
+      REAL(DOUBLE)                    :: MITC_GP_RS(2,ELGP)
 
-      RETURN
+      END FUNCTION MITC_GP_RS
 
+   END INTERFACE
 
-! **********************************************************************************************************************************
-  
-      END FUNCTION QUAD8_DIRECTOR_VECTOR
+   END MODULE MITC_GP_RS_Interface
+

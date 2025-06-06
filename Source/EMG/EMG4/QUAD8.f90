@@ -45,6 +45,8 @@
       USE OUTA_HERE_Interface
       USE MATMULT_FFF_Interface
       USE MATMULT_FFF_T_Interface
+      USE MITC_DETJ_Interface
+      USE QUAD8_B_Interface
 
       IMPLICIT NONE 
   
@@ -54,22 +56,18 @@
       INTEGER(LONG), INTENT(IN)       :: INT_ELEM_ID       ! Internal element ID
       INTEGER(LONG), PARAMETER        :: IORD_IJ = 3       ! Integration order for stiffness matrix
       INTEGER(LONG), PARAMETER        :: IORD_K = 2        ! Integration order for stiffness matrix in thickness direction
-      INTEGER(LONG)                   :: GAUSS_PT          ! Gauss point number
       INTEGER(LONG)                   :: I,J,K,L,M         ! DO loop indices
-  
-                                                           ! Strain-displ matrix for this element for all Gauss points      
-      REAL(DOUBLE)                    :: B(6,6*ELGP,IORD_IJ*IORD_IJ*IORD_K)  
       
       REAL(DOUBLE)                    :: HH_IJ(MAX_ORDER_GAUSS) ! Gauss weights for integration in in-layer directions
       REAL(DOUBLE)                    :: SS_IJ(MAX_ORDER_GAUSS) ! Gauss abscissa's for integration in in-layer directions
       REAL(DOUBLE)                    :: HH_K(MAX_ORDER_GAUSS)  ! Gauss weights for integration in thickness direction
       REAL(DOUBLE)                    :: SS_K(MAX_ORDER_GAUSS)  ! Gauss abscissa's for integration in thickness direction
+      REAL(DOUBLE)                    :: R, S, T                ! Isoparametric coordinates of a point
       REAL(DOUBLE)                    :: BI(6,6*ELGP)      ! Strain-displ matrix for this element for one Gauss point
       REAL(DOUBLE)                    :: DUM1(6,6*ELGP)    ! Intermediate matrix
       REAL(DOUBLE)                    :: DUM2(6*ELGP,6*ELGP)    ! Intermediate matrix
       REAL(DOUBLE)                    :: INTFAC            ! An integration factor (constant multiplier for the Gauss integration)
       REAL(DOUBLE)                    :: DETJ              ! Jacobian determinant
-
  
 
 ! **********************************************************************************************************************************
@@ -153,12 +151,6 @@
 
 !victor todo see if I can make local cartisian coordiantes be the same as Nastran element local coordinates and material coordiantes are that rotated about the normal by THETA.
 !victor todo generate ES in EMG similar to for CHEXA but without the transform. But that's only for isotropic. For 2D materials we need to generate 3D elasticitiy matrices.
-!victor todo generate B above. This is the meat of MITC8.
-!             Maybe call a function in here to generate it on the fly.
-!             Only do it above if I'm reusing it at the same gauss points. 
-!             Or just don't do it above at all.
-!             Mecway caches B at each gauss point but I'm not sure where it reuses them.
-!victor todo implement QUAD8_DETJ function. Use XEB which is grid point coordinates in basic coordinate system.
 
         DO I=1,6*ELGP
           DO J=1,6*ELGP
@@ -169,20 +161,16 @@
         CALL ORDER_GAUSS ( IORD_IJ, SS_IJ, HH_IJ )
         CALL ORDER_GAUSS ( IORD_K, SS_K, HH_K )
 
-        GAUSS_PT = 0
         DO I=1,IORD_IJ
           DO J=1,IORD_IJ
             DO K=1,IORD_K
-              GAUSS_PT = GAUSS_PT + 1
-              
-              DO L=1,6
-                DO M=1,6*ELGP
-                  BI(L,M) = B(L,M,GAUSS_PT)
-                ENDDO
-              ENDDO
+              R = SS_IJ(I)
+              S = SS_IJ(J)
+              T = SS_K(K)
+              CALL QUAD8_B( R, S, T, BI)
               CALL MATMULT_FFF ( ES, BI, 6, 6, 6*ELGP, DUM1 )
               CALL MATMULT_FFF_T ( BI, DUM1, 6, 6*ELGP, 6*ELGP, DUM2 )
-              DETJ = 0.0 !victor todo QUAD8_DETJ ( SS_IJ(I), SS_IJ(J), SS_K(K) )
+              DETJ = MITC_DETJ ( R, S, T )
               INTFAC = DETJ*HH_IJ(I)*HH_IJ(J)*HH_K(K)
               DO L=1,6*ELGP
                 DO M=1,6*ELGP

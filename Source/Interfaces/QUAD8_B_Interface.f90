@@ -24,49 +24,24 @@
                                                                                                         
 ! End MIT license text.                                                                                      
 
-   MODULE QUAD8_Interface
+   MODULE QUAD8_B_Interface
 
    INTERFACE
 
-      SUBROUTINE QUAD8 ( OPT, INT_ELEM_ID )
+      SUBROUTINE QUAD8_B ( R, S, T, B )
 
-      USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
-      USE IOUNT1, ONLY                :  ERR, F06
-      USE SCONTR, ONLY                :  BLNK_SUB_NAM, FATAL_ERR, MAX_ORDER_GAUSS
-      USE NONLINEAR_PARAMS, ONLY      :  LOAD_ISTEP
-      USE MODEL_STUF, ONLY            :  NUM_EMG_FATAL_ERRS, PCOMP_PROPS, ELGP, ES, KE
+      USE PENTIUM_II_KIND, ONLY       :  DOUBLE
+      USE MODEL_STUF, ONLY            :  ELGP
       USE CONSTANTS_1, ONLY           :  ZERO
 
-      USE ORDER_GAUSS_Interface
-      USE OUTA_HERE_Interface
-      USE MATMULT_FFF_Interface
-      USE MATMULT_FFF_T_Interface
-      USE MITC_DETJ_Interface
-
       IMPLICIT NONE 
-  
-      CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: SUBR_NAME = 'QUAD8'
-      CHARACTER(1*BYTE), INTENT(IN)   :: OPT(6)            ! 'Y'/'N' flags for whether to calc certain elem matrices
 
-      INTEGER(LONG), INTENT(IN)       :: INT_ELEM_ID       ! Internal element ID
-      INTEGER(LONG), PARAMETER        :: IORD_IJ = 3       ! Integration order for stiffness matrix
-      INTEGER(LONG), PARAMETER        :: IORD_K = 2        ! Integration order for stiffness matrix in thickness direction
-      INTEGER(LONG)                   :: GAUSS_PT          ! Gauss point number
-      INTEGER(LONG)                   :: I,J,K,L,M         ! DO loop indices
-      
-      REAL(DOUBLE)                    :: HH_IJ(MAX_ORDER_GAUSS) ! Gauss weights for integration in in-layer directions
-      REAL(DOUBLE)                    :: SS_IJ(MAX_ORDER_GAUSS) ! Gauss abscissa's for integration in in-layer directions
-      REAL(DOUBLE)                    :: HH_K(MAX_ORDER_GAUSS)  ! Gauss weights for integration in thickness direction
-      REAL(DOUBLE)                    :: SS_K(MAX_ORDER_GAUSS)  ! Gauss abscissa's for integration in thickness direction
-      REAL(DOUBLE)                    :: BI(6,6*ELGP)      ! Strain-displ matrix for this element for one Gauss point
-      REAL(DOUBLE)                    :: DUM1(6,6*ELGP)    ! Intermediate matrix
-      REAL(DOUBLE)                    :: DUM2(6*ELGP,6*ELGP)    ! Intermediate matrix
-      REAL(DOUBLE)                    :: INTFAC            ! An integration factor (constant multiplier for the Gauss integration)
-      REAL(DOUBLE)                    :: DETJ              ! Jacobian determinant
+      REAL(DOUBLE) , INTENT(IN)       :: R, S, T           ! Isoparametric coordinates
+      REAL(DOUBLE) , INTENT(OUT)      :: B(6, 6*ELGP)      ! Strain-displacement matrix
 
-      END SUBROUTINE QUAD8
+      END SUBROUTINE QUAD8_B
 
    END INTERFACE
 
-   END MODULE QUAD8_Interface
+   END MODULE QUAD8_B_Interface
 

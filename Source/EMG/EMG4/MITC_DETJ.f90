@@ -1,4 +1,4 @@
-! ###############################################################################################################################
+! #################################################################################################################################
 ! Begin MIT license text.                                                                                    
 ! _______________________________________________________________________________________________________
                                                                                                          
@@ -23,50 +23,37 @@
 ! _______________________________________________________________________________________________________
                                                                                                         
 ! End MIT license text.                                                                                      
+      FUNCTION MITC_DETJ ( R, S, T )
 
-   MODULE QUAD8_Interface
+! Calculates the Jacobian determinant in basic coordinates at a point in isoparametric coordinates.
+ 
+      USE PENTIUM_II_KIND, ONLY       :  DOUBLE
 
-   INTERFACE
-
-      SUBROUTINE QUAD8 ( OPT, INT_ELEM_ID )
-
-      USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
-      USE IOUNT1, ONLY                :  ERR, F06
-      USE SCONTR, ONLY                :  BLNK_SUB_NAM, FATAL_ERR, MAX_ORDER_GAUSS
-      USE NONLINEAR_PARAMS, ONLY      :  LOAD_ISTEP
-      USE MODEL_STUF, ONLY            :  NUM_EMG_FATAL_ERRS, PCOMP_PROPS, ELGP, ES, KE
-      USE CONSTANTS_1, ONLY           :  ZERO
-
-      USE ORDER_GAUSS_Interface
-      USE OUTA_HERE_Interface
-      USE MATMULT_FFF_Interface
-      USE MATMULT_FFF_T_Interface
-      USE MITC_DETJ_Interface
+      USE MITC_COVARIANT_BASIS_Interface
+      USE CROSS_Interface
 
       IMPLICIT NONE 
-  
-      CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: SUBR_NAME = 'QUAD8'
-      CHARACTER(1*BYTE), INTENT(IN)   :: OPT(6)            ! 'Y'/'N' flags for whether to calc certain elem matrices
-
-      INTEGER(LONG), INTENT(IN)       :: INT_ELEM_ID       ! Internal element ID
-      INTEGER(LONG), PARAMETER        :: IORD_IJ = 3       ! Integration order for stiffness matrix
-      INTEGER(LONG), PARAMETER        :: IORD_K = 2        ! Integration order for stiffness matrix in thickness direction
-      INTEGER(LONG)                   :: GAUSS_PT          ! Gauss point number
-      INTEGER(LONG)                   :: I,J,K,L,M         ! DO loop indices
       
-      REAL(DOUBLE)                    :: HH_IJ(MAX_ORDER_GAUSS) ! Gauss weights for integration in in-layer directions
-      REAL(DOUBLE)                    :: SS_IJ(MAX_ORDER_GAUSS) ! Gauss abscissa's for integration in in-layer directions
-      REAL(DOUBLE)                    :: HH_K(MAX_ORDER_GAUSS)  ! Gauss weights for integration in thickness direction
-      REAL(DOUBLE)                    :: SS_K(MAX_ORDER_GAUSS)  ! Gauss abscissa's for integration in thickness direction
-      REAL(DOUBLE)                    :: BI(6,6*ELGP)      ! Strain-displ matrix for this element for one Gauss point
-      REAL(DOUBLE)                    :: DUM1(6,6*ELGP)    ! Intermediate matrix
-      REAL(DOUBLE)                    :: DUM2(6*ELGP,6*ELGP)    ! Intermediate matrix
-      REAL(DOUBLE)                    :: INTFAC            ! An integration factor (constant multiplier for the Gauss integration)
-      REAL(DOUBLE)                    :: DETJ              ! Jacobian determinant
+      REAL(DOUBLE)                    :: MITC_DETJ
+      REAL(DOUBLE) , INTENT(IN)       :: R
+      REAL(DOUBLE) , INTENT(IN)       :: S
+      REAL(DOUBLE) , INTENT(IN)       :: T
+      REAL(DOUBLE)                    :: G_R(3)            ! g_r vector in basic coordinates
+      REAL(DOUBLE)                    :: G_S(3)            ! g_s vector in basic coordinates
+      REAL(DOUBLE)                    :: G_T(3)            ! g_t vector in basic coordinates
+      REAL(DOUBLE)                    :: DUM1(3)
 
-      END SUBROUTINE QUAD8
+! **********************************************************************************************************************************
+      
+      CALL MITC_COVARIANT_BASIS( R, S, T, G_R, G_S, G_T )
 
-   END INTERFACE
+      !DET(J) = G_R . (G_S x G_T)
+      CALL CROSS(G_S, G_T, DUM1)
+      MITC_DETJ = G_R(1)*DUM1(1) + G_R(2)*DUM1(2) + G_R(3)*DUM1(3)
 
-   END MODULE QUAD8_Interface
+      RETURN
 
+
+! **********************************************************************************************************************************
+  
+      END FUNCTION MITC_DETJ
