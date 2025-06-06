@@ -38,7 +38,7 @@
       USE IOUNT1, ONLY                :  ERR, F06
       USE SCONTR, ONLY                :  BLNK_SUB_NAM, FATAL_ERR, MAX_ORDER_GAUSS
       USE NONLINEAR_PARAMS, ONLY      :  LOAD_ISTEP
-      USE MODEL_STUF, ONLY            :  NUM_EMG_FATAL_ERRS, PCOMP_PROPS, ELGP, ES, KE
+      USE MODEL_STUF, ONLY            :  NUM_EMG_FATAL_ERRS, PCOMP_PROPS, ELGP, ES, KE, EM, ET
       USE CONSTANTS_1, ONLY           :  ZERO
 
       USE ORDER_GAUSS_Interface
@@ -68,6 +68,8 @@
       REAL(DOUBLE)                    :: DUM2(6*ELGP,6*ELGP)    ! Intermediate matrix
       REAL(DOUBLE)                    :: INTFAC            ! An integration factor (constant multiplier for the Gauss integration)
       REAL(DOUBLE)                    :: DETJ              ! Jacobian determinant
+      REAL(DOUBLE)                    :: E(6,6)            ! Elasticity matrix in the material coordinate system.
+      REAL(DOUBLE)                    :: EE(6,6)           ! Elasticity matrix in the cartesian local coordinate system.
  
 
 ! **********************************************************************************************************************************
@@ -140,17 +142,54 @@
  
       IF(OPT(4) == 'Y') THEN
 
-        ! K = int( [B]^T [ES] [B] dV )
+        ! K = int( [B]^T [EE] [B] dV )
         !    dV = |det(J)|dr ds dt
-        ! K = int( [B]^T [ES] [B] |det(J)| dr ds dt )
+        ! K = int( [B]^T [EE] [B] |det(J)| dr ds dt )
         !
-        ! [ES] is material elasticity matrix in cartesian local coordinates
-        ! stress = [ES] * strain
+        ! [EE] is material elasticity matrix in cartesian local coordinates
+        ! stress = [EE] * strain
         ! strain = [B] * displacement
         ! K is in the basic coordinate system
 
-!victor todo see if I can make local cartisian coordiantes be the same as Nastran element local coordinates and material coordiantes are that rotated about the normal by THETA.
-!victor todo generate ES in EMG similar to for CHEXA but without the transform. But that's only for isotropic. For 2D materials we need to generate 3D elasticitiy matrices.
+!victor todo see if I can make cartisian local coordiantes be the same as Nastran element local coordinates and material coordiantes are that rotated about the normal by THETA.
+
+
+
+                                                           ! Convert 2D material elasticity matrices to 3D.
+        E(1,1) = EM(1,1)
+        E(1,2) = EM(1,2)
+        E(1,3) = ZERO
+        E(1,4) = EM(1,3)
+        E(1,5) = ZERO
+        E(1,6) = ZERO
+
+        E(2,2) = EM(2,2)
+        E(2,3) = ZERO
+        E(2,4) = EM(2,3)
+        E(2,5) = ZERO
+        E(2,6) = ZERO
+
+        E(3,3) = ZERO
+        E(3,4) = ZERO
+        E(3,5) = ZERO
+        E(3,6) = ZERO
+
+        E(4,4) = EM(3,3)
+        E(4,5) = ZERO
+        E(4,6) = ZERO
+
+        E(5,5) = ET(2,2) !victor todo shear correction factor
+        E(5,6) = ET(2,1) !victor todo shear correction factor ??
+
+        E(6,6) = ET(1,1) !victor todo shear correction factor
+
+        DO I=2,6                                           ! Copy UT to LT because it's symmetric.
+          DO J=1,I-1
+            E(I,J) = E(J,I)
+          ENDDO 
+        ENDDO   
+
+
 
         DO I=1,6*ELGP
           DO J=1,6*ELGP
@@ -168,7 +207,15 @@
               S = SS_IJ(J)
               T = SS_K(K)
               CALL QUAD8_B( R, S, T, BI)
-              CALL MATMULT_FFF ( ES, BI, 6, 6, 6*ELGP, DUM1 )
+
+! victor todo transform E from material to cartesian local coordiantes (EE) at this Gauss point. Not this simple copy.
+              DO L=1,6
+                DO M=1,6
+                  EE(L,M) = E(L,M)
+                ENDDO 
+              ENDDO   
+
+              CALL MATMULT_FFF ( EE, BI, 6, 6, 6*ELGP, DUM1 )
               CALL MATMULT_FFF_T ( BI, DUM1, 6, 6*ELGP, 6*ELGP, DUM2 )
               DETJ = MITC_DETJ ( R, S, T )
               INTFAC = DETJ*HH_IJ(I)*HH_IJ(J)*HH_K(K)
