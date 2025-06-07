@@ -55,13 +55,13 @@
       REAL(DOUBLE)                    :: JAC(3,3)          ! Jacobian matrix in basic coordinates
       REAL(DOUBLE)                    :: GP_RS(2,ELGP)     ! Isoparametric coordinates of the nodes
       REAL(DOUBLE)                    :: DIRECTOR(3)       ! Director vector
-      REAL(DOUBLE)                    :: THICKNESS         ! Uniform element thickness
+      REAL(DOUBLE)                    :: THICKNESS(ELGP)   ! Element thicknesses at grid points
 
       INTEGER(LONG), INTENT(IN)       :: ROW_FROM          ! First row of B to generate. 1-6.
       INTEGER(LONG), INTENT(IN)       :: ROW_TO            ! Last row of B to generate. 1-6.
       INTEGER(LONG)                   :: GP                ! Element grid point number
       INTEGER(LONG)                   :: I,J,K,L           ! Loop and tensor indices
-      INTEGER(LONG)                   :: ROW              
+      INTEGER(LONG)                   :: ROW      
 
       END SUBROUTINE MITC_COVARIANT_STRAIN_DIRECT_INTERPOLATION
 

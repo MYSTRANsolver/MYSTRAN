@@ -142,6 +142,13 @@
  
       IF(OPT(4) == 'Y') THEN
 
+! Based on
+! MITC4 paper "A continuum mechanics based four-node shell element for general nonlinear analysis" 
+!   by Dvorkin and Bathe
+! MITC8 paper "A FORMULATION OF GENERAL SHELL ELEMENTS-THE USE OF MIXED INTERPOLATION OF TENSORIAL COMPONENTS" 
+!   by Dvorkin and Bathe, 1986
+
+
         ! K = int( [B]^T [EE] [B] dV )
         !    dV = |det(J)|dr ds dt
         ! K = int( [B]^T [EE] [B] |det(J)| dr ds dt )
@@ -206,7 +213,7 @@
               R = SS_IJ(I)
               S = SS_IJ(J)
               T = SS_K(K)
-              CALL QUAD8_B( R, S, T, BI)
+              CALL QUAD8_B( R, S, T, .TRUE., .TRUE., BI)
 
 ! victor todo transform E from material to cartesian local coordiantes (EE) at this Gauss point. Not this simple copy.
               DO L=1,6

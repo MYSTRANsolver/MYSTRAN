@@ -42,6 +42,7 @@
       IMPLICIT NONE 
       
       INTEGER(LONG)                   :: I,J               ! DO loop indices
+      INTEGER(LONG)                   :: GP                ! Element grid point number
 
       REAL(DOUBLE) , INTENT(IN)       :: R, S, T           ! Isoparametric coordinates
       REAL(DOUBLE) , INTENT(OUT)      :: G_R(3)            ! g_r vector in basic coordinates
@@ -52,7 +53,7 @@
       REAL(DOUBLE)                    :: DIRECTOR(3)       ! Director vector
       REAL(DOUBLE)                    :: GP_RS(2,ELGP)     ! Isoparametric coordinates of the nodes
       REAL(DOUBLE)                    :: RS_THICKNESS      ! Element thickness at R,S
-      REAL(DOUBLE)                    :: GP_THICKNESS(ELGP)! Element thickness at grid points
+      REAL(DOUBLE)                    :: THICKNESS(ELGP)   ! Element thickness at grid points
 
 
 ! **********************************************************************************************************************************
@@ -61,7 +62,7 @@
       ! Thickness is treated as uniform.
       ! To allow grid point thicknesses, this should be interpolated to midside nodes and at (R,S).
       DO I=1,ELGP
-        GP_THICKNESS(I) = EPROP(1)
+        THICKNESS(I) = EPROP(1)
       ENDDO
       RS_THICKNESS = EPROP(1)
 
@@ -89,11 +90,11 @@
       ! Interpolate from the values at nodes
       ! g_r(r, s, t) = dX/dr = d/dr X + t/2 * d/dr (hv)
       !     = sum over nodes[ dN/dr X + t/2 * dN/dr (hv) ]
-      DO I=1,ELGP
-        DIRECTOR = MITC_DIRECTOR_VECTOR(GP_RS(1,I), GP_RS(2,I))
+      DO GP=1,ELGP
+        DIRECTOR = MITC_DIRECTOR_VECTOR(GP_RS(1,GP), GP_RS(2,GP))
         DO J=1,3
-          G_R(J) = G_R(J) + XEB(I,J) * DPSHG(1,I) + DIRECTOR(J) * T/TWO * DPSHG(1,I) * GP_THICKNESS(I)
-          G_S(J) = G_S(J) + XEB(I,J) * DPSHG(2,I) + DIRECTOR(J) * T/TWO * DPSHG(2,I) * GP_THICKNESS(I)
+          G_R(J) = G_R(J) + XEB(GP,J) * DPSHG(1,GP) + DIRECTOR(J) * T/TWO * DPSHG(1,GP) * THICKNESS(GP)
+          G_S(J) = G_S(J) + XEB(GP,J) * DPSHG(2,GP) + DIRECTOR(J) * T/TWO * DPSHG(2,GP) * THICKNESS(GP)
         ENDDO
       ENDDO
 

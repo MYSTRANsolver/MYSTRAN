@@ -28,16 +28,48 @@
 
    INTERFACE
 
-      SUBROUTINE QUAD8_B ( R, S, T, B )
+      SUBROUTINE QUAD8_B ( R, S, T, INLAYER, SHEAR, B )
 
-      USE PENTIUM_II_KIND, ONLY       :  DOUBLE
-      USE MODEL_STUF, ONLY            :  ELGP
-      USE CONSTANTS_1, ONLY           :  ZERO
+      USE PENTIUM_II_KIND, ONLY       :  LONG, DOUBLE
+      USE MODEL_STUF, ONLY            :  ELGP, TYPE
+      USE CONSTANTS_1, ONLY           :  ZERO, ONE, THREE
+      USE IOUNT1, ONLY                :  ERR, F06
+      USE SCONTR, ONLY                :  FATAL_ERR
+
+      USE OUTA_HERE_Interface
+      USE SHP2DQ_Interface
+      USE MITC_COVARIANT_BASIS_Interface
+      USE MITC_CONTRAVARIANT_BASIS_Interface
+      USE MITC_COVARIANT_STRAIN_DIRECT_INTERPOLATION_Interface
+      USE OUTER_PRODUCT_Interface
 
       IMPLICIT NONE 
 
+      LOGICAL, INTENT(IN)             :: INLAYER           ! TRUE for in-layer rows (1-4)
+      LOGICAL, INTENT(IN)             :: SHEAR             ! TRUE for transverse shear rows (5-6)
+
+      INTEGER(LONG)                   :: I, J              ! DO loop indices
+      INTEGER(LONG)                   :: POINT             ! Sampling point number
+
       REAL(DOUBLE) , INTENT(IN)       :: R, S, T           ! Isoparametric coordinates
-      REAL(DOUBLE) , INTENT(OUT)      :: B(6, 6*ELGP)      ! Strain-displacement matrix
+      REAL(DOUBLE) , INTENT(OUT)      :: B(6, 6*ELGP)      ! Strain-displacement matrix in cartesian local coordinates
+      REAL(DOUBLE)                    :: BB(6, 6*ELGP)     ! Strain-displacement matrix in basic coordinates
+      REAL(DOUBLE)                    :: E(6, 6*ELGP)      ! Strain-displacement matrix directly interpolated
+      REAL(DOUBLE)                    :: A
+      REAL(DOUBLE)                    :: POINT_R(8)        ! Sampling point isoparametric R coordinates
+      REAL(DOUBLE)                    :: POINT_S(8)        ! Sampling point isoparametric S coordinates
+      REAL(DOUBLE)                    :: PSH(ELGP)         ! Shape functions (interpolation functions)
+      REAL(DOUBLE)                    :: DPSHG(2,ELGP)     ! Derivatives of shape functions with respect to R and S.
+      REAL(DOUBLE)                    :: H_IS(8)           ! Interpolation functions indexed by sampling point number.
+      REAL(DOUBLE)                    :: G_R(3)            ! Covariant basis vector g_r in basic coordinates
+      REAL(DOUBLE)                    :: G_S(3)            ! Covariant basis vector g_s in basic coordinates
+      REAL(DOUBLE)                    :: G_T(3)            ! Covariant basis vector g_t in basic coordinates
+      REAL(DOUBLE)                    :: G_1(3)            ! Contravariant basis vector g^1 in basic coordinates
+      REAL(DOUBLE)                    :: G_2(3)            ! Contravariant basis vector g^2 in basic coordinates
+      REAL(DOUBLE)                    :: G_3(3)            ! Contravariant basis vector g^3 in basic coordinates
+      REAL(DOUBLE)                    :: GG(3,3)           ! Outer product of two contravariant basis vectors
+
+      INTRINSIC                       :: DSQRT
 
       END SUBROUTINE QUAD8_B
 

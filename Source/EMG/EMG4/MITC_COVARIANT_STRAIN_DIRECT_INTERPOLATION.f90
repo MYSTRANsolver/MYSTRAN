@@ -62,7 +62,7 @@
       REAL(DOUBLE)                    :: JAC(3,3)          ! Jacobian matrix in basic coordinates
       REAL(DOUBLE)                    :: GP_RS(2,ELGP)     ! Isoparametric coordinates of the nodes
       REAL(DOUBLE)                    :: DIRECTOR(3)       ! Director vector
-      REAL(DOUBLE)                    :: THICKNESS         ! Uniform element thickness
+      REAL(DOUBLE)                    :: THICKNESS(ELGP)   ! Element thicknesses at grid points
 
       INTEGER(LONG), INTENT(IN)       :: ROW_FROM          ! First row of B to generate. 1-6.
       INTEGER(LONG), INTENT(IN)       :: ROW_TO            ! Last row of B to generate. 1-6.
@@ -72,10 +72,11 @@
 
 ! **********************************************************************************************************************************
 
-! Thickness is treated as uniform.
+! Thickness is currently treated as uniform.
 ! To allow grid point thicknesses, a different value should be used for each node, interpolating to midside nodes.
-      THICKNESS = EPROP(1)
-!victor todo see if the thicknessses used below are at the nodes, and if so, make this an array GP_THICKNESS like in MITC_COVARIANT_BASIS
+      DO I=1,ELGP
+        THICKNESS(I) = EPROP(1)
+      ENDDO
 
 ! Shape function derivatives at R,S
       IF (TYPE(1:5) == 'QUAD8') THEN
@@ -109,6 +110,8 @@
       ENDDO
 
 ! Build strain-displacement matrix
+! From "A continuum mechanics based four-node shell element for general nonlinear analysis" by Dvorkin and Bathe
+! equations (21a), (22a), (23a), (24a)
 
       GP_RS = MITC_GP_RS()
 
@@ -123,11 +126,11 @@
 
                                                            ! Tensor indices for the row
             SELECT CASE (ROW)
-              CASE (1); I=1; J=1
-              CASE (2); I=2; J=2
-              CASE (4); I=1; J=2
-              CASE (5); I=2; J=3
-              CASE (6); I=1; J=3
+              CASE (1); I=1; J=1                           ! In-layer normal strain
+              CASE (2); I=2; J=2                           ! In-layer normal strain
+              CASE (4); I=1; J=2                           ! In-layer shear strain
+              CASE (5); I=2; J=3                           ! Transverse shear strain
+              CASE (6); I=1; J=3                           ! Transverse shear strain
             END SELECT
 
                                                 ! e_ij = sum over nodes [ 1/2 d/di u_0 dot g_j  +  1/2 d/dj u_0 dot g_i  + ...
@@ -135,22 +138,25 @@
             B(ROW, K+2) = (DPSHG3(I,GP) * JAC(2,J) + DPSHG3(J,GP) * JAC(2,I)) / TWO
             B(ROW, K+3) = (DPSHG3(I,GP) * JAC(3,J) + DPSHG3(J,GP) * JAC(3,I)) / TWO
                                                            !... 1/4 d/di (t h phi) dot g_j  + ...
-            B(ROW, K+4) = THICKNESS * T * DPSHG3(I,GP) * (JAC(3,J) * DIRECTOR(2) - JAC(2,J) * DIRECTOR(3)) / FOUR
-            B(ROW, K+5) = THICKNESS * T * DPSHG3(I,GP) * (JAC(1,J) * DIRECTOR(3) - JAC(3,J) * DIRECTOR(1)) / FOUR
-            B(ROW, K+6) = THICKNESS * T * DPSHG3(I,GP) * (JAC(2,J) * DIRECTOR(1) - JAC(1,J) * DIRECTOR(2)) / FOUR
+            B(ROW, K+4) = THICKNESS(GP) * T * DPSHG3(I,GP) * (JAC(3,J) * DIRECTOR(2) - JAC(2,J) * DIRECTOR(3)) / FOUR
+            B(ROW, K+5) = THICKNESS(GP) * T * DPSHG3(I,GP) * (JAC(1,J) * DIRECTOR(3) - JAC(3,J) * DIRECTOR(1)) / FOUR
+            B(ROW, K+6) = THICKNESS(GP) * T * DPSHG3(I,GP) * (JAC(2,J) * DIRECTOR(1) - JAC(1,J) * DIRECTOR(2)) / FOUR
                                                            !... 1/4 d/dj (t h phi) dot g_i  ]
             IF (J == 3) THEN
-                                                           ! Differentiating in the thickness direction is special
+                                                           ! Transverse shear rows are special. Eqn. (23a), (24a)
                                                            ! 1/4 d/dt (t h phi) = 1/4 h phi
-              B(ROW, K+4) = B(ROW, K+4) + THICKNESS * PSH(GP) * (JAC(3,I) * DIRECTOR(2) - JAC(2,I) * DIRECTOR(3)) / FOUR
-              B(ROW, K+5) = B(ROW, K+5) + THICKNESS * PSH(GP) * (JAC(1,I) * DIRECTOR(3) - JAC(3,I) * DIRECTOR(1)) / FOUR
-              B(ROW, K+6) = B(ROW, K+6) + THICKNESS * PSH(GP) * (JAC(2,I) * DIRECTOR(1) - JAC(1,I) * DIRECTOR(2)) / FOUR
+              B(ROW, K+4) = B(ROW, K+4) + THICKNESS(GP) * PSH(GP) * (JAC(3,I) * DIRECTOR(2) - JAC(2,I) * DIRECTOR(3)) / FOUR
+              B(ROW, K+5) = B(ROW, K+5) + THICKNESS(GP) * PSH(GP) * (JAC(1,I) * DIRECTOR(3) - JAC(3,I) * DIRECTOR(1)) / FOUR
+              B(ROW, K+6) = B(ROW, K+6) + THICKNESS(GP) * PSH(GP) * (JAC(2,I) * DIRECTOR(1) - JAC(1,I) * DIRECTOR(2)) / FOUR
             ELSE            
                                                            ! 1/4 d/dr (t h phi) = 1/4 t h dN/dr phi
                                                            ! 1/4 d/ds (t h phi) = 1/4 t h dN/ds phi
-              B(ROW, K+4) = B(ROW, K+4) + THICKNESS * T * DPSHG3(J,GP) * (JAC(3,I) * DIRECTOR(2) - JAC(2,I) * DIRECTOR(3)) / FOUR
-              B(ROW, K+5) = B(ROW, K+5) + THICKNESS * T * DPSHG3(J,GP) * (JAC(1,I) * DIRECTOR(3) - JAC(3,I) * DIRECTOR(1)) / FOUR
-              B(ROW, K+6) = B(ROW, K+6) + THICKNESS * T * DPSHG3(J,GP) * (JAC(2,I) * DIRECTOR(1) - JAC(1,I) * DIRECTOR(2)) / FOUR
+              B(ROW, K+4) = B(ROW, K+4) +                                                                                          &
+                THICKNESS(GP) * T * DPSHG3(J,GP) * (JAC(3,I) * DIRECTOR(2) - JAC(2,I) * DIRECTOR(3)) / FOUR
+              B(ROW, K+5) = B(ROW, K+5) +                                                                                          &
+                THICKNESS(GP) * T * DPSHG3(J,GP) * (JAC(1,I) * DIRECTOR(3) - JAC(3,I) * DIRECTOR(1)) / FOUR
+              B(ROW, K+6) = B(ROW, K+6) +                                                                                          &
+                THICKNESS(GP) * T * DPSHG3(J,GP) * (JAC(2,I) * DIRECTOR(1) - JAC(1,I) * DIRECTOR(2)) / FOUR
             ENDIF
 
 

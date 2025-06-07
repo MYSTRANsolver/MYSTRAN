@@ -24,42 +24,27 @@
                                                                                                         
 ! End MIT license text.                                                                                      
 
-   MODULE MITC_COVARIANT_BASIS_Interface
+   MODULE OUTER_PRODUCT_Interface
 
    INTERFACE
 
-      SUBROUTINE MITC_COVARIANT_BASIS ( R, S, T, G_R, G_S, G_T )
-      
+      SUBROUTINE OUTER_PRODUCT ( A, B, NA, NB, C )
+ 
       USE PENTIUM_II_KIND, ONLY       :  LONG, DOUBLE
-      USE MODEL_STUF, ONLY            :  ELGP, XEB, EPROP, TYPE
-      USE CONSTANTS_1, ONLY           :  ZERO, TWO
-      USE IOUNT1, ONLY                :  ERR, F06
-      USE SCONTR, ONLY                :  FATAL_ERR
 
-      USE SHP2DQ_Interface
-      USE MITC_GP_RS_Interface
-      USE MITC_DIRECTOR_VECTOR_Interface
-      USE OUTA_HERE_Interface
+      IMPLICIT NONE
 
-      IMPLICIT NONE 
-      
+      INTEGER(LONG), INTENT(IN)       :: NA                ! No. elements in input vector A
+      INTEGER(LONG), INTENT(IN)       :: NB                ! No. elements in input vector B
       INTEGER(LONG)                   :: I,J               ! DO loop indices
-      INTEGER(LONG)                   :: GP                ! Element grid point number
-
-      REAL(DOUBLE) , INTENT(IN)       :: R, S, T           ! Isoparametric coordinates
-      REAL(DOUBLE) , INTENT(OUT)      :: G_R(3)            ! g_r vector in basic coordinates
-      REAL(DOUBLE) , INTENT(OUT)      :: G_S(3)            ! g_s vector in basic coordinates
-      REAL(DOUBLE) , INTENT(OUT)      :: G_T(3)            ! g_t vector in basic coordinates
-      REAL(DOUBLE)                    :: PSH(ELGP)       
-      REAL(DOUBLE)                    :: DPSHG(2,ELGP)     ! Derivatives of shape functions with respect to xi and eta.
-      REAL(DOUBLE)                    :: DIRECTOR(3)       ! Director vector
-      REAL(DOUBLE)                    :: GP_RS(2,ELGP)     ! Isoparametric coordinates of the nodes
-      REAL(DOUBLE)                    :: RS_THICKNESS      ! Element thickness at R,S
-      REAL(DOUBLE)                    :: THICKNESS(ELGP)   ! Element thickness at grid points
-
-      END SUBROUTINE MITC_COVARIANT_BASIS
+ 
+      REAL(DOUBLE) , INTENT(IN)       :: A(NA)             ! Input  vector A
+      REAL(DOUBLE) , INTENT(IN)       :: B(NB)             ! Input  vector B
+      REAL(DOUBLE) , INTENT(OUT)      :: C(NA,NB)          ! Output matrix C
+ 
+      END SUBROUTINE OUTER_PRODUCT
 
    END INTERFACE
 
-   END MODULE MITC_COVARIANT_BASIS_Interface
+   END MODULE OUTER_PRODUCT_Interface
 
