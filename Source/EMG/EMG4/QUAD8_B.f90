@@ -39,6 +39,7 @@
       USE MITC_COVARIANT_BASIS_Interface
       USE MITC_CONTRAVARIANT_BASIS_Interface
       USE MITC_COVARIANT_STRAIN_DIRECT_INTERPOLATION_Interface
+      USE QUAD8_ADD_TO_B_Interface
       USE OUTER_PRODUCT_Interface
 
       IMPLICIT NONE 
@@ -66,6 +67,8 @@
       REAL(DOUBLE)                    :: G_2(3)            ! Contravariant basis vector g^2 in basic coordinates
       REAL(DOUBLE)                    :: G_3(3)            ! Contravariant basis vector g^3 in basic coordinates
       REAL(DOUBLE)                    :: GG(3,3)           ! Outer product of two contravariant basis vectors
+      REAL(DOUBLE)                    :: GG_T(3,3)         ! Transpose of GG
+      REAL(DOUBLE)                    :: E_GLOBAL(6,6*ELGP,4) ! Part of strain-displacement matrix for each of 4 sampling points.
 
       INTRINSIC                       :: DSQRT
       
@@ -114,24 +117,60 @@
         H_IS(7) = PSH(5)
         H_IS(8) = PSH(6)
 
-        DO POINT=1,4
-            ! The contribution to ε in the global (basic) basis is
-            ! = hIS(i) * ( ε~_rr g^r g^r|_i  +  ε~_ss g^s g^s|_i  +  ε~_rs [g^r g^s|_i  + g^r g^s|_i^T] )
 
-            CALL MITC_COVARIANT_BASIS( POINT_R(POINT), POINT_S(POINT), T, G_R, G_S, G_T )
-            CALL MITC_CONTRAVARIANT_BASIS( G_R, G_S, G_T, G_1, G_2, G_3 )
-            CALL MITC_COVARIANT_STRAIN_DIRECT_INTERPOLATION( POINT_R(POINT), POINT_S(POINT), T, 1, 4, E )
+        DO POINT=1,4
+
+          DO I=1,6
+            DO J=1,6*ELGP
+              E_GLOBAL(I,J,POINT) = 0
+            ENDDO
+          ENDDO
+
+          ! The contribution to ε in the global (basic) basis is
+          ! = hIS(i) * ( ε~_rr g^r g^r|_i  +  ε~_ss g^s g^s|_i  +  ε~_rs [g^r g^s|_i  + g^r g^s|_i^T] )
+
+          CALL MITC_COVARIANT_BASIS( POINT_R(POINT), POINT_S(POINT), T, G_R, G_S, G_T )
+          CALL MITC_CONTRAVARIANT_BASIS( G_R, G_S, G_T, G_1, G_2, G_3 )
+          CALL MITC_COVARIANT_STRAIN_DIRECT_INTERPOLATION( POINT_R(POINT), POINT_S(POINT), T, 1, 4, E )
 
                                                            ! ε~_rr g^r g^r|_i
-            CALL OUTER_PRODUCT( G_1, G_1, 3, 3, GG )
-            DO I=1,6*ELGP
-              !victor todo AddtoB and multiple by H_IS(POINT) on the way.
+          CALL OUTER_PRODUCT( G_1, G_1, 3, 3, GG )
+          DO I=1,6*ELGP
+            CALL QUAD8_ADD_TO_B( E_GLOBAL, POINT, I, E(1, I), GG )
+          ENDDO
+
+                                                           ! ε~_ss g^s g^s|_i
+          CALL OUTER_PRODUCT( G_2, G_2, 3, 3, GG )
+          DO I=1,6*ELGP
+            CALL QUAD8_ADD_TO_B( E_GLOBAL, POINT, I, E(2, I), GG )
+          ENDDO
+
+                                                           ! ε~_rs [g^r g^s|_i  + g^r g^s|_i^T]
+          CALL OUTER_PRODUCT( G_1, G_2, 3, 3, GG )
+          DO I=1,3                                         ! GG^T
+            DO J=1,3
+              GG_T(I,J) = GG(J,I)
             ENDDO
+          ENDDO
+          DO I=1,3                                         ! GG = GG + GG^T
+            DO J=1,3
+              GG(I,J) = GG(I,J) + GG_T(I,J)
+            ENDDO
+          ENDDO
+          DO I=1,6*ELGP
+            CALL QUAD8_ADD_TO_B( E_GLOBAL, POINT, I, E(4, I), GG )
+          ENDDO
 
-            !victor todo 2 other terms
-
+          DO I=1,6                                         ! Add E_GLOBAL * interpolation function for this sampling point to BB.
+            DO J=1,6*ELGP
+              BB(I,J) = BB(I,J) + E_GLOBAL(I,J,POINT) * H_IS(POINT)
+            ENDDO
+          ENDDO
 
         ENDDO
+
+
+
 
         DO POINT=5,8
 
