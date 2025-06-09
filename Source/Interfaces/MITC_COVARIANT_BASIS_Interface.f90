@@ -28,8 +28,8 @@
 
    INTERFACE
 
-      SUBROUTINE MITC_COVARIANT_BASIS ( R, S, T, G_R, G_S, G_T )
-      
+      SUBROUTINE MITC_COVARIANT_BASIS ( R, S, T, G )
+
       USE PENTIUM_II_KIND, ONLY       :  LONG, DOUBLE
       USE MODEL_STUF, ONLY            :  ELGP, XEB, EPROP, TYPE
       USE CONSTANTS_1, ONLY           :  ZERO, TWO
@@ -47,9 +47,7 @@
       INTEGER(LONG)                   :: GP                ! Element grid point number
 
       REAL(DOUBLE) , INTENT(IN)       :: R, S, T           ! Isoparametric coordinates
-      REAL(DOUBLE) , INTENT(OUT)      :: G_R(3)            ! g_r vector in basic coordinates
-      REAL(DOUBLE) , INTENT(OUT)      :: G_S(3)            ! g_s vector in basic coordinates
-      REAL(DOUBLE) , INTENT(OUT)      :: G_T(3)            ! g_t vector in basic coordinates
+      REAL(DOUBLE) , INTENT(OUT)      :: G(3,3)            ! basis vector in basic coordinates
       REAL(DOUBLE)                    :: PSH(ELGP)       
       REAL(DOUBLE)                    :: DPSHG(2,ELGP)     ! Derivatives of shape functions with respect to xi and eta.
       REAL(DOUBLE)                    :: DIRECTOR(3)       ! Director vector

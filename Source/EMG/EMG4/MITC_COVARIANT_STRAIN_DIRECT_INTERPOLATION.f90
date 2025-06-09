@@ -56,16 +56,13 @@
       REAL(DOUBLE)                    :: PSH(ELGP)         ! Shape functions
       REAL(DOUBLE)                    :: DPSHG(2,ELGP)     ! Derivatives of shape functions with respect to R and S.
       REAL(DOUBLE)                    :: DPSHG3(3,ELGP)    ! Derivatives of shape functions with respect to R, S, T.
-      REAL(DOUBLE)                    :: G_R(3)            ! g_r vector in basic coordinates
-      REAL(DOUBLE)                    :: G_S(3)            ! g_s vector in basic coordinates
-      REAL(DOUBLE)                    :: G_T(3)            ! g_t vector in basic coordinates
-      REAL(DOUBLE)                    :: JAC(3,3)          ! Jacobian matrix in basic coordinates
+      REAL(DOUBLE)                    :: G(3,3)            ! Covariant basis vectors (Jacobian matrix) in basic coordinates
       REAL(DOUBLE)                    :: GP_RS(2,ELGP)     ! Isoparametric coordinates of the nodes
       REAL(DOUBLE)                    :: DIRECTOR(3)       ! Director vector
       REAL(DOUBLE)                    :: THICKNESS(ELGP)   ! Element thicknesses at grid points
 
-      INTEGER(LONG), INTENT(IN)       :: ROW_FROM          ! First row of B to generate. 1-6.
-      INTEGER(LONG), INTENT(IN)       :: ROW_TO            ! Last row of B to generate. 1-6.
+      INTEGER(LONG), INTENT(IN)       :: ROW_FROM          ! First row of B to generate. Strain component index 1-6.
+      INTEGER(LONG), INTENT(IN)       :: ROW_TO            ! Last row of B to generate. Strain component index 1-6.
       INTEGER(LONG)                   :: GP                ! Element grid point number
       INTEGER(LONG)                   :: I,J,K,L           ! Loop and tensor indices
       INTEGER(LONG)                   :: ROW               
@@ -102,12 +99,7 @@
 
 
 ! Jacobian matrix
-      CALL MITC_COVARIANT_BASIS( R, S, T, G_R, G_S, G_T )
-      DO I=1,3
-        JAC(I,1) = G_R(I)
-        JAC(I,2) = G_S(I)
-        JAC(I,3) = G_T(I)
-      ENDDO
+      CALL MITC_COVARIANT_BASIS( R, S, T, G )
 
 ! Build strain-displacement matrix
 ! From "A continuum mechanics based four-node shell element for general nonlinear analysis" by Dvorkin and Bathe
@@ -134,29 +126,29 @@
             END SELECT
 
                                                 ! e_ij = sum over nodes [ 1/2 d/di u_0 dot g_j  +  1/2 d/dj u_0 dot g_i  + ...
-            B(ROW, K+1) = (DPSHG3(I,GP) * JAC(1,J) + DPSHG3(J,GP) * JAC(1,I)) / TWO
-            B(ROW, K+2) = (DPSHG3(I,GP) * JAC(2,J) + DPSHG3(J,GP) * JAC(2,I)) / TWO
-            B(ROW, K+3) = (DPSHG3(I,GP) * JAC(3,J) + DPSHG3(J,GP) * JAC(3,I)) / TWO
+            B(ROW, K+1) = (DPSHG3(I,GP) * G(1,J) + DPSHG3(J,GP) * G(1,I)) / TWO
+            B(ROW, K+2) = (DPSHG3(I,GP) * G(2,J) + DPSHG3(J,GP) * G(2,I)) / TWO
+            B(ROW, K+3) = (DPSHG3(I,GP) * G(3,J) + DPSHG3(J,GP) * G(3,I)) / TWO
                                                            !... 1/4 d/di (t h phi) dot g_j  + ...
-            B(ROW, K+4) = THICKNESS(GP) * T * DPSHG3(I,GP) * (JAC(3,J) * DIRECTOR(2) - JAC(2,J) * DIRECTOR(3)) / FOUR
-            B(ROW, K+5) = THICKNESS(GP) * T * DPSHG3(I,GP) * (JAC(1,J) * DIRECTOR(3) - JAC(3,J) * DIRECTOR(1)) / FOUR
-            B(ROW, K+6) = THICKNESS(GP) * T * DPSHG3(I,GP) * (JAC(2,J) * DIRECTOR(1) - JAC(1,J) * DIRECTOR(2)) / FOUR
+            B(ROW, K+4) = THICKNESS(GP) * T * DPSHG3(I,GP) * (G(3,J) * DIRECTOR(2) - G(2,J) * DIRECTOR(3)) / FOUR
+            B(ROW, K+5) = THICKNESS(GP) * T * DPSHG3(I,GP) * (G(1,J) * DIRECTOR(3) - G(3,J) * DIRECTOR(1)) / FOUR
+            B(ROW, K+6) = THICKNESS(GP) * T * DPSHG3(I,GP) * (G(2,J) * DIRECTOR(1) - G(1,J) * DIRECTOR(2)) / FOUR
                                                            !... 1/4 d/dj (t h phi) dot g_i  ]
             IF (J == 3) THEN
                                                            ! Transverse shear rows are special. Eqn. (23a), (24a)
                                                            ! 1/4 d/dt (t h phi) = 1/4 h phi
-              B(ROW, K+4) = B(ROW, K+4) + THICKNESS(GP) * PSH(GP) * (JAC(3,I) * DIRECTOR(2) - JAC(2,I) * DIRECTOR(3)) / FOUR
-              B(ROW, K+5) = B(ROW, K+5) + THICKNESS(GP) * PSH(GP) * (JAC(1,I) * DIRECTOR(3) - JAC(3,I) * DIRECTOR(1)) / FOUR
-              B(ROW, K+6) = B(ROW, K+6) + THICKNESS(GP) * PSH(GP) * (JAC(2,I) * DIRECTOR(1) - JAC(1,I) * DIRECTOR(2)) / FOUR
+              B(ROW, K+4) = B(ROW, K+4) + THICKNESS(GP) * PSH(GP) * (G(3,I) * DIRECTOR(2) - G(2,I) * DIRECTOR(3)) / FOUR
+              B(ROW, K+5) = B(ROW, K+5) + THICKNESS(GP) * PSH(GP) * (G(1,I) * DIRECTOR(3) - G(3,I) * DIRECTOR(1)) / FOUR
+              B(ROW, K+6) = B(ROW, K+6) + THICKNESS(GP) * PSH(GP) * (G(2,I) * DIRECTOR(1) - G(1,I) * DIRECTOR(2)) / FOUR
             ELSE            
                                                            ! 1/4 d/dr (t h phi) = 1/4 t h dN/dr phi
                                                            ! 1/4 d/ds (t h phi) = 1/4 t h dN/ds phi
               B(ROW, K+4) = B(ROW, K+4) +                                                                                          &
-                THICKNESS(GP) * T * DPSHG3(J,GP) * (JAC(3,I) * DIRECTOR(2) - JAC(2,I) * DIRECTOR(3)) / FOUR
+                THICKNESS(GP) * T * DPSHG3(J,GP) * (G(3,I) * DIRECTOR(2) - G(2,I) * DIRECTOR(3)) / FOUR
               B(ROW, K+5) = B(ROW, K+5) +                                                                                          &
-                THICKNESS(GP) * T * DPSHG3(J,GP) * (JAC(1,I) * DIRECTOR(3) - JAC(3,I) * DIRECTOR(1)) / FOUR
+                THICKNESS(GP) * T * DPSHG3(J,GP) * (G(1,I) * DIRECTOR(3) - G(3,I) * DIRECTOR(1)) / FOUR
               B(ROW, K+6) = B(ROW, K+6) +                                                                                          &
-                THICKNESS(GP) * T * DPSHG3(J,GP) * (JAC(2,I) * DIRECTOR(1) - JAC(1,I) * DIRECTOR(2)) / FOUR
+                THICKNESS(GP) * T * DPSHG3(J,GP) * (G(2,I) * DIRECTOR(1) - G(1,I) * DIRECTOR(2)) / FOUR
             ENDIF
 
 

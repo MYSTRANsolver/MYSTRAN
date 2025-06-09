@@ -38,18 +38,16 @@
       REAL(DOUBLE) , INTENT(IN)       :: R
       REAL(DOUBLE) , INTENT(IN)       :: S
       REAL(DOUBLE) , INTENT(IN)       :: T
-      REAL(DOUBLE)                    :: G_R(3)            ! g_r vector in basic coordinates
-      REAL(DOUBLE)                    :: G_S(3)            ! g_s vector in basic coordinates
-      REAL(DOUBLE)                    :: G_T(3)            ! g_t vector in basic coordinates
+      REAL(DOUBLE)                    :: G(3,3)            ! covariant basis vectors in basic coordinates
       REAL(DOUBLE)                    :: DUM1(3)
 
 ! **********************************************************************************************************************************
       
-      CALL MITC_COVARIANT_BASIS( R, S, T, G_R, G_S, G_T )
+      CALL MITC_COVARIANT_BASIS( R, S, T, G )
 
       !DET(J) = G_R . (G_S x G_T)
-      CALL CROSS(G_S, G_T, DUM1)
-      MITC_DETJ = G_R(1)*DUM1(1) + G_R(2)*DUM1(2) + G_R(3)*DUM1(3)
+      CALL CROSS(G(:,2), G(:,3), DUM1)
+      MITC_DETJ = G(1,1)*DUM1(1) + G(2,1)*DUM1(2) + G(3,1)*DUM1(3)
 
       RETURN
 

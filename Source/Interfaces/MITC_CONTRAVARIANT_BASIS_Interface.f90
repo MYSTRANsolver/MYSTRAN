@@ -28,24 +28,17 @@
 
    INTERFACE
 
-      SUBROUTINE MITC_CONTRAVARIANT_BASIS ( G_R, G_S, G_T, G_1, G_2, G_3 )
-      
-      USE PENTIUM_II_KIND, ONLY       :  LONG, DOUBLE
+      SUBROUTINE MITC_CONTRAVARIANT_BASIS ( G, G_CONTRA )
+
+      USE PENTIUM_II_KIND, ONLY       :  DOUBLE
 
       USE CROSS_Interface
       
       IMPLICIT NONE 
-      
-      INTEGER(LONG)                   :: I                 ! DO loop index
 
-      REAL(DOUBLE) , INTENT(IN)       :: G_R(3)            ! Covariant basis vector g_r in basic coordinates
-      REAL(DOUBLE) , INTENT(IN)       :: G_S(3)            ! Covariant basis vector g_s in basic coordinates
-      REAL(DOUBLE) , INTENT(IN)       :: G_T(3)            ! Covariant basis vector g_t in basic coordinates
-      REAL(DOUBLE) , INTENT(OUT)      :: G_1(3)            ! Contravariant basis vector g^1 in basic coordinates
-      REAL(DOUBLE) , INTENT(OUT)      :: G_2(3)            ! Contravariant basis vector g^2 in basic coordinates
-      REAL(DOUBLE) , INTENT(OUT)      :: G_3(3)            ! Contravariant basis vector g^3 in basic coordinates
+      REAL(DOUBLE) , INTENT(IN)       :: G(3,3)            ! Covariant basis vectors
+      REAL(DOUBLE) , INTENT(OUT)      :: G_CONTRA(3,3)     ! Contravariant basis vectors
       REAL(DOUBLE)                    :: DUM1(3)
-
       REAL(DOUBLE)                    :: DETJ
 
       END SUBROUTINE MITC_CONTRAVARIANT_BASIS

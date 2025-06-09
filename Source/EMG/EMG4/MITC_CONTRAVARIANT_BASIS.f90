@@ -23,45 +23,36 @@
 ! _______________________________________________________________________________________________________
                                                                                                         
 ! End MIT license text.                                                                                      
-      SUBROUTINE MITC_CONTRAVARIANT_BASIS ( G_R, G_S, G_T, G_1, G_2, G_3 )
+      SUBROUTINE MITC_CONTRAVARIANT_BASIS ( G, G_CONTRA )
  
 ! Calculates the contravariant basis vectors g^1, g^2, g^3 to the specified covariant basis vectors
-! G_R, G_S, G_T. This is the inverse Jacobian matrix where G_R/S/T are the columns of the Jacobian matrix.
+! g_r, g_s, g_t. This is the inverse Jacobian matrix where g_r/s/t are the columns of the Jacobian matrix.
+! G(:,1) is g_r, etc.
+! G_CONTRA(:,1) is g^1, etc.
 
-      USE PENTIUM_II_KIND, ONLY       :  LONG, DOUBLE
+      USE PENTIUM_II_KIND, ONLY       :  DOUBLE
 
       USE CROSS_Interface
       
       IMPLICIT NONE 
-      
-      INTEGER(LONG)                   :: I                 ! DO loop index
 
-      REAL(DOUBLE) , INTENT(IN)       :: G_R(3)            ! Covariant basis vector g_r in basic coordinates
-      REAL(DOUBLE) , INTENT(IN)       :: G_S(3)            ! Covariant basis vector g_s in basic coordinates
-      REAL(DOUBLE) , INTENT(IN)       :: G_T(3)            ! Covariant basis vector g_t in basic coordinates
-      REAL(DOUBLE) , INTENT(OUT)      :: G_1(3)            ! Contravariant basis vector g^1 in basic coordinates
-      REAL(DOUBLE) , INTENT(OUT)      :: G_2(3)            ! Contravariant basis vector g^2 in basic coordinates
-      REAL(DOUBLE) , INTENT(OUT)      :: G_3(3)            ! Contravariant basis vector g^3 in basic coordinates
+      REAL(DOUBLE) , INTENT(IN)       :: G(3,3)            ! Covariant basis vectors
+      REAL(DOUBLE) , INTENT(OUT)      :: G_CONTRA(3,3)     ! Contravariant basis vectors
       REAL(DOUBLE)                    :: DUM1(3)
-
       REAL(DOUBLE)                    :: DETJ
 
 
 ! **********************************************************************************************************************************
 
-                                                           ! DET(J) = G_R . (G_S x G_T)
-      CALL CROSS(G_S, G_T, DUM1)
-      DETJ = G_R(1)*DUM1(1) + G_R(2)*DUM1(2) + G_R(3)*DUM1(3)
+                                                           ! DET(J) = g_r . (g_s x g_t)
+      CALL CROSS(G(:,2), G(:,3), DUM1)
+      DETJ = G(1,1)*DUM1(1) + G(2,1)*DUM1(2) + G(3,1)*DUM1(3)
 
-      CALL CROSS(G_S, G_T, G_1)
-      CALL CROSS(G_T, G_R, G_2)
-      CALL CROSS(G_R, G_S, G_3)
+      CALL CROSS(G(:,2), G(:,3), G_CONTRA(:,1))
+      CALL CROSS(G(:,3), G(:,1), G_CONTRA(:,2))
+      CALL CROSS(G(:,1), G(:,2), G_CONTRA(:,3))
 
-      DO I=1,3
-        G_1(I) = G_1(I) / DETJ
-        G_2(I) = G_2(I) / DETJ
-        G_3(I) = G_3(I) / DETJ
-      ENDDO
+      G_CONTRA = G_CONTRA / DETJ
 
       RETURN
 

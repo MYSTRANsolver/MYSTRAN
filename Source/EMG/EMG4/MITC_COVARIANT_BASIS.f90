@@ -23,10 +23,12 @@
 ! _______________________________________________________________________________________________________
                                                                                                         
 ! End MIT license text.                                                                                      
-      SUBROUTINE MITC_COVARIANT_BASIS ( R, S, T, G_R, G_S, G_T )
+      SUBROUTINE MITC_COVARIANT_BASIS ( R, S, T, G )
  
 ! Calculates g_r, g_s, g_t in global coordinates.
 ! These are also the columns of the Jacobian matrix.
+! G(:,1) is g^r, etc.
+
 
       USE PENTIUM_II_KIND, ONLY       :  LONG, DOUBLE
       USE MODEL_STUF, ONLY            :  ELGP, XEB, EPROP, TYPE
@@ -45,9 +47,7 @@
       INTEGER(LONG)                   :: GP                ! Element grid point number
 
       REAL(DOUBLE) , INTENT(IN)       :: R, S, T           ! Isoparametric coordinates
-      REAL(DOUBLE) , INTENT(OUT)      :: G_R(3)            ! g_r vector in basic coordinates
-      REAL(DOUBLE) , INTENT(OUT)      :: G_S(3)            ! g_s vector in basic coordinates
-      REAL(DOUBLE) , INTENT(OUT)      :: G_T(3)            ! g_t vector in basic coordinates
+      REAL(DOUBLE) , INTENT(OUT)      :: G(3,3)            ! basis vector in basic coordinates
       REAL(DOUBLE)                    :: PSH(ELGP)       
       REAL(DOUBLE)                    :: DPSHG(2,ELGP)     ! Derivatives of shape functions with respect to xi and eta.
       REAL(DOUBLE)                    :: DIRECTOR(3)       ! Director vector
@@ -80,10 +80,7 @@
       ENDIF
  
 
-      DO I=1,3
-        G_R(I)=ZERO
-        G_S(I)=ZERO
-      ENDDO
+      G(:,:) = ZERO
 
       GP_RS = MITC_GP_RS()
 
@@ -93,14 +90,14 @@
       DO GP=1,ELGP
         DIRECTOR = MITC_DIRECTOR_VECTOR(GP_RS(1,GP), GP_RS(2,GP))
         DO J=1,3
-          G_R(J) = G_R(J) + XEB(GP,J) * DPSHG(1,GP) + DIRECTOR(J) * T/TWO * DPSHG(1,GP) * THICKNESS(GP)
-          G_S(J) = G_S(J) + XEB(GP,J) * DPSHG(2,GP) + DIRECTOR(J) * T/TWO * DPSHG(2,GP) * THICKNESS(GP)
+          G(J,1) = G(J,1) + XEB(GP,J) * DPSHG(1,GP) + DIRECTOR(J) * T/TWO * DPSHG(1,GP) * THICKNESS(GP)
+          G(J,2) = G(J,2) + XEB(GP,J) * DPSHG(2,GP) + DIRECTOR(J) * T/TWO * DPSHG(2,GP) * THICKNESS(GP)
         ENDDO
       ENDDO
 
       DIRECTOR = MITC_DIRECTOR_VECTOR(R, S)
       DO J=1,3
-        G_T(J) = DIRECTOR(J) * RS_THICKNESS/TWO
+        G(J,3) = DIRECTOR(J) * RS_THICKNESS/TWO
       ENDDO
     
 
