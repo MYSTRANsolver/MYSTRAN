@@ -40,7 +40,7 @@
 
       INTEGER(LONG), INTENT(IN)       :: POINT
       INTEGER(LONG), INTENT(IN)       :: COL
-
+      
       END SUBROUTINE QUAD8_ADD_TO_B
 
    END INTERFACE

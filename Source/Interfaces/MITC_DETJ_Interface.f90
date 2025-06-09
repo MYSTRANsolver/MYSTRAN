@@ -41,9 +41,7 @@
       REAL(DOUBLE) , INTENT(IN)       :: R
       REAL(DOUBLE) , INTENT(IN)       :: S
       REAL(DOUBLE) , INTENT(IN)       :: T
-      REAL(DOUBLE)                    :: G_R(3)            ! g_r vector in basic coordinates
-      REAL(DOUBLE)                    :: G_S(3)            ! g_s vector in basic coordinates
-      REAL(DOUBLE)                    :: G_T(3)            ! g_t vector in basic coordinates
+      REAL(DOUBLE)                    :: G(3,3)            ! covariant basis vectors in basic coordinates
       REAL(DOUBLE)                    :: DUM1(3)
 
       END FUNCTION MITC_DETJ

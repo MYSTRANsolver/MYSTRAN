@@ -278,7 +278,7 @@ emspnt0:          DO                                       ! so, run this loop u
          CALL COUNTER_PROGRESS(I)
 
       ENDDO elems 
- 
+
       WRITE(SC1,*) CR13
 
 ! Debug output:

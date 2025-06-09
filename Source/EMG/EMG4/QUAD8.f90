@@ -89,7 +89,6 @@
 ! Generate the mass matrix for this element.
  
       IF (OPT(1) == 'Y') THEN
-
         !Not implememented yet but we can't make it a fatal error because this gets called even when it doesn't need it.
 
       ENDIF
@@ -198,11 +197,7 @@
 
 
 
-        DO I=1,6*ELGP
-          DO J=1,6*ELGP
-            KE(I,J) = ZERO
-          ENDDO 
-        ENDDO   
+        KE(:,:) = ZERO
 
         CALL ORDER_GAUSS ( IORD_IJ, SS_IJ, HH_IJ )
         CALL ORDER_GAUSS ( IORD_K, SS_K, HH_K )
@@ -226,15 +221,12 @@
               CALL MATMULT_FFF_T ( BI, DUM1, 6, 6*ELGP, 6*ELGP, DUM2 )
               DETJ = MITC_DETJ ( R, S, T )
               INTFAC = DETJ*HH_IJ(I)*HH_IJ(J)*HH_K(K)
-              DO L=1,6*ELGP
-                DO M=1,6*ELGP
-                  KE(L,M) = KE(L,M) + DUM2(L,M)*INTFAC
-                ENDDO 
-              ENDDO   
+              KE(:,:) = KE(:,:) + DUM2(:,:)*INTFAC
             ENDDO
           ENDDO 
         ENDDO   
    
+ 
   
       ENDIF
   

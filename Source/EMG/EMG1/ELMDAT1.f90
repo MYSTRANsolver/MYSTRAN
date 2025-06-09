@@ -43,7 +43,7 @@
                                          NCORD, NGRID
       USE SCONTR, ONLY                :  DEDAT_Q4_MATANG_KEY, DEDAT_Q4_THICK_KEY, DEDAT_Q4_POFFS_KEY,                              &
                                          DEDAT_T3_MATANG_KEY, DEDAT_T3_THICK_KEY, DEDAT_T3_POFFS_KEY,                              &
-                                         DEDAT_Q8_POFFS_KEY
+                                                              DEDAT_Q8_THICK_KEY, DEDAT_Q8_POFFS_KEY
       USE PARAMS, ONLY                :  EPSIL, TSTM_DEF
       USE TIMDAT, ONLY                :  TSEC
       USE SUBR_BEGEND_LEVELS, ONLY    :  ELMDAT_BEGEND
@@ -374,7 +374,8 @@
             EPROP(I) = RPSHEAR(INTL_PID,I)
          ENDDO 
 
-      ELSE IF ((TYPE(1:5) == 'TRIA3') .OR. (TYPE(1:5) == 'QUAD4')) THEN
+      ELSE IF ((TYPE(1:5) == 'TRIA3') .OR. (TYPE(1:5) == 'QUAD4') .OR. (TYPE(1:5) == 'QUAD8')) THEN
+
                                                            ! For elems that not composites do EPROP in subr SHELL_ABD_MATRICES)
          IF (PCOMP_PROPS == 'N') THEN                      ! Shell properties are in array PSHELL (except maybe membrane thickness)
 
@@ -393,8 +394,10 @@
             THICK_AVG = ZERO                               ! DELTA locates where thickness key is in EDAT (rel to EID) for plates
             IF (TYPE(1:5) == 'QUAD4') THEN
                DELTA = DEDAT_Q4_THICK_KEY
-            ELSE
+            ELSE IF (TYPE(1:5) == 'TRIA3') THEN
                DELTA = DEDAT_T3_THICK_KEY
+            ELSE IF (TYPE(1:5) == 'QUAD8') THEN
+               DELTA = DEDAT_Q8_THICK_KEY
             ENDIF
             
             IF (EDAT(EPNTK+DELTA) > 0) THEN                ! Membrane thickness was defined as grid thicknesses on connection entry

@@ -428,6 +428,7 @@
       INTEGER(LONG), PARAMETER :: DEDAT_T3_THICK_KEY  =   9      ! Delta in EDAT for TRIA3 to get from EID to the thickness key
       INTEGER(LONG), PARAMETER :: DEDAT_Q8_POFFS_KEY  =  12      ! Delta in EDAT for QUAD8 to get from EID to the offset key
       INTEGER(LONG), PARAMETER :: DEDAT_Q8_SHELL_KEY  =  13      ! Delta in EDAT for QUAD8 to get from EID to the shell/pcomp key
+      INTEGER(LONG), PARAMETER :: DEDAT_Q8_THICK_KEY  =  14      ! Delta in EDAT for QUAD8 to get from EID to the thickness key
       INTEGER(LONG), PARAMETER :: MAX_FEMAP_COLS      =  22      ! Max number of columns for array FEMAP_ELEM_VECS
       INTEGER(LONG), PARAMETER :: MAX_NUM_STR         =   9      ! Number of different stresses/strains
       INTEGER(LONG), PARAMETER :: MAX_ORDER_GAUSS     =  10      ! Max order that can be used when subr ORDER_GAUSS is called

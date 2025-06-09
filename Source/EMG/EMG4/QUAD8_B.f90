@@ -33,12 +33,9 @@
 
 
       USE PENTIUM_II_KIND, ONLY       :  LONG, DOUBLE
-      USE MODEL_STUF, ONLY            :  ELGP, TYPE
+      USE MODEL_STUF, ONLY            :  ELGP
       USE CONSTANTS_1, ONLY           :  ZERO, QUARTER, ONE, TWO, THREE
-      USE IOUNT1, ONLY                :  ERR, F06
-      USE SCONTR, ONLY                :  FATAL_ERR
 
-      USE OUTA_HERE_Interface
       USE SHP2DQ_Interface
       USE MITC_COVARIANT_BASIS_Interface
       USE MITC_CONTRAVARIANT_BASIS_Interface
@@ -101,26 +98,30 @@
 ! **********************************************************************************************************************************
 ! Add in-layer strain-displacement terms
 
+
       IF ( INLAYER ) THEN                                  
 
-                                                           ! 8 sampling points
+                                                           ! 8 in-layer sampling points
+        !         ^ s
+        !         |
+        !  4      7      3          o sampling point
+        !   +-----+-----+           + node
+        !   | o   o   o |
+        !   |  2  5  1  |
+        ! 8 + o6     8o + 6 --> r
+        !   |  3  7  4  |
+        !   | o   o   o |
+        !   +-----+-----+
+        !  1      5      2
+        ! 
+
         A = ONE / DSQRT(THREE)
         POINT_R = (/ A, -A, -A,  A, ZERO, -A,     ZERO, A    /)
         POINT_S = (/ A,  A, -A, -A, A,     ZERO, -A,    ZERO /)
 
                                                            ! Interpolation functions for the 8 sampling points.
-        IF (TYPE(1:5) == 'QUAD8') THEN
+        CALL SHP2DQ ( 0, 0, ELGP, 'QUAD8_B', '', 0, R/A, S/A, 'N', PSH, DPSHG )
 
-          CALL SHP2DQ ( 0, 0, ELGP, 'QUAD8_B', '', 0, R/A, S/A, 'N', PSH, DPSHG )
-
-        ELSE
-
-          WRITE(ERR,*) ' *ERROR: INCORRECT ELEMENT TYPE', TYPE
-          WRITE(F06,*) ' *ERROR: INCORRECT ELEMENT TYPE', TYPE
-          FATAL_ERR = FATAL_ERR + 1
-          CALL OUTA_HERE ( 'Y' )
-
-        ENDIF
 
                                                             ! Convert interpolation functions from native node numbering
                                                             ! to Bathe interpolation point/node numbering.
@@ -348,7 +349,6 @@
         ENDDO
 
 
-
       ENDIF
 
 
@@ -356,6 +356,7 @@
 ! Transform from the global cartesian basis (basic) to the cartesian local basis.
 
       B = BB !victor todo temporary shortcut
+
 
       RETURN
 

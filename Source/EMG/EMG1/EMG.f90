@@ -332,7 +332,7 @@
           (TYPE      == 'TETRA4  ') .OR. (TYPE      == 'TETRA10 ')) THEN
          CALL ELMDAT2 ( INT_ELEM_ID, OPT, WRITE_WARN )
       ENDIF
- 
+
       IF (NUM_EMG_FATAL_ERRS > 0)   CALL EMG_QUIT
 
 ! **********************************************************************************************************************************
