@@ -1,3 +1,4 @@
+! ###############################################################################################################################
 ! Begin MIT license text.                                                                                    
 ! _______________________________________________________________________________________________________
                                                                                                          
@@ -20,38 +21,38 @@
 ! OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN                              
 ! THE SOFTWARE.                                                                                          
 ! _______________________________________________________________________________________________________
-                                                                                                      
+                                                                                                        
 ! End MIT license text.                                                                                      
 
-      MODULE EMG_USE_IFs
+   MODULE MITC_TRANSFORM_B_Interface
 
-! USE Interface statements for all subroutines called by SUBROUTINE EMG
+   INTERFACE
 
-      USE IS_ELEM_PCOMP_PROPS_Interface
-      USE OURTIM_Interface
-      USE ELMDAT1_Interface
-      USE OUTA_HERE_Interface
-      USE ELMGM1_Interface
-      USE ELMGM2_Interface
-      USE ELMGM3_Interface
-      USE GET_MATANGLE_FROM_CID_Interface
-      USE MATERIAL_PROPS_2D_Interface
-      USE ROT_AXES_MATL_TO_LOC_Interface
-      USE MATERIAL_PROPS_3D_Interface
-      USE ELMOUT_Interface
-      USE SHELL_ABD_MATRICES_Interface
-      USE ELMDAT2_Interface
-      USE ELAS1_Interface
-      USE BREL1_Interface
-      USE BUSH_Interface
-      USE TREL1_Interface
-      USE QDEL1_Interface
-      USE HEXA_Interface
-      USE PENTA_Interface
-      USE TETRA_Interface
-      USE KUSER1_Interface
-      USE USERIN_Interface
-      USE ELMOFF_Interface
-      USE MITC8_Interface
+      SUBROUTINE MITC_TRANSFORM_B ( TRANSFORM, B )
 
-      END MODULE EMG_USE_IFs
+      USE PENTIUM_II_KIND, ONLY       :  LONG, DOUBLE
+      USE MODEL_STUF, ONLY            :  ELGP
+      USE CONSTANTS_1, ONLY           :  ZERO
+
+      IMPLICIT NONE 
+
+      REAL(DOUBLE),  INTENT(INOUT)    :: B(6,6*ELGP)
+      REAL(DOUBLE),  INTENT(IN)       :: TRANSFORM(3,3)
+      REAL(DOUBLE)                    :: B_TRANSFORMED(6,6*ELGP)
+      REAL(DOUBLE)                    :: FACTOR
+
+      INTEGER(LONG)                   :: I,J,K,L           ! Tensor indices
+      INTEGER(LONG)                   :: INDEX1(6)         ! Mapping of 6x1 vector index to 3x3 tensor first index.
+      INTEGER(LONG)                   :: INDEX2(6)         ! Mapping of 6x1 vector index to 3x3 tensor second index.
+      INTEGER(LONG)                   :: ROWS(3,3)         ! Mapping of 3x3 tensor indices to 6x1 vector index
+      INTEGER(LONG)                   :: ROW
+      INTEGER(LONG)                   :: IJ_ROW
+
+      INTRINSIC                       :: DSQRT
+
+      END SUBROUTINE MITC_TRANSFORM_B
+
+   END INTERFACE
+
+   END MODULE MITC_TRANSFORM_B_Interface
+

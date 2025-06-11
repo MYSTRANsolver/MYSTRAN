@@ -23,7 +23,7 @@
 ! _______________________________________________________________________________________________________
                                                                                                         
 ! End MIT license text.                                                                                      
-      SUBROUTINE QUAD8_B ( R, S, T, INLAYER, SHEAR, B )
+      SUBROUTINE MITC8_B ( R, S, T, INLAYER, SHEAR, B )
  
 ! Calculates the strain-displacement matrix in the cartesian local coordinate system
 ! for MITC8 shell at one point in isoparametric coordinates.
@@ -40,8 +40,10 @@
       USE MITC_COVARIANT_BASIS_Interface
       USE MITC_CONTRAVARIANT_BASIS_Interface
       USE MITC_COVARIANT_STRAIN_DIRECT_INTERPOLATION_Interface
-      USE QUAD8_ADD_TO_B_Interface
+      USE MITC_ADD_TO_B_Interface
       USE OUTER_PRODUCT_Interface
+      USE MITC8_CARTESIAN_LOCAL_BASIS_Interface
+      USE MITC_TRANSFORM_B_Interface
 
       IMPLICIT NONE 
 
@@ -57,8 +59,7 @@
       INTEGER(LONG)                   :: POINT_B           ! Corner sampling point number adjacent to midside one.
 
       REAL(DOUBLE) , INTENT(IN)       :: R, S, T           ! Isoparametric coordinates
-      REAL(DOUBLE) , INTENT(OUT)      :: B(6, 6*ELGP)      ! Strain-displacement matrix in cartesian local coordinates
-      REAL(DOUBLE)                    :: BB(6, 6*ELGP)     ! Strain-displacement matrix in basic coordinates
+      REAL(DOUBLE) , INTENT(OUT)      :: B(6, 6*ELGP)      ! Strain-displacement matrix
       REAL(DOUBLE)                    :: E(6, 6*ELGP)      ! Strain-displacement matrix directly interpolated
       REAL(DOUBLE)                    :: A
       REAL(DOUBLE)                    :: POINT_R(8)        ! Sampling point isoparametric R coordinates
@@ -73,8 +74,8 @@
       REAL(DOUBLE)                    :: G_CONTRA(3,3)     ! Array of 3 contravariant basis vectors in basic coordinates
       REAL(DOUBLE)                    :: G_J_NORMALIZED(3)
       REAL(DOUBLE)                    :: GG(3,3)           ! Outer product of two contravariant basis vectors
-      REAL(DOUBLE)                    :: BB_1(6,6*ELGP,4)  ! Part of strain-displacement matrix for each of 4 sampling points.
-      REAL(DOUBLE)                    :: BB_2(6,6*ELGP,1)  ! Part of strain-displacement matrix for a sampling point.
+      REAL(DOUBLE)                    :: B_1(6,6*ELGP,4)   ! Part of strain-displacement matrix for each of 4 sampling points.
+      REAL(DOUBLE)                    :: B_2(6,6*ELGP,1)   ! Part of strain-displacement matrix for a sampling point.
       REAL(DOUBLE)                    :: E_AVERAGE(6,6*ELGP)
       REAL(DOUBLE)                    :: EJJ(6,6*ELGP)     ! Part of strain-displacement matrix with only row J used.
       REAL(DOUBLE)                    :: EIT(6,6*ELGP)     ! Part of strain-displacement matrix with only row RT or ST.
@@ -86,13 +87,14 @@
       REAL(DOUBLE)                    :: DUM1(3)
       REAL(DOUBLE)                    :: COORD_1           ! R or S coordinate of a sampling point.
       REAL(DOUBLE)                    :: COORD_2           ! S or R coordinate of a sampling point.
+      REAL(DOUBLE)                    :: TRANSFORM(3,3)    ! Transformation matrix
 
       INTRINSIC                       :: DSQRT
       
 ! **********************************************************************************************************************************
 ! Initialize empty matrix
 
-      BB(:,:) = ZERO
+      B(:,:) = ZERO
  
 
 ! **********************************************************************************************************************************
@@ -120,7 +122,7 @@
         POINT_S = (/ A,  A, -A, -A, A,     ZERO, -A,    ZERO /)
 
                                                            ! Interpolation functions for the 8 sampling points.
-        CALL SHP2DQ ( 0, 0, ELGP, 'QUAD8_B', '', 0, R/A, S/A, 'N', PSH, DPSHG )
+        CALL SHP2DQ ( 0, 0, ELGP, 'MITC8_B', '', 0, R/A, S/A, 'N', PSH, DPSHG )
 
 
                                                             ! Convert interpolation functions from native node numbering
@@ -137,7 +139,7 @@
 
         DO POINT=1,4
 
-          BB_1(:,:,POINT) = ZERO
+          B_1(:,:,POINT) = ZERO
 
           ! The contribution to ε in the global (basic) basis is
           ! = hIS(i) * ( ε~_rr g^r g^r|_i  +  ε~_ss g^s g^s|_i  +  ε~_rs [g^r g^s|_i  + g^r g^s|_i^T] )
@@ -149,23 +151,23 @@
                                                            ! ε~_rr g^r g^r|_i
           CALL OUTER_PRODUCT( G_CONTRA(:,1), G_CONTRA(:,1), 3, 3, GG )
           DO COL=1,6*ELGP
-            CALL QUAD8_ADD_TO_B( BB_1, POINT, COL, E(1, COL), GG )
+            CALL MITC_ADD_TO_B( B_1, POINT, COL, E(1, COL), GG )
           ENDDO
 
                                                            ! ε~_ss g^s g^s|_i
           CALL OUTER_PRODUCT( G_CONTRA(:,2), G_CONTRA(:,2), 3, 3, GG )
           DO COL=1,6*ELGP
-            CALL QUAD8_ADD_TO_B( BB_1, POINT, COL, E(2, COL), GG )
+            CALL MITC_ADD_TO_B( B_1, POINT, COL, E(2, COL), GG )
           ENDDO
 
                                                            ! ε~_rs [g^r g^s|_i  + g^r g^s|_i^T]
           CALL OUTER_PRODUCT( G_CONTRA(:,1), G_CONTRA(:,2), 3, 3, GG )
           GG = GG + TRANSPOSE(GG)
           DO COL=1,6*ELGP
-            CALL QUAD8_ADD_TO_B( BB_1, POINT, COL, E(4, COL), GG )
+            CALL MITC_ADD_TO_B( B_1, POINT, COL, E(4, COL), GG )
           ENDDO
 
-          BB = BB + BB_1(:,:,POINT) * H_IS(POINT)
+          B = B + B_1(:,:,POINT) * H_IS(POINT)
 
         ENDDO
 
@@ -205,15 +207,15 @@
 
           CALL MITC_CONTRAVARIANT_BASIS( G, G_CONTRA )
 
-          BB_2(:,:,1) = ZERO
+          B_2(:,:,1) = ZERO
           
           CALL OUTER_PRODUCT( G_CONTRA(:,J), G_CONTRA(:,J), 3, 3, GG )
           DO COL=1,6*ELGP
-            CALL QUAD8_ADD_TO_B( BB_2, 1, COL, EJJ(J, COL), GG )
+            CALL MITC_ADD_TO_B( B_2, 1, COL, EJJ(J, COL), GG )
           ENDDO
           
                                                            ! [1/2 (ε|_A + ε|_B)]
-          E_AVERAGE = (BB_1(:,:,POINT_A) + BB_1(:,:,POINT_B)) / TWO
+          E_AVERAGE = (B_1(:,:,POINT_A) + B_1(:,:,POINT_B)) / TWO
 
                       ! {g_r · [1/2 (ε|_A + ε|_B)] · g_r} g^r g^r |_SamplingPoint if sampling point is 5 or 7
                       ! {g_s · [1/2 (ε|_A + ε|_B)] · g_s} g^s g^s |_SamplingPoint if sampling point is 6 or 8
@@ -225,7 +227,7 @@
             DUM1(3) = G(1,I) * E_AVERAGE(6,COL) + G(2,I) * E_AVERAGE(5,COL) + G(3,I) * E_AVERAGE(3,COL)
                                                            ! [...] · g_i
             SCALAR = DUM1(1) * G(1,I) + DUM1(2) * G(2,I) + DUM1(3) * G(3,I)
-            CALL QUAD8_ADD_TO_B( BB_2, 1, COL, SCALAR, GG )
+            CALL MITC_ADD_TO_B( B_2, 1, COL, SCALAR, GG )
           ENDDO        
         
                       ! {g_r · [1/2 (ε|_A + ε|_B)] · g_s} (g^r g^s + [g^r g^s]^T |_SamplingPoint
@@ -238,10 +240,10 @@
             DUM1(3) = G(1,1) * E_AVERAGE(6,COL) + G(2,1) * E_AVERAGE(5,COL) + G(3,1) * E_AVERAGE(3,COL)
                                                            ! [...] · g_s
             SCALAR = DUM1(1) * G(1,2) + DUM1(2) * G(2,2) + DUM1(3) * G(3,2)
-            CALL QUAD8_ADD_TO_B( BB_2, 1, COL, SCALAR, GG )
+            CALL MITC_ADD_TO_B( B_2, 1, COL, SCALAR, GG )
           ENDDO   
         
-          BB = BB + BB_2(:,:,1) * H_IS(POINT)
+          B = B + B_2(:,:,1) * H_IS(POINT)
 
         ENDDO
 
@@ -329,17 +331,17 @@
               CALL MITC_COVARIANT_STRAIN_DIRECT_INTERPOLATION( POINT_R(POINT), POINT_S(POINT), ZERO, ROW, ROW, EIT )
             ENDIF
 
-            BB_2(:,:,1) = ZERO
+            B_2(:,:,1) = ZERO
             
             CALL OUTER_PRODUCT( G_CONTRA(:,I), G_CONTRA(:,3), 3, 3, GG )
             ! Evaluate both the g^r g^t term and the [g^r g^t]^T term together so their sum is symmetric since only
             ! the unique elements are stored in the B matrix.
             GG = GG + TRANSPOSE(GG)
             DO COL=1,6*ELGP
-              CALL QUAD8_ADD_TO_B( BB_2, 1, COL, EIT(ROW, COL), GG )
+              CALL MITC_ADD_TO_B( B_2, 1, COL, EIT(ROW, COL), GG )
             ENDDO
             
-            BB = BB + BB_2(:,:,1) * H_IT(POINT)
+            B = B + B_2(:,:,1) * H_IT(POINT)
 
           ENDDO
         
@@ -355,8 +357,11 @@
 ! **********************************************************************************************************************************
 ! Transform from the global cartesian basis (basic) to the cartesian local basis.
 
-      B = BB !victor todo temporary shortcut
+      TRANSFORM = TRANSPOSE(MITC8_CARTESIAN_LOCAL_BASIS(R, S))
+      CALL MITC_TRANSFORM_B( TRANSFORM, B)
 
+      ! Double shear terms because it's now treated as vectors instead of tensors.
+      B(4:6,:) = B(4:6,:) * 2
 
       RETURN
 
@@ -365,4 +370,4 @@
 
 ! **********************************************************************************************************************************
   
-      END SUBROUTINE QUAD8_B
+      END SUBROUTINE MITC8_B

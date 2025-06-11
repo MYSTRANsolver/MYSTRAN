@@ -1,4 +1,4 @@
-! #################################################################################################################################
+! ###############################################################################################################################
 ! Begin MIT license text.                                                                                    
 ! _______________________________________________________________________________________________________
                                                                                                          
@@ -23,9 +23,12 @@
 ! _______________________________________________________________________________________________________
                                                                                                         
 ! End MIT license text.                                                                                      
-      SUBROUTINE QUAD8_ADD_TO_B ( B, POINT, COL, SCALAR, TENSOR )
 
-! Add the UT of the 3x3 tensor times the scalar to a column of the B for sampling point POINT.
+   MODULE MITC_ADD_TO_B_Interface
+
+   INTERFACE
+
+      SUBROUTINE MITC_ADD_TO_B ( B, POINT, COL, SCALAR, TENSOR )
  
       USE PENTIUM_II_KIND, ONLY       :  LONG, DOUBLE
 
@@ -37,19 +40,10 @@
 
       INTEGER(LONG), INTENT(IN)       :: POINT
       INTEGER(LONG), INTENT(IN)       :: COL
+      
+      END SUBROUTINE MITC_ADD_TO_B
 
-! **********************************************************************************************************************************
+   END INTERFACE
 
-      B(1, COL, POINT) = B(1, COL, POINT) + SCALAR * TENSOR(1,1)
-      B(2, COL, POINT) = B(2, COL, POINT) + SCALAR * TENSOR(2,2)
-      B(3, COL, POINT) = B(3, COL, POINT) + SCALAR * TENSOR(3,3)
-      B(4, COL, POINT) = B(4, COL, POINT) + SCALAR * TENSOR(1,2)
-      B(5, COL, POINT) = B(5, COL, POINT) + SCALAR * TENSOR(2,3)
-      B(6, COL, POINT) = B(6, COL, POINT) + SCALAR * TENSOR(1,3)
+   END MODULE MITC_ADD_TO_B_Interface
 
-      RETURN
-
-
-! **********************************************************************************************************************************
-  
-      END SUBROUTINE QUAD8_ADD_TO_B

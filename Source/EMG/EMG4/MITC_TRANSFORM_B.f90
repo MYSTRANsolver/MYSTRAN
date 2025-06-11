@@ -1,4 +1,4 @@
-! ###############################################################################################################################
+! #################################################################################################################################
 ! Begin MIT license text.                                                                                    
 ! _______________________________________________________________________________________________________
                                                                                                          
@@ -23,27 +23,59 @@
 ! _______________________________________________________________________________________________________
                                                                                                         
 ! End MIT license text.                                                                                      
+      SUBROUTINE MITC_TRANSFORM_B ( TRANSFORM, B )
 
-   MODULE QUAD8_ADD_TO_B_Interface
+! Transform the strain-displacement matrix (tensor components) to a different basis.
+! Equivalent to the sum
+!    B_kl = A_ki Alj B~_ij
 
-   INTERFACE
-
-      SUBROUTINE QUAD8_ADD_TO_B ( B, POINT, COL, SCALAR, TENSOR )
- 
       USE PENTIUM_II_KIND, ONLY       :  LONG, DOUBLE
+      USE MODEL_STUF, ONLY            :  ELGP
+      USE CONSTANTS_1, ONLY           :  ZERO
 
       IMPLICIT NONE 
+
+      REAL(DOUBLE),  INTENT(INOUT)    :: B(6,6*ELGP)
+      REAL(DOUBLE),  INTENT(IN)       :: TRANSFORM(3,3)
+      REAL(DOUBLE)                    :: B_TRANSFORMED(6,6*ELGP)
+      REAL(DOUBLE)                    :: FACTOR
+
+      INTEGER(LONG)                   :: I,J,K,L           ! Tensor indices
+      INTEGER(LONG)                   :: INDEX1(6)         ! Mapping of 6x1 vector index to 3x3 tensor first index.
+      INTEGER(LONG)                   :: INDEX2(6)         ! Mapping of 6x1 vector index to 3x3 tensor second index.
+      INTEGER(LONG)                   :: ROWS(3,3)         ! Mapping of 3x3 tensor indices to 6x1 vector index
+      INTEGER(LONG)                   :: ROW
+      INTEGER(LONG)                   :: IJ_ROW
+
+      INTRINSIC                       :: DSQRT
+
+
+! **********************************************************************************************************************************
+
+      INDEX1 = (/ 1, 2, 3, 1, 2, 1 /)
+      INDEX2 = (/ 1, 2, 3, 2, 3, 3 /)
       
-      REAL(DOUBLE) , INTENT(INOUT)    :: B(6,6*8,4)
-      REAL(DOUBLE) , INTENT(IN)       :: SCALAR
-      REAL(DOUBLE) , INTENT(IN)       :: TENSOR(3,3)
-
-      INTEGER(LONG), INTENT(IN)       :: POINT
-      INTEGER(LONG), INTENT(IN)       :: COL
+      ROWS = RESHAPE((/ 1, 4, 6, 4, 2, 5, 6, 5, 3 /), SHAPE(ROWS))
       
-      END SUBROUTINE QUAD8_ADD_TO_B
+      B_TRANSFORMED(:,:) = ZERO
+      
+      DO ROW=1,6
+        K = INDEX1(ROW)
+        L = INDEX2(ROW)
+        DO I=1,3
+          DO J=1,3
+            IJ_ROW = ROWS(I,J)
+            FACTOR = TRANSFORM(K,I) * TRANSFORM(L,J)
+            B_TRANSFORMED(ROW,:) = B_TRANSFORMED(ROW,:) + B(IJ_ROW,:) * FACTOR
+          ENDDO
+        ENDDO
+      ENDDO
 
-   END INTERFACE
+      B(:,:) = B_TRANSFORMED(:,:)
 
-   END MODULE QUAD8_ADD_TO_B_Interface
+      RETURN
 
+
+! **********************************************************************************************************************************
+  
+      END SUBROUTINE MITC_TRANSFORM_B

@@ -24,11 +24,11 @@
                                                                                                         
 ! End MIT license text.                                                                                      
 
-   MODULE QUAD8_B_Interface
+   MODULE MITC8_B_Interface
 
    INTERFACE
 
-      SUBROUTINE QUAD8_B ( R, S, T, INLAYER, SHEAR, B )
+      SUBROUTINE MITC8_B ( R, S, T, INLAYER, SHEAR, B )
 
       USE PENTIUM_II_KIND, ONLY       :  LONG, DOUBLE
       USE MODEL_STUF, ONLY            :  ELGP
@@ -38,8 +38,10 @@
       USE MITC_COVARIANT_BASIS_Interface
       USE MITC_CONTRAVARIANT_BASIS_Interface
       USE MITC_COVARIANT_STRAIN_DIRECT_INTERPOLATION_Interface
-      USE QUAD8_ADD_TO_B_Interface
+      USE MITC_ADD_TO_B_Interface
       USE OUTER_PRODUCT_Interface
+      USE MITC8_CARTESIAN_LOCAL_BASIS_Interface
+      USE MITC_TRANSFORM_B_Interface
 
       IMPLICIT NONE 
 
@@ -55,8 +57,7 @@
       INTEGER(LONG)                   :: POINT_B           ! Corner sampling point number adjacent to midside one.
 
       REAL(DOUBLE) , INTENT(IN)       :: R, S, T           ! Isoparametric coordinates
-      REAL(DOUBLE) , INTENT(OUT)      :: B(6, 6*ELGP)      ! Strain-displacement matrix in cartesian local coordinates
-      REAL(DOUBLE)                    :: BB(6, 6*ELGP)     ! Strain-displacement matrix in basic coordinates
+      REAL(DOUBLE) , INTENT(OUT)      :: B(6, 6*ELGP)      ! Strain-displacement matrix
       REAL(DOUBLE)                    :: E(6, 6*ELGP)      ! Strain-displacement matrix directly interpolated
       REAL(DOUBLE)                    :: A
       REAL(DOUBLE)                    :: POINT_R(8)        ! Sampling point isoparametric R coordinates
@@ -71,8 +72,8 @@
       REAL(DOUBLE)                    :: G_CONTRA(3,3)     ! Array of 3 contravariant basis vectors in basic coordinates
       REAL(DOUBLE)                    :: G_J_NORMALIZED(3)
       REAL(DOUBLE)                    :: GG(3,3)           ! Outer product of two contravariant basis vectors
-      REAL(DOUBLE)                    :: BB_1(6,6*ELGP,4)  ! Part of strain-displacement matrix for each of 4 sampling points.
-      REAL(DOUBLE)                    :: BB_2(6,6*ELGP,1)  ! Part of strain-displacement matrix for a sampling point.
+      REAL(DOUBLE)                    :: B_1(6,6*ELGP,4)   ! Part of strain-displacement matrix for each of 4 sampling points.
+      REAL(DOUBLE)                    :: B_2(6,6*ELGP,1)   ! Part of strain-displacement matrix for a sampling point.
       REAL(DOUBLE)                    :: E_AVERAGE(6,6*ELGP)
       REAL(DOUBLE)                    :: EJJ(6,6*ELGP)     ! Part of strain-displacement matrix with only row J used.
       REAL(DOUBLE)                    :: EIT(6,6*ELGP)     ! Part of strain-displacement matrix with only row RT or ST.
@@ -84,12 +85,13 @@
       REAL(DOUBLE)                    :: DUM1(3)
       REAL(DOUBLE)                    :: COORD_1           ! R or S coordinate of a sampling point.
       REAL(DOUBLE)                    :: COORD_2           ! S or R coordinate of a sampling point.
+      REAL(DOUBLE)                    :: TRANSFORM(3,3)    ! Transformation matrix
 
       INTRINSIC                       :: DSQRT
 
-      END SUBROUTINE QUAD8_B
+      END SUBROUTINE MITC8_B
 
    END INTERFACE
 
-   END MODULE QUAD8_B_Interface
+   END MODULE MITC8_B_Interface
 

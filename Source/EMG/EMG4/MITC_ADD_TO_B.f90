@@ -1,3 +1,4 @@
+! #################################################################################################################################
 ! Begin MIT license text.                                                                                    
 ! _______________________________________________________________________________________________________
                                                                                                          
@@ -20,38 +21,35 @@
 ! OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN                              
 ! THE SOFTWARE.                                                                                          
 ! _______________________________________________________________________________________________________
-                                                                                                      
+                                                                                                        
 ! End MIT license text.                                                                                      
+      SUBROUTINE MITC_ADD_TO_B ( B, POINT, COL, SCALAR, TENSOR )
 
-      MODULE EMG_USE_IFs
+! Add the UT of the 3x3 tensor times the scalar to a column of the B for sampling point POINT.
+ 
+      USE PENTIUM_II_KIND, ONLY       :  LONG, DOUBLE
 
-! USE Interface statements for all subroutines called by SUBROUTINE EMG
+      IMPLICIT NONE 
+      
+      REAL(DOUBLE) , INTENT(INOUT)    :: B(6,6*8,4)
+      REAL(DOUBLE) , INTENT(IN)       :: SCALAR
+      REAL(DOUBLE) , INTENT(IN)       :: TENSOR(3,3)
 
-      USE IS_ELEM_PCOMP_PROPS_Interface
-      USE OURTIM_Interface
-      USE ELMDAT1_Interface
-      USE OUTA_HERE_Interface
-      USE ELMGM1_Interface
-      USE ELMGM2_Interface
-      USE ELMGM3_Interface
-      USE GET_MATANGLE_FROM_CID_Interface
-      USE MATERIAL_PROPS_2D_Interface
-      USE ROT_AXES_MATL_TO_LOC_Interface
-      USE MATERIAL_PROPS_3D_Interface
-      USE ELMOUT_Interface
-      USE SHELL_ABD_MATRICES_Interface
-      USE ELMDAT2_Interface
-      USE ELAS1_Interface
-      USE BREL1_Interface
-      USE BUSH_Interface
-      USE TREL1_Interface
-      USE QDEL1_Interface
-      USE HEXA_Interface
-      USE PENTA_Interface
-      USE TETRA_Interface
-      USE KUSER1_Interface
-      USE USERIN_Interface
-      USE ELMOFF_Interface
-      USE MITC8_Interface
+      INTEGER(LONG), INTENT(IN)       :: POINT
+      INTEGER(LONG), INTENT(IN)       :: COL
 
-      END MODULE EMG_USE_IFs
+! **********************************************************************************************************************************
+
+      B(1, COL, POINT) = B(1, COL, POINT) + SCALAR * TENSOR(1,1)
+      B(2, COL, POINT) = B(2, COL, POINT) + SCALAR * TENSOR(2,2)
+      B(3, COL, POINT) = B(3, COL, POINT) + SCALAR * TENSOR(3,3)
+      B(4, COL, POINT) = B(4, COL, POINT) + SCALAR * TENSOR(1,2)
+      B(5, COL, POINT) = B(5, COL, POINT) + SCALAR * TENSOR(2,3)
+      B(6, COL, POINT) = B(6, COL, POINT) + SCALAR * TENSOR(1,3)
+
+      RETURN
+
+
+! **********************************************************************************************************************************
+  
+      END SUBROUTINE MITC_ADD_TO_B

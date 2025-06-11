@@ -23,7 +23,7 @@
 ! _______________________________________________________________________________________________________
                                                                                                         
 ! End MIT license text.                                                                                      
-      SUBROUTINE QUAD8 ( OPT, INT_ELEM_ID )
+      SUBROUTINE MITC8 ( OPT, INT_ELEM_ID )
  
 ! Calculates, or calls subr's to calculate, quadrilateral element matrices:
 
@@ -46,11 +46,11 @@
       USE MATMULT_FFF_Interface
       USE MATMULT_FFF_T_Interface
       USE MITC_DETJ_Interface
-      USE QUAD8_B_Interface
+      USE MITC8_B_Interface
 
       IMPLICIT NONE 
   
-      CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: SUBR_NAME = 'QUAD8'
+      CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: SUBR_NAME = 'MITC8'
       CHARACTER(1*BYTE), INTENT(IN)   :: OPT(6)            ! 'Y'/'N' flags for whether to calc certain elem matrices
 
       INTEGER(LONG), INTENT(IN)       :: INT_ELEM_ID       ! Internal element ID
@@ -157,7 +157,6 @@
         ! strain = [B] * displacement
         ! K is in the basic coordinate system
 
-!victor todo see if I can make cartisian local coordiantes be the same as Nastran element local coordinates and material coordiantes are that rotated about the normal by THETA.
 
 
 
@@ -208,7 +207,7 @@
               R = SS_IJ(I)
               S = SS_IJ(J)
               T = SS_K(K)
-              CALL QUAD8_B( R, S, T, .TRUE., .TRUE., BI)
+              CALL MITC8_B( R, S, T, .TRUE., .TRUE., BI)
 
 ! victor todo transform E from material to cartesian local coordiantes (EE) at this Gauss point. Not this simple copy.
               DO L=1,6
@@ -269,4 +268,4 @@
 
 ! **********************************************************************************************************************************
   
-      END SUBROUTINE QUAD8
+      END SUBROUTINE MITC8
