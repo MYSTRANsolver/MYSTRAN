@@ -173,7 +173,6 @@
 
 
 
-
         DO POINT=5,8
                                                            
           SELECT CASE (POINT)
@@ -185,8 +184,8 @@
 
                                                            ! ε_ss g^s g^s |_SamplingPoint if sampling point is 5 or 7
                                                            ! ε_rr g^r g^r |_SamplingPoint if sampling point is 6 or 8
-          CALL MITC_COVARIANT_STRAIN_DIRECT_INTERPOLATION( R, S, T, J, J, EJJ )
-          CALL MITC_COVARIANT_BASIS(R, S, T, G)
+          CALL MITC_COVARIANT_STRAIN_DIRECT_INTERPOLATION( POINT_R(POINT), POINT_S(POINT), T, J, J, EJJ )
+          CALL MITC_COVARIANT_BASIS(POINT_R(POINT), POINT_S(POINT), T, G)
 
           !              _
           ! Convert g to g
@@ -242,10 +241,11 @@
             SCALAR = DUM1(1) * G(1,2) + DUM1(2) * G(2,2) + DUM1(3) * G(3,2)
             CALL MITC_ADD_TO_B( B_2, 1, COL, SCALAR, GG )
           ENDDO   
-        
+       
           B = B + B_2(:,:,1) * H_IS(POINT)
 
         ENDDO
+
 
       ENDIF
 
