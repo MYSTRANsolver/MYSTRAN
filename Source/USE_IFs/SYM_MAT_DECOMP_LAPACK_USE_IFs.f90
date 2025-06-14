@@ -36,5 +36,6 @@
       USE OUTA_HERE_Interface
       USE GET_GRID_AND_COMP_Interface
       USE COND_NUM_Interface
+      USE BAILOUT_CHECK_Interface
 
       END MODULE SYM_MAT_DECOMP_LAPACK_USE_IFs
