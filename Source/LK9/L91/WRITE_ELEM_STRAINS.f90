@@ -40,7 +40,7 @@
       USE NONLINEAR_PARAMS, ONLY      :  LOAD_ISTEP
       USE SUBR_BEGEND_LEVELS, ONLY    :  WRITE_ELEM_STRAINS_BEGEND
       USE LINK9_STUFF, ONLY           :  EID_OUT_ARRAY, GID_OUT_ARRAY, OGEL, POLY_FIT_ERR, POLY_FIT_ERR_INDEX
-      USE MODEL_STUF, ONLY            :  ELEM_ONAME, ELMTYP, LABEL, SCNUM, STITLE, TITLE, TYPE
+      USE MODEL_STUF, ONLY            :  ELEM_ONAME, ELMTYP, LABEL, SCNUM, STITLE, TITLE, TYPE, ELGP
       USE CC_OUTPUT_DESCRIBERS, ONLY  :  STRN_LOC, STRN_OPT, STRN_OUT
   
       USE WRITE_ELEM_STRAINS_USE_IFs
@@ -255,28 +255,20 @@
                 IF (WRITE_F06) WRITE(F06,401) FILL(1: 40), ONAME
                 IF (WRITE_ANS) WRITE(ANS,401) FILL(1: 56), ONAME
 
-             ELSE IF ((TYPE(1:4) == 'HEXA') .OR. (TYPE(1:5) == 'PENTA') .OR. (TYPE(1:5) == 'TETRA')) THEN
-                IF (STRN_OPT == 'VONMISES') THEN
-                   IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
-                      IF (WRITE_F06) WRITE(F06,302) FILL(1: 15)
-                      IF (WRITE_ANS) WRITE(ANS,302) FILL(1: 15)
-                   ELSE
-                      IF (WRITE_F06) WRITE(F06,301) FILL(1: 27)
-                      IF (WRITE_ANS) WRITE(ANS,301) FILL(1: 27)
-                   ENDIF
-                   IF (WRITE_F06) WRITE(F06,401) FILL(1: 55), ONAME
-                   IF (WRITE_ANS) WRITE(ANS,401) FILL(1: 55), ONAME
-                ELSE
-                   IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
-                      IF (WRITE_F06) WRITE(F06,302) FILL(1: 22)
-                      IF (WRITE_ANS) WRITE(ANS,302) FILL(1: 22)
-                   ELSE
-                      IF (WRITE_F06) WRITE(F06,301) FILL(1: 33)
-                      IF (WRITE_ANS) WRITE(ANS,301) FILL(1: 33)
-                   ENDIF
-                   IF (WRITE_F06) WRITE(F06,401) FILL(1: 61), ONAME
-                   IF (WRITE_ANS) WRITE(ANS,401) FILL(1: 61), ONAME
-                ENDIF
+             ELSE IF (TYPE(1:4) == 'HEXA') THEN
+                                                             
+                IF (WRITE_F06) WRITE(F06,402)
+                IF (WRITE_ANS) WRITE(ANS,402)
+
+             ELSE IF (TYPE(1:5) == 'PENTA') THEN
+                                                             
+                IF (WRITE_F06) WRITE(F06,403)
+                IF (WRITE_ANS) WRITE(ANS,403)
+
+             ELSE IF (TYPE(1:5) == 'TETRA') THEN
+                        
+                IF (WRITE_F06) WRITE(F06,404)
+                IF (WRITE_ANS) WRITE(ANS,404)
 
              ELSE IF (TYPE(1:5) == 'QUAD4') THEN
                 IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
@@ -346,11 +338,11 @@
 
              ELSE IF((TYPE(1:4) == 'HEXA') .OR. (TYPE(1:5) == 'PENTA') .OR. (TYPE(1:5) == 'TETRA')) THEN
                 IF (STRN_OPT == 'VONMISES') THEN
-                   IF (WRITE_F06) WRITE(F06,1301) FILL(1: 1), FILL(1: 1)
-                   IF (WRITE_ANS) WRITE(ANS,1301) FILL(1:16), FILL(1:16)
+                   IF (WRITE_F06) WRITE(F06,1301)
+                   IF (WRITE_ANS) WRITE(ANS,1301)
                 ELSE
-                   IF (WRITE_F06) WRITE(F06,1302) FILL(1: 1), FILL(1: 1)
-                   IF (WRITE_ANS) WRITE(ANS,1302) FILL(1:16), FILL(1:16)
+                   IF (WRITE_F06) WRITE(F06,1302)
+                   IF (WRITE_ANS) WRITE(ANS,1302)
                 ENDIF
 
              ELSE IF (TYPE(1:5) == 'QUAD4') THEN
@@ -422,99 +414,111 @@
 
 
       ELSE IF((TYPE(1:4) == 'HEXA') .OR. (TYPE(1:5) == 'PENTA') .OR. (TYPE(1:5) == 'TETRA')) THEN
-         !       12345
-         ! 39 : CTETRA
-         ! 67 : CHEXA
-         ! 68 : CPENTA
-         IF (TYPE(1:4) == "HEXA") THEN
-             ELEMENT_TYPE = 67
-             NNODES = 9
-         ELSE IF (TYPE(1:5) == "TETRA") THEN
-             ELEMENT_TYPE = 39
-             NNODES = 5
-         ELSE IF (TYPE(1:5) == "PENTA") THEN
-             ELEMENT_TYPE = 68
-             NNODES = 7
-         ENDIF
+        !       12345
+        ! 39 : CTETRA
+        ! 67 : CHEXA
+        ! 68 : CPENTA
+        IF (TYPE(1:4) == "HEXA") THEN
+           ELEMENT_TYPE = 67
+           NNODES = 9
+        ELSE IF (TYPE(1:5) == "TETRA") THEN
+           ELEMENT_TYPE = 39
+           NNODES = 5
+        ELSE IF (TYPE(1:5) == "PENTA") THEN
+           ELEMENT_TYPE = 68
+           NNODES = 7
+        ENDIF
 
-         IF (WRITE_OP2) THEN
-           NUM_WIDE = 4 + 21 * NNODES
-           NVALUES = NUM_WIDE * NUM
+        IF (WRITE_OP2) THEN
+         NUM_WIDE = 4 + 21 * NNODES
+         NVALUES = NUM_WIDE * NUM
 
-           !CALL GET_STRESS_CODE(STRESS_CODE, IS_VON_MISES, IS_STRAIN, IS_FIBER_DISTANCE)
-           CALL GET_STRESS_CODE( STRESS_CODE, 1,            1,         0)
-           CALL WRITE_OES3_STATIC(ITABLE, ISUBCASE, DEVICE_CODE, ELEMENT_TYPE, NUM_WIDE, STRESS_CODE, &
-                                  TITLEI, STITLEI, LABELI, FIELD5_INT_MODE, FIELD6_EIGENVALUE)
-           WRITE(OP2) NVALUES
-           CEN_WORD = "CEN/"
+         !CALL GET_STRESS_CODE(STRESS_CODE, IS_VON_MISES, IS_STRAIN, IS_FIBER_DISTANCE)
+         CALL GET_STRESS_CODE( STRESS_CODE, 1,            1,         0)
+         CALL WRITE_OES3_STATIC(ITABLE, ISUBCASE, DEVICE_CODE, ELEMENT_TYPE, NUM_WIDE, STRESS_CODE, &
+                                TITLEI, STITLEI, LABELI, FIELD5_INT_MODE, FIELD6_EIGENVALUE)
+         WRITE(OP2) NVALUES
+         CEN_WORD = "CEN/"
 
-          ! See the CHEXA, CPENTA, or CTETRA entry for the definition of the element coordinate systems.
-          ! The material coordinate system (CORDM) may be the basic system (0 or blank), any defined system
-          ! (Integer > 0), or the standard internal coordinate system of the element designated as:
-          ! -1: element coordinate system (-1)
-          ! -2: element system based on eigenvalue techniques to insure non bias in the element formulation.
+        ! See the CHEXA, CPENTA, or CTETRA entry for the definition of the element coordinate systems.
+        ! The material coordinate system (CORDM) may be the basic system (0 or blank), any defined system
+        ! (Integer > 0), or the standard internal coordinate system of the element designated as:
+        ! -1: element coordinate system (-1)
+        ! -2: element system based on eigenvalue techniques to insure non bias in the element formulation.
 
-          ! TODO hardcoded
-           CID = -1
+        ! TODO hardcoded
+         CID = -1
 
-          ! setting:
-          !  - CTETRA: [element_device, cid, 'CEN/', 4]
-          !  - CPYRAM: [element_device, cid, 'CEN/', 5]
-          !  - CPENTA: [element_device, cid, 'CEN/', 6]
-          !  - CHEXA:  [element_device, cid, 'CEN/', 8]
+        ! setting:
+        !  - CTETRA: [element_device, cid, 'CEN/', 4]
+        !  - CPYRAM: [element_device, cid, 'CEN/', 5]
+        !  - CPENTA: [element_device, cid, 'CEN/', 6]
+        !  - CHEXA:  [element_device, cid, 'CEN/', 8]
 
-          !                 1             2             3            4            5               6             7
-          !  Element    Sigma-xx      Sigma-yy      Sigma-zz       Tau-xy        Tau-yz        Tau-zx      von Mises
-          !     ID
+        !                 1             2             3            4            5               6             7
+        !  Element    Sigma-xx      Sigma-yy      Sigma-zz       Tau-xy        Tau-yz        Tau-zx      von Mises
+        !     ID
 
-          ! TODO: we repeat the center node N times because the corner results have not been calculated
-          WRITE(OP2) (EID_OUT_ARRAY(I,1)*10+DEVICE_CODE, CID, CEN_WORD, NNODES-1,           &
-                      ! grid_id
-                      ! 21
-                     (GID_OUT_ARRAY(I,J),                                                   &
-                      ! oxx             txy                s1                  a1  a2  a3
-                     REAL(OGEL(I,1),4), REAL(OGEL(I,4),4), REAL(OGEL(I,9), 4), 0., 0., 0.,  &
-                     ! p                 ovm
-                     REAL(OGEL(I,12),4), REAL(OGEL(I,7),4),  &
-                      ! syy             tyz                s2                  b1  b2  b3
-                     REAL(OGEL(I,2),4), REAL(OGEL(I,5),4), REAL(OGEL(I,10),4), 0., 0., 0.,  &
-                      ! szz             txz                s3                  c1  c2  c3
-                     REAL(OGEL(I,3),4), REAL(OGEL(I,6),4), REAL(OGEL(I,11),4), 0., 0., 0.,  &
-                     J=1,NNODES), I=1,NUM)
-         ENDIF  ! end of op2
+        ! TODO: we repeat the center node N times because the corner results have not been calculated
+        WRITE(OP2) (EID_OUT_ARRAY(I,1)*10+DEVICE_CODE, CID, CEN_WORD, NNODES-1,           &
+                    ! grid_id
+                    ! 21
+                   (GID_OUT_ARRAY(I,J),                                                   &
+                    ! oxx             txy                s1                  a1  a2  a3
+                   REAL(OGEL(I,1),4), REAL(OGEL(I,4),4), REAL(OGEL(I,9), 4), 0., 0., 0.,  &
+                   ! p                 ovm
+                   REAL(OGEL(I,12),4), REAL(OGEL(I,7),4),  &
+                    ! syy             tyz                s2                  b1  b2  b3
+                   REAL(OGEL(I,2),4), REAL(OGEL(I,5),4), REAL(OGEL(I,10),4), 0., 0., 0.,  &
+                    ! szz             txz                s3                  c1  c2  c3
+                   REAL(OGEL(I,3),4), REAL(OGEL(I,6),4), REAL(OGEL(I,11),4), 0., 0., 0.,  &
+                   J=1,NNODES), I=1,NUM)
+        ENDIF  ! end of op2
 
-         IF (STRN_OPT == 'VONMISES') THEN
-            NCOLS = 7
-         ELSE
-            NCOLS = 8
-         ENDIF
+        IF (STRN_OPT == 'VONMISES') THEN
+          NCOLS = 7
+        ELSE
+          NCOLS = 8
+        ENDIF
 
-!Victor todo ans file too.
-         K = 0
-         DO I=1,NUM,NUM_PTS
+
+        K = 0
+        DO I=1,NUM,NUM_PTS
+          K = K + 1
+          ! Element header
+          WRITE(F06,1307) EID_OUT_ARRAY(I,1), -1, ELGP
+          ! Center            
+          WRITE(F06,1308)                     OGEL(K,1), OGEL(K,4),OGEL(K,NCOLS)
+          WRITE(F06,1310)                     OGEL(K,2), OGEL(K,5)
+          WRITE(F06,1311)                     OGEL(K,3), OGEL(K,6)
+          ! Corner
+          DO L=1,NUM_PTS-1
             K = K + 1
-            ! Center
-            WRITE(F06,1303) EID_OUT_ARRAY(I,1),(OGEL(K,J),J=1,NCOLS)
-            ! Corner
-            DO L=1,NUM_PTS-1
-               K = K + 1
-               WRITE(F06,1306) FILL(1: 0), GID_OUT_ARRAY(I,L+1),(OGEL(K,J),J=1,NCOLS)
-            ENDDO
-         ENDDO
+                    
+            WRITE(F06,1309) GID_OUT_ARRAY(I,L+1), OGEL(K,1), OGEL(K,4),OGEL(K,NCOLS)
+            WRITE(F06,1310)                       OGEL(K,2), OGEL(K,5)
+                            
+                        
+            WRITE(F06,1311)                       OGEL(K,3), OGEL(K,6)
+          ENDDO
+        ENDDO
 
-         CALL GET_MAX_MIN_ABS_STR ( NUM, NCOLS, 'N', MAX_ANS, MIN_ANS, ABS_ANS )
 
-         IF (STRN_OPT == 'VONMISES') THEN
-            WRITE(F06,1304) (MAX_ANS(J),J=1,7), (MIN_ANS(J),J=1,7), (ABS_ANS(J),J=1,7)
-            IF (WRITE_ANS) THEN
-               WRITE(ANS,1314) (MAX_ANS(J),J=1,7), (MIN_ANS(J),J=1,7), (ABS_ANS(J),J=1,7)
-            ENDIF
-         ELSE
-            WRITE(F06,1305) (MAX_ANS(J),J=1,8), (MIN_ANS(J),J=1,8), (ABS_ANS(J),J=1,8)
-            IF (WRITE_ANS) THEN
-               WRITE(ANS,1315) (MAX_ANS(J),J=1,8), (MIN_ANS(J),J=1,8), (ABS_ANS(J),J=1,8)
-            ENDIF
-         ENDIF
+        CALL GET_MAX_MIN_ABS_STR ( NUM, NCOLS, 'N', MAX_ANS, MIN_ANS, ABS_ANS )
+
+        IF (STRN_OPT == 'VONMISES') THEN
+          WRITE(F06,1312)
+          WRITE(F06,1304) (MAX_ANS(J),J=1,7), (MIN_ANS(J),J=1,7), (ABS_ANS(J),J=1,7)
+          IF (WRITE_ANS) THEN
+             WRITE(ANS,1314) (MAX_ANS(J),J=1,7), (MIN_ANS(J),J=1,7), (ABS_ANS(J),J=1,7)
+          ENDIF
+        ELSE
+          WRITE(F06,1313)
+          WRITE(F06,1305) (MAX_ANS(J),J=1,8), (MIN_ANS(J),J=1,8), (ABS_ANS(J),J=1,8)
+          IF (WRITE_ANS) THEN
+             WRITE(ANS,1315) (MAX_ANS(J),J=1,8), (MIN_ANS(J),J=1,8), (ABS_ANS(J),J=1,8)
+          ENDIF
+        ENDIF
 
       ELSE IF (TYPE(1:5) == 'QUAD4') THEN
 
@@ -766,8 +770,13 @@
   '   S Y S T E M')
   
   401 FORMAT(A,'F O R   E L E M E N T   T Y P E   ',A11)
- 
 
+  402 FORMAT(131X,' ',/,'0',130X,' ',/,' ',/,                                                                                      &
+             '                        S T R A I N S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S   ( H E X A )')
+  403 FORMAT(131X,' ',/,'0',130X,' ',/,' ',/,                                                                                      &
+             '                      S T R A I N S   I N   P E N T A H E D R O N   S O L I D   E L E M E N T S   ( P E N T A )')
+  404 FORMAT(131X,' ',/,'0',130X,' ',/,' ',/,                                                                                      &
+             '                     S T R A I N S   I N   T E T R A H E D R O N   S O L I D   E L E M E N T S   ( C T E T R A )')
 
 ! BAR >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
  1101 FORMAT(                                                                                                                      &
@@ -789,45 +798,51 @@
  1104 FORMAT(A,I8,1ES14.6)
 
 ! 3D Elems >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
- 1301 FORMAT(1X,A,'  Elem  Location            Epsilon-xx    Epsilon-yy    Epsilon-zz     Gamma-xy      Gamma-yz      Gamma-zx  ', &
-             '   von Mises'                                                                                                        &
-          ,/,1X,A,'   ID')
-  
- 1302 FORMAT(1X,A,'  Elem  Location            Epsilon-xx    Epsilon-yy    Epsilon-zz     Gamma-xy      Gamma-yz      Gamma-zx  ', &
-             '      Octahedral Strain'                                                                                             &
-          ,/,1X,A,'   ID',109X,'Direct        Shear')
+
+ 1301 FORMAT('0                CORNER        ------CENTER AND CORNER POINT  STRAINS---------                                 '     &
+             '                 '                                                                                                   &
+          ,/,'  ELEMENT-ID    GRID-ID        NORMAL              SHEAR                                                       '     &
+             '       VON MISES ')
+
+ 1302 FORMAT('0                CORNER        ------CENTER AND CORNER POINT  STRAINS---------                                 '     &
+             '       OCTAHEDRAL'                                                                                                   &
+          ,/,'  ELEMENT-ID    GRID-ID        NORMAL              SHEAR                                                       '     &
+             '         SHEAR   ')
   
  1303 FORMAT(1X,I8,2X,'CENTER  ',8X,8(1ES14.6))
 
-
- ! 1301 FORMAT(A,'Element   Epsilon-xx    Epsilon-yy    Epsilon-zz     Gamma-xy      Gamma-yz      Gamma-zx     von Mises'           &
-          ! ,/,A,'   ID')
-  
- ! 1302 FORMAT(A,'Element   Epsilon-xx    Epsilon-yy    Epsilon-zz     Gamma-xy      Gamma-yz      Gamma-zx        ',                &
-             ! 'Octahedral Strain'                                                                                                   &
-          ! ,/,A,'   ID',91X,'Direct        Shear')
-  
- ! 1303 FORMAT(19X,I8,8(1ES14.6))
-
-
-
-
- 1304 FORMAT(28X,'------------- ------------- ------------- ------------- ------------- ------------- -------------',/,            &
-             16X,'MAX* :     ',7(ES14.6),/,                                                                                        &
+ 1304 FORMAT(16X,'MAX* :     ',7(ES14.6),/,                                                                                        &
              16X,'MIN* :     ',7(ES14.6),//,                                                                                       &
              16X,'ABS* :     ',7(ES14.6),/                                                                                         &
              16X,'* for output set')
 
- 1305 FORMAT(27X,' ------------- ------------- ------------- ------------- ------------- ------------- -------------',             &
-                 ' -------------',/,                                                                                               &
-             16X,'MAX* :     ',8(ES14.6),/,                                                                                        &
+ 1305 FORMAT(16X,'MAX* :     ',8(ES14.6),/,                                                                                        &
              16X,'MIN* :     ',8(ES14.6),//,                                                                                       &
              16X,'ABS* :     ',8(ES14.6),/                                                                                         &
              16X,'* for output set')
 
  1306 FORMAT(1X,A,10X,'GRD',I8,5X,8(1ES14.6))
 
- 1313 FORMAT(16X,I8,8(1ES14.6))
+ 1307 FORMAT('0',2X,I8,4X,I8,'GRID CS',1X,I2,1X,'GP')
+
+ 1308 FORMAT('0',14X,'  CENTER',2X,'X',2X,1E13.6,2X,'XY',2X,1E13.6,3X,' ',2X,13X,2X,2X,3(5X),2X,13X,3X,1E13.6)
+
+ 1309 FORMAT('0',14X,        I8,2X,'X',2X,1E13.6,2X,'XY',2X,1E13.6,3X,' ',2X,13X,2X,2X,3(5X),2X,13X,3X,1E13.6)
+
+ 1310 FORMAT(' ',14X,        8X,2X,'Y',2X,1E13.6,2X,'YZ',2X,1E13.6,3X,' ',2X,13X,2X,2X,3(5X))
+
+ 1311 FORMAT(' ',14X,        8X,2X,'Z',2X,1E13.6,2X,'ZX',2X,1E13.6,3X,' ',2X,13X,2X,2X,3(5X))
+
+ 1312 FORMAT(28X,'------------- ------------- ------------- ------------- ------------- ------------- -------------'               &
+          ,/,1X,'                            Epsilon-xx    Epsilon-yy    Epsilon-zz     Gamma-xy      Gamma-yz      Gamma-zx  ',   &
+          '    von Mises'                                                                                                          &
+          ,/,1X,'     ')
+
+ 1313 FORMAT(27X,' ------------- ------------- ------------- ------------- ------------- ------------- -------------',             &
+                 ' -------------',1X                                                                                               &
+             ,/,'                              Epsilon-xx    Epsilon-yy    Epsilon-zz     Gamma-xy      Gamma-yz      Gamma-zx  ', &
+                 '      Octahedral Strain'                                                                                         &
+          ,/,1X,'     ',109X,'Direct        Shear')
 
  1314 FORMAT(28X,'------------- ------------- ------------- ------------- ------------- ------------- -------------',/,            &
              1X,'MAX (for output set):  ',7(ES14.6),/,                                                                             &
