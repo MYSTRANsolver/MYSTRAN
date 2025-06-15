@@ -189,7 +189,7 @@ Factr:IF (SOLLIB == 'BANDED  ') THEN                       ! Use LAPACK
          IF (SPARSE_FLAVOR(1:7) == 'SUPERLU') THEN
 
             SLU_INFO = 0
-            CALL SYM_MAT_DECOMP_SUPRLU ( SUBR_NAME, 'KLL', NDOFL, NTERM_KLL, I_KLL, J_KLL, KLL, SLU_INFO )
+            CALL SYM_MAT_DECOMP_SUPRLU ( SUBR_NAME, 'KLL', L_SET, NDOFL, NTERM_KLL, I_KLL, J_KLL, KLL, SLU_INFO )
 
          ELSE
 
