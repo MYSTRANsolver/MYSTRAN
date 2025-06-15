@@ -36,6 +36,7 @@
                                          MEDAT_CQUAD8, NCQUAD8, NEDAT, NELE, NMATANGLE, NPLATEOFF, NPLATETHICK
       USE CONSTANTS_1, ONLY           :  ZERO
       USE MODEL_STUF, ONLY            :  EDAT, ETYPE, MATANGLE, PLATEOFF, PLATETHICK
+      USE DEBUG_PARAMETERS, ONLY      :  DEBUG
  
       USE MKJCARD_Interface
       USE ELEPRO_Interface
@@ -94,6 +95,15 @@
 !    8      Matl angle     NMATANGLE (MATANGLE key) goes in EDAT(nedat+11)
 !    9      Offset         NPLATEOFF (PLATEOFF key) goes in EDAT(nedat+12)
 !                          EDAT(nedat+13)
+
+                                                           ! Remove this check and DEBUG(250) comment from DEBUG_PARAMETERS
+                                                           ! when CQUAD8 is finished.
+      IF(DEBUG(250) == 0) THEN
+        FATAL_ERR = FATAL_ERR + 1
+        WRITE (ERR,*) " *ERROR  : CQUAD8 NOT ALLOWED WITHOUT DEBUG,250,1"
+        WRITE (F06,*) " *ERROR  : CQUAD8 NOT ALLOWED WITHOUT DEBUG,250,1"
+        CALL OUTA_HERE ( 'Y' )
+      ENDIF
  
 ! Make JCARD from CARD
 
