@@ -38,8 +38,8 @@
       USE IOUNT1, ONLY                :  ERR, F06
       USE SCONTR, ONLY                :  BLNK_SUB_NAM, FATAL_ERR, MAX_ORDER_GAUSS
       USE NONLINEAR_PARAMS, ONLY      :  LOAD_ISTEP
-      USE MODEL_STUF, ONLY            :  NUM_EMG_FATAL_ERRS, PCOMP_PROPS, ELGP, ES, KE, EM, ET
-      USE CONSTANTS_1, ONLY           :  ZERO
+      USE MODEL_STUF, ONLY            :  NUM_EMG_FATAL_ERRS, PCOMP_PROPS, ELGP, ES, KE, EM, ET, BE1, BE2, BE3
+      USE CONSTANTS_1, ONLY           :  ZERO, ONE, TWO
 
       USE ORDER_GAUSS_Interface
       USE OUTA_HERE_Interface
@@ -56,14 +56,18 @@
       INTEGER(LONG), INTENT(IN)       :: INT_ELEM_ID       ! Internal element ID
       INTEGER(LONG), PARAMETER        :: IORD_IJ = 3       ! Integration order for stiffness matrix
       INTEGER(LONG), PARAMETER        :: IORD_K = 2        ! Integration order for stiffness matrix in thickness direction
+      INTEGER(LONG), PARAMETER        :: IORD_STRESS_Q8 = 2! Gauss integration order for stress/strain recovery matrices
       INTEGER(LONG)                   :: I,J,K,L,M         ! DO loop indices
-      
+      INTEGER(LONG)                   :: GAUSS_PT          ! Gauss point number
+
       REAL(DOUBLE)                    :: HH_IJ(MAX_ORDER_GAUSS) ! Gauss weights for integration in in-layer directions
       REAL(DOUBLE)                    :: SS_IJ(MAX_ORDER_GAUSS) ! Gauss abscissa's for integration in in-layer directions
       REAL(DOUBLE)                    :: HH_K(MAX_ORDER_GAUSS)  ! Gauss weights for integration in thickness direction
       REAL(DOUBLE)                    :: SS_K(MAX_ORDER_GAUSS)  ! Gauss abscissa's for integration in thickness direction
       REAL(DOUBLE)                    :: R, S, T                ! Isoparametric coordinates of a point
       REAL(DOUBLE)                    :: BI(6,6*ELGP)      ! Strain-displ matrix for this element for one Gauss point
+      REAL(DOUBLE)                    :: BI1(6,6*ELGP)     ! Strain-displ matrix for this element for one Gauss point bottom
+      REAL(DOUBLE)                    :: BI2(6,6*ELGP)     ! Strain-displ matrix for this element for one Gauss point top
       REAL(DOUBLE)                    :: DUM1(6,6*ELGP)    ! Intermediate matrix
       REAL(DOUBLE)                    :: DUM2(6*ELGP,6*ELGP)    ! Intermediate matrix
       REAL(DOUBLE)                    :: INTFAC            ! An integration factor (constant multiplier for the Gauss integration)
@@ -109,31 +113,69 @@
       ENDIF
   
 ! **********************************************************************************************************************************
-! Calculate BE1 matrix (6 x 48) for strain/stress data recovery. All calculated at center of element/ply
- 
+! BE1 matrix (3 x 48) for membrane strain/stress data recovery. 
+! BE2 matrix (3 x 48) for bending strain/stress data recovery.
+! BE3 matrix (2 x 48) for transverse shear strain/stress data recovery.
+! All calculated at center of element/ply and at stress points.
       IF (OPT(3) == 'Y') THEN
 
-        WRITE(ERR,*) ' *ERROR: Code not written for QUAD8 stress recovery matrices'
-        WRITE(F06,*) ' *ERROR: Code not written for QUAD8 stress recovery matrices'
-        NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
-        FATAL_ERR = FATAL_ERR + 1
-        CALL OUTA_HERE ( 'Y' )
+!victor todo these are for displacements in basic coordinates, not element coordinates like the other shells.
+!  so modify ELEM_STRE_STRN_ARRAYS to use UEB instead of UEL for quad8.
 
-      ENDIF  
-  
-  
+!victor todo Nastran's element center may not be at RS=0. Check the definition.
+        R = 0
+        S = 0
+        CALL MITC8_B( R, S, -ONE, .TRUE., .TRUE., BI1)
+        CALL MITC8_B( R, S, +ONE, .TRUE., .TRUE., BI2)
+
+                                                           ! Membrane strain is the average of the strains at the two t points.
+        BE1(1,:,1) = (BI2(1,:) + BI1(1,:)) / TWO           ! xx
+        BE1(2,:,1) = (BI2(2,:) + BI1(2,:)) / TWO           ! yy
+        BE1(3,:,1) = (BI2(4,:) + BI1(4,:)) / TWO           ! xy
+
+                                                           ! Bending strain is half the difference of the strains at top and bottom.
+        BE2(1,:,1) = (BI2(1,:) - BI1(1,:)) / TWO           ! xx
+        BE2(2,:,1) = (BI2(2,:) - BI1(2,:)) / TWO           ! yy
+        BE2(3,:,1) = (BI2(4,:) - BI1(4,:)) / TWO           ! xy
+
+!victor todo min4 calculates BE3 from the average at the for gauss points instead of direclty at the center like membrane and bending. Might need that too.
+                                                           ! Transverse shear strain. Note reversed order of rows.
+        BE3(1,:,1) = (BI2(6,:) + BI1(6,:)) / TWO           ! zx
+        BE3(2,:,1) = (BI2(5,:) + BI1(5,:)) / TWO           ! yz
+
+
 ! Generate BE1 for the stress recovery Gauss points (order IORD_STRESS_Q8). Put them into array BE1(i,j,k)
-! at i indices 2 through IORD_STRESS_Q8*IORD_STRESS_Q8 + 1 since index 1 is for center point stress/strain matrices.
-! First make sure we dimensioned BEi large enough
+! at k indices 2 through IORD_STRESS_Q8*IORD_STRESS_Q8 + 1 since index 1 is for center point stress/strain matrices.
 
-      IF ((OPT(3) == 'Y') .OR. (OPT(6) == 'Y')) THEN
+        CALL ORDER_GAUSS ( IORD_STRESS_Q8, SS_IJ, HH_IJ )
 
-        WRITE(ERR,*) ' *ERROR: Code not written for QUAD8 differential stiffness matrix'
-        WRITE(F06,*) ' *ERROR: Code not written for QUAD8 differential stiffness matrix'
-        NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
-        FATAL_ERR = FATAL_ERR + 1
-        CALL OUTA_HERE ( 'Y' )
+        GAUSS_PT = 0
+        DO I=1,IORD_STRESS_Q8
+           DO J=1,IORD_STRESS_Q8
 
+              GAUSS_PT = GAUSS_PT + 1
+
+              CALL MITC8_B( SS_IJ(I), SS_IJ(J), -ONE, .TRUE., .TRUE., BI1)
+              CALL MITC8_B( SS_IJ(I), SS_IJ(J), +ONE, .TRUE., .TRUE., BI2)
+
+                                                           ! Membrane strain is the average of the strains at the two t points.
+              BE1(1,:,GAUSS_PT+1) = (BI2(1,:) + BI1(1,:)) / TWO           ! xx
+              BE1(2,:,GAUSS_PT+1) = (BI2(2,:) + BI1(2,:)) / TWO           ! yy
+              BE1(3,:,GAUSS_PT+1) = (BI2(4,:) + BI1(4,:)) / TWO           ! xy
+
+                                                           ! Bending strain is half the difference of the strains at top and bottom.
+              BE2(1,:,GAUSS_PT+1) = (BI2(1,:) - BI1(1,:)) / TWO           ! xx
+              BE2(2,:,GAUSS_PT+1) = (BI2(2,:) - BI1(2,:)) / TWO           ! yy
+              BE2(3,:,GAUSS_PT+1) = (BI2(4,:) - BI1(4,:)) / TWO           ! xy
+
+                                                           ! Transverse shear strain. Note reversed order of rows.
+              BE3(1,:,GAUSS_PT+1) = (BI2(6,:) + BI1(6,:)) / TWO           ! zx
+              BE3(2,:,GAUSS_PT+1) = (BI2(5,:) + BI1(5,:)) / TWO           ! yz
+
+           ENDDO
+        ENDDO
+
+  
       ENDIF
 
 ! **********************************************************************************************************************************

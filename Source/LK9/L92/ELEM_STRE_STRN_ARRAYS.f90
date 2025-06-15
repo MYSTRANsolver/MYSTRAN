@@ -161,7 +161,8 @@
 ! **********************************************************************************************************************************
 ! Calc strains, then stresses for 2D elements
 
-      ELSE IF ((TYPE(1:5) == 'TRIA3') .OR. (TYPE(1:5) == 'QUAD4') .OR. (TYPE(1:5) == 'SHEAR') .OR. (TYPE(1:5) == 'USER1')) THEN
+      ELSE IF ((TYPE(1:5) == 'TRIA3') .OR. (TYPE(1:5) == 'QUAD4') .OR. (TYPE(1:5) == 'QUAD8') .OR.                                 &
+               (TYPE(1:5) == 'SHEAR') .OR. (TYPE(1:5) == 'USER1')) THEN
 
          DO I=1,3
             STRAIN(I) = ZERO
@@ -286,11 +287,6 @@
                ENDIF
             ENDDO
          ENDIF
-
-
-
-
-
 
 
 

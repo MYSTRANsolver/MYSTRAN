@@ -355,7 +355,7 @@
 
 
 ! **********************************************************************************************************************************
-! Transform from the global cartesian basis (basic) to the cartesian local basis.
+! Transform strain from the global cartesian basis (basic) to the cartesian local basis.
 
       TRANSFORM = TRANSPOSE(MITC8_CARTESIAN_LOCAL_BASIS(R, S))
       CALL MITC_TRANSFORM_B( TRANSFORM, B)
