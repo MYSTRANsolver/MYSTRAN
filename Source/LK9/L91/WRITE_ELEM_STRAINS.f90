@@ -489,7 +489,6 @@
             NCOLS = 8
          ENDIF
 
-!Victor todo ans file too.
          K = 0
          DO I=1,NUM,NUM_PTS
             K = K + 1

@@ -53,9 +53,9 @@
       USE DEBUG_PARAMETERS, ONLY      :  DEBUG
       USE PARAMS, ONLY                :  SUPINFO, SUPWARN
       USE SUBR_BEGEND_LEVELS, ONLY    :  EMG_BEGEND
-      USE CONSTANTS_1, ONLY           :  CONV_DEG_RAD, CONV_RAD_DEG, ZERO
+      USE CONSTANTS_1, ONLY           :  CONV_DEG_RAD, CONV_RAD_DEG, ZERO, ONE
       USE MODEL_STUF, ONLY            :  CAN_ELEM_TYPE_OFFSET, EDAT, EID, EPNT, ETYPE, ISOLID, MATANGLE, NUM_EMG_FATAL_ERRS,       &
-                                         PCOMP_PROPS, PLY_NUM, TE_IDENT, THETAM, TYPE, XEL
+                                         PCOMP_PROPS, PLY_NUM, TE_IDENT, THETAM, TYPE, XEL, TE
 
 
       USE EMG_USE_IFs
@@ -156,7 +156,15 @@
          CALL ELMGM2 ( WRITE_WARN )
 
       ELSE IF (TYPE(1:5) == 'QUAD8') THEN
-         TE_IDENT = 'Y'                                    ! Stiffness matrix is calculated in basic coordinates so no transformation.
+                                                           ! Stiffness matrix is calculated in basic coordinates so no transformation.
+         TE(:,:) = ZERO
+         DO I=1,3
+            TE(I,I) = ONE
+         ENDDO
+         TE_IDENT = 'Y'
+                                                           ! Set grid point coords in local coord system to zero to prevent reuse
+                                                           ! from previous element. They should never be used for CQUAD8.
+         XEL(:,:) = ZERO
 
       ELSE IF ((TYPE == 'HEXA8   ') .OR. (TYPE == 'HEXA20  ')) THEN
          CALL ELMGM3 ( WRITE_WARN )

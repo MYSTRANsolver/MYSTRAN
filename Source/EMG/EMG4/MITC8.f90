@@ -117,10 +117,8 @@
 ! BE2 matrix (3 x 48) for bending strain/stress data recovery.
 ! BE3 matrix (2 x 48) for transverse shear strain/stress data recovery.
 ! All calculated at center of element/ply and at stress points.
+! The displacements are in basic coordinates and the strains are in element coordinates.
       IF (OPT(3) == 'Y') THEN
-
-!victor todo these are for displacements in basic coordinates, not element coordinates like the other shells.
-!  so modify ELEM_STRE_STRN_ARRAYS to use UEB instead of UEL for quad8.
 
 !victor todo Nastran's element center may not be at RS=0. Check the definition.
         R = 0

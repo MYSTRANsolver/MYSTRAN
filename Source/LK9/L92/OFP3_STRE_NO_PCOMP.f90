@@ -192,6 +192,7 @@ elems_5: DO J = 1,NELE
                         STRESS_RAW(K,M) = STRESS(K) 
                      ENDDO
                   ENDDO
+                  
                   DO K=1,9                                 ! Set STRESS_OUT for NUM_PTS(I) = 1
                      STRESS_OUT(K,1) = STRESS(K)
                   ENDDO
