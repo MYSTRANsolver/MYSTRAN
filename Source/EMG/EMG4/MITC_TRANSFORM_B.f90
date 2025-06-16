@@ -1,3 +1,4 @@
+! #################################################################################################################################
 ! Begin MIT license text.                                                                                    
 ! _______________________________________________________________________________________________________
                                                                                                          
@@ -22,38 +23,59 @@
 ! _______________________________________________________________________________________________________
                                                                                                         
 ! End MIT license text.                                                                                      
+      SUBROUTINE MITC_TRANSFORM_B ( TRANSFORM, B )
 
-      MODULE LOADB0_USE_IFs
+! Transform the strain-displacement matrix (tensor components) to a different basis.
+! Equivalent to the sum
+!    B_kl = A_ki Alj B~_ij
 
-! USE Interface statements for all subroutines called by SUBROUTINE LOADB0
+      USE PENTIUM_II_KIND, ONLY       :  LONG, DOUBLE
+      USE MODEL_STUF, ONLY            :  ELGP
+      USE CONSTANTS_1, ONLY           :  ZERO
 
-      USE OURTIM_Interface
-      USE OUTA_HERE_Interface
-      USE FFIELD_Interface
-      USE FFIELD2_Interface
-      USE BD_BAROR0_Interface
-      USE BD_BEAMOR0_Interface
-      USE BD_CBAR0_Interface
-      USE BD_CBUSH0_Interface
-      USE BD_CHEXA0_Interface
-      USE BD_CPENTA0_Interface
-      USE BD_CQUAD0_Interface
-      USE BD_CQUAD80_Interface
-      USE BD_CTETRA0_Interface
-      USE BD_CTRIA0_Interface
-      USE BD_CUSERIN0_Interface
-      USE BD_DEBUG0_Interface
-      USE BD_GRDSET0_Interface
-      USE BD_LOAD0_Interface
-      USE BD_MPC0_Interface
-      USE BD_MPCADD0_Interface
-      USE BD_PARAM0_Interface
-      USE BD_PCOMP0_Interface
-      USE BD_PCOMP10_Interface
-      USE BD_RBE30_Interface
-      USE BD_RSPLINE0_Interface
-      USE BD_SLOAD0_Interface
-      USE BD_SPCADD0_Interface
-      USE BD_SPOINT0_Interface
+      IMPLICIT NONE 
 
-      END MODULE LOADB0_USE_IFs
+      REAL(DOUBLE),  INTENT(INOUT)    :: B(6,6*ELGP)
+      REAL(DOUBLE),  INTENT(IN)       :: TRANSFORM(3,3)
+      REAL(DOUBLE)                    :: B_TRANSFORMED(6,6*ELGP)
+      REAL(DOUBLE)                    :: FACTOR
+
+      INTEGER(LONG)                   :: I,J,K,L           ! Tensor indices
+      INTEGER(LONG)                   :: INDEX1(6)         ! Mapping of 6x1 vector index to 3x3 tensor first index.
+      INTEGER(LONG)                   :: INDEX2(6)         ! Mapping of 6x1 vector index to 3x3 tensor second index.
+      INTEGER(LONG)                   :: ROWS(3,3)         ! Mapping of 3x3 tensor indices to 6x1 vector index
+      INTEGER(LONG)                   :: ROW
+      INTEGER(LONG)                   :: IJ_ROW
+
+      INTRINSIC                       :: DSQRT
+
+
+! **********************************************************************************************************************************
+
+      INDEX1 = (/ 1, 2, 3, 1, 2, 1 /)
+      INDEX2 = (/ 1, 2, 3, 2, 3, 3 /)
+      
+      ROWS = RESHAPE((/ 1, 4, 6, 4, 2, 5, 6, 5, 3 /), SHAPE(ROWS))
+      
+      B_TRANSFORMED(:,:) = ZERO
+      
+      DO ROW=1,6
+        K = INDEX1(ROW)
+        L = INDEX2(ROW)
+        DO I=1,3
+          DO J=1,3
+            IJ_ROW = ROWS(I,J)
+            FACTOR = TRANSFORM(K,I) * TRANSFORM(L,J)
+            B_TRANSFORMED(ROW,:) = B_TRANSFORMED(ROW,:) + B(IJ_ROW,:) * FACTOR
+          ENDDO
+        ENDDO
+      ENDDO
+
+      B(:,:) = B_TRANSFORMED(:,:)
+
+      RETURN
+
+
+! **********************************************************************************************************************************
+  
+      END SUBROUTINE MITC_TRANSFORM_B

@@ -122,6 +122,7 @@
       OPT(5) = 'N'                                         ! OPT(5) is for calc of PPE
       OPT(6) = 'N'                                         ! OPT(6) is for calc of KE-diff stiff
  
+ 
 ! Find out how many output requests were made for each element type.
 
       DO I=1,METYPE                                        ! Initialize the array containing the no. requests/elem.
@@ -137,7 +138,8 @@
                       (STRE_LOC == 'GAUSS   ') .OR.                                                                                &
                       (ETYPE(J)(1:4) == 'HEXA') .OR.                                                                               &
                       (ETYPE(J)(1:5) == 'PENTA') .OR.                                                                              &
-                      (ETYPE(J)(1:5) == 'TETRA')) THEN
+                      (ETYPE(J)(1:5) == 'TETRA') .OR.                                                                              &
+                      (ETYPE(J)(1:5) == 'QUAD8')) THEN
                      NUM_PTS(I) = NUM_SEi(I)
                   ELSE
                      NUM_PTS(I) = 1
@@ -197,10 +199,16 @@ elems_5: DO J = 1,NELE
                       (STRE_LOC == 'GAUSS   ') .OR.                                                                                &
                       (TYPE(1:4) == 'HEXA') .OR.                                                                                   &
                       (TYPE(1:5) == 'PENTA') .OR.                                                                                  &
-                      (TYPE(1:5) == 'TETRA')) THEN
+                      (TYPE(1:5) == 'TETRA') .OR.                                                                                  &
+                      (TYPE(1:5) == 'QUAD8')) THEN
                      IF (TYPE(1:5) == 'QUAD4') THEN        ! Calc STRESS_OUT for QUAD4
                         CALL POLYNOM_FIT_STRE_STRN ( STRESS_RAW, 9, NUM_PTS(I), STRESS_OUT, STRESS_OUT_PCT_ERR,                    &
                                                      STRESS_OUT_ERR_INDEX, PCT_ERR_MAX )
+                     ELSE IF (TYPE(1:5) == 'QUAD8') THEN
+! Victor todo
+! Stress is evaluated at Gauss points not corners, so it must extrapolate here, not just copy. Possibly use POLYNOM_FIT_STRE_STRN
+! or the traditional Gauss element with extrapolation approach.
+                        STRESS_OUT(:,:) = STRESS_RAW(:,:)
                      ELSE IF ((TYPE(1:4) == 'HEXA') .OR.                                                                           &
                               (TYPE(1:5) == 'PENTA') .OR.                                                                          &
                               (TYPE(1:5) == 'TETRA')) THEN

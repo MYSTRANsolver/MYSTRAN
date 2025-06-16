@@ -51,6 +51,7 @@
       USE BD_CORD_Interface
       USE BD_CPENTA_Interface
       USE BD_CQUAD_Interface
+      USE BD_CQUAD8_Interface
       USE BD_CROD_Interface
       USE BD_CSHEAR_Interface
       USE BD_CTETRA_Interface

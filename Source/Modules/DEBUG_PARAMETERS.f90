@@ -293,4 +293,6 @@
 
 !        DEBUG 249  > 0 In BREL1 call code for Timoshenko BART instead of BAR1
 
+!        DEBUG 250  > 0 Enable CQUAD8 MITC8 shell. Remove this parameter once it's ready.
+
       END MODULE DEBUG_PARAMETERS

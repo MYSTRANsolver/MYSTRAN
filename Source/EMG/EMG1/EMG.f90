@@ -102,14 +102,14 @@
 
 ! **********************************************************************************************************************************
 ! Call ELMDAT1 subr to get some of the data needed for this elem. 
- 
+
       IF ((TYPE == 'ELAS1   ') .OR. (TYPE == 'ELAS2   ') .OR. (TYPE == 'ELAS3   ') .OR. (TYPE == 'ELAS4   ') .OR.                  &
           (TYPE == 'ROD     ') .OR. (TYPE == 'BAR     ') .OR. (TYPE == 'BEAM    ') .OR. (TYPE == 'BUSH    ') .OR.                  &
           (TYPE == 'HEXA8   ') .OR. (TYPE == 'HEXA20  ') .OR.                                                                      &
           (TYPE == 'PENTA6  ') .OR. (TYPE == 'PENTA15 ') .OR.                                                                      &
           (TYPE == 'TETRA4  ') .OR. (TYPE == 'TETRA10 ') .OR.                                                                      &
           (TYPE == 'USER1   ') .OR. (TYPE == 'USERIN  ') .OR. (TYPE == 'PLOTEL  ') .OR.                                            &
-          (TYPE == 'SHEAR   ') .OR. (TYPE(1:5) == 'TRIA3') .OR. (TYPE(1:5) == 'QUAD4'   )) THEN
+          (TYPE == 'SHEAR   ') .OR. (TYPE(1:5) == 'TRIA3') .OR. (TYPE(1:5) == 'QUAD4'   ) .OR. (TYPE(1:5) == 'QUAD8'   )) THEN
          CALL ELMDAT1 ( INT_ELEM_ID, WRITE_WARN )
       ELSE             
          WRITE(ERR,1916) SUBR_NAME,EID,TYPE
@@ -155,6 +155,9 @@
       ELSE IF ((TYPE(1:5) == 'QUAD4') .OR. (TYPE == 'SHEAR   ')) THEN
          CALL ELMGM2 ( WRITE_WARN )
 
+      ELSE IF (TYPE(1:5) == 'QUAD8') THEN
+         TE_IDENT = 'Y'                                    ! Stiffness matrix is calculated in basic coordinates so no transformation.
+
       ELSE IF ((TYPE == 'HEXA8   ') .OR. (TYPE == 'HEXA20  ')) THEN
          CALL ELMGM3 ( WRITE_WARN )
          FIX_EDAT = 'N'
@@ -187,7 +190,6 @@
 ! --------
 
       IF ((TYPE(1:5) == 'TRIA3') .OR. (TYPE(1:5) == 'QUAD4') .OR. (TYPE == 'SHEAR   ')) THEN
-
          IF (PCOMP_PROPS == 'N') THEN                      ! SHEAR elem does not use PCOMP props
 
             THETAM = ZERO
@@ -271,6 +273,15 @@
 
       ENDIF
 
+      IF (TYPE == 'QUAD8   ') THEN
+! Victor todo sort out THETAM like above for the regular shells once I've worked out the coordinate systems.
+      
+        CALL MATERIAL_PROPS_2D ( WRITE_WARN )
+        ! Don't transform the material properties here because the transformation is different at each point in the element.
+
+
+      ENDIF
+
       IF ((TYPE == 'HEXA8   ') .OR. (TYPE == 'HEXA20  ') .OR.                                                                      &
           (TYPE == 'PENTA6  ') .OR. (TYPE == 'PENTA15 ') .OR.                                                                      &
           (TYPE == 'TETRA4  ') .OR. (TYPE == 'TETRA10 ')) THEN
@@ -321,7 +332,7 @@
           (TYPE      == 'TETRA4  ') .OR. (TYPE      == 'TETRA10 ')) THEN
          CALL ELMDAT2 ( INT_ELEM_ID, OPT, WRITE_WARN )
       ENDIF
- 
+
       IF (NUM_EMG_FATAL_ERRS > 0)   CALL EMG_QUIT
 
 ! **********************************************************************************************************************************
@@ -345,6 +356,10 @@
 
       ELSE IF ((TYPE(1:5) == 'QUAD4') .OR. (TYPE == 'SHEAR   ')) THEN
          CALL QDEL1 ( OPT, INT_ELEM_ID, WRITE_WARN )
+         IF (NUM_EMG_FATAL_ERRS > 0)   CALL EMG_QUIT
+
+      ELSE IF (TYPE(1:5) == 'QUAD8') THEN
+         CALL MITC8 ( OPT, INT_ELEM_ID )
          IF (NUM_EMG_FATAL_ERRS > 0)   CALL EMG_QUIT
 
       ELSE IF ((TYPE == 'HEXA8   ') .OR. (TYPE == 'HEXA20  ') .OR.                                                                 &

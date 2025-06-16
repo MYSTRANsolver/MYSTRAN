@@ -52,5 +52,6 @@
       USE KUSER1_Interface
       USE USERIN_Interface
       USE ELMOFF_Interface
+      USE MITC8_Interface
 
       END MODULE EMG_USE_IFs

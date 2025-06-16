@@ -1,3 +1,4 @@
+! #################################################################################################################################
 ! Begin MIT license text.                                                                                    
 ! _______________________________________________________________________________________________________
                                                                                                          
@@ -22,38 +23,33 @@
 ! _______________________________________________________________________________________________________
                                                                                                         
 ! End MIT license text.                                                                                      
+      SUBROUTINE MITC_ADD_TO_B ( B, POINT, COL, SCALAR, TENSOR )
 
-      MODULE LOADB0_USE_IFs
+! Add the UT of the 3x3 tensor times the scalar to a column of the B for sampling point POINT.
+ 
+      USE PENTIUM_II_KIND, ONLY       :  LONG, DOUBLE
 
-! USE Interface statements for all subroutines called by SUBROUTINE LOADB0
+      IMPLICIT NONE 
+      
+      REAL(DOUBLE) , INTENT(INOUT)    :: B(6,6*8,4)
+      REAL(DOUBLE) , INTENT(IN)       :: SCALAR
+      REAL(DOUBLE) , INTENT(IN)       :: TENSOR(3,3)
 
-      USE OURTIM_Interface
-      USE OUTA_HERE_Interface
-      USE FFIELD_Interface
-      USE FFIELD2_Interface
-      USE BD_BAROR0_Interface
-      USE BD_BEAMOR0_Interface
-      USE BD_CBAR0_Interface
-      USE BD_CBUSH0_Interface
-      USE BD_CHEXA0_Interface
-      USE BD_CPENTA0_Interface
-      USE BD_CQUAD0_Interface
-      USE BD_CQUAD80_Interface
-      USE BD_CTETRA0_Interface
-      USE BD_CTRIA0_Interface
-      USE BD_CUSERIN0_Interface
-      USE BD_DEBUG0_Interface
-      USE BD_GRDSET0_Interface
-      USE BD_LOAD0_Interface
-      USE BD_MPC0_Interface
-      USE BD_MPCADD0_Interface
-      USE BD_PARAM0_Interface
-      USE BD_PCOMP0_Interface
-      USE BD_PCOMP10_Interface
-      USE BD_RBE30_Interface
-      USE BD_RSPLINE0_Interface
-      USE BD_SLOAD0_Interface
-      USE BD_SPCADD0_Interface
-      USE BD_SPOINT0_Interface
+      INTEGER(LONG), INTENT(IN)       :: POINT
+      INTEGER(LONG), INTENT(IN)       :: COL
 
-      END MODULE LOADB0_USE_IFs
+! **********************************************************************************************************************************
+
+      B(1, COL, POINT) = B(1, COL, POINT) + SCALAR * TENSOR(1,1)
+      B(2, COL, POINT) = B(2, COL, POINT) + SCALAR * TENSOR(2,2)
+      B(3, COL, POINT) = B(3, COL, POINT) + SCALAR * TENSOR(3,3)
+      B(4, COL, POINT) = B(4, COL, POINT) + SCALAR * TENSOR(1,2)
+      B(5, COL, POINT) = B(5, COL, POINT) + SCALAR * TENSOR(2,3)
+      B(6, COL, POINT) = B(6, COL, POINT) + SCALAR * TENSOR(1,3)
+
+      RETURN
+
+
+! **********************************************************************************************************************************
+  
+      END SUBROUTINE MITC_ADD_TO_B

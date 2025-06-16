@@ -200,8 +200,9 @@
       INTEGER(LONG)            :: NCORD2              =   0      ! Count of no. of CORD2C, 2R or 2S cards
       INTEGER(LONG)            :: NCPENTA6            =   0      ! Count of no. of CPENTA  elems with  6 nodes
       INTEGER(LONG)            :: NCPENTA15           =   0      ! Count of no. of CPENTA  elems with 15 nodes
-      INTEGER(LONG)            :: NCQUAD4             =   0      ! Count of no. of CQUAD3  elems
-      INTEGER(LONG)            :: NCQUAD4K            =   0      ! Count of no. of CQUAD3K elems
+      INTEGER(LONG)            :: NCQUAD4             =   0      ! Count of no. of CQUAD4  elems
+      INTEGER(LONG)            :: NCQUAD4K            =   0      ! Count of no. of CQUAD4K elems
+      INTEGER(LONG)            :: NCQUAD8             =   0      ! Count of no. of CQUAD8  elems
       INTEGER(LONG)            :: NCROD               =   0      ! Count of no. of CROD    elems
       INTEGER(LONG)            :: NCSHEAR             =   0      ! Count of no. of CSHEAR  elems
       INTEGER(LONG)            :: NCTETRA4            =   0      ! Count of no. of CTETRA  elems with  4 nodes
@@ -425,6 +426,9 @@
       INTEGER(LONG), PARAMETER :: DEDAT_T3_POFFS_KEY  =   7      ! Delta in EDAT for TRIA3 to get from EID to the offset key
       INTEGER(LONG), PARAMETER :: DEDAT_T3_SHELL_KEY  =   8      ! Delta in EDAT for TRIA3 to get from EID to the shell/pcomp key
       INTEGER(LONG), PARAMETER :: DEDAT_T3_THICK_KEY  =   9      ! Delta in EDAT for TRIA3 to get from EID to the thickness key
+      INTEGER(LONG), PARAMETER :: DEDAT_Q8_POFFS_KEY  =  12      ! Delta in EDAT for QUAD8 to get from EID to the offset key
+      INTEGER(LONG), PARAMETER :: DEDAT_Q8_SHELL_KEY  =  13      ! Delta in EDAT for QUAD8 to get from EID to the shell/pcomp key
+      INTEGER(LONG), PARAMETER :: DEDAT_Q8_THICK_KEY  =  14      ! Delta in EDAT for QUAD8 to get from EID to the thickness key
       INTEGER(LONG), PARAMETER :: MAX_FEMAP_COLS      =  22      ! Max number of columns for array FEMAP_ELEM_VECS
       INTEGER(LONG), PARAMETER :: MAX_NUM_STR         =   9      ! Number of different stresses/strains
       INTEGER(LONG), PARAMETER :: MAX_ORDER_GAUSS     =  10      ! Max order that can be used when subr ORDER_GAUSS is called
@@ -447,6 +451,7 @@
       INTEGER(LONG), PARAMETER :: MEDAT_CPENTA6       =   8      ! No. terms that go into EDAT array for CPENTA elems with  6 nodes
       INTEGER(LONG), PARAMETER :: MEDAT_CPENTA15      =  17      ! No. terms that go into EDAT array for CPENTA elems with 15 nodes
       INTEGER(LONG), PARAMETER :: MEDAT_CQUAD         =  11      ! No. terms that go into EDAT array for CQUAD  elems
+      INTEGER(LONG), PARAMETER :: MEDAT_CQUAD8        =  15      ! No. terms that go into EDAT array for CQUAD8 elems
       INTEGER(LONG), PARAMETER :: MEDAT_CROD          =   4      ! No. terms that go into EDAT array for CROD   elems
       INTEGER(LONG), PARAMETER :: MEDAT_CSHEAR        =   6      ! No. terms that go into EDAT array for CSHEAR elems with  4 nodes
       INTEGER(LONG), PARAMETER :: MEDAT_CTETRA4       =   6      ! No. terms that go into EDAT array for CTETRA elems with  4 nodes
@@ -466,7 +471,7 @@
       INTEGER(LONG), PARAMETER :: MEOFIL              =   4      ! Max no. elem disk debug output files
       INTEGER(LONG), PARAMETER :: MEPROP              =  50      ! Max no. element properties that cab be stored in array EPROP
       INTEGER(LONG), PARAMETER :: MEPSIL              =   6      ! Max no. variables in EPSIL array
-      INTEGER(LONG), PARAMETER :: METYPE              =  22      ! Max number of element types
+      INTEGER(LONG), PARAMETER :: METYPE              =  23      ! Max number of element types
       INTEGER(LONG), PARAMETER :: MFIJ                =   5      ! Max number of disk files for WRT_FIJ (F21, F22, etc files)
       INTEGER(LONG), PARAMETER :: MGRID               =   6      ! No. cols allowed in dimensioning array GRID
       INTEGER(LONG), PARAMETER :: MGROUTS             =   6      ! No. of types of grid related outputs

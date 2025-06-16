@@ -1,3 +1,4 @@
+! #################################################################################################################################
 ! Begin MIT license text.                                                                                    
 ! _______________________________________________________________________________________________________
                                                                                                          
@@ -22,38 +23,35 @@
 ! _______________________________________________________________________________________________________
                                                                                                         
 ! End MIT license text.                                                                                      
+      FUNCTION MITC_DETJ ( R, S, T )
 
-      MODULE LOADB0_USE_IFs
+! Calculates the Jacobian determinant in basic coordinates at a point in isoparametric coordinates.
+ 
+      USE PENTIUM_II_KIND, ONLY       :  DOUBLE
 
-! USE Interface statements for all subroutines called by SUBROUTINE LOADB0
+      USE MITC_COVARIANT_BASIS_Interface
+      USE CROSS_Interface
 
-      USE OURTIM_Interface
-      USE OUTA_HERE_Interface
-      USE FFIELD_Interface
-      USE FFIELD2_Interface
-      USE BD_BAROR0_Interface
-      USE BD_BEAMOR0_Interface
-      USE BD_CBAR0_Interface
-      USE BD_CBUSH0_Interface
-      USE BD_CHEXA0_Interface
-      USE BD_CPENTA0_Interface
-      USE BD_CQUAD0_Interface
-      USE BD_CQUAD80_Interface
-      USE BD_CTETRA0_Interface
-      USE BD_CTRIA0_Interface
-      USE BD_CUSERIN0_Interface
-      USE BD_DEBUG0_Interface
-      USE BD_GRDSET0_Interface
-      USE BD_LOAD0_Interface
-      USE BD_MPC0_Interface
-      USE BD_MPCADD0_Interface
-      USE BD_PARAM0_Interface
-      USE BD_PCOMP0_Interface
-      USE BD_PCOMP10_Interface
-      USE BD_RBE30_Interface
-      USE BD_RSPLINE0_Interface
-      USE BD_SLOAD0_Interface
-      USE BD_SPCADD0_Interface
-      USE BD_SPOINT0_Interface
+      IMPLICIT NONE 
+      
+      REAL(DOUBLE)                    :: MITC_DETJ
+      REAL(DOUBLE) , INTENT(IN)       :: R
+      REAL(DOUBLE) , INTENT(IN)       :: S
+      REAL(DOUBLE) , INTENT(IN)       :: T
+      REAL(DOUBLE)                    :: G(3,3)            ! covariant basis vectors in basic coordinates
+      REAL(DOUBLE)                    :: DUM1(3)
 
-      END MODULE LOADB0_USE_IFs
+! **********************************************************************************************************************************
+      
+      CALL MITC_COVARIANT_BASIS( R, S, T, G )
+
+      !DET(J) = G_R . (G_S x G_T)
+      CALL CROSS(G(:,2), G(:,3), DUM1)
+      MITC_DETJ = G(1,1)*DUM1(1) + G(2,1)*DUM1(2) + G(3,1)*DUM1(3)
+
+      RETURN
+
+
+! **********************************************************************************************************************************
+  
+      END FUNCTION MITC_DETJ

@@ -1,3 +1,4 @@
+! #################################################################################################################################
 ! Begin MIT license text.                                                                                    
 ! _______________________________________________________________________________________________________
                                                                                                          
@@ -22,38 +23,40 @@
 ! _______________________________________________________________________________________________________
                                                                                                         
 ! End MIT license text.                                                                                      
+      SUBROUTINE MITC_CONTRAVARIANT_BASIS ( G, G_CONTRA )
+ 
+! Calculates the contravariant basis vectors g^1, g^2, g^3 to the specified covariant basis vectors
+! g_r, g_s, g_t. This is the inverse Jacobian matrix where g_r/s/t are the columns of the Jacobian matrix.
+! G(:,1) is g_r, etc.
+! G_CONTRA(:,1) is g^1, etc.
 
-      MODULE LOADB0_USE_IFs
+      USE PENTIUM_II_KIND, ONLY       :  DOUBLE
 
-! USE Interface statements for all subroutines called by SUBROUTINE LOADB0
+      USE CROSS_Interface
+      
+      IMPLICIT NONE 
 
-      USE OURTIM_Interface
-      USE OUTA_HERE_Interface
-      USE FFIELD_Interface
-      USE FFIELD2_Interface
-      USE BD_BAROR0_Interface
-      USE BD_BEAMOR0_Interface
-      USE BD_CBAR0_Interface
-      USE BD_CBUSH0_Interface
-      USE BD_CHEXA0_Interface
-      USE BD_CPENTA0_Interface
-      USE BD_CQUAD0_Interface
-      USE BD_CQUAD80_Interface
-      USE BD_CTETRA0_Interface
-      USE BD_CTRIA0_Interface
-      USE BD_CUSERIN0_Interface
-      USE BD_DEBUG0_Interface
-      USE BD_GRDSET0_Interface
-      USE BD_LOAD0_Interface
-      USE BD_MPC0_Interface
-      USE BD_MPCADD0_Interface
-      USE BD_PARAM0_Interface
-      USE BD_PCOMP0_Interface
-      USE BD_PCOMP10_Interface
-      USE BD_RBE30_Interface
-      USE BD_RSPLINE0_Interface
-      USE BD_SLOAD0_Interface
-      USE BD_SPCADD0_Interface
-      USE BD_SPOINT0_Interface
+      REAL(DOUBLE) , INTENT(IN)       :: G(3,3)            ! Covariant basis vectors
+      REAL(DOUBLE) , INTENT(OUT)      :: G_CONTRA(3,3)     ! Contravariant basis vectors
+      REAL(DOUBLE)                    :: DUM1(3)
+      REAL(DOUBLE)                    :: DETJ
 
-      END MODULE LOADB0_USE_IFs
+
+! **********************************************************************************************************************************
+
+                                                           ! DET(J) = g_r . (g_s x g_t)
+      CALL CROSS(G(:,2), G(:,3), DUM1)
+      DETJ = G(1,1)*DUM1(1) + G(2,1)*DUM1(2) + G(3,1)*DUM1(3)
+
+      CALL CROSS(G(:,2), G(:,3), G_CONTRA(:,1))
+      CALL CROSS(G(:,3), G(:,1), G_CONTRA(:,2))
+      CALL CROSS(G(:,1), G(:,2), G_CONTRA(:,3))
+
+      G_CONTRA = G_CONTRA / DETJ
+
+      RETURN
+
+
+! **********************************************************************************************************************************
+  
+      END SUBROUTINE MITC_CONTRAVARIANT_BASIS

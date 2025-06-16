@@ -1,3 +1,4 @@
+! ###############################################################################################################################
 ! Begin MIT license text.                                                                                    
 ! _______________________________________________________________________________________________________
                                                                                                          
@@ -23,37 +24,45 @@
                                                                                                         
 ! End MIT license text.                                                                                      
 
-      MODULE LOADB0_USE_IFs
+   MODULE MITC8_CARTESIAN_LOCAL_BASIS_Interface
 
-! USE Interface statements for all subroutines called by SUBROUTINE LOADB0
+   INTERFACE
 
-      USE OURTIM_Interface
+      FUNCTION MITC8_CARTESIAN_LOCAL_BASIS ( R, S )
+ 
+      USE PENTIUM_II_KIND, ONLY       :  LONG, DOUBLE
+      USE MODEL_STUF, ONLY            :  ELGP, XEB, TYPE
+      USE CONSTANTS_1, ONLY           :  ZERO, ONE, TWO
+      USE IOUNT1, ONLY                :  ERR, F06
+      USE SCONTR, ONLY                :  FATAL_ERR
+
+      USE SHP2DQ_Interface
+      USE CROSS_Interface
       USE OUTA_HERE_Interface
-      USE FFIELD_Interface
-      USE FFIELD2_Interface
-      USE BD_BAROR0_Interface
-      USE BD_BEAMOR0_Interface
-      USE BD_CBAR0_Interface
-      USE BD_CBUSH0_Interface
-      USE BD_CHEXA0_Interface
-      USE BD_CPENTA0_Interface
-      USE BD_CQUAD0_Interface
-      USE BD_CQUAD80_Interface
-      USE BD_CTETRA0_Interface
-      USE BD_CTRIA0_Interface
-      USE BD_CUSERIN0_Interface
-      USE BD_DEBUG0_Interface
-      USE BD_GRDSET0_Interface
-      USE BD_LOAD0_Interface
-      USE BD_MPC0_Interface
-      USE BD_MPCADD0_Interface
-      USE BD_PARAM0_Interface
-      USE BD_PCOMP0_Interface
-      USE BD_PCOMP10_Interface
-      USE BD_RBE30_Interface
-      USE BD_RSPLINE0_Interface
-      USE BD_SLOAD0_Interface
-      USE BD_SPCADD0_Interface
-      USE BD_SPOINT0_Interface
 
-      END MODULE LOADB0_USE_IFs
+      IMPLICIT NONE 
+      
+      INTEGER(LONG)                   :: I                 ! DO loop indices
+
+      REAL(DOUBLE)                    :: MITC8_CARTESIAN_LOCAL_BASIS(3,3)
+      REAL(DOUBLE) , INTENT(IN)       :: R
+      REAL(DOUBLE) , INTENT(IN)       :: S
+      REAL(DOUBLE)                    :: PSH(ELGP)       
+      REAL(DOUBLE)                    :: DPSHG(2,ELGP)     ! Derivatives of shape functions with respect to R and S.
+      REAL(DOUBLE)                    :: E_XI(3)
+      REAL(DOUBLE)                    :: E_ETA(3)
+      REAL(DOUBLE)                    :: A(3)
+      REAL(DOUBLE)                    :: B(3)
+      REAL(DOUBLE)                    :: X_L_ACB(3)
+      REAL(DOUBLE)                    :: Y_L_ACB(3)
+      REAL(DOUBLE)                    :: T(3,3)
+
+      INTRINSIC                       :: DSQRT
+
+      
+      END FUNCTION MITC8_CARTESIAN_LOCAL_BASIS
+
+   END INTERFACE
+
+   END MODULE MITC8_CARTESIAN_LOCAL_BASIS_Interface
+

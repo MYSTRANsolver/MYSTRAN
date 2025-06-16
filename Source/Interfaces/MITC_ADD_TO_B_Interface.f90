@@ -1,3 +1,4 @@
+! ###############################################################################################################################
 ! Begin MIT license text.                                                                                    
 ! _______________________________________________________________________________________________________
                                                                                                          
@@ -23,37 +24,26 @@
                                                                                                         
 ! End MIT license text.                                                                                      
 
-      MODULE LOADB0_USE_IFs
+   MODULE MITC_ADD_TO_B_Interface
 
-! USE Interface statements for all subroutines called by SUBROUTINE LOADB0
+   INTERFACE
 
-      USE OURTIM_Interface
-      USE OUTA_HERE_Interface
-      USE FFIELD_Interface
-      USE FFIELD2_Interface
-      USE BD_BAROR0_Interface
-      USE BD_BEAMOR0_Interface
-      USE BD_CBAR0_Interface
-      USE BD_CBUSH0_Interface
-      USE BD_CHEXA0_Interface
-      USE BD_CPENTA0_Interface
-      USE BD_CQUAD0_Interface
-      USE BD_CQUAD80_Interface
-      USE BD_CTETRA0_Interface
-      USE BD_CTRIA0_Interface
-      USE BD_CUSERIN0_Interface
-      USE BD_DEBUG0_Interface
-      USE BD_GRDSET0_Interface
-      USE BD_LOAD0_Interface
-      USE BD_MPC0_Interface
-      USE BD_MPCADD0_Interface
-      USE BD_PARAM0_Interface
-      USE BD_PCOMP0_Interface
-      USE BD_PCOMP10_Interface
-      USE BD_RBE30_Interface
-      USE BD_RSPLINE0_Interface
-      USE BD_SLOAD0_Interface
-      USE BD_SPCADD0_Interface
-      USE BD_SPOINT0_Interface
+      SUBROUTINE MITC_ADD_TO_B ( B, POINT, COL, SCALAR, TENSOR )
+ 
+      USE PENTIUM_II_KIND, ONLY       :  LONG, DOUBLE
 
-      END MODULE LOADB0_USE_IFs
+      IMPLICIT NONE 
+      
+      REAL(DOUBLE) , INTENT(INOUT)    :: B(6,6*8,4)
+      REAL(DOUBLE) , INTENT(IN)       :: SCALAR
+      REAL(DOUBLE) , INTENT(IN)       :: TENSOR(3,3)
+
+      INTEGER(LONG), INTENT(IN)       :: POINT
+      INTEGER(LONG), INTENT(IN)       :: COL
+      
+      END SUBROUTINE MITC_ADD_TO_B
+
+   END INTERFACE
+
+   END MODULE MITC_ADD_TO_B_Interface
+

@@ -304,7 +304,7 @@
                IF (WRITE_ANS) WRITE(ANS,401) FILL(1: 61), ONAME
             ENDIF
 
-         ELSE IF (TYPE(1:5) == 'QUAD4') THEN
+         ELSE IF ((TYPE(1:5) == 'QUAD4') .OR. (TYPE(1:5) == 'QUAD8')) THEN
             IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
                IF (WRITE_F06) WRITE(F06,302) FILL(1: 20)
                IF (WRITE_ANS) WRITE(ANS,302) FILL(1: 20)
@@ -372,7 +372,7 @@
                IF (WRITE_ANS) WRITE(ANS,1302) FILL(1:16), FILL(1:16)
             ENDIF
 
-         ELSE IF (TYPE(1:5) == 'QUAD4') THEN
+         ELSE IF ((TYPE(1:5) == 'QUAD4') .OR. (TYPE(1:5) == 'QUAD8')) THEN
             IF (STRE_OPT == 'VONMISES') THEN
                IF (WRITE_F06) WRITE(F06,1401) FILL(1: 1), FILL(1: 1), FILL(1: 1)
                IF (WRITE_ANS) WRITE(ANS,1401) FILL(1:16), FILL(1:16), FILL(1:16)
@@ -501,7 +501,6 @@
             NCOLS = 8
          ENDIF
 
-!Victor todo ans file too.
          K = 0
          DO I=1,NUM,NUM_PTS
             K = K + 1
@@ -529,14 +528,14 @@
             ENDIF
          ENDIF
 
-      ELSE IF (TYPE(1:5) == 'QUAD4') THEN
+      ELSE IF ((TYPE(1:5) == 'QUAD4') .OR. (TYPE(1:5) == 'QUAD8')) THEN
          !CALL WRITE_OES_CQUAD4 ( NUM, FILL, ISUBCASE, ITABLE, TITLEI, STITLEI, LABELI )
 
          !CALL GET_STRESS_CODE(STRESS_CODE, IS_VON_MISES, IS_STRAIN, IS_FIBER_DISTANCE)
          CALL GET_STRESS_CODE( STRESS_CODE, 1,            0,         1)
 
          IF (WRITE_OP2) THEN
-           IF (STRE_LOC == 'CENTER  ') THEN
+           IF ((STRE_LOC == 'CENTER  ') .AND. (TYPE(1:5) /= 'QUAD8')) THEN
               ! CQUAD4-33
   2           FORMAT(' *DEBUG:  WRITE_CQUAD4-33:  NUM=',I4, " NUM_PTS=", I4, " STRE_LOC=",A,"ITABLE=",I4)
               WRITE(ERR,2) NUM,NUM_PTS,STRE_LOC,ITABLE
@@ -653,7 +652,7 @@
              ! Get abs POLY_FIT_ERR
          ABS_ANS(11) = MAX( DABS(MAX_ANS(11)), DABS(MIN_ANS(11)) )
 
-         IF (STRE_LOC == 'CORNER  ') THEN 
+         IF ((STRE_LOC == 'CORNER  ') .OR. (TYPE(1:5) == 'QUAD8')) THEN 
             WRITE(F06,1408) FILL(1: 0), FILL(1: 0), MAX_ANS(2),MAX_ANS(3),MAX_ANS(4),MAX_ANS(6),MAX_ANS(7),MAX_ANS(8),MAX_ANS(9),  &
                                                     MAX_ANS(10),MAX_ANS(11),                                                       &
                             FILL(1: 0),             MIN_ANS(2),MIN_ANS(3),MIN_ANS(4),MIN_ANS(6),MIN_ANS(7),MIN_ANS(8),MIN_ANS(9),  &
@@ -669,8 +668,8 @@
                                                     ABS_ANS(10),ABS_ANS(11), FILL(1: 0)
          ENDIF
 
-             IF (WRITE_ANS) THEN
-            IF (STRE_LOC == 'CORNER  ') THEN
+         IF (WRITE_ANS) THEN
+            IF ((STRE_LOC == 'CORNER  ') .OR. (TYPE(1:5) == 'QUAD8')) THEN 
                WRITE(ANS,1418)MAX_ANS(2),MAX_ANS(3),MAX_ANS(4),MAX_ANS(6),MAX_ANS(7),MAX_ANS(8),MAX_ANS(9),MAX_ANS(10),MAX_ANS(11),&
                               MIN_ANS(2),MIN_ANS(3),MIN_ANS(4),MIN_ANS(6),MIN_ANS(7),MIN_ANS(8),MIN_ANS(9),MIN_ANS(10),MIN_ANS(11),&
                               ABS_ANS(2),ABS_ANS(3),ABS_ANS(4),ABS_ANS(6),ABS_ANS(7),ABS_ANS(8),ABS_ANS(9),ABS_ANS(10)
@@ -681,21 +680,21 @@
             ENDIF
          ENDIF
              
-             WRITE_NOTES = 'N'
-             DO I=1,MAX_NUM_STR
-                IF (WRT_ERR_INDEX_NOTE(I) == 'Y') THEN
-                   WRITE_NOTES = 'Y'
-                ENDIF
-             ENDDO
-       
-             IF (WRITE_NOTES == 'Y') THEN
-                WRITE(F06,1498)
-                DO I=1,MAX_NUM_STR
-                   IF (WRT_ERR_INDEX_NOTE(I) == 'Y') THEN
-                      WRITE(F06,1499) ERR_INDEX_NOTE(I)
-                   ENDIF
-                ENDDO
-             ENDIF
+         WRITE_NOTES = 'N'
+         DO I=1,MAX_NUM_STR
+            IF (WRT_ERR_INDEX_NOTE(I) == 'Y') THEN
+               WRITE_NOTES = 'Y'
+            ENDIF
+         ENDDO
+   
+         IF (WRITE_NOTES == 'Y') THEN
+            WRITE(F06,1498)
+            DO I=1,MAX_NUM_STR
+               IF (WRT_ERR_INDEX_NOTE(I) == 'Y') THEN
+                  WRITE(F06,1499) ERR_INDEX_NOTE(I)
+               ENDIF
+            ENDDO
+         ENDIF
 
       ELSE IF (TYPE == 'ROD     ') THEN
          CALL WRITE_ROD (ISUBCASE, NUM, FILL(1:1), FILL(1:16), ITABLE, TITLEI, STITLEI, LABELI, &

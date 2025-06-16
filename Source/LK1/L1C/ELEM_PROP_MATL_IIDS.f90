@@ -32,8 +32,8 @@
 
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
       USE IOUNT1, ONLY                :  ERR, F04, F06, IN4FIL_NUM, NUM_IN4_FILES, WRT_LOG
-      USE SCONTR, ONLY                :  BLNK_SUB_NAM, DEDAT_Q4_SHELL_KEY, DEDAT_T3_SHELL_KEY, FATAL_ERR, MPCOMP0, MPCOMP_PLIES,   &
-                                         NCMASS, NELE, NMATL, NPBAR, NPBEAM,                                                       &
+      USE SCONTR, ONLY                :  BLNK_SUB_NAM, DEDAT_Q4_SHELL_KEY, DEDAT_T3_SHELL_KEY, DEDAT_Q8_SHELL_KEY, FATAL_ERR,      &
+                                         MPCOMP0, MPCOMP_PLIES, NCMASS, NELE, NMATL, NPBAR, NPBEAM,                                &
                                          NPBUSH, NPCOMP, NPELAS, NPMASS, NPROD, npshear, NPSHEL, NPSOLID, NPUSER1, NPUSERIN
       USE TIMDAT, ONLY                :  TSEC
       USE SUBR_BEGEND_LEVELS, ONLY    :  ELEM_PROP_MATL_IIDS_BEGEND
@@ -169,9 +169,8 @@
                FATAL_ERR = FATAL_ERR + 1
             ENDIF
                                                            ! Process property ID's for shell elements
-         ELSE IF ((ETYPE(I)(1:5) == 'QUAD4') .OR. (ETYPE(I)(1:5) == 'TRIA3')) THEN
+         ELSE IF ((ETYPE(I)(1:5) == 'QUAD4') .OR. (ETYPE(I)(1:5) == 'TRIA3') .OR. (ETYPE(I)(1:5) == 'QUAD8')) THEN
             PROPERTY_ID = EDAT(EPNTK+1)
-
             FOUND_PSHEL = 'N'
             DO J = 1,NPSHEL                                ! Search PSHEL to see if we find ID
                IF (PSHEL(J,1) == PROPERTY_ID) THEN
@@ -186,6 +185,8 @@
                   EDAT(EPNTK+DEDAT_Q4_SHELL_KEY) = 1       !     flag for QUAD's using PSHELL is 1 
                ELSE IF (ETYPE(I)(1:5) == 'TRIA3') THEN
                   EDAT(EPNTK+DEDAT_T3_SHELL_KEY) = 1       !     flag for TRIA's using PSHELL is 1
+               ELSE IF (ETYPE(I)(1:5) == 'QUAD8') THEN
+                  EDAT(EPNTK+DEDAT_Q8_SHELL_KEY) = 1       !     flag for QUAD8's using PSHELL is 1
                ENDIF
             ENDIF
 
@@ -199,10 +200,12 @@
             ENDDO
             IF (FOUND_PCOMP == 'Y') THEN   
                PROPERTY_NAME(1:5) = 'PCOMP'
-               IF (ETYPE(I)(1:1) == 'Q') THEN              ! Set flag to indicate, in EDAT, that this element refers to a PSHELL
+               IF      (ETYPE(I)(1:5) == 'QUAD4') THEN     ! Set flag to indicate, in EDAT, that this element refers to a PSHELL
                   EDAT(EPNTK+DEDAT_Q4_SHELL_KEY) = 2       !     flag for QUAD's using PCOMP is 2
-               ELSE
+               ELSE IF (ETYPE(I)(1:5) == 'TRIA3') THEN
                   EDAT(EPNTK+DEDAT_T3_SHELL_KEY) = 2       !     flag for TRIA's using PCOMP  is 2
+               ELSE IF (ETYPE(I)(1:5) == 'QUAD8') THEN
+                  EDAT(EPNTK+DEDAT_Q8_SHELL_KEY) = 2       !     flag for QUAD8's using PCOMP  is 2
                ENDIF
             ENDIF
 

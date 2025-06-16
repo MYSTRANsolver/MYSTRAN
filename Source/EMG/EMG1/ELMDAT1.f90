@@ -42,7 +42,8 @@
                                          MRPBAR, MRPBEAM, MRPBUSH, MRPELAS, MRPROD, MRPSHEAR, MRPUSER1, MPSOLID, BLNK_SUB_NAM,     &
                                          NCORD, NGRID
       USE SCONTR, ONLY                :  DEDAT_Q4_MATANG_KEY, DEDAT_Q4_THICK_KEY, DEDAT_Q4_POFFS_KEY,                              &
-                                         DEDAT_T3_MATANG_KEY, DEDAT_T3_THICK_KEY, DEDAT_T3_POFFS_KEY 
+                                         DEDAT_T3_MATANG_KEY, DEDAT_T3_THICK_KEY, DEDAT_T3_POFFS_KEY,                              &
+                                                              DEDAT_Q8_THICK_KEY, DEDAT_Q8_POFFS_KEY
       USE PARAMS, ONLY                :  EPSIL, TSTM_DEF
       USE TIMDAT, ONLY                :  TSEC
       USE SUBR_BEGEND_LEVELS, ONLY    :  ELMDAT_BEGEND
@@ -145,7 +146,7 @@
 
       ! *** NOTE: CHECK CODE FOR 3D ELEMS IF THEY ARE TO HAVE OFFSET. GRID ORDER MAY GET CHANGED IN SUBR EDAT_FIXUP (SEE EMG)
       IF ((TYPE == 'BAR     ') .OR. (TYPE == 'BEAM    ') .OR. (TYPE == 'BUSH    ') .OR. (TYPE(1:5) == 'TRIA3'   ) .OR.             &
-          (TYPE(1:5) == 'QUAD4'   )) THEN
+          (TYPE(1:5) == 'QUAD4'   ) .OR. (TYPE(1:5) == 'QUAD8'   )) THEN
          CAN_ELEM_TYPE_OFFSET = 'Y'
       ELSE
          CAN_ELEM_TYPE_OFFSET = 'N'
@@ -373,7 +374,8 @@
             EPROP(I) = RPSHEAR(INTL_PID,I)
          ENDDO 
 
-      ELSE IF ((TYPE(1:5) == 'TRIA3') .OR. (TYPE(1:5) == 'QUAD4')) THEN
+      ELSE IF ((TYPE(1:5) == 'TRIA3') .OR. (TYPE(1:5) == 'QUAD4') .OR. (TYPE(1:5) == 'QUAD8')) THEN
+
                                                            ! For elems that not composites do EPROP in subr SHELL_ABD_MATRICES)
          IF (PCOMP_PROPS == 'N') THEN                      ! Shell properties are in array PSHELL (except maybe membrane thickness)
 
@@ -392,8 +394,10 @@
             THICK_AVG = ZERO                               ! DELTA locates where thickness key is in EDAT (rel to EID) for plates
             IF (TYPE(1:5) == 'QUAD4') THEN
                DELTA = DEDAT_Q4_THICK_KEY
-            ELSE
+            ELSE IF (TYPE(1:5) == 'TRIA3') THEN
                DELTA = DEDAT_T3_THICK_KEY
+            ELSE IF (TYPE(1:5) == 'QUAD8') THEN
+               DELTA = DEDAT_Q8_THICK_KEY
             ENDIF
             
             IF (EDAT(EPNTK+DELTA) > 0) THEN                ! Membrane thickness was defined as grid thicknesses on connection entry
@@ -555,10 +559,9 @@
          ENDIF
          NUMMAT = 1
 
-      ELSE IF ((TYPE(1:5) == 'TRIA3') .OR. (TYPE(1:5) == 'QUAD4')) THEN
+      ELSE IF ((TYPE(1:5) == 'TRIA3') .OR. (TYPE(1:5) == 'QUAD4') .OR. (TYPE(1:5) == 'QUAD8')) THEN
                                                            ! For elems that are not composites do EMAT in subr SHELL_ABD_MATRICES)
          IF (PCOMP_PROPS == 'N') THEN
-
             INTL_MID(1) = PSHEL(INTL_PID,2)
             IF (INTL_MID(1) /= 0) THEN
                MTRL_TYPE(1) = MATL(INTL_MID(1),2)
@@ -815,6 +818,23 @@
                      FATAL_ERR = FATAL_ERR + 1
                   ENDIF
                ENDIF
+            ELSE
+               EOFF(INT_ELEM_ID) = 'N'
+               ZOFFS = ZERO
+            ENDIF
+
+         ELSE IF (TYPE(1:5) == 'QUAD8') THEN
+
+            IROW = EDAT(EPNTK + DEDAT_Q8_POFFS_KEY)
+            IF (IROW > 0) THEN                             ! Elem has offset. IROW > 0 is the row in PLATEOFF where ZOFFS is
+              EOFF(INT_ELEM_ID) = 'Y'
+              ZOFFS = PLATEOFF(IROW)
+              IF (DABS(ZOFFS) > 0.D0) THEN                 ! Offset not yet allowed on quad8
+                WRITE(ERR,*) ' *ERROR  : OFFSET CANNOT BE USED FOR CQUAD8'
+                WRITE(F06,*) ' *ERROR  : OFFSET CANNOT BE USED FOR CQUAD8'
+                NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
+                FATAL_ERR = FATAL_ERR + 1
+              ENDIF
             ELSE
                EOFF(INT_ELEM_ID) = 'N'
                ZOFFS = ZERO

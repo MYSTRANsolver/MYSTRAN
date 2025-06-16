@@ -24,35 +24,52 @@
                                                                                                         
 ! End MIT license text.                                                                                      
 
-   MODULE ELEM_PROP_MATL_IIDS_Interface
+   MODULE MITC8_Interface
 
    INTERFACE
 
-      SUBROUTINE ELEM_PROP_MATL_IIDS
+      SUBROUTINE MITC8 ( OPT, INT_ELEM_ID )
 
- 
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
-      USE IOUNT1, ONLY                :  ERR, F04, F06, IN4FIL_NUM, NUM_IN4_FILES, WRT_LOG
-      USE SCONTR, ONLY                :  BLNK_SUB_NAM, DEDAT_Q4_SHELL_KEY, DEDAT_T3_SHELL_KEY, DEDAT_Q8_SHELL_KEY, FATAL_ERR,      &
-                                         MPCOMP0, MPCOMP_PLIES, NCMASS, NELE, NMATL, NPBAR, NPBEAM,                                &
-                                         NPBUSH, NPCOMP, NPELAS, NPMASS, NPROD, npshear, NPSHEL, NPSOLID, NPUSER1, NPUSERIN
-      USE TIMDAT, ONLY                :  TSEC
-      USE SUBR_BEGEND_LEVELS, ONLY    :  ELEM_PROP_MATL_IIDS_BEGEND
-      USE MODEL_STUF, ONLY            :  CMASS, ETYPE, EPNT, EDAT, PELAS, PROD, PBAR, PBEAM, PBUSH, PCOMP, PMASS, PSHEAR,          &
-                                         PSHEL, PSOLID, PUSER1, PUSERIN, MATL
- 
-      IMPLICIT NONE
+      USE IOUNT1, ONLY                :  ERR, F06
+      USE SCONTR, ONLY                :  BLNK_SUB_NAM, FATAL_ERR, MAX_ORDER_GAUSS
+      USE NONLINEAR_PARAMS, ONLY      :  LOAD_ISTEP
+      USE MODEL_STUF, ONLY            :  NUM_EMG_FATAL_ERRS, PCOMP_PROPS, ELGP, ES, KE, EM, ET
+      USE CONSTANTS_1, ONLY           :  ZERO
 
-      CHARACTER( 1*BYTE)              :: FOUND             ! Used to indicate if a prop or mat'l ID was found 
-      CHARACTER( 1*BYTE)              :: FOUND_PCOMP       ! Used to indicate if a PCOMP prop ID was found 
-      CHARACTER( 1*BYTE)              :: FOUND_PSHEL       ! Used to indicate if a PSHELL prop ID was found 
-      CHARACTER( 8*BYTE)              :: NAME = 'MATERIAL' ! Used for output error message
- 
-      INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = ELEM_PROP_MATL_IIDS_BEGEND
- 
-      END SUBROUTINE ELEM_PROP_MATL_IIDS
+      USE ORDER_GAUSS_Interface
+      USE OUTA_HERE_Interface
+      USE MATMULT_FFF_Interface
+      USE MATMULT_FFF_T_Interface
+      USE MITC_DETJ_Interface
+      USE MITC8_B_Interface
+
+      IMPLICIT NONE 
+  
+      CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: SUBR_NAME = 'MITC8'
+      CHARACTER(1*BYTE), INTENT(IN)   :: OPT(6)            ! 'Y'/'N' flags for whether to calc certain elem matrices
+
+      INTEGER(LONG), INTENT(IN)       :: INT_ELEM_ID       ! Internal element ID
+      INTEGER(LONG), PARAMETER        :: IORD_IJ = 3       ! Integration order for stiffness matrix
+      INTEGER(LONG), PARAMETER        :: IORD_K = 2        ! Integration order for stiffness matrix in thickness direction
+      INTEGER(LONG)                   :: I,J,K,L,M         ! DO loop indices
+      
+      REAL(DOUBLE)                    :: HH_IJ(MAX_ORDER_GAUSS) ! Gauss weights for integration in in-layer directions
+      REAL(DOUBLE)                    :: SS_IJ(MAX_ORDER_GAUSS) ! Gauss abscissa's for integration in in-layer directions
+      REAL(DOUBLE)                    :: HH_K(MAX_ORDER_GAUSS)  ! Gauss weights for integration in thickness direction
+      REAL(DOUBLE)                    :: SS_K(MAX_ORDER_GAUSS)  ! Gauss abscissa's for integration in thickness direction
+      REAL(DOUBLE)                    :: R, S, T                ! Isoparametric coordinates of a point
+      REAL(DOUBLE)                    :: BI(6,6*ELGP)      ! Strain-displ matrix for this element for one Gauss point
+      REAL(DOUBLE)                    :: DUM1(6,6*ELGP)    ! Intermediate matrix
+      REAL(DOUBLE)                    :: DUM2(6*ELGP,6*ELGP)    ! Intermediate matrix
+      REAL(DOUBLE)                    :: INTFAC            ! An integration factor (constant multiplier for the Gauss integration)
+      REAL(DOUBLE)                    :: DETJ              ! Jacobian determinant
+      REAL(DOUBLE)                    :: E(6,6)            ! Elasticity matrix in the material coordinate system.
+      REAL(DOUBLE)                    :: EE(6,6)           ! Elasticity matrix in the cartesian local coordinate system.
+
+      END SUBROUTINE MITC8
 
    END INTERFACE
 
-   END MODULE ELEM_PROP_MATL_IIDS_Interface
+   END MODULE MITC8_Interface
 
