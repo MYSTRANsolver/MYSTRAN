@@ -125,8 +125,8 @@
       num_pcomp_elems = 0                                  ! Remove lower case code when I fix engr force output for PCOMP's
       DO I=1,METYPE
          DO J=1,NELE
-            IF((ETYPE(J)(1:5) == 'TRIA3') .OR. (ETYPE(J)(1:5) == 'QUAD4') .OR. (ETYPE(J)(1:5) == 'SHEAR') .OR.                     &
-               (ETYPE(J)(1:6) == 'USERIN')) THEN
+            IF((ETYPE(J)(1:5) == 'TRIA3') .OR. (ETYPE(J)(1:5) == 'QUAD4') .OR. (ETYPE(J)(1:5) == 'QUAD8') .OR.                     &
+               (ETYPE(J)(1:5) == 'SHEAR') .OR. (ETYPE(J)(1:6) == 'USERIN')) THEN
                IF (ETYPE(J) == ELMTYP(I)) THEN
                   call is_elem_pcomp_props ( j )
                   if (pcomp_props == 'N') then
@@ -171,13 +171,13 @@ elems_3: DO J = 1,NELE
             if (pcomp_props == 'N') then
                EID   = EDAT(EPNT(J))
                TYPE  = ETYPE(J)
-               IF((ETYPE(J)(1:5) == 'TRIA3') .OR. (ETYPE(J)(1:5) == 'QUAD4') .OR. (ETYPE(J)(1:5) == 'SHEAR') .OR.                  &
-                  (ETYPE(J)(1:6) == 'USERIN')) THEN
-
+               IF((ETYPE(J)(1:5) == 'TRIA3') .OR. (ETYPE(J)(1:5) == 'QUAD4') .OR. (ETYPE(J)(1:5) == 'QUAD8') .OR.                  &
+                  (ETYPE(J)(1:5) == 'SHEAR') .OR. (ETYPE(J)(1:6) == 'USERIN')) THEN
                   IF (ETYPE(J) == ELMTYP(I)) THEN
                      ELOUT_ELFE = IAND(ELOUT(J,INT_SC_NUM),IBIT(ELOUT_ELFE_BIT))
                      IF (ELOUT_ELFE > 0) THEN
-                        IF((ETYPE(J)(1:5) == 'TRIA3') .OR. (ETYPE(J)(1:5) == 'QUAD4') .OR. (ETYPE(J)(1:5) == 'SHEAR')) THEN
+                        IF((ETYPE(J)(1:5) == 'TRIA3') .OR. (ETYPE(J)(1:5) == 'QUAD4') .OR. (ETYPE(J)(1:5) == 'QUAD8') .OR.         &
+                           (ETYPE(J)(1:5) == 'SHEAR')) THEN
                            OPT(4) = 'Y'
                         ENDIF
                         DO K=0,MBUG-1

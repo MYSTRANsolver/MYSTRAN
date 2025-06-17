@@ -308,7 +308,8 @@
          CALL ELMOUT ( INT_ELEM_ID, DUM_BUG, CASE_NUM, OPT )
       ENDIF
 
-      IF ((TYPE(1:5) == 'TRIA3') .OR. (TYPE(1:5) == 'QUAD4') .OR. (TYPE(1:6) == 'SHEAR') .OR. (TYPE == 'USER1   ')) THEN
+      IF ((TYPE(1:5) == 'TRIA3') .OR. (TYPE(1:5) == 'QUAD4') .OR. (TYPE(1:5) == 'QUAD8') .OR. (TYPE(1:6) == 'SHEAR') .OR.          &
+          (TYPE == 'USER1   ')) THEN
          CALL SHELL_ABD_MATRICES ( INT_ELEM_ID, WRITE_WARN )
       ENDIF
 

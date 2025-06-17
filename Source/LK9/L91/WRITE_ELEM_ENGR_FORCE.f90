@@ -235,7 +235,7 @@ headr:IF (IHDR == 'Y') THEN
                 ENDIF
                 WRITE(F06,401) FILL(1:32), ONAME
   
-             ELSE IF((TYPE(1:5) == 'TRIA3') .OR. (TYPE(1:5) == 'QUAD4')) THEN
+             ELSE IF((TYPE(1:5) == 'TRIA3') .OR. (TYPE(1:5) == 'QUAD4') .OR. (TYPE(1:5) == 'QUAD8')) THEN
                 IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
                    WRITE(F06,302) FILL(1:33)
                 ELSE
@@ -257,7 +257,7 @@ headr:IF (IHDR == 'Y') THEN
              ELSE IF (TYPE(1:5) == 'SHEAR') THEN
                 WRITE(F06,1401) FILL(1: 0), FILL(1: 0)
 
-             ELSE IF ((TYPE(1:5) == 'TRIA3') .OR. (TYPE(1:5) == 'QUAD4')) THEN 
+             ELSE IF ((TYPE(1:5) == 'TRIA3') .OR. (TYPE(1:5) == 'QUAD4') .OR. (TYPE(1:5) == 'QUAD8')) THEN 
                 WRITE(F06,1501) FILL(1: 0), FILL(1: 0), FILL(1: 0)
 
              ELSE IF (TYPE(1:4) == 'BUSH') THEN
@@ -409,7 +409,7 @@ headr:IF (IHDR == 'Y') THEN
          NUM_TERMS = 6
          IF (WRITE_ANS) CALL FWRITE_ANS ( 'SHELL' )
 
-      ELSE IF ((TYPE == 'TRIA3   ') .OR. (TYPE == 'QUAD4   ')) THEN
+      ELSE IF ((TYPE == 'TRIA3   ') .OR. (TYPE == 'QUAD4   ') .OR. (TYPE == 'QUAD8   ')) THEN
         IF (WRITE_OP2)  THEN
           IF (TYPE == 'TRIA3   ') THEN
               ELEMENT_TYPE = 74

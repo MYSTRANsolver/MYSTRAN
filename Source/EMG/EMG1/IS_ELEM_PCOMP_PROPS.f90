@@ -29,7 +29,7 @@
 ! Given a shell (TRIA3 or QUAD4) element's internal ID, determine if its properties are defined on a Bulk Data PCOMP entry
 
       USE PENTIUM_II_KIND, ONLY       :  LONG
-      USE SCONTR, ONLY                :  DEDAT_T3_SHELL_KEY, DEDAT_Q4_SHELL_KEY 
+      USE SCONTR, ONLY                :  DEDAT_T3_SHELL_KEY, DEDAT_Q4_SHELL_KEY, DEDAT_Q8_SHELL_KEY
       USE MODEL_STUF, ONLY            :  EDAT, EPNT, ETYPE, PCOMP_PROPS, TYPE
 
       USE IS_ELEM_PCOMP_PROPS_USE_IFs
@@ -50,6 +50,10 @@
          ENDIF
       ELSE IF (TYPE(1:5) == 'QUAD4') THEN
          IF (EDAT(EPNTK+DEDAT_Q4_SHELL_KEY) == 2) THEN
+            PCOMP_PROPS = 'Y'
+         ENDIF
+      ELSE IF (TYPE(1:5) == 'QUAD8') THEN
+         IF (EDAT(EPNTK+DEDAT_Q8_SHELL_KEY) == 2) THEN
             PCOMP_PROPS = 'Y'
          ENDIF
       ENDIF

@@ -119,7 +119,7 @@
 
       TYPE  = ETYPE(INT_ELEM_ID)
 
-      IF ((TYPE(1:5) /= 'TRIA3') .AND. (TYPE(1:5) /= 'QUAD4') .AND. (TYPE(1:5) /= 'SHEAR')) THEN
+      IF ((TYPE(1:5) /= 'TRIA3') .AND. (TYPE(1:5) /= 'QUAD4') .AND. (TYPE(1:5) /= 'QUAD8') .AND. (TYPE(1:5) /= 'SHEAR')) THEN
          NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
          FATAL_ERR = FATAL_ERR + 1
          WRITE(ERR,1946) TYPE, SUBR_NAME
