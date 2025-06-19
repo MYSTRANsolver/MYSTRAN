@@ -58,7 +58,7 @@
       INTEGER(LONG), PARAMETER        :: IORD_K = 2        ! Integration order for stiffness matrix in thickness direction
       INTEGER(LONG), PARAMETER        :: IORD_STRESS_Q8 = 2! Gauss integration order for stress/strain recovery matrices
       INTEGER(LONG)                   :: I,J,K,L,M         ! DO loop indices
-      INTEGER(LONG)                   :: GAUSS_PT          ! Gauss point number
+      INTEGER(LONG)                   :: STR_PT_NUM        ! Stress recovery point number
 
       REAL(DOUBLE)                    :: HH_IJ(MAX_ORDER_GAUSS) ! Gauss weights for integration in in-layer directions
       REAL(DOUBLE)                    :: SS_IJ(MAX_ORDER_GAUSS) ! Gauss abscissa's for integration in in-layer directions
@@ -74,7 +74,51 @@
       REAL(DOUBLE)                    :: DETJ              ! Jacobian determinant
       REAL(DOUBLE)                    :: E(6,6)            ! Elasticity matrix in the material coordinate system.
       REAL(DOUBLE)                    :: EE(6,6)           ! Elasticity matrix in the cartesian local coordinate system.
- 
+
+! **********************************************************************************************************************************
+
+! Coordinate systems
+! ==================
+!
+! Basic
+!  Used for the grid point DOFs of the strain-displacement and the element stiffness matrices.
+!  Orthogonal
+!
+! Cartesian local
+!  e^_1, e^_2, e^_3 in Bathe but they are oriented differently there.
+!  Currently the same as the element coordinate system x_l, y_l, z_l.
+!  Used for strain in the strain-displacement matrix and the material elasticity matrix is transformed to this to integrate KE.
+!  e^_3 is the midsurface normal which may be different from the director vector.
+!  Orthogonal
+!
+! Element
+!  x_l, y_l, z_l
+!  Defined the same way as MSC (element coordinate system) and SimCenter (local coordinate system).
+!  Used for stress and strain output
+!  Defined by x_l being the bisection of the R, S isoparametric basis vectors rotated about the normal by -45 degrees.
+!  Orthogonal
+!
+! Material
+!  Used for material elasticity read from the input file.
+!  Orthogonal
+!
+! Isoparametric (natural)
+!  R, S, T in code. r_1, r_2, r_3 in Bathe.
+!  Each coordinate has range [-1,1].
+!  T is parallel to the director vector.
+!  Not orthogonal
+!
+! Covariant
+!  g_r, g_s, g_t. g_1, g_2, g_3 in Bathe.
+!  Parallel to the isometric coordinates but scaled by the element size. Eg. |g_t| = half thickness.
+!  Not orthogonal
+!
+! Contravariant
+!  g^r, g^s, g^t. g^1, g^2, g^3 in Bathe.
+!  Contravariant to the covariant.
+!  Not orthogonal
+!
+
 
 ! **********************************************************************************************************************************
       
@@ -116,62 +160,52 @@
 ! BE1 matrix (3 x 48) for membrane strain/stress data recovery. 
 ! BE2 matrix (3 x 48) for bending strain/stress data recovery.
 ! BE3 matrix (2 x 48) for transverse shear strain/stress data recovery.
-! All calculated at center of element/ply and at stress points.
+! All calculated at center of element/ply and at stress recovery points.
 ! The displacements are in basic coordinates and the strains are in element coordinates.
+! Strain and stress are directly evaluated at the center and corner grid points, not extrapolated from Gauss points.
+! If this is changed, then stress points 2-5 should be Gauss points instead of grid points.
+
       IF (OPT(3) == 'Y') THEN
 
-!victor todo Nastran's element center may not be at RS=0. Check the definition.
-        R = 0
-        S = 0
-        CALL MITC8_B( R, S, -ONE, .TRUE., .TRUE., BI1)
-        CALL MITC8_B( R, S, +ONE, .TRUE., .TRUE., BI2)
+! Generate BE1 at the stress recovery points. Put them into array BE1(i,j,k) at k indices 1-5.
 
-                                                           ! Membrane strain is the average of the strains at the two t points.
-        BE1(1,:,1) = (BI2(1,:) + BI1(1,:)) / TWO           ! xx
-        BE1(2,:,1) = (BI2(2,:) + BI1(2,:)) / TWO           ! yy
-        BE1(3,:,1) = (BI2(4,:) + BI1(4,:)) / TWO           ! xy
+         DO STR_PT_NUM=1,5
 
-                                                           ! Bending strain is half the difference of the strains at top and bottom.
-        BE2(1,:,1) = (BI2(1,:) - BI1(1,:)) / TWO           ! xx
-        BE2(2,:,1) = (BI2(2,:) - BI1(2,:)) / TWO           ! yy
-        BE2(3,:,1) = (BI2(4,:) - BI1(4,:)) / TWO           ! xy
+            SELECT CASE (STR_PT_NUM)
+            CASE (1)                                       ! Center
+               !victor todo Nastran's element center may not be at RS=0. Check the definition.
+               R = 0; S = 0
+            CASE (2)                                       ! Node 1
+               R = -1; S = -1
+            CASE (3)                                       ! Node 2
+               R = +1; S = -1
+            CASE (4)                                       ! Node 3
+               R = +1; S = +1
+            CASE (5)                                       ! Node 4
+               R = -1; S = +1
+            END SELECT
 
-!victor todo min4 calculates BE3 from the average at the for gauss points instead of direclty at the center like membrane and bending. Might need that too.
-                                                           ! Transverse shear strain. Note reversed order of rows.
-        BE3(1,:,1) = (BI2(6,:) + BI1(6,:)) / TWO           ! zx
-        BE3(2,:,1) = (BI2(5,:) + BI1(5,:)) / TWO           ! yz
+            CALL MITC8_B( R, S, -ONE, .TRUE., .TRUE., BI1)
+            CALL MITC8_B( R, S, +ONE, .TRUE., .TRUE., BI2)
 
+                                               ! Membrane strain is the average of the strains at the two t points.
+            BE1(1,:,STR_PT_NUM) = (BI2(1,:) + BI1(1,:)) / TWO           ! xx
+            BE1(2,:,STR_PT_NUM) = (BI2(2,:) + BI1(2,:)) / TWO           ! yy
+            BE1(3,:,STR_PT_NUM) = (BI2(4,:) + BI1(4,:)) / TWO           ! xy
 
-! Generate BE1 for the stress recovery Gauss points (order IORD_STRESS_Q8). Put them into array BE1(i,j,k)
-! at k indices 2 through IORD_STRESS_Q8*IORD_STRESS_Q8 + 1 since index 1 is for center point stress/strain matrices.
+                                               ! Bending strain is half the difference of the strains at top and bottom.
+            BE2(1,:,STR_PT_NUM) = (BI2(1,:) - BI1(1,:)) / TWO           ! xx
+            BE2(2,:,STR_PT_NUM) = (BI2(2,:) - BI1(2,:)) / TWO           ! yy
+            BE2(3,:,STR_PT_NUM) = (BI2(4,:) - BI1(4,:)) / TWO           ! xy
 
-        CALL ORDER_GAUSS ( IORD_STRESS_Q8, SS_IJ, HH_IJ )
+            !victor todo 
+            !Min4 calculates BE3 at the center from the average at the for gauss points instead of 
+            !directly at the center like membrane and bending. Might need that too but be careful of the different element coordinate system at each point.
+                                               ! Transverse shear strain. Note reversed order of rows.
+            BE3(1,:,STR_PT_NUM) = (BI2(6,:) + BI1(6,:)) / TWO           ! zx
+            BE3(2,:,STR_PT_NUM) = (BI2(5,:) + BI1(5,:)) / TWO           ! yz
 
-        GAUSS_PT = 0
-        DO I=1,IORD_STRESS_Q8
-           DO J=1,IORD_STRESS_Q8
-
-              GAUSS_PT = GAUSS_PT + 1
-
-              CALL MITC8_B( SS_IJ(I), SS_IJ(J), -ONE, .TRUE., .TRUE., BI1)
-              CALL MITC8_B( SS_IJ(I), SS_IJ(J), +ONE, .TRUE., .TRUE., BI2)
-
-                                                           ! Membrane strain is the average of the strains at the two t points.
-              BE1(1,:,GAUSS_PT+1) = (BI2(1,:) + BI1(1,:)) / TWO           ! xx
-              BE1(2,:,GAUSS_PT+1) = (BI2(2,:) + BI1(2,:)) / TWO           ! yy
-              BE1(3,:,GAUSS_PT+1) = (BI2(4,:) + BI1(4,:)) / TWO           ! xy
-
-                                                           ! Bending strain is half the difference of the strains at top and bottom.
-              BE2(1,:,GAUSS_PT+1) = (BI2(1,:) - BI1(1,:)) / TWO           ! xx
-              BE2(2,:,GAUSS_PT+1) = (BI2(2,:) - BI1(2,:)) / TWO           ! yy
-              BE2(3,:,GAUSS_PT+1) = (BI2(4,:) - BI1(4,:)) / TWO           ! xy
-
-                                                           ! Transverse shear strain. Note reversed order of rows.
-              BE3(1,:,GAUSS_PT+1) = (BI2(6,:) + BI1(6,:)) / TWO           ! zx
-              BE3(2,:,GAUSS_PT+1) = (BI2(5,:) + BI1(5,:)) / TWO           ! yz
-
-           ENDDO
-        ENDDO
+         ENDDO
 
   
       ENDIF

@@ -27,7 +27,7 @@
  
 ! Calculates g_r, g_s, g_t in global coordinates.
 ! These are also the columns of the Jacobian matrix.
-! G(:,1) is g^r, etc.
+! G(:,1) is g_r, etc.
 
 
       USE PENTIUM_II_KIND, ONLY       :  LONG, DOUBLE

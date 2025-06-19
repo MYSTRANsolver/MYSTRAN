@@ -205,21 +205,18 @@ elems_5: DO J = 1,NELE
                      IF (TYPE(1:5) == 'QUAD4') THEN        ! Calc STRESS_OUT for QUAD4
                         CALL POLYNOM_FIT_STRE_STRN ( STRESS_RAW, 9, NUM_PTS(I), STRESS_OUT, STRESS_OUT_PCT_ERR,                    &
                                                      STRESS_OUT_ERR_INDEX, PCT_ERR_MAX )
-                     ELSE IF (TYPE(1:5) == 'QUAD8') THEN
-! Victor todo
-! Stress is evaluated at Gauss points not corners, so it must extrapolate here, not just copy. Possibly use POLYNOM_FIT_STRE_STRN
-! or the traditional Gauss element with extrapolation approach.
-                        STRESS_OUT(:,:) = STRESS_RAW(:,:)
                      ELSE IF ((TYPE(1:4) == 'HEXA') .OR.                                                                           &
                               (TYPE(1:5) == 'PENTA') .OR.                                                                          &
-                              (TYPE(1:5) == 'TETRA')) THEN
-! Stresses are directly evaluated at the corner grid points. If they are going to be evaluated at gauss points
-! then extrapolated to grid points, that should be done here or in POLYNOM_FIT_STRE_STRN
-                        DO M=1,NUM_PTS(I)
-                          DO K=1,9
-                             STRESS_OUT(K,M) = STRESS_RAW(K,M)
-                          ENDDO
-                        ENDDO
+                              (TYPE(1:5) == 'TETRA') .OR.                                                                          &
+                              (TYPE(1:5) == 'QUAD8')) THEN
+! Stresses are directly evaluated at the corner grid points. If they are going to be evaluated at Gauss points
+! then extrapolated to grid points, that should be done here, in POLYNOM_FIT_STRE_STRN, or in an equivalent subroutine.
+! Issues for extrapolating from Gauss points:
+!  - The number of Gauss points may be different from the number of grid points so NUM_PTS(I) doesn't apply to both.
+!  - Gauss point and grid point numbering is different. For QUAD, nodes 1,2,3,4 are closest to Gauss point numbers 1,3,4,2.
+!  - For CQUAD8, the element coordinate system is different at each grid and Gauss point so they must be transformed or 
+!    alternatively, calculate and extrapolate stress in a more uniform coordinate system then transform after extrapolating.
+                        STRESS_OUT(:,:) = STRESS_RAW(:,:)
                      ENDIF
                   ENDIF
 
