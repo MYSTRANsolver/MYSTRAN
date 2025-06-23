@@ -44,7 +44,7 @@
       USE PARAMS, ONLY                :  EPSIL, IORQ1M, QUAD4TYP, PCOMPEQ, PCMPTSTM, SHRFXFAC, SUPWARN, TSTM_DEF
 
       USE MODEL_STUF, ONLY            :  ALPVEC, EB, EBM, EM, ET, EDAT, EID, EMAT, EPNT, EPROP, ETYPE, FAILURE_THEORY, FCONV,      &
-                                         FCONV_SHEAR_THICK, INTL_MID, INTL_PID, MASS_PER_UNIT_AREA, MATL, MEPROP, MTRL_TYPE,       &
+                                         INTL_MID, INTL_PID, MASS_PER_UNIT_AREA, MATL, MEPROP, MTRL_TYPE,                          &
                                          NUM_EMG_FATAL_ERRS, NUM_PLIES, PLY_NUM, PCOMP, PCOMP_LAM, PCOMP_PROPS, RPCOMP, PSHEL,     &
                                          RPSHEL, RHO, RMATL, SHELL_A, SHELL_B, SHELL_D, SHELL_T, SHELL_AALP, SHELL_BALP,           &
                                          SHELL_DALP, SHELL_TALP, SHELL_T_MOD, THETA_PLY, TPLY, TYPE, ULT_STRE, ULT_STRN, ZPLY, ZS
@@ -153,7 +153,7 @@ pcom0:IF (PCOMP_PROPS == 'N') THEN                         ! Element is not a co
             ZS(2)             =  EPROP(6)
             FCONV(1)          =  TM
             FCONV(2)          = -IB                        ! Note neq sign on FCONV(2): due to sign convention on positive bending
-            FCONV_SHEAR_THICK =  TS
+            FCONV(3)          =  TS
          ENDIF
 
          IF ((TYPE(1:5) == 'QUAD4') .OR. (TYPE(1:5) == 'TRIA3') .OR. (TYPE(1:5) == 'TRIA3')) THEN 
@@ -478,7 +478,7 @@ ply_do:  DO K=1,NUM_PLIES_TO_PROC
 
          FCONV(1)  =  PCOMP_TM
          FCONV(2)  = -PCOMP_IB                             ! Note neq sign on FCONV(2): due to sign convention on positive bending
-         FCONV_SHEAR_THICK = PCOMP_TS
+         FCONV(3)  =  PCOMP_TS
                                                            ! Write equiv PSHELL, MAT2, if not already written for this PCOMP
          IF ((PCOMPEQ > 0) .AND. (PCOMP(INTL_PID,6) == 0)) THEN
             IF ((PCOMP_TM > EPS1) .AND. (PCOMP_IB > EPS1) .AND. (PCOMP_TS > EPS1)) THEN

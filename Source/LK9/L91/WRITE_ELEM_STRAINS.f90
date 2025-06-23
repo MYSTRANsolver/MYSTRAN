@@ -278,7 +278,7 @@
                    IF (WRITE_ANS) WRITE(ANS,401) FILL(1: 61), ONAME
                 ENDIF
 
-             ELSE IF (TYPE(1:5) == 'QUAD4') THEN
+             ELSE IF ((TYPE(1:5) == 'QUAD4') .OR. (TYPE(1:5) == 'QUAD8')) THEN
                 IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
                    IF (WRITE_F06) WRITE(F06,302) FILL(1: 20)
                    IF (WRITE_ANS) WRITE(ANS,302) FILL(1: 20)
@@ -353,7 +353,7 @@
                    IF (WRITE_ANS) WRITE(ANS,1302) FILL(1:16), FILL(1:16)
                 ENDIF
 
-             ELSE IF (TYPE(1:5) == 'QUAD4') THEN
+             ELSE IF ((TYPE(1:5) == 'QUAD4') .OR. (TYPE(1:5) == 'QUAD8')) THEN
                 IF (STRN_OPT == 'VONMISES') THEN
                    IF (WRITE_F06) WRITE(F06,1401) FILL(1: 1), FILL(1: 1), FILL(1: 1)
                    IF (WRITE_ANS) WRITE(ANS,1401) FILL(1:16), FILL(1:16), FILL(1:16)
@@ -515,14 +515,14 @@
             ENDIF
          ENDIF
 
-      ELSE IF (TYPE(1:5) == 'QUAD4') THEN
+      ELSE IF ((TYPE(1:5) == 'QUAD4') .OR. (TYPE(1:5) == 'QUAD8')) THEN
 
          IF (WRITE_OP2) THEN
            !CALL WRITE_OST_CQUAD4 ( NUM, FILL, ISUBCASE, ITABLE, TITLEI, STITLEI, LABELI )
 
            !CALL GET_STRESS_CODE(STRESS_CODE, IS_VON_MISES, IS_STRAIN, IS_FIBER_DISTANCE)
            CALL GET_STRESS_CODE( STRESS_CODE, 1,            1,         1)
-            IF (STRN_LOC == 'CENTER  ') THEN
+            IF ((STRN_LOC == 'CENTER  ') .AND. (TYPE(1:5) /= 'QUAD8')) THEN
                ! CQUAD4-33
                !(eid_device, 
                ! fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
@@ -641,7 +641,7 @@
              ! Get abs POLY_FIT_ERR
              ABS_ANS(11) = MAX( DABS(MAX_ANS(11)), DABS(MIN_ANS(11)) )
 
-               IF (STRN_LOC == 'CORNER  ') THEN 
+               IF ((STRN_LOC == 'CORNER  ') .OR. (TYPE(1:5) == 'QUAD8')) THEN 
                 WRITE(F06,1408) FILL(1: 0), FILL(1: 0), MAX_ANS(2),MAX_ANS(3),MAX_ANS(4),MAX_ANS(6),MAX_ANS(7),MAX_ANS(8), &
                                             MAX_ANS(9), MAX_ANS(10),MAX_ANS(11),                                           &
                                             FILL(1: 0), MIN_ANS(2),MIN_ANS(3),MIN_ANS(4),MIN_ANS(6),MIN_ANS(7),MIN_ANS(8), &
@@ -658,7 +658,7 @@
                ENDIF
 
              IF (WRITE_ANS) THEN
-               IF (STRN_LOC == 'CORNER  ') THEN
+               IF ((STRN_LOC == 'CORNER  ') .OR. (TYPE(1:5) == 'QUAD8')) THEN 
                  WRITE(ANS,1418)MAX_ANS(2),MAX_ANS(3),MAX_ANS(4),MAX_ANS(6),MAX_ANS(7),MAX_ANS(8),MAX_ANS(9), &
                                 MAX_ANS(10),MAX_ANS(11),                                                      &
                                 MIN_ANS(2),MIN_ANS(3),MIN_ANS(4),MIN_ANS(6),MIN_ANS(7),MIN_ANS(8),MIN_ANS(9), &

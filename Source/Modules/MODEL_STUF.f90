@@ -1406,9 +1406,6 @@
       REAL(DOUBLE)                    :: FCONV(3)            = (/(ZERO, I=1,3)/)
                                                              ! Array of constants to convert stresses to engr forces for elem
 
-      REAL(DOUBLE)                    :: FCONV_SHEAR_THICK   = ZERO
-                                                             ! Shear thickness used in calculating FCONV(3)
-
       REAL(DOUBLE)                    :: HBAR                = ZERO
                                                              ! For the quad elem, the dist from the mean plane to the G.P.'s
 

@@ -38,8 +38,10 @@
       USE IOUNT1, ONLY                :  ERR, F06
       USE SCONTR, ONLY                :  BLNK_SUB_NAM, FATAL_ERR, MAX_ORDER_GAUSS
       USE NONLINEAR_PARAMS, ONLY      :  LOAD_ISTEP
-      USE MODEL_STUF, ONLY            :  NUM_EMG_FATAL_ERRS, PCOMP_PROPS, ELGP, ES, KE, EM, ET, BE1, BE2, BE3
-      USE CONSTANTS_1, ONLY           :  ZERO, ONE, TWO
+      USE MODEL_STUF, ONLY            :  NUM_EMG_FATAL_ERRS, PCOMP_PROPS, ELGP, ES, KE, EM, ET, BE1, BE2, BE3, PHI_SQ, FCONV,      &
+                                         EPROP
+      USE CONSTANTS_1, ONLY           :  ZERO, ONE, TWO, FOUR
+      USE PARAMS, ONLY                :  TSTM_DEF
 
       USE ORDER_GAUSS_Interface
       USE OUTA_HERE_Interface
@@ -77,7 +79,7 @@
 
 ! **********************************************************************************************************************************
 
-! Coordinate systems
+! COORDINATE SYSTEMS
 ! ==================
 !
 ! Basic
@@ -86,15 +88,15 @@
 !
 ! Cartesian local
 !  e^_1, e^_2, e^_3 in Bathe but they are oriented differently there.
-!  Currently the same as the element coordinate system x_l, y_l, z_l.
 !  Used for strain in the strain-displacement matrix and the material elasticity matrix is transformed to this to integrate KE.
+!  Currently the same as the element coordinate system x_l, y_l, z_l.
 !  e^_3 is the midsurface normal which may be different from the director vector.
 !  Orthogonal
 !
 ! Element
 !  x_l, y_l, z_l
+!  Used for element stress, strain, and force outputs
 !  Defined the same way as MSC (element coordinate system) and SimCenter (local coordinate system).
-!  Used for stress and strain output
 !  Defined by x_l being the bisection of the R, S isoparametric basis vectors rotated about the normal by -45 degrees.
 !  Orthogonal
 !
@@ -118,9 +120,24 @@
 !  Contravariant to the covariant.
 !  Not orthogonal
 !
-
+! NORMAL AND THICKNESS
+! ====================
+!
+! There are two definitions of the shell  normal:
+! 1) Normal to the midsurface. Defined by grid point positions.
+! 2) Director vector. Can be defined arbitrarily.
+! Both vary across the element if it's curved out of plane.
+! Currently, the director vector is equal to the midsurface normal so the distinction doesn't matter. However, 
+! they may be different if we include smoothing of shell normals by averaging with adjacent elements like MSC 
+! does. In that case, each occurrence of normal or director vector needs to be checked to make sure it's the
+! correct one. Also, element thickness might be defined as thickness in the direction of either of those
+! directions so some uses of thickness may need to be adjusted.
+!
 
 ! **********************************************************************************************************************************
+  
+! Initialize
+      PHI_SQ  = ONE                                        ! Not used for this element
       
       
       IF (PCOMP_PROPS == 'Y') THEN
@@ -169,7 +186,7 @@
 
 ! Generate BE1 at the stress recovery points. Put them into array BE1(i,j,k) at k indices 1-5.
 
-         DO STR_PT_NUM=1,5
+         DO STR_PT_NUM=2,5
 
             SELECT CASE (STR_PT_NUM)
             CASE (1)                                       ! Center
@@ -198,16 +215,19 @@
             BE2(2,:,STR_PT_NUM) = (BI2(2,:) - BI1(2,:)) / TWO           ! yy
             BE2(3,:,STR_PT_NUM) = (BI2(4,:) - BI1(4,:)) / TWO           ! xy
 
-            !victor todo 
-            !Min4 calculates BE3 at the center from the average at the for gauss points instead of 
-            !directly at the center like membrane and bending. Might need that too but be careful of the different element coordinate system at each point.
                                                ! Transverse shear strain. Note reversed order of rows.
             BE3(1,:,STR_PT_NUM) = (BI2(6,:) + BI1(6,:)) / TWO           ! zx
             BE3(2,:,STR_PT_NUM) = (BI2(5,:) + BI1(5,:)) / TWO           ! yz
 
          ENDDO
 
-  
+                                                           ! Center strain is average of corner strains.
+                                                           ! Might not be right.
+         BE1(:,:,1) = (BE1(:,:,2) + BE1(:,:,3) + BE1(:,:,4) + BE1(:,:,5)) / FOUR
+         BE2(:,:,1) = (BE2(:,:,2) + BE2(:,:,3) + BE2(:,:,4) + BE2(:,:,5)) / FOUR
+         BE3(:,:,1) = (BE3(:,:,2) + BE3(:,:,3) + BE3(:,:,4) + BE3(:,:,5)) / FOUR
+         
+
       ENDIF
 
 ! **********************************************************************************************************************************
@@ -222,83 +242,81 @@
 !   by Dvorkin and Bathe, 1986
 
 
-        ! K = int( [B]^T [EE] [B] dV )
-        !    dV = |det(J)|dr ds dt
-        ! K = int( [B]^T [EE] [B] |det(J)| dr ds dt )
-        !
-        ! [EE] is material elasticity matrix in cartesian local coordinates
-        ! stress = [EE] * strain
-        ! strain = [B] * displacement
-        ! K is in the basic coordinate system
-
-
+         ! K = int( [B]^T [EE] [B] dV )
+         !    dV = |det(J)|dr ds dt
+         ! K = int( [B]^T [EE] [B] |det(J)| dr ds dt )
+         !
+         ! [EE] is material elasticity matrix in cartesian local coordinates
+         ! stress = [EE] * strain
+         ! strain = [B] * displacement
+         ! K is in the basic coordinate system
 
 
                                                            ! Convert 2D material elasticity matrices to 3D.
-        E(1,1) = EM(1,1)
-        E(1,2) = EM(1,2)
-        E(1,3) = ZERO
-        E(1,4) = EM(1,3)
-        E(1,5) = ZERO
-        E(1,6) = ZERO
+         E(1,1) = EM(1,1)
+         E(1,2) = EM(1,2)
+         E(1,3) = ZERO
+         E(1,4) = EM(1,3)
+         E(1,5) = ZERO
+         E(1,6) = ZERO
 
-        E(2,2) = EM(2,2)
-        E(2,3) = ZERO
-        E(2,4) = EM(2,3)
-        E(2,5) = ZERO
-        E(2,6) = ZERO
+         E(2,2) = EM(2,2)
+         E(2,3) = ZERO
+         E(2,4) = EM(2,3)
+         E(2,5) = ZERO
+         E(2,6) = ZERO
 
-        E(3,3) = ZERO
-        E(3,4) = ZERO
-        E(3,5) = ZERO
-        E(3,6) = ZERO
+         E(3,3) = ZERO
+         E(3,4) = ZERO
+         E(3,5) = ZERO
+         E(3,6) = ZERO
 
-        E(4,4) = EM(3,3)
-        E(4,5) = ZERO
-        E(4,6) = ZERO
+         E(4,4) = EM(3,3)
+         E(4,5) = ZERO
+         E(4,6) = ZERO
 
-        E(5,5) = ET(2,2) !victor todo shear correction factor
-        E(5,6) = ET(2,1) !victor todo shear correction factor ??
+         E(5,5) = ET(2,2) * EPROP(3)
+         E(5,6) = ET(2,1) * EPROP(3)
 
-        E(6,6) = ET(1,1) !victor todo shear correction factor
+         E(6,6) = ET(1,1) * EPROP(3)
 
-        DO I=2,6                                           ! Copy UT to LT because it's symmetric.
-          DO J=1,I-1
-            E(I,J) = E(J,I)
-          ENDDO 
-        ENDDO   
+         DO I=2,6                                           ! Copy UT to LT because it's symmetric.
+            DO J=1,I-1
+               E(I,J) = E(J,I)
+            ENDDO 
+         ENDDO   
 
 
 
-        KE(:,:) = ZERO
+         KE(:,:) = ZERO
 
-        CALL ORDER_GAUSS ( IORD_IJ, SS_IJ, HH_IJ )
-        CALL ORDER_GAUSS ( IORD_K, SS_K, HH_K )
+         CALL ORDER_GAUSS ( IORD_IJ, SS_IJ, HH_IJ )
+         CALL ORDER_GAUSS ( IORD_K, SS_K, HH_K )
 
-        DO I=1,IORD_IJ
-          DO J=1,IORD_IJ
-            DO K=1,IORD_K
-              R = SS_IJ(I)
-              S = SS_IJ(J)
-              T = SS_K(K)
-              CALL MITC8_B( R, S, T, .TRUE., .TRUE., BI)
+         DO I=1,IORD_IJ
+            DO J=1,IORD_IJ
+               DO K=1,IORD_K
+                  R = SS_IJ(I)
+                  S = SS_IJ(J)
+                  T = SS_K(K)
+                  CALL MITC8_B( R, S, T, .TRUE., .TRUE., BI)
 
-! victor todo transform E from material to cartesian local coordiantes (EE) at this Gauss point. Not this simple copy.
-              DO L=1,6
-                DO M=1,6
-                  EE(L,M) = E(L,M)
-                ENDDO 
-              ENDDO   
+                  ! victor todo transform E from material to cartesian local coordiantes (EE) at this Gauss point. Not this simple copy.
+                  DO L=1,6
+                     DO M=1,6
+                        EE(L,M) = E(L,M)
+                     ENDDO 
+                  ENDDO   
 
-              CALL MATMULT_FFF ( EE, BI, 6, 6, 6*ELGP, DUM1 )
-              CALL MATMULT_FFF_T ( BI, DUM1, 6, 6*ELGP, 6*ELGP, DUM2 )
-              DETJ = MITC_DETJ ( R, S, T )
-              INTFAC = DETJ*HH_IJ(I)*HH_IJ(J)*HH_K(K)
-              KE(:,:) = KE(:,:) + DUM2(:,:)*INTFAC
-            ENDDO
-          ENDDO 
-        ENDDO   
-   
+                  CALL MATMULT_FFF ( EE, BI, 6, 6, 6*ELGP, DUM1 )
+                  CALL MATMULT_FFF_T ( BI, DUM1, 6, 6*ELGP, 6*ELGP, DUM2 )
+                  DETJ = MITC_DETJ ( R, S, T )
+                  INTFAC = DETJ*HH_IJ(I)*HH_IJ(J)*HH_K(K)
+                  KE(:,:) = KE(:,:) + DUM2(:,:)*INTFAC
+               ENDDO
+            ENDDO 
+         ENDDO   
+
  
   
       ENDIF

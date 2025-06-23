@@ -129,8 +129,7 @@
       DO I=1,METYPE                                        ! Only count requests for elem types that can have strain output
          IF((ELMTYP(I)(1:5) == 'TRIA3') .OR. (ELMTYP(I)(1:5) == 'QUAD4') .OR. (ELMTYP(I)(1:5) == 'SHEAR') .OR.                     &
             (ELMTYP(I)(1:4) == 'HEXA' ) .OR. (ELMTYP(I)(1:5) == 'PENTA') .OR. (ELMTYP(I)(1:5) == 'TETRA') .OR.                     &
-            (ELMTYP(I)(1:4) == 'BUSH' )) THEN
-!            (ELMTYP(I)(1:4) == 'BUSH' ) .OR. (ELMTYP(I)(1:3) == 'ROD') .OR. (ELMTYP(I)(1:4) == 'ELAS')) THEN
+            (ELMTYP(I)(1:4) == 'BUSH' ) .OR. (ELMTYP(I)(1:5) == 'QUAD8')) THEN
             DO J=1,NELE
                CALL IS_ELEM_PCOMP_PROPS ( J )
                IF (PCOMP_PROPS == 'N') THEN
@@ -139,7 +138,8 @@
                       (STRN_LOC == 'GAUSS   ') .OR.                                                                                &
                       (ETYPE(J)(1:4) == 'HEXA') .OR.                                                                               &
                       (ETYPE(J)(1:5) == 'PENTA') .OR.                                                                              &
-                      (ETYPE(J)(1:5) == 'TETRA')) THEN
+                      (ETYPE(J)(1:5) == 'TETRA') .OR.                                                                              &
+                      (ETYPE(J)(1:5) == 'QUAD8')) THEN
                         NUM_PTS(I) = NUM_SEi(I)
                      ELSE
                         NUM_PTS(I) = 1
@@ -199,20 +199,23 @@ elems_7: DO J = 1,NELE
                       (STRN_LOC == 'GAUSS   ') .OR.                                                                                &
                       (TYPE(1:4) == 'HEXA') .OR.                                                                                   &
                       (TYPE(1:5) == 'PENTA') .OR.                                                                                  &
-                      (TYPE(1:5) == 'TETRA')) THEN
+                      (TYPE(1:5) == 'TETRA') .OR.                                                                                  &
+                      (TYPE(1:5) == 'QUAD8')) THEN
                      IF (TYPE(1:5) == 'QUAD4') THEN        ! Calc STRAIN_OUT for QUAD4
                         CALL POLYNOM_FIT_STRE_STRN ( STRAIN_RAW, 9, NUM_PTS(I), STRAIN_OUT, STRAIN_OUT_PCT_ERR,                    &
                                                      STRAIN_OUT_ERR_INDEX, PCT_ERR_MAX )
                      ELSE IF ((TYPE(1:4) == 'HEXA') .OR.                                                                           &
                               (TYPE(1:5) == 'PENTA') .OR.                                                                          &
-                              (TYPE(1:5) == 'TETRA')) THEN
-! Strains are directly evaluated at the corner grid points. If they are going to be evaluated at gauss points
-! then extrapolated to grid points, that should be done here or in POLYNOM_FIT_STRE_STRN
-                        DO M=1,NUM_PTS(I)
-                          DO K=1,9
-                             STRAIN_OUT(K,M) = STRAIN_RAW(K,M)
-                          ENDDO
-                        ENDDO
+                              (TYPE(1:5) == 'TETRA') .OR.                                                                          &
+                              (TYPE(1:5) == 'QUAD8')) THEN
+! Strains are directly evaluated at the corner grid points. If they are going to be evaluated at Gauss points
+! then extrapolated to grid points, that should be done here, in POLYNOM_FIT_STRE_STRN, or in an equivalent subroutine.
+! Issues for extrapolating from Gauss points:
+!  - The number of Gauss points may be different from the number of grid points so NUM_PTS(I) doesn't apply to both.
+!  - Gauss point and grid point numbering is different. For QUAD, nodes 1,2,3,4 are closest to Gauss point numbers 1,3,4,2.
+!  - For CQUAD8, the element coordinate system is different at each grid and Gauss point so they must be transformed or 
+!    alternatively, calculate and extrapolate strain in a more uniform coordinate system then transform after extrapolating.
+                        STRAIN_OUT(:,:) = STRAIN_RAW(:,:)
                      ENDIF
                   ENDIF
 
