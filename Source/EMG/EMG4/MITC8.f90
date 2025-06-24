@@ -99,10 +99,11 @@
 ! Cartesian local
 !  e^_1, e^_2, e^_3 in Bathe but they are oriented differently there.
 !  Used for strain in the strain-displacement matrix and the material elasticity matrix is transformed to this to integrate KE.
-!  Currently the same as the element coordinate system x_l, y_l, z_l.
+!  Defined the same way as the zero THETA material coordinate system in Siemens SimCenter. This definition is used because it
+!  has uniform orientation on distorted flat elements and is only non-uniform as needed to accomodate out-of-plane curvature.
+!  The uniformity allows stress to be interpolated and extrapolated to different locations conveniently.
 !  e^_3 is the midsurface normal which may be different from the director vector.
 !  Orthogonal
-! Victor todo this is different now.
 !
 ! Element
 !  x_l, y_l, z_l
