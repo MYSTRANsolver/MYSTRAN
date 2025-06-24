@@ -1,4 +1,4 @@
-! ###############################################################################################################################
+! #################################################################################################################################
 ! Begin MIT license text.                                                                                    
 ! _______________________________________________________________________________________________________
                                                                                                          
@@ -23,43 +23,56 @@
 ! _______________________________________________________________________________________________________
                                                                                                         
 ! End MIT license text.                                                                                      
+      SUBROUTINE TRANSFORM_SHELL_STR ( T, STR_VEC, SHR_FAC )
 
-   MODULE MITC8_CARTESIAN_LOCAL_BASIS_Interface
+! Transforms a shell stress or strain vector with separate membrane, bending, and transverse shear terms.
+! Use SHR_FAC = ONE for stress
+! Use SHR_FAC = TWO for engineering strain to make it convert to tensor strain for transforming
 
-   INTERFACE
-
-      FUNCTION MITC8_CARTESIAN_LOCAL_BASIS ( R, S )
- 
-      USE PENTIUM_II_KIND, ONLY       :  LONG, DOUBLE
-      USE MODEL_STUF, ONLY            :  ELGP, XEB, TYPE
-      USE CONSTANTS_1, ONLY           :  ZERO, ONE, TWO
-      USE IOUNT1, ONLY                :  ERR, F06
-      USE SCONTR, ONLY                :  FATAL_ERR
-
-      USE SHP2DQ_Interface
-      USE CROSS_Interface
-      USE OUTA_HERE_Interface
+      USE PENTIUM_II_KIND, ONLY       :  DOUBLE
+      USE CONSTANTS_1, ONLY           :  ZERO
 
       IMPLICIT NONE 
-      
-      INTEGER(LONG)                   :: I                 ! DO loop indices
 
-      REAL(DOUBLE)                    :: MITC8_CARTESIAN_LOCAL_BASIS(3,3)
-      REAL(DOUBLE) , INTENT(IN)       :: R
-      REAL(DOUBLE) , INTENT(IN)       :: S
-      REAL(DOUBLE)                    :: PSH(ELGP)       
-      REAL(DOUBLE)                    :: DPSHG(2,ELGP)     ! Derivatives of shape functions with respect to R and S.
-      REAL(DOUBLE)                    :: E_XI(3)
-      REAL(DOUBLE)                    :: E_ETA(3)
-      REAL(DOUBLE)                    :: Z_REF(3)
-      REAL(DOUBLE)                    :: R_G1G2(3)
-      REAL(DOUBLE)                    :: X(3)
-      REAL(DOUBLE)                    :: Y(3)
-      REAL(DOUBLE)                    :: Z(3)
-      
-      END FUNCTION MITC8_CARTESIAN_LOCAL_BASIS
+      REAL(DOUBLE),  INTENT(IN)       :: T(3,3)
+      REAL(DOUBLE),  INTENT(INOUT)    :: STR_VEC(9)
+      REAL(DOUBLE),  INTENT(IN)       :: SHR_FAC
+      REAL(DOUBLE)                    :: STR_TENSOR(3,3)
+      REAL(DOUBLE)                    :: DUM33(3,3)
 
-   END INTERFACE
 
-   END MODULE MITC8_CARTESIAN_LOCAL_BASIS_Interface
+! **********************************************************************************************************************************
 
+                                                           ! Membrane and transverse shear
+      STR_TENSOR(1,1) = STR_VEC(1)           ; STR_TENSOR(1,2) = STR_VEC(3) / SHR_FAC ;   STR_TENSOR(1,3) = STR_VEC(7) / SHR_FAC
+      STR_TENSOR(2,1) = STR_VEC(3) / SHR_FAC ; STR_TENSOR(2,2) = STR_VEC(2)           ;   STR_TENSOR(2,3) = STR_VEC(8) / SHR_FAC
+      STR_TENSOR(3,1) = STR_VEC(7) / SHR_FAC ; STR_TENSOR(3,2) = STR_VEC(8) / SHR_FAC ;   STR_TENSOR(3,3) = ZERO
+
+      CALL MATMULT_FFF (STR_TENSOR, TRANSPOSE(T), 3, 3, 3, DUM33 )
+      CALL MATMULT_FFF (T, DUM33, 3, 3, 3, STR_TENSOR )
+
+      STR_VEC(1) = STR_TENSOR(1,1)
+      STR_VEC(2) = STR_TENSOR(2,2)
+      STR_VEC(3) = STR_TENSOR(1,2) * SHR_FAC
+      STR_VEC(7) = STR_TENSOR(1,3) * SHR_FAC
+      STR_VEC(8) = STR_TENSOR(2,3) * SHR_FAC
+
+                                                           ! Bending
+      STR_TENSOR(1,1) = STR_VEC(4)           ;   STR_TENSOR(1,2) = STR_VEC(6) / SHR_FAC ;   STR_TENSOR(1,3) = ZERO
+      STR_TENSOR(2,1) = STR_VEC(6) / SHR_FAC ;   STR_TENSOR(2,2) = STR_VEC(5)           ;   STR_TENSOR(2,3) = ZERO
+      STR_TENSOR(3,1) = ZERO                 ;   STR_TENSOR(3,2) = ZERO                 ;   STR_TENSOR(3,3) = ZERO
+
+      CALL MATMULT_FFF (STR_TENSOR, TRANSPOSE(T), 3, 3, 3, DUM33 )
+      CALL MATMULT_FFF (T, DUM33, 3, 3, 3, STR_TENSOR )
+
+      STR_VEC(4) = STR_TENSOR(1,1)
+      STR_VEC(5) = STR_TENSOR(2,2)
+      STR_VEC(6) = STR_TENSOR(1,2) * SHR_FAC
+
+
+      RETURN
+
+
+! **********************************************************************************************************************************
+  
+      END SUBROUTINE TRANSFORM_SHELL_STR

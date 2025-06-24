@@ -24,42 +24,26 @@
                                                                                                         
 ! End MIT license text.                                                                                      
 
-   MODULE MITC8_CARTESIAN_LOCAL_BASIS_Interface
+   MODULE TRANSFORM_SHELL_STR_Interface
 
    INTERFACE
 
-      FUNCTION MITC8_CARTESIAN_LOCAL_BASIS ( R, S )
+      SUBROUTINE TRANSFORM_SHELL_STR ( T, STR_VEC, SHR_FAC )
  
-      USE PENTIUM_II_KIND, ONLY       :  LONG, DOUBLE
-      USE MODEL_STUF, ONLY            :  ELGP, XEB, TYPE
-      USE CONSTANTS_1, ONLY           :  ZERO, ONE, TWO
-      USE IOUNT1, ONLY                :  ERR, F06
-      USE SCONTR, ONLY                :  FATAL_ERR
-
-      USE SHP2DQ_Interface
-      USE CROSS_Interface
-      USE OUTA_HERE_Interface
+      USE PENTIUM_II_KIND, ONLY       :  DOUBLE
+      USE CONSTANTS_1, ONLY           :  ZERO
 
       IMPLICIT NONE 
-      
-      INTEGER(LONG)                   :: I                 ! DO loop indices
 
-      REAL(DOUBLE)                    :: MITC8_CARTESIAN_LOCAL_BASIS(3,3)
-      REAL(DOUBLE) , INTENT(IN)       :: R
-      REAL(DOUBLE) , INTENT(IN)       :: S
-      REAL(DOUBLE)                    :: PSH(ELGP)       
-      REAL(DOUBLE)                    :: DPSHG(2,ELGP)     ! Derivatives of shape functions with respect to R and S.
-      REAL(DOUBLE)                    :: E_XI(3)
-      REAL(DOUBLE)                    :: E_ETA(3)
-      REAL(DOUBLE)                    :: Z_REF(3)
-      REAL(DOUBLE)                    :: R_G1G2(3)
-      REAL(DOUBLE)                    :: X(3)
-      REAL(DOUBLE)                    :: Y(3)
-      REAL(DOUBLE)                    :: Z(3)
-      
-      END FUNCTION MITC8_CARTESIAN_LOCAL_BASIS
+      REAL(DOUBLE),  INTENT(IN)       :: T(3,3)
+      REAL(DOUBLE),  INTENT(INOUT)    :: STR_VEC(9)
+      REAL(DOUBLE),  INTENT(IN)       :: SHR_FAC
+      REAL(DOUBLE)                    :: STR_TENSOR(3,3)
+      REAL(DOUBLE)                    :: DUM33(3,3)
+
+      END SUBROUTINE TRANSFORM_SHELL_STR
 
    END INTERFACE
 
-   END MODULE MITC8_CARTESIAN_LOCAL_BASIS_Interface
+   END MODULE TRANSFORM_SHELL_STR_Interface
 

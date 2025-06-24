@@ -353,6 +353,7 @@
             FATAL_ERR = FATAL_ERR + 1
             CALL OUTA_HERE ( 'Y' )
 
+! Some of this code could be replaced with calls to TRANSFORM_SHELL_STR
                                                            ! Transform 2D membrane and transverse shear stresses
             STR_TENSOR(1,1) = STRESS(1)   ;   STR_TENSOR(1,2) = STRESS(3)   ;   STR_TENSOR(1,3) = STRESS(7)
             STR_TENSOR(2,1) = STRESS(3)   ;   STR_TENSOR(2,2) = STRESS(2)   ;   STR_TENSOR(2,3) = STRESS(8)

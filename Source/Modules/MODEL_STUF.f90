@@ -32,7 +32,7 @@
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
       USE CONSTANTS_1, ONLY           :  ONEPM4, ZERO, TEN
       USE SCONTR, ONLY                :  BLNK_SUB_NAM, CC_ENTRY_LEN, JCARD_LEN, MELDTS, MEMATR, MEMATC, MEPROP, METYPE,            &
-                                         MPSOLID, MEFE, MEFEI, MEFER, MEWE, MEWEI, MEWER
+                                         MPSOLID, MEFE, MEFEI, MEFER, MEWE, MEWEI, MEWER, MAX_STRESS_POINTS
   
       IMPLICIT NONE
  
@@ -1475,6 +1475,10 @@
       REAL(DOUBLE)                    :: SHELL_PROP_ALP(3)   = (/(ZERO, I=1,3)/)
                                                              ! matrix resulting from material matrix times coeff of thermal
 !                                                              expansion vector times a property (thickness or bending MOI)
+
+      REAL(DOUBLE)                    :: SHELL_STR_ANGLE(5) = (/(ZERO, I=1,5)/)
+                                                             ! Angle of element coordinate system from cartesial local coordinate system
+                                                             ! at each stress output point
 
       REAL(DOUBLE)                    :: SHRSUM              = ZERO
                                                              ! Sum of diag stiffness from KS for rotation DOF's

@@ -36,10 +36,10 @@
   
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
       USE IOUNT1, ONLY                :  ERR, F06
-      USE SCONTR, ONLY                :  BLNK_SUB_NAM, FATAL_ERR, MAX_ORDER_GAUSS
+      USE SCONTR, ONLY                :  BLNK_SUB_NAM, FATAL_ERR, MAX_ORDER_GAUSS, MAX_STRESS_POINTS
       USE NONLINEAR_PARAMS, ONLY      :  LOAD_ISTEP
       USE MODEL_STUF, ONLY            :  NUM_EMG_FATAL_ERRS, PCOMP_PROPS, ELGP, ES, KE, EM, ET, BE1, BE2, BE3, PHI_SQ, FCONV,      &
-                                         EPROP
+                                         EPROP, SHELL_STR_ANGLE
       USE CONSTANTS_1, ONLY           :  ZERO, ONE, TWO, FOUR
       USE PARAMS, ONLY                :  TSTM_DEF
 
@@ -49,7 +49,10 @@
       USE MATMULT_FFF_T_Interface
       USE MITC_DETJ_Interface
       USE MITC8_B_Interface
-
+      USE MITC_GP_RS_Interface
+      USE MITC8_CARTESIAN_LOCAL_BASIS_Interface
+      USE MITC8_ELEMENT_CS_BASIS_Interface
+      
       IMPLICIT NONE 
   
       CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: SUBR_NAME = 'MITC8'
@@ -76,6 +79,13 @@
       REAL(DOUBLE)                    :: DETJ              ! Jacobian determinant
       REAL(DOUBLE)                    :: E(6,6)            ! Elasticity matrix in the material coordinate system.
       REAL(DOUBLE)                    :: EE(6,6)           ! Elasticity matrix in the cartesian local coordinate system.
+      REAL(DOUBLE)                    :: GP_RS(2,ELGP)     ! Isoparametric coordinates of grid points
+      REAL(DOUBLE)                    :: LOCAL_BASIS(3,3)  ! Cartesian local basis
+      REAL(DOUBLE)                    :: ELEMENT_BASIS(3,3)! Element coordinate system basis
+      REAL(DOUBLE)                    :: XL(3)
+      REAL(DOUBLE)                    :: ZL(3)
+      REAL(DOUBLE)                    :: XE(3)
+      REAL(DOUBLE)                    :: CROSS_XLE(3)
 
 ! **********************************************************************************************************************************
 
@@ -92,6 +102,7 @@
 !  Currently the same as the element coordinate system x_l, y_l, z_l.
 !  e^_3 is the midsurface normal which may be different from the director vector.
 !  Orthogonal
+! Victor todo this is different now.
 !
 ! Element
 !  x_l, y_l, z_l
@@ -227,6 +238,35 @@
          BE2(:,:,1) = (BE2(:,:,2) + BE2(:,:,3) + BE2(:,:,4) + BE2(:,:,5)) / FOUR
          BE3(:,:,1) = (BE3(:,:,2) + BE3(:,:,3) + BE3(:,:,4) + BE3(:,:,5)) / FOUR
          
+
+                                                           ! Find angle of the element coordinate system's x axis from
+                                                           ! the cartesian local coordinate system's x axis at each 
+                                                           ! stress output point (corner grid points and center).
+                                                           ! This will be used to transform stress and strain to the
+                                                           ! element coordinate system after extrapolating to stress
+                                                           ! output points.
+         GP_RS = MITC_GP_RS()
+         DO STR_PT_NUM=1,5
+
+            IF (STR_PT_NUM == 1) THEN
+               !victor todo Nastran's element center is not be at RS=0.
+               R = 0
+               S = 0
+            ELSE
+               R = GP_RS(1, STR_PT_NUM - 1)
+               S = GP_RS(2, STR_PT_NUM - 1)
+            ENDIF
+
+            LOCAL_BASIS = MITC8_CARTESIAN_LOCAL_BASIS( R, S )
+            XL = LOCAL_BASIS(:,1)                          ! X axis of cartesian local basis
+            ZL = LOCAL_BASIS(:,3)                          ! Normal
+            ELEMENT_BASIS = MITC8_ELEMENT_CS_BASIS( R, S )
+            XE = ELEMENT_BASIS(:,1)                        ! X axis of element coordinate system
+
+            CALL CROSS( XL, XE, CROSS_XLE )
+            SHELL_STR_ANGLE( STR_PT_NUM ) = ATAN2(DOT_PRODUCT( ZL, CROSS_XLE ), DOT_PRODUCT( XL, XE ))
+         
+         ENDDO
 
       ENDIF
 

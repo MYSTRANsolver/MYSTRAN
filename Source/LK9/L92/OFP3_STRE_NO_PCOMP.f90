@@ -38,15 +38,17 @@
                                          SOL_NAME
       USE TIMDAT, ONLY                :  TSEC
       USE SUBR_BEGEND_LEVELS, ONLY    :  OFP3_STRE_NO_PCOMP_BEGEND
-      USE CONSTANTS_1, ONLY           :  ZERO
+      USE CONSTANTS_1, ONLY           :  ZERO, ONE
       USE FEMAP_ARRAYS, ONLY          :  FEMAP_EL_NUMS
       USE PARAMS, ONLY                :  OTMSKIP, PRTNEU
       USE MODEL_STUF, ONLY            :  AGRID, ANY_STRE_OUTPUT, EDAT, EPNT, ETYPE, EID, ELGP, ELMTYP, ELOUT,                      &
-                                         METYPE, NUM_SEi, NUM_EMG_FATAL_ERRS, PCOMP_PROPS, PLY_NUM, STRESS, TYPE
+                                         METYPE, NUM_SEi, NUM_EMG_FATAL_ERRS, PCOMP_PROPS, PLY_NUM, STRESS, TYPE, SHELL_STR_ANGLE
       USE CC_OUTPUT_DESCRIBERS, ONLY  :  STRE_LOC, STRE_OPT
       USE LINK9_STUFF, ONLY           :  EID_OUT_ARRAY, GID_OUT_ARRAY, MAXREQ, OGEL, POLY_FIT_ERR, POLY_FIT_ERR_INDEX
       USE OUTPUT4_MATRICES, ONLY      :  OTM_STRE, TXT_STRE
-  
+
+      USE PLANE_COORD_TRANS_21_Interface
+      USE TRANSFORM_SHELL_STR_Interface
       USE OFP3_STRE_NO_PCOMP_USE_IFs
 
       IMPLICIT NONE
@@ -94,6 +96,7 @@
 
                                                            ! Array of output stress values after surface fit
       REAL(DOUBLE)                    :: STRESS_OUT(9,MAX_STRESS_POINTS)
+      REAL(DOUBLE)                    :: TEL(3,3)          ! Transformation matrix from cartesian local (L) to element (E) coordinates.
 
       ! OP2 stuff
       CHARACTER(8*BYTE)               :: TABLE_NAME   ! name of the op2 table name
@@ -205,17 +208,24 @@ elems_5: DO J = 1,NELE
                      IF (TYPE(1:5) == 'QUAD4') THEN        ! Calc STRESS_OUT for QUAD4
                         CALL POLYNOM_FIT_STRE_STRN ( STRESS_RAW, 9, NUM_PTS(I), STRESS_OUT, STRESS_OUT_PCT_ERR,                    &
                                                      STRESS_OUT_ERR_INDEX, PCT_ERR_MAX )
-                     ELSE IF ((TYPE(1:4) == 'HEXA') .OR.                                                                           &
-                              (TYPE(1:5) == 'PENTA') .OR.                                                                          &
-                              (TYPE(1:5) == 'TETRA') .OR.                                                                          &
-                              (TYPE(1:5) == 'QUAD8')) THEN
+                     ELSE IF (TYPE(1:5) == 'QUAD8') THEN
 ! Stresses are directly evaluated at the corner grid points. If they are going to be evaluated at Gauss points
 ! then extrapolated to grid points, that should be done here, in POLYNOM_FIT_STRE_STRN, or in an equivalent subroutine.
-! Issues for extrapolating from Gauss points:
-!  - The number of Gauss points may be different from the number of grid points so NUM_PTS(I) doesn't apply to both.
-!  - Gauss point and grid point numbering is different. For QUAD, nodes 1,2,3,4 are closest to Gauss point numbers 1,3,4,2.
-!  - For CQUAD8, the element coordinate system is different at each grid and Gauss point so they must be transformed or 
-!    alternatively, calculate and extrapolate stress in a more uniform coordinate system then transform after extrapolating.
+
+                        STRESS_OUT(:,:) = STRESS_RAW(:,:)
+
+                                                           ! Transform stress from the cartesian local coordinate system to 
+                                                           ! the element coordinate system
+                        DO M=1,NUM_PTS(I)
+                           CALL PLANE_COORD_TRANS_21( SHELL_STR_ANGLE( M ), TEL, '')
+                           CALL TRANSFORM_SHELL_STR( TEL, STRESS_OUT(:,M), ONE)
+                        ENDDO
+                     
+                     ELSE IF ((TYPE(1:4) == 'HEXA') .OR.                                                                           &
+                              (TYPE(1:5) == 'PENTA') .OR.                                                                          &
+                              (TYPE(1:5) == 'TETRA')) THEN
+! Stresses are directly evaluated at the corner grid points. If they are going to be evaluated at Gauss points
+! then extrapolated to grid points, that should be done here, in POLYNOM_FIT_STRE_STRN, or in an equivalent subroutine.
                         STRESS_OUT(:,:) = STRESS_RAW(:,:)
                      ENDIF
                   ENDIF

@@ -1,4 +1,4 @@
-! #################################################################################################################################
+! ###############################################################################################################################
 ! Begin MIT license text.                                                                                    
 ! _______________________________________________________________________________________________________
                                                                                                          
@@ -23,17 +23,13 @@
 ! _______________________________________________________________________________________________________
                                                                                                         
 ! End MIT license text.                                                                                      
-      FUNCTION MITC8_CARTESIAN_LOCAL_BASIS ( R, S )
- 
-! Finds the basis vectors of the cartesian local coordinate system expressed in the basic coordinate system.
-! This is defined the same way as the material coordinate system in Simcenter Nastran with THETA=0.
-! This definition is chosen because it is uniform over the surface of the element so stress and strain outputs
-! can be interpolated/extrapolated in this coordinate system then transformed to the local element coordinate
-! system at the corner grid points and center for output.
-!
-! First index of the result is a vector component in basic coordinates (x,y,z)
-! Second index of the result is basis vector (x_l, y_l, normal)
 
+   MODULE MITC8_ELEMENT_CS_BASIS_Interface
+
+   INTERFACE
+
+      FUNCTION MITC8_ELEMENT_CS_BASIS ( R, S )
+ 
       USE PENTIUM_II_KIND, ONLY       :  LONG, DOUBLE
       USE MODEL_STUF, ONLY            :  ELGP, XEB, TYPE
       USE CONSTANTS_1, ONLY           :  ZERO, ONE, TWO
@@ -48,69 +44,25 @@
       
       INTEGER(LONG)                   :: I                 ! DO loop indices
 
-      REAL(DOUBLE)                    :: MITC8_CARTESIAN_LOCAL_BASIS(3,3)
+      REAL(DOUBLE)                    :: MITC8_ELEMENT_CS_BASIS(3,3)
       REAL(DOUBLE) , INTENT(IN)       :: R
       REAL(DOUBLE) , INTENT(IN)       :: S
       REAL(DOUBLE)                    :: PSH(ELGP)       
       REAL(DOUBLE)                    :: DPSHG(2,ELGP)     ! Derivatives of shape functions with respect to R and S.
       REAL(DOUBLE)                    :: E_XI(3)
       REAL(DOUBLE)                    :: E_ETA(3)
-      REAL(DOUBLE)                    :: Z_REF(3)
-      REAL(DOUBLE)                    :: R_G1G2(3)
-      REAL(DOUBLE)                    :: X(3)
-      REAL(DOUBLE)                    :: Y(3)
-      REAL(DOUBLE)                    :: Z(3)
+      REAL(DOUBLE)                    :: A(3)
+      REAL(DOUBLE)                    :: B(3)
+      REAL(DOUBLE)                    :: X_L_ACB(3)
+      REAL(DOUBLE)                    :: Y_L_ACB(3)
+      REAL(DOUBLE)                    :: T(3,3)
 
+      INTRINSIC                       :: DSQRT
 
-! **********************************************************************************************************************************
       
- 
-      IF (TYPE(1:5) == 'QUAD8') THEN
+      END FUNCTION MITC8_ELEMENT_CS_BASIS
 
-        CALL SHP2DQ ( 0, 0, ELGP, 'MITC8_CARTESIAN_LOCAL_BASIS', '', 0, R, S, 'N', PSH, DPSHG )
+   END INTERFACE
 
-      ELSE
+   END MODULE MITC8_ELEMENT_CS_BASIS_Interface
 
-        WRITE(ERR,*) ' *ERROR: INCORRECT ELEMENT TYPE', TYPE
-        WRITE(F06,*) ' *ERROR: INCORRECT ELEMENT TYPE', TYPE
-        FATAL_ERR = FATAL_ERR + 1
-        CALL OUTA_HERE ( 'Y' )
-
-      ENDIF
-
-                                                           ! Unit normal to the reference plane
-      CALL CROSS(XEB(3,:) - XEB(1,:), XEB(4,:) - XEB(2,:), Z_REF)
-      Z_REF = Z_REF / DSQRT(DOT_PRODUCT(Z_REF, Z_REF))
-
-                                                           ! Project R_G1G2 onto the reference plane
-      R_G1G2 = XEB(2,:) - XEB(1,:)
-!victor todo
-
-                                                           ! Unit normal to shell surface (Z)
-      E_XI(:)=ZERO
-      E_ETA(:)=ZERO
-      DO I=1,ELGP
-        E_XI(:) = E_XI(:) + XEB(I,:) * DPSHG(1,I)
-        E_ETA(:) = E_ETA(:) + XEB(I,:) * DPSHG(2,I)
-      ENDDO
-      CALL CROSS(E_XI, E_ETA, Z)
-      Z = Z / DSQRT(DOT_PRODUCT(Z, Z))
-
-                                                           ! Y tangent to the surface
-      CALL CROSS(Z, R_G1G2, Y)
-      Y = Y / DSQRT(DOT_PRODUCT(Y, Y))
-
-                                                           ! Rotate R_G1G2 about Y to be tangent to the surface
-      CALL CROSS(Y, Z, X)
-
-      MITC8_CARTESIAN_LOCAL_BASIS(:,1) = X
-      MITC8_CARTESIAN_LOCAL_BASIS(:,2) = Y
-      MITC8_CARTESIAN_LOCAL_BASIS(:,3) = Z
-
-
-      RETURN
-
-
-! **********************************************************************************************************************************
-  
-      END FUNCTION MITC8_CARTESIAN_LOCAL_BASIS

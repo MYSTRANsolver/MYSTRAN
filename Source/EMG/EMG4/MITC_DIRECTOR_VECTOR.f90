@@ -49,7 +49,6 @@
       REAL(DOUBLE)                    :: TANGENT_R(3)
       REAL(DOUBLE)                    :: TANGENT_S(3)
       REAL(DOUBLE)                    :: NORMAL(3)
-      REAL(DOUBLE)                    :: MAG
 
       INTRINSIC                       :: DSQRT
 
@@ -88,11 +87,8 @@
 
       CALL CROSS(TANGENT_R, TANGENT_S, NORMAL)
 
-      MAG = DSQRT(NORMAL(1)*NORMAL(1)+NORMAL(2)*NORMAL(2)+NORMAL(3)*NORMAL(3))
-      DO J = 1,3
-        NORMAL(J) = NORMAL(J)/MAG
-      ENDDO 
-
+      NORMAL = NORMAL / DSQRT(DOT_PRODUCT(NORMAL, NORMAL))
+      
       MITC_DIRECTOR_VECTOR = NORMAL
 
       RETURN
