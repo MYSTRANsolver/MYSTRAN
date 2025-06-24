@@ -205,14 +205,14 @@ elems_5: DO J = 1,NELE
                       (TYPE(1:5) == 'PENTA') .OR.                                                                                  &
                       (TYPE(1:5) == 'TETRA') .OR.                                                                                  &
                       (TYPE(1:5) == 'QUAD8')) THEN
-                     IF (TYPE(1:5) == 'QUAD4') THEN        ! Calc STRESS_OUT for QUAD4
+
+                     IF (TYPE(1:5) == 'QUAD4') THEN
                         CALL POLYNOM_FIT_STRE_STRN ( STRESS_RAW, 9, NUM_PTS(I), STRESS_OUT, STRESS_OUT_PCT_ERR,                    &
                                                      STRESS_OUT_ERR_INDEX, PCT_ERR_MAX )
+                    
                      ELSE IF (TYPE(1:5) == 'QUAD8') THEN
-! Stresses are directly evaluated at the corner grid points. If they are going to be evaluated at Gauss points
-! then extrapolated to grid points, that should be done here, in POLYNOM_FIT_STRE_STRN, or in an equivalent subroutine.
-
-                        STRESS_OUT(:,:) = STRESS_RAW(:,:)
+                        CALL POLYNOM_FIT_STRE_STRN ( STRESS_RAW, 9, NUM_PTS(I), STRESS_OUT, STRESS_OUT_PCT_ERR,                    &
+                                                     STRESS_OUT_ERR_INDEX, PCT_ERR_MAX )
 
                                                            ! Transform stress from the cartesian local coordinate system to 
                                                            ! the element coordinate system
@@ -227,7 +227,9 @@ elems_5: DO J = 1,NELE
 ! Stresses are directly evaluated at the corner grid points. If they are going to be evaluated at Gauss points
 ! then extrapolated to grid points, that should be done here, in POLYNOM_FIT_STRE_STRN, or in an equivalent subroutine.
                         STRESS_OUT(:,:) = STRESS_RAW(:,:)
+                        
                      ENDIF
+
                   ENDIF
 
 do_stress_pts:    DO M=1,NUM_PTS(I)

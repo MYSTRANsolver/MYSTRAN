@@ -121,16 +121,17 @@
 
 ! Calc actual coords of the points for which the BEi, SEi matrices were calculated
 
-      IF (TYPE(1:5) == 'QUAD4') THEN
+      IF ((TYPE(1:5) == 'QUAD4') .OR. (TYPE(1:5) == 'QUAD8')) THEN
 
-         IF (NCOL /= ELGP+1) THEN                          ! We assume that the number of stress/strain points = ELGP+1, so check it
-            WRITE(ERR,9202) SUBR_NAME, TYPE, NCOL, ELGP+1
-            WRITE(F06,9202) SUBR_NAME, TYPE, NCOL, ELGP+1
+         IF (NCOL /= 5) THEN                               ! Number of stress/strain points = number of corner points+1
+            WRITE(ERR,9202) SUBR_NAME, TYPE, NCOL, 4+1
+            WRITE(F06,9202) SUBR_NAME, TYPE, NCOL, 4+1
             FATAL_ERR = FATAL_ERR + 1
             CALL OUTA_HERE ( 'Y' )
          ENDIF
-                                                           ! For the MIN4  QUAD4, XEP parametric coords are the Gauss point coords
-         IF ((QUAD4TYP == 'MIN4 ') .OR. (TYPE(1:6) == 'QUAD4K')) THEN
+                                                           ! For the MIN4 QUAD4 and QUAD8. XEP parametric coords 
+                                                           ! are the Gauss point coords
+         IF ((QUAD4TYP == 'MIN4 ') .OR. (TYPE(1:6) == 'QUAD4K') .OR. (TYPE(1:5) == 'QUAD8')) THEN
             CALL ORDER_GAUSS ( IORD, SSS, HHH )
             XEP(1,1) =  SSS(1)      ;   XEP(1,2) =  SSS(1)      ;   XEP(1,3) = ZERO
             XEP(2,1) =  SSS(1)      ;   XEP(2,2) =  SSS(2)      ;   XEP(2,3) = ZERO
@@ -144,12 +145,11 @@
          ENDIF
 
          CALL PARAM_CORDS_ACT_CORDS ( 4, IORD, XEP, XEA )  ! Get actual local elem coords corresponding to the parametric coords
-         DO I=1,ELGP
+         DO I=1,NCOL-1
             XI(I) = XEA(I,1)                               ! XEA are act coords of the XEP.        XI is input to subr SURFACE_FIT
             YI(I) = XEA(I,2)
             XO(I) = XEL(I,1)                               ! XEL are act coords of the elem nodes. XO is input to subr SURFACE_FIT
             YO(I) = XEL(I,2)
-
          ENDDO
 
 ! Now do surface fit on the data (STR_IN) to get stress/strain at the elem corners (STR_OUT)

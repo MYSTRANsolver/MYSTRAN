@@ -204,14 +204,14 @@ elems_7: DO J = 1,NELE
                       (TYPE(1:5) == 'PENTA') .OR.                                                                                  &
                       (TYPE(1:5) == 'TETRA') .OR.                                                                                  &
                       (TYPE(1:5) == 'QUAD8')) THEN
-                     IF (TYPE(1:5) == 'QUAD4') THEN        ! Calc STRAIN_OUT for QUAD4
+
+                     IF (TYPE(1:5) == 'QUAD4') THEN
                         CALL POLYNOM_FIT_STRE_STRN ( STRAIN_RAW, 9, NUM_PTS(I), STRAIN_OUT, STRAIN_OUT_PCT_ERR,                    &
                                                      STRAIN_OUT_ERR_INDEX, PCT_ERR_MAX )
-                     ELSE IF (TYPE(1:5) == 'QUAD8') THEN
-! Strains are directly evaluated at the corner grid points. If they are going to be evaluated at Gauss points
-! then extrapolated to grid points, that should be done here, in POLYNOM_FIT_STRE_STRN, or in an equivalent subroutine.
 
-                        STRAIN_OUT(:,:) = STRAIN_RAW(:,:)
+                     ELSE IF (TYPE(1:5) == 'QUAD8') THEN
+                        CALL POLYNOM_FIT_STRE_STRN ( STRAIN_RAW, 9, NUM_PTS(I), STRAIN_OUT, STRAIN_OUT_PCT_ERR,                    &
+                                                     STRAIN_OUT_ERR_INDEX, PCT_ERR_MAX )
 
                                                            ! Transform strain from the cartesian local coordinate system to 
                                                            ! the element coordinate system
@@ -226,7 +226,9 @@ elems_7: DO J = 1,NELE
 ! Strains are directly evaluated at the corner grid points. If they are going to be evaluated at Gauss points
 ! then extrapolated to grid points, that should be done here, in POLYNOM_FIT_STRE_STRN, or in an equivalent subroutine.
                         STRAIN_OUT(:,:) = STRAIN_RAW(:,:)
+                        
                      ENDIF
+
                   ENDIF
 
 do_strain_pts:    DO M=1,NUM_PTS(I)

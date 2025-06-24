@@ -98,11 +98,11 @@
 !
 ! Cartesian local
 !  e^_1, e^_2, e^_3 in Bathe but they are oriented differently there.
+!  e^_3 is the midsurface normal which may be different from the director vector.
 !  Used for strain in the strain-displacement matrix and the material elasticity matrix is transformed to this to integrate KE.
 !  Defined the same way as the zero THETA material coordinate system in Siemens SimCenter. This definition is used because it
 !  has uniform orientation on distorted flat elements and is only non-uniform as needed to accomodate out-of-plane curvature.
 !  The uniformity allows stress to be interpolated and extrapolated to different locations conveniently.
-!  e^_3 is the midsurface normal which may be different from the director vector.
 !  Orthogonal
 !
 ! Element
@@ -114,6 +114,9 @@
 !
 ! Material
 !  Used for material elasticity read from the input file.
+!  Currently, this is the same as the cartesian local coordinate system. To allow non-isotropic materials, it
+!  should find the angle between the two systems's x axes at each integration point and rotate the material
+!  elasticity matrix about that when building the stiffness matrix KE.
 !  Orthogonal
 !
 ! Isoparametric (natural)
@@ -196,41 +199,38 @@
 
       IF (OPT(3) == 'Y') THEN
 
-! Generate BE1 at the stress recovery points. Put them into array BE1(i,j,k) at k indices 1-5.
+         STR_PT_NUM = 1
 
-         DO STR_PT_NUM=2,5
+         CALL ORDER_GAUSS ( IORD_STRESS_Q8, SS_IJ, HH_IJ )
 
-            SELECT CASE (STR_PT_NUM)
-            CASE (1)                                       ! Center
-               !victor todo Nastran's element center may not be at RS=0. Check the definition.
-               R = 0; S = 0
-            CASE (2)                                       ! Node 1
-               R = -1; S = -1
-            CASE (3)                                       ! Node 2
-               R = +1; S = -1
-            CASE (4)                                       ! Node 3
-               R = +1; S = +1
-            CASE (5)                                       ! Node 4
-               R = -1; S = +1
-            END SELECT
+         DO I=1,IORD_STRESS_Q8
+            DO J=1,IORD_STRESS_Q8
 
-            CALL MITC8_B( R, S, -ONE, .TRUE., .TRUE., BI1)
-            CALL MITC8_B( R, S, +ONE, .TRUE., .TRUE., BI2)
+               STR_PT_NUM = STR_PT_NUM + 1
 
-                                               ! Membrane strain is the average of the strains at the two t points.
-            BE1(1,:,STR_PT_NUM) = (BI2(1,:) + BI1(1,:)) / TWO           ! xx
-            BE1(2,:,STR_PT_NUM) = (BI2(2,:) + BI1(2,:)) / TWO           ! yy
-            BE1(3,:,STR_PT_NUM) = (BI2(4,:) + BI1(4,:)) / TWO           ! xy
+               R = SS_IJ(I)
+               S = SS_IJ(J)
+               
+               CALL MITC8_B( R, S, -ONE, .TRUE., .TRUE., BI1)
+               CALL MITC8_B( R, S, +ONE, .TRUE., .TRUE., BI2)
 
-                                               ! Bending strain is half the difference of the strains at top and bottom.
-            BE2(1,:,STR_PT_NUM) = (BI2(1,:) - BI1(1,:)) / TWO           ! xx
-            BE2(2,:,STR_PT_NUM) = (BI2(2,:) - BI1(2,:)) / TWO           ! yy
-            BE2(3,:,STR_PT_NUM) = (BI2(4,:) - BI1(4,:)) / TWO           ! xy
+                                                  ! Membrane strain is the average of the strains at the two t points.
+               BE1(1,:,STR_PT_NUM) = (BI2(1,:) + BI1(1,:)) / TWO           ! xx
+               BE1(2,:,STR_PT_NUM) = (BI2(2,:) + BI1(2,:)) / TWO           ! yy
+               BE1(3,:,STR_PT_NUM) = (BI2(4,:) + BI1(4,:)) / TWO           ! xy
 
-                                               ! Transverse shear strain. Note reversed order of rows.
-            BE3(1,:,STR_PT_NUM) = (BI2(6,:) + BI1(6,:)) / TWO           ! zx
-            BE3(2,:,STR_PT_NUM) = (BI2(5,:) + BI1(5,:)) / TWO           ! yz
+                                                  ! Curvature is (strain_top - strain_bottom) / thickness
+                                                  ! To allow grid point thicknesses, this should be the thickness
+                                                  ! interpolated at the Gauss point.
+               BE2(1,:,STR_PT_NUM) = (BI2(1,:) - BI1(1,:)) / EPROP(1)      ! xx
+               BE2(2,:,STR_PT_NUM) = (BI2(2,:) - BI1(2,:)) / EPROP(1)      ! yy
+               BE2(3,:,STR_PT_NUM) = (BI2(4,:) - BI1(4,:)) / EPROP(1)      ! xy
 
+                                                  ! Transverse shear strain. Note reversed order of rows.
+               BE3(1,:,STR_PT_NUM) = (BI2(6,:) + BI1(6,:)) / TWO           ! zx
+               BE3(2,:,STR_PT_NUM) = (BI2(5,:) + BI1(5,:)) / TWO           ! yz
+                              
+            ENDDO
          ENDDO
 
                                                            ! Center strain is average of corner strains.
@@ -342,12 +342,9 @@
                   T = SS_K(K)
                   CALL MITC8_B( R, S, T, .TRUE., .TRUE., BI)
 
-                  ! victor todo transform E from material to cartesian local coordiantes (EE) at this Gauss point. Not this simple copy.
-                  DO L=1,6
-                     DO M=1,6
-                        EE(L,M) = E(L,M)
-                     ENDDO 
-                  ENDDO   
+                  ! For non-isotropic materials, this should be rotated from the material coordinate system to the cartesian local
+                  ! coordinate system here. The rotation angle may be different at each Gauss point.
+                  EE(:,:) = E(:,:)
 
                   CALL MATMULT_FFF ( EE, BI, 6, 6, 6*ELGP, DUM1 )
                   CALL MATMULT_FFF_T ( BI, DUM1, 6, 6*ELGP, 6*ELGP, DUM2 )

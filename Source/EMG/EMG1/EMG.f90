@@ -156,15 +156,19 @@
          CALL ELMGM2 ( WRITE_WARN )
 
       ELSE IF (TYPE(1:5) == 'QUAD8') THEN
+
+         CALL ELMGM2 ( WRITE_WARN )                        ! Get grid point coordinates (XEL) in a 2D element coordinate system
+                                                           ! that's used for extrapolating stress/strain from Gauss points.
+                                                           ! This is not the element coordinate system for the stiffness matrix
+                                                           ! or stress output.
+
                                                            ! Stiffness matrix is calculated in basic coordinates so no transformation.
          TE(:,:) = ZERO
          DO I=1,3
             TE(I,I) = ONE
          ENDDO
          TE_IDENT = 'Y'
-                                                           ! Set grid point coords in local coord system to zero to prevent reuse
-                                                           ! from previous element. They should never be used for CQUAD8.
-         XEL(:,:) = ZERO
+
 
       ELSE IF ((TYPE == 'HEXA8   ') .OR. (TYPE == 'HEXA20  ')) THEN
          CALL ELMGM3 ( WRITE_WARN )
