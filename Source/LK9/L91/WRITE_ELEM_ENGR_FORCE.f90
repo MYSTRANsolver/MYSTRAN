@@ -24,7 +24,7 @@
                                                                                                         
 ! End MIT license text.                                                                                      
   
-      SUBROUTINE WRITE_ELEM_ENGR_FORCE ( JSUB, NUM, IHDR, ITABLE )
+      SUBROUTINE WRITE_ELEM_ENGR_FORCE ( JSUB, NUM, IHDR, NUM_PTS, ITABLE )
 
       ! Writes blocks of element engineering force output for one element type, one
       ! subcase. Elements that can have engineering force output are the ones 
@@ -36,7 +36,7 @@
       USE PARAMS, ONLY                :  PRTANS
       USE DEBUG_PARAMETERS, ONLY      :  DEBUG
       USE NONLINEAR_PARAMS, ONLY      :  LOAD_ISTEP
-      USE LINK9_STUFF, ONLY           :  EID_OUT_ARRAY, OGEL
+      USE LINK9_STUFF, ONLY           :  EID_OUT_ARRAY, GID_OUT_ARRAY, OGEL
       USE SUBR_BEGEND_LEVELS, ONLY    :  WRITE_ELEM_ENGR_FORCE_BEGEND
       USE MODEL_STUF, ONLY            :  ELEM_ONAME, LABEL, SCNUM, STITLE, TITLE, TYPE
       USE CC_OUTPUT_DESCRIBERS, ONLY  :  FORC_OUT
@@ -51,11 +51,12 @@
 
       INTEGER(LONG), INTENT(IN)       :: JSUB              ! Solution vector number
       INTEGER(LONG), INTENT(IN)       :: NUM               ! The number of rows of OGEL to write out
+      INTEGER(LONG), INTENT(IN)       :: NUM_PTS           ! Num diff stress points for one element
       INTEGER(LONG), INTENT(INOUT)    :: ITABLE            ! the current op2 subtable, should be -3, -5, ...
       INTEGER(LONG)                   :: BDY_COMP          ! Component (1-6) for a boundary DOF in CB analyses
       INTEGER(LONG)                   :: BDY_GRID          ! Grid for a boundary DOF in CB analyses
       INTEGER(LONG)                   :: BDY_DOF_NUM       ! DOF number for BDY_GRID/BDY_COMP
-      INTEGER(LONG)                   :: I,J,J1            ! DO loop indices or counters
+      INTEGER(LONG)                   :: I,J,J1,K,L        ! DO loop indices or counters
       INTEGER(LONG)                   :: NUM_TERMS         ! Number of terms to write out for shell elems
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = WRITE_ELEM_ENGR_FORCE_BEGEND
       LOGICAL                         :: WRITE_F06, WRITE_OP2, WRITE_ANS   ! flag
@@ -430,8 +431,19 @@ headr:IF (IHDR == 'Y') THEN
         ENDIF
 
         IF (WRITE_F06)  THEN  ! f06
-          DO I=1,NUM
-             WRITE(F06,1522) FILL(1: 0), EID_OUT_ARRAY(I,1),(OGEL(I,J),J=1,8)
+          K = 0
+          DO I=1,NUM,NUM_PTS
+             K = K + 1
+             WRITE(F06,*)                                  ! Blank line between elements
+
+                                                           ! Center forces
+             WRITE(F06,1522) FILL(1: 0), EID_OUT_ARRAY(I,1),(OGEL(K,J),J=1,8)
+                                                           
+             DO L=2,NUM_PTS                                ! Corner forces
+               K = K + 1
+               WRITE(F06,1522) FILL(1: 0), GID_OUT_ARRAY(I,L),(OGEL(K,J),J=1,8) 
+!victor todo different format for corner and center nodes so it can put EID and GID in different columns like stress
+             ENDDO
           ENDDO   
           CALL GET_MAX_MIN_ABS ( 1, 8 )
           WRITE(F06,1523) FILL(1: 0), FILL(1: 0), (MAX_ANS(J),J=1,8), FILL(1: 0), (MIN_ANS(J),J=1,8), FILL(1: 0),  &

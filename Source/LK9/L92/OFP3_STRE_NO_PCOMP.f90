@@ -38,7 +38,7 @@
                                          SOL_NAME
       USE TIMDAT, ONLY                :  TSEC
       USE SUBR_BEGEND_LEVELS, ONLY    :  OFP3_STRE_NO_PCOMP_BEGEND
-      USE CONSTANTS_1, ONLY           :  ZERO, ONE
+      USE CONSTANTS_1, ONLY           :  ZERO, ONE, FOUR
       USE FEMAP_ARRAYS, ONLY          :  FEMAP_EL_NUMS
       USE PARAMS, ONLY                :  OTMSKIP, PRTNEU
       USE MODEL_STUF, ONLY            :  AGRID, ANY_STRE_OUTPUT, EDAT, EPNT, ETYPE, EID, ELGP, ELMTYP, ELOUT,                      &
@@ -191,14 +191,11 @@ elems_5: DO J = 1,NELE
 
                   DO M=1,NUM_PTS(I)
                      CALL ELEM_STRE_STRN_ARRAYS ( M )
-                     DO K=1,9
-                        STRESS_RAW(K,M) = STRESS(K) 
-                     ENDDO
+                     STRESS_RAW(:,M) = STRESS(:) 
                   ENDDO
                   
-                  DO K=1,9                                 ! Set STRESS_OUT for NUM_PTS(I) = 1
-                     STRESS_OUT(K,1) = STRESS(K)
-                  ENDDO
+                  STRESS_OUT(:,1) = STRESS(:)            ! Set STRESS_OUT for NUM_PTS(I) = 1
+
                   IF ((STRE_LOC == 'CORNER  ') .OR.                                                                                & 
                       (STRE_LOC == 'GAUSS   ') .OR.                                                                                &
                       (TYPE(1:4) == 'HEXA') .OR.                                                                                   &
@@ -216,10 +213,12 @@ elems_5: DO J = 1,NELE
 
                                                            ! Transform stress from the cartesian local coordinate system to 
                                                            ! the element coordinate system
-                        DO M=1,NUM_PTS(I)
+                        DO M=2,NUM_PTS(I)
                            CALL PLANE_COORD_TRANS_21( SHELL_STR_ANGLE( M ), TEL, '')
                            CALL TRANSFORM_SHELL_STR( TEL, STRESS_OUT(:,M), ONE)
                         ENDDO
+                                                           ! Center stress is the average of corner stress in element coordinates
+                        STRESS_OUT(:,1) = (STRESS_OUT(:,2) + STRESS_OUT(:,3) + STRESS_OUT(:,4) + STRESS_OUT(:,5)) / FOUR
                      
                      ELSE IF ((TYPE(1:4) == 'HEXA') .OR.                                                                           &
                               (TYPE(1:5) == 'PENTA') .OR.                                                                          &

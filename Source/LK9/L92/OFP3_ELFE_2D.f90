@@ -32,16 +32,16 @@
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
       USE IOUNT1, ONLY                :  WRT_BUG, WRT_LOG, ERR, F04, F06
       USE SCONTR, ONLY                :  BLNK_SUB_NAM, ELOUT_ELFE_BIT, FATAL_ERR, IBIT, INT_SC_NUM, MBUG, MOGEL,                   &
-                                         WARN_ERR, NELE, NCQUAD4, NCQUAD4K, NCSHEAR, NCTRIA3, NCTRIA3K, SOL_NAME                   
+                                         WARN_ERR, NELE, NCQUAD4, NCQUAD4K, NCSHEAR, NCTRIA3, NCTRIA3K, SOL_NAME, MAX_STRESS_POINTS
       USE TIMDAT, ONLY                :  TSEC
       USE SUBR_BEGEND_LEVELS, ONLY    :  OFP3_ELFE_2D_BEGEND
-      USE CONSTANTS_1, ONLY           :  ZERO, ONE
+      USE CONSTANTS_1, ONLY           :  ZERO, ONE, FOUR
       USE FEMAP_ARRAYS, ONLY          :  FEMAP_EL_NUMS, FEMAP_EL_VECS
       USE PARAMS, ONLY                :  OTMSKIP, PRTNEU
       use model_stuf, only            :  pcomp_props
       USE MODEL_STUF, ONLY            :  ANY_ELFE_OUTPUT, EDAT, EPNT, ETYPE, FCONV, EID, ELMTYP, ELOUT, METYPE, NUM_EMG_FATAL_ERRS,&
-                                         PLY_NUM, TYPE, STRESS, SHELL_STR_ANGLE
-      USE LINK9_STUFF, ONLY           :  EID_OUT_ARRAY, MAXREQ, OGEL
+                                         PLY_NUM, TYPE, STRESS, SHELL_STR_ANGLE, NUM_SEi, ELGP, AGRID
+      USE LINK9_STUFF, ONLY           :  EID_OUT_ARRAY, GID_OUT_ARRAY, MAXREQ, OGEL
       USE OUTPUT4_MATRICES, ONLY      :  OTM_ELFE, TXT_ELFE
   
       USE PLANE_COORD_TRANS_21_Interface
@@ -63,22 +63,34 @@
      !INTEGER(LONG), INTENT(INOUT)    :: ITABLE            ! the op2 subtable number, should be -3, -5, ...
       INTEGER(LONG), INTENT(INOUT)    :: OT4_EROW          ! Row number in OT4 file for elem related OTM descriptors
       INTEGER(LONG)                   :: ELOUT_ELFE        ! If > 0, there are ELFORCE(ENGR) requests for some elems                
-      INTEGER(LONG)                   :: I,J,K             ! DO loop indices
+      INTEGER(LONG)                   :: I,J,K,M           ! DO loop indices
       INTEGER(LONG)                   :: IERROR       = 0  ! Local error count
 !xx   INTEGER(LONG)                   :: IROW_MAT          ! Row number in OTM's
 !xx   INTEGER(LONG)                   :: IROW_TXT          ! Row number in OTM text file
       INTEGER(LONG)                   :: NELREQ(METYPE)    ! Count of the no. of requests for ELFORCE(NODE or ENGR) or STRESS
-      INTEGER(LONG)                   :: NUM_ELEM          ! No. elems processed prior to writing results to F06 file
+      INTEGER(LONG)                   :: NUM_OGEL_ROWS     ! No. elem points processed prior to writing results to F06 file
       INTEGER(LONG)                   :: NUM_FROWS         ! No. elems processed for FEMAP
       INTEGER(LONG)                   :: NUM_OGEL          ! No. rows written to array OGEL prior to writing results to F06 file
-!                                                            (this can be > NUM_ELEM since more than 1 row is written to OGEL
+!                                                            (this can be > NUM_OGEL_ROWS since more than 1 row is written to OGEL
 !                                                            for ELFORCE(NODE) - elem nodal forces)
-                                                           ! Indicator for output of elem data to BUG file
+      INTEGER(LONG)                   :: NUM_PTS(METYPE)   ! Num diff force points for one element
       integer(long)                   :: num_pcomp_elems   ! number of elements that are composites (used to prevent output of engr
 !                                                            forces for PCOMP elems until I fix that output)
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = OFP3_ELFE_2D_BEGEND
+                                                           ! Stress index (1 through 9) where poly fit err is max
+      INTEGER(LONG)                   :: STRESS_OUT_ERR_INDEX(MAX_STRESS_POINTS)
+
+                                                           ! Array of %errs from subr POLYNOM_FIT_STRE_STRN (only NUM_PTS vals used)
+      REAL(DOUBLE)                    :: STRESS_OUT_PCT_ERR(MAX_STRESS_POINTS)
+
+      REAL(DOUBLE)                    :: PCT_ERR_MAX       ! Max value from array STRESS_OUT_PCT_ERR
  
       REAL(DOUBLE)                    :: TEL(3,3)          ! Transformation matrix from cartesian local (L) to element (E) coordinates.
+                                                           ! Array of values from array STRESS for all stress points
+      REAL(DOUBLE)                    :: STRESS_RAW(9,MAX_STRESS_POINTS)
+                                                           ! Array of output stress values after surface fit
+      REAL(DOUBLE)                    :: STRESS_OUT(9,MAX_STRESS_POINTS)
+
 
       ! OP2 parameters
       INTEGER(LONG)                   :: ITABLE            ! the op2 subtable number
@@ -134,9 +146,14 @@
                IF (ETYPE(J) == ELMTYP(I)) THEN
                   call is_elem_pcomp_props ( j )
                   if (pcomp_props == 'N') then
+                     IF (ETYPE(J)(1:5) == 'QUAD8') THEN
+                        NUM_PTS(I) = NUM_SEi(I)
+                     ELSE
+                        NUM_PTS(I) = 1
+                     ENDIF
                      ELOUT_ELFE = IAND(ELOUT(J,INT_SC_NUM),IBIT(ELOUT_ELFE_BIT))
                      IF (ELOUT_ELFE > 0) THEN
-                        NELREQ(I) = NELREQ(I) + 1
+                        NELREQ(I) = NELREQ(I) + NUM_PTS(I)
                      ENDIF
                   else
                      num_pcomp_elems = num_pcomp_elems + 1
@@ -167,7 +184,7 @@
       OT4_DESCRIPTOR = 'Element engineering force'
 reqs3:DO I=1,METYPE
          IF (NELREQ(I) == 0) CYCLE reqs3
-         NUM_ELEM = 0
+         NUM_OGEL_ROWS = 0
          NUM_OGEL = 0
  
 elems_3: DO J = 1,NELE
@@ -195,12 +212,45 @@ elems_3: DO J = 1,NELE
                         ENDIF
                         OPT(4) = 'N'
                         CALL ELMDIS
-                        CALL ELEM_STRE_STRN_ARRAYS ( 1 )
-                        IF (ETYPE(J)(1:5) == 'QUAD8') THEN ! Transfrom stress to element coordinate system
-                           CALL PLANE_COORD_TRANS_21( SHELL_STR_ANGLE( 1 ), TEL, '')
-                           CALL TRANSFORM_SHELL_STR( TEL, STRESS, ONE)
-                        END IF
-                        CALL SHELL_ENGR_FORCE_OGEL ( NUM_OGEL )
+                        
+
+                        DO M=1,NUM_PTS(I)                  ! Gauss point stress
+                           CALL ELEM_STRE_STRN_ARRAYS ( M )
+                           STRESS_RAW(:,M) = STRESS(:) 
+                        ENDDO
+                                         
+                        IF (ETYPE(J)(1:5) == 'QUAD8') THEN
+                                                           ! Extrapolate stress to corners
+                           CALL POLYNOM_FIT_STRE_STRN ( STRESS_RAW, 9, NUM_PTS(I), STRESS_OUT, STRESS_OUT_PCT_ERR,                 &
+                             STRESS_OUT_ERR_INDEX, PCT_ERR_MAX )
+
+                                                           ! Transfrom stress to element coordinate system
+                           DO M=2,NUM_PTS(I)
+                              CALL PLANE_COORD_TRANS_21( SHELL_STR_ANGLE( M ), TEL, '')
+                              CALL TRANSFORM_SHELL_STR( TEL, STRESS_OUT(:,M), ONE)
+                           ENDDO
+                           
+                                                           ! Center stress is the average of corner stress in element coordinates
+                           STRESS_OUT(:,1) = (STRESS_OUT(:,2) + STRESS_OUT(:,3) + STRESS_OUT(:,4) + STRESS_OUT(:,5)) / FOUR
+                        ELSE
+                        
+                           STRESS_OUT(:,1) = STRESS_RAW(:,1)
+                        
+                        ENDIF
+                        
+                        DO M=1,NUM_PTS(I)                  ! Calculate forces and moments from stresses
+                           STRESS(:) = STRESS_OUT(:,M)
+                           CALL SHELL_ENGR_FORCE_OGEL ( NUM_OGEL )
+                           
+                           NUM_OGEL_ROWS = NUM_OGEL_ROWS + 1
+                           EID_OUT_ARRAY(NUM_OGEL_ROWS,1) = EID
+                           GID_OUT_ARRAY(NUM_OGEL_ROWS,1) = 0
+                           DO K=1,ELGP
+                              GID_OUT_ARRAY(NUM_OGEL_ROWS,K+1) = AGRID(K)
+                           ENDDO
+
+                        ENDDO
+
  
                         IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
                            DO K=1,8
@@ -219,16 +269,14 @@ elems_3: DO J = 1,NELE
                            ENDDO
                         ENDIF
 
-                        NUM_ELEM = NUM_ELEM + 1
-                        EID_OUT_ARRAY(NUM_ELEM,1) = EID
-                        IF (NUM_ELEM == NELREQ(I)) THEN
+                        IF (NUM_OGEL_ROWS == NELREQ(I)) THEN
                            CALL CHK_OGEL_ZEROS ( NUM_OGEL )
 
  100                       FORMAT("*DEBUG:      ",A,"; ELEMENT_TYPE=",A,"; TABLE_NAME=",A,"; ITABLE=",I8)
                            WRITE(ERR,100) "F3",ETYPE(J),TABLE_NAME,ITABLE
                            CALL SET_OEF_TABLE_NAME(ETYPE(J), TABLE_NAME, ITABLE)
                            WRITE(ERR,100) "F4",ETYPE(J),TABLE_NAME,ITABLE
-                           CALL WRITE_ELEM_ENGR_FORCE ( JVEC, NUM_ELEM, IHDR, ITABLE )
+                           CALL WRITE_ELEM_ENGR_FORCE ( JVEC, NUM_OGEL_ROWS, IHDR, NUM_PTS(I), ITABLE )
                            EXIT
                         ENDIF
                      ENDIF

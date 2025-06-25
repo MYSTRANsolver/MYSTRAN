@@ -38,7 +38,7 @@
                                          SOL_NAME
       USE TIMDAT, ONLY                :  TSEC
       USE SUBR_BEGEND_LEVELS, ONLY    :  OFP3_STRN_NO_PCOMP_BEGEND
-      USE CONSTANTS_1, ONLY           :  ZERO, TWO
+      USE CONSTANTS_1, ONLY           :  ZERO, TWO, FOUR
       USE FEMAP_ARRAYS, ONLY          :  FEMAP_EL_NUMS
       USE PARAMS, ONLY                :  OTMSKIP, PRTNEU
       USE MODEL_STUF, ONLY            :  AGRID, ANY_STRN_OUTPUT, EDAT, EPNT, ETYPE, EID, ELGP, ELMTYP, ELOUT,                      &
@@ -220,13 +220,16 @@ elems_7: DO J = 1,NELE
                            CALL TRANSFORM_SHELL_STR( TEL, STRAIN_OUT(:,M), TWO)
                         ENDDO
 
+                                                           ! Center strain is the average of corner strain in element coordinates
+                        STRAIN_OUT(:,1) = (STRAIN_OUT(:,2) + STRAIN_OUT(:,3) + STRAIN_OUT(:,4) + STRAIN_OUT(:,5)) / FOUR
+
                      ELSE IF ((TYPE(1:4) == 'HEXA') .OR.                                                                           &
                               (TYPE(1:5) == 'PENTA') .OR.                                                                          &
                               (TYPE(1:5) == 'TETRA')) THEN
 ! Strains are directly evaluated at the corner grid points. If they are going to be evaluated at Gauss points
 ! then extrapolated to grid points, that should be done here, in POLYNOM_FIT_STRE_STRN, or in an equivalent subroutine.
                         STRAIN_OUT(:,:) = STRAIN_RAW(:,:)
-                        
+                                                
                      ENDIF
 
                   ENDIF
