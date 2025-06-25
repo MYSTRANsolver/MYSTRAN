@@ -84,7 +84,7 @@
 
                                                            ! Project R_G1G2 onto the reference plane
       R_G1G2 = XEB(2,:) - XEB(1,:)
-!victor todo
+      R_G1G2 = R_G1G2 - Z_REF * DOT_PRODUCT(R_G1G2, Z_REF) / DOT_PRODUCT(Z_REF, Z_REF)
 
                                                            ! Unit normal to shell surface (Z)
       E_XI(:)=ZERO
@@ -100,7 +100,7 @@
       CALL CROSS(Z, R_G1G2, Y)
       Y = Y / DSQRT(DOT_PRODUCT(Y, Y))
 
-                                                           ! Rotate R_G1G2 about Y to be tangent to the surface
+                                                           ! Rotate the projected R_G1G2 about Y to be tangent to the surface
       CALL CROSS(Y, Z, X)
 
       MITC8_CARTESIAN_LOCAL_BASIS(:,1) = X

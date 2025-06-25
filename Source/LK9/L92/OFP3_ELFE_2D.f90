@@ -29,21 +29,23 @@
 ! Processes element engr force output requests for 2D (TRIA3, QUAD4, SHEAR) elements for one subcase. Results go into array OGEL
 ! for later output in LINK9
  
-      USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG
+      USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
       USE IOUNT1, ONLY                :  WRT_BUG, WRT_LOG, ERR, F04, F06
       USE SCONTR, ONLY                :  BLNK_SUB_NAM, ELOUT_ELFE_BIT, FATAL_ERR, IBIT, INT_SC_NUM, MBUG, MOGEL,                   &
                                          WARN_ERR, NELE, NCQUAD4, NCQUAD4K, NCSHEAR, NCTRIA3, NCTRIA3K, SOL_NAME                   
       USE TIMDAT, ONLY                :  TSEC
       USE SUBR_BEGEND_LEVELS, ONLY    :  OFP3_ELFE_2D_BEGEND
-      USE CONSTANTS_1, ONLY           :  ZERO
+      USE CONSTANTS_1, ONLY           :  ZERO, ONE
       USE FEMAP_ARRAYS, ONLY          :  FEMAP_EL_NUMS, FEMAP_EL_VECS
       USE PARAMS, ONLY                :  OTMSKIP, PRTNEU
       use model_stuf, only            :  pcomp_props
       USE MODEL_STUF, ONLY            :  ANY_ELFE_OUTPUT, EDAT, EPNT, ETYPE, FCONV, EID, ELMTYP, ELOUT, METYPE, NUM_EMG_FATAL_ERRS,&
-                                         PLY_NUM, TYPE, STRESS
+                                         PLY_NUM, TYPE, STRESS, SHELL_STR_ANGLE
       USE LINK9_STUFF, ONLY           :  EID_OUT_ARRAY, MAXREQ, OGEL
       USE OUTPUT4_MATRICES, ONLY      :  OTM_ELFE, TXT_ELFE
   
+      USE PLANE_COORD_TRANS_21_Interface
+      USE TRANSFORM_SHELL_STR_Interface
       USE OFP3_ELFE_2D_USE_IFs
 
       IMPLICIT NONE
@@ -76,6 +78,8 @@
 !                                                            forces for PCOMP elems until I fix that output)
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = OFP3_ELFE_2D_BEGEND
  
+      REAL(DOUBLE)                    :: TEL(3,3)          ! Transformation matrix from cartesian local (L) to element (E) coordinates.
+
       ! OP2 parameters
       INTEGER(LONG)                   :: ITABLE            ! the op2 subtable number
       CHARACTER(8*BYTE)               :: TABLE_NAME        ! the op2 table name
@@ -192,6 +196,10 @@ elems_3: DO J = 1,NELE
                         OPT(4) = 'N'
                         CALL ELMDIS
                         CALL ELEM_STRE_STRN_ARRAYS ( 1 )
+                        IF (ETYPE(J)(1:5) == 'QUAD8') THEN ! Transfrom stress to element coordinate system
+                           CALL PLANE_COORD_TRANS_21( SHELL_STR_ANGLE( 1 ), TEL, '')
+                           CALL TRANSFORM_SHELL_STR( TEL, STRESS, ONE)
+                        END IF
                         CALL SHELL_ENGR_FORCE_OGEL ( NUM_OGEL )
  
                         IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
