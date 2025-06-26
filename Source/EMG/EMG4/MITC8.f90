@@ -94,6 +94,7 @@
 !
 ! Basic
 !  Used for the grid point DOFs of the strain-displacement and the element stiffness matrices.
+!  No distinction is made between grid point and element node coordinates but they may be different if ZOFFS is enabled.
 !  Orthogonal
 !
 ! Cartesian local
@@ -110,6 +111,13 @@
 !  Used for element stress, strain, and force outputs
 !  Defined the same way as MSC (element coordinate system) and SimCenter (local coordinate system).
 !  Defined by x_l being the bisection of the R, S isoparametric basis vectors rotated about the normal by -45 degrees.
+!  Orthogonal
+!
+! XEL
+!  Used for extrapolating stress and strain from Gauss points to corners.
+!  Grid point coordinates stored in XEL are in a coordinate system which is flat, with the normal being the cross product 
+!  of vectors from grid points 1-3 and 2-4. The x axis is an arbitrary direction in this plane. The flat coordinate system
+!  is used because the polynomial curve fit code to extrapolate stress/strain from Gauss points to corners is only 2D.
 !  Orthogonal
 !
 ! Material
@@ -189,13 +197,11 @@
       ENDIF
   
 ! **********************************************************************************************************************************
-! BE1 matrix (3 x 48) for membrane strain/stress data recovery. 
-! BE2 matrix (3 x 48) for bending strain/stress data recovery.
-! BE3 matrix (2 x 48) for transverse shear strain/stress data recovery.
-! All calculated at center of element/ply and at stress recovery points.
+! BE1 matrix (3 x 48) for membrane strain/stress/force data recovery. 
+! BE2 matrix (3 x 48) for bending strain/stress/force data recovery.
+! BE3 matrix (2 x 48) for transverse shear strain/stress/force data recovery.
+! All calculated at Gauss points and not center.
 ! The displacements are in basic coordinates and the strains are in element coordinates.
-! Strain and stress are directly evaluated at the center and corner grid points, not extrapolated from Gauss points.
-! If this is changed, then stress points 2-5 should be Gauss points instead of grid points.
 
       IF (OPT(3) == 'Y') THEN
 
@@ -233,30 +239,16 @@
             ENDDO
          ENDDO
 
-                                                           ! Center strain is average of corner strains.
-                                                           ! Might not be right.
-         BE1(:,:,1) = (BE1(:,:,2) + BE1(:,:,3) + BE1(:,:,4) + BE1(:,:,5)) / FOUR
-         BE2(:,:,1) = (BE2(:,:,2) + BE2(:,:,3) + BE2(:,:,4) + BE2(:,:,5)) / FOUR
-         BE3(:,:,1) = (BE3(:,:,2) + BE3(:,:,3) + BE3(:,:,4) + BE3(:,:,5)) / FOUR
-         
-
                                                            ! Find angle of the element coordinate system's x axis from
                                                            ! the cartesian local coordinate system's x axis at each 
-                                                           ! stress output point (corner grid points and center).
+                                                           ! corner.
                                                            ! This will be used to transform stress and strain to the
-                                                           ! element coordinate system after extrapolating to stress
-                                                           ! output points.
+                                                           ! element coordinate system after extrapolating to corners.
          GP_RS = MITC_GP_RS()
-         DO STR_PT_NUM=1,5
+         DO STR_PT_NUM=2,5
 
-            IF (STR_PT_NUM == 1) THEN
-               !victor todo Nastran's element center is not be at RS=0.
-               R = 0
-               S = 0
-            ELSE
-               R = GP_RS(1, STR_PT_NUM - 1)
-               S = GP_RS(2, STR_PT_NUM - 1)
-            ENDIF
+            R = GP_RS(1, STR_PT_NUM - 1)
+            S = GP_RS(2, STR_PT_NUM - 1)
 
             LOCAL_BASIS = MITC8_CARTESIAN_LOCAL_BASIS( R, S )
             XL = LOCAL_BASIS(:,1)                          ! X axis of cartesian local basis

@@ -434,15 +434,16 @@ headr:IF (IHDR == 'Y') THEN
           K = 0
           DO I=1,NUM,NUM_PTS
              K = K + 1
-             WRITE(F06,*)                                  ! Blank line between elements
-
                                                            ! Center forces
-             WRITE(F06,1522) FILL(1: 0), EID_OUT_ARRAY(I,1),(OGEL(K,J),J=1,8)
+             IF(TYPE == 'QUAD8   ') THEN
+               WRITE(F06,1524) FILL(1: 0), EID_OUT_ARRAY(I,1), 'CENTER  ', (OGEL(K,J),J=1,8)
+             ELSE
+               WRITE(F06,1524) FILL(1: 0), EID_OUT_ARRAY(I,1), '        ', (OGEL(K,J),J=1,8)
+             ENDIF
                                                            
              DO L=2,NUM_PTS                                ! Corner forces
                K = K + 1
-               WRITE(F06,1522) FILL(1: 0), GID_OUT_ARRAY(I,L),(OGEL(K,J),J=1,8) 
-!victor todo different format for corner and center nodes so it can put EID and GID in different columns like stress
+               WRITE(F06,1525) FILL(1: 0), GID_OUT_ARRAY(I,L),(OGEL(K,J),J=1,8) 
              ENDDO
           ENDDO   
           CALL GET_MAX_MIN_ABS ( 1, 8 )
@@ -553,13 +554,13 @@ headr:IF (IHDR == 'Y') THEN
              16X,A,'*for output set')
 
 ! SHELL >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
- 1501 FORMAT(16X,A,' Element         N o r m a l   F o r c e s                       M o m e n t s'                                &
-          ,19X,'T r a n s v e r s e',/16X,A,'    ID', 89X,'S h e a r   F o r c e s'                                                &
+ 1501 FORMAT(1X,A,' Element Location               N o r m a l   F o r c e s                       M o m e n t s'                  &
+          ,19X,'T r a n s v e r s e',/1X,A,'    ID', 104X,'S h e a r   F o r c e s'                                                &
           ,/,16X,A,'              Nxx           Nyy           Nxy           Mxx           Myy           Mxy            Qx         '&
           ,'  Qy')
 
 !            WRITE(F06,1501) FILL(1: 0), FILL(1: 0), FILL(1: 0)
- 1512 FORMAT(16X,A,I8,6(1ES14.6))
+ 1512 FORMAT(1X,A,I8,15X,6(1ES14.6))
  
  1513 FORMAT(16X,A,'          ------------- ------------- ------------- ------------- ------------- -------------',/,              &
              16X,A,'MAX* :  ',6(ES14.6),/,                                                                                         &
@@ -567,8 +568,6 @@ headr:IF (IHDR == 'Y') THEN
              16X,A,'ABS* :  ',6(ES14.6),/,                                                                                         &
              16X,A,'*for output set')
 
- 1522 FORMAT(16X,A,I8,8(1ES14.6))
- 
  1523 FORMAT(16X,A,'          ------------- ------------- ------------- ------------- ------------- ------------- -------------',  &
                         ' -------------',/,                                                                                        &
              16X,A,'MAX* :  ',8(ES14.6),/,                                                                                         &
@@ -576,6 +575,11 @@ headr:IF (IHDR == 'Y') THEN
              16X,A,'ABS* :  ',8(ES14.6),/,                                                                                         &
              16X,A,'*for output set')
 
+ 1524 FORMAT(1X,A,I8,2X,A,5X,8(1ES14.6))
+ 
+ 1525 FORMAT(1X,A,10X,'GRD',I8,2X,8(1ES14.6))
+
+ 
 ! BUSH >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
  1601 FORMAT(16X,A,' Element      Force         Force         Force        Moment        Moment        Moment'                     &
           ,/,16X,A,'    ID         XE            YE            ZE            XE            YE            ZE')
