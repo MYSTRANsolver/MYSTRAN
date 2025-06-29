@@ -217,7 +217,8 @@ elems_5: DO J = 1,NELE
                            CALL PLANE_COORD_TRANS_21( SHELL_STR_ANGLE( M ), TEL, '')
                            CALL TRANSFORM_SHELL_STR( TEL, STRESS_OUT(:,M), ONE)
                         ENDDO
-                                                           ! Center stress is the average of corner stress in element coordinates
+                                                           ! Center stress is the average of corner stress in element coordinates.
+                                                           ! This is how MSC does it.
                         STRESS_OUT(:,1) = (STRESS_OUT(:,2) + STRESS_OUT(:,3) + STRESS_OUT(:,4) + STRESS_OUT(:,5)) / FOUR
                      
                      ELSE IF ((TYPE(1:4) == 'HEXA') .OR.                                                                           &

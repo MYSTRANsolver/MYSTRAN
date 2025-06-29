@@ -230,7 +230,9 @@ elems_3: DO J = 1,NELE
                               CALL TRANSFORM_SHELL_STR( TEL, STRESS_OUT(:,M), ONE)
                            ENDDO
                            
-                                                           ! Center stress is the average of corner stress in element coordinates
+                                                           ! Center stress is the average of corner stress in element coordinates.
+                                                           ! In MSC, the center force and moment resultants are the average but
+                                                           ! this is equivalent.
                            STRESS_OUT(:,1) = (STRESS_OUT(:,2) + STRESS_OUT(:,3) + STRESS_OUT(:,4) + STRESS_OUT(:,5)) / FOUR
                         ELSE
                         

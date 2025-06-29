@@ -203,6 +203,19 @@
 ! All calculated at Gauss points and not center.
 ! The displacements are in basic coordinates and the strains are in element coordinates.
 
+
+! There's a possible bug where the numbering of the element grid points (eg. 1-2-3-4 vs 2-3-4-1) affects the stress/strain/elforce, 
+! when the element is distorted. This includes von Mises which should be invariant to rotation.
+!
+! - It doesn't occur if we skip the extrapolation from Gauss points to corners so Gauss point strains are probably OK.
+! - It makes no differences if the cartesian local coordiante system is changed to be G1G2 or the bisected diagonals projected 
+!   onto the surface everywhere or like Siemens material coordinates with an intermediate reference plane.
+! - It works OK if the cartesian local coordinate system is defined using the same vector for each element, eg. (1,0,0), instead 
+!   of G1G2 with either the Siemens or direct projection. However, this won't generalize to elements in any orientation and might
+!   just be hiding the problem.
+! - The problem is probably the extrapolation from Gauss points to grid points. Maybe it should be done in covariant coordinates 
+!   the way strains are interpolated by MITC. Somehow.
+
       IF (OPT(3) == 'Y') THEN
 
          STR_PT_NUM = 1

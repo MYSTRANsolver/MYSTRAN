@@ -220,7 +220,8 @@ elems_7: DO J = 1,NELE
                            CALL TRANSFORM_SHELL_STR( TEL, STRAIN_OUT(:,M), TWO)
                         ENDDO
 
-                                                           ! Center strain is the average of corner strain in element coordinates
+                                                           ! Center strain is the average of corner strain in element coordinates.
+                                                           ! This is how MSC does it.
                         STRAIN_OUT(:,1) = (STRAIN_OUT(:,2) + STRAIN_OUT(:,3) + STRAIN_OUT(:,4) + STRAIN_OUT(:,5)) / FOUR
 
                      ELSE IF ((TYPE(1:4) == 'HEXA') .OR.                                                                           &

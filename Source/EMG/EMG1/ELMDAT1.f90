@@ -379,6 +379,52 @@
                                                            ! For elems that not composites do EPROP in subr SHELL_ABD_MATRICES)
          IF (PCOMP_PROPS == 'N') THEN                      ! Shell properties are in array PSHELL (except maybe membrane thickness)
 
+            IF(TYPE(1:5) == 'QUAD8') THEN                  ! Features that aren't currently supported by CQUAD8.
+                                                              ! MID2 /= MID3
+               IF(PSHEL(INTL_PID, 2) /= PSHEL(INTL_PID, 3)) THEN
+                  WRITE(ERR,*) ' *ERROR: PSHELL FIELDS MID1 AND MID2 MUST HAVE THE SAME VALUE FOR QUAD8'
+                  WRITE(F06,*) ' *ERROR: PSHELL FIELDS MID1 AND MID2 MUST HAVE THE SAME VALUE FOR QUAD8'
+                  NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
+                  FATAL_ERR          = FATAL_ERR + 1
+               ENDIF
+
+               IF(PSHEL(INTL_PID, 5) /= 0) THEN               ! MID4
+                  WRITE(ERR,*) ' *ERROR: PSHELL FIELD MID4 MUST BE BLANK FOR QUAD8'
+                  WRITE(F06,*) ' *ERROR: PSHELL FIELD MID4 MUST BE BLANK FOR QUAD8'
+                  NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
+                  FATAL_ERR          = FATAL_ERR + 1
+               ENDIF
+
+               IF(RPSHEL(INTL_PID, 2) /= ONE) THEN
+                  WRITE(ERR,*) ' *ERROR: PSHELL FIELD 12I/TM**3 MUST BE BLANK OR 1.0 FOR QUAD8'
+                  WRITE(F06,*) ' *ERROR: PSHELL FIELD 12I/TM**3 MUST BE BLANK OR 1.0 FOR QUAD8'
+                  NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
+                  FATAL_ERR          = FATAL_ERR + 1
+               ENDIF
+
+               IF(RPSHEL(INTL_PID, 4) /= ZERO) THEN           ! NSM
+                  WRITE(ERR,*) ' *ERROR: PSHELL FIELD NSM MUST BE BLANK OR 0.0 FOR QUAD8'
+                  WRITE(F06,*) ' *ERROR: PSHELL FIELD NSM MUST BE BLANK OR 0.0 FOR QUAD8'
+                  NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
+                  FATAL_ERR          = FATAL_ERR + 1
+               ENDIF
+                                                              ! Default Z1 set in BD_PSHEL
+               IF (RPSHEL(INTL_PID,5) /= -RPSHEL(INTL_PID,1)/TWO) THEN
+                  WRITE(ERR,*) ' *ERROR: PSHELL FIELD Z1 MUST BE BLANK FOR QUAD8'
+                  WRITE(F06,*) ' *ERROR: PSHELL FIELD Z1 MUST BE BLANK FOR QUAD8'
+                  NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
+                  FATAL_ERR          = FATAL_ERR + 1
+               ENDIF
+                                                              ! Default Z2 set in BD_PSHEL
+               IF (RPSHEL(INTL_PID,6) /= RPSHEL(INTL_PID,1)/TWO) THEN
+                  WRITE(ERR,*) ' *ERROR: PSHELL FIELD Z2 MUST BE BLANK FOR QUAD8'
+                  WRITE(F06,*) ' *ERROR: PSHELL FIELD Z2 MUST BE BLANK FOR QUAD8'
+                  NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
+                  FATAL_ERR          = FATAL_ERR + 1
+               ENDIF
+            ENDIF
+
+
             EPROP( 2) = RPSHEL(INTL_PID, 2)                ! 12*IB/(TM^3)
 
             IF (PSHEL(INTL_PID,6) == 0) THEN               ! Use TS/TM from PSHEL card for EPROP( 3)
@@ -401,11 +447,7 @@
             ENDIF
             
             IF (EDAT(EPNTK+DELTA) > 0) THEN                ! Membrane thickness was defined as grid thicknesses on connection entry
-               IF      (TYPE(1:5) == 'QUAD4') THEN
-                  IPNTR = EDAT(EPNTK+DELTA)
-               ELSE IF (TYPE(1:5) == 'TRIA3') THEN
-                  IPNTR = EDAT(EPNTK+DELTA)
-               ENDIF
+               IPNTR = EDAT(EPNTK+DELTA)
                DO I=1,ELGP
                   EPROP(6+I) = PLATETHICK(IPNTR+I-1)
                   THICK_AVG  = THICK_AVG + PLATETHICK(IPNTR+I-1)/ELGP
@@ -431,6 +473,7 @@
          ELSE                                              ! EPROP will be set in subr SHELL_ABD_MATRICES for PCOMP's
 
          ENDIF
+
 
       ELSE IF (TYPE == 'USER1   ') THEN
          DO I=1,MRPUSER1
