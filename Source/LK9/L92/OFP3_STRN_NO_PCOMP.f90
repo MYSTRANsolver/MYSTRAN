@@ -38,15 +38,17 @@
                                          SOL_NAME
       USE TIMDAT, ONLY                :  TSEC
       USE SUBR_BEGEND_LEVELS, ONLY    :  OFP3_STRN_NO_PCOMP_BEGEND
-      USE CONSTANTS_1, ONLY           :  ZERO
+      USE CONSTANTS_1, ONLY           :  ZERO, TWO, FOUR
       USE FEMAP_ARRAYS, ONLY          :  FEMAP_EL_NUMS
       USE PARAMS, ONLY                :  OTMSKIP, PRTNEU
       USE MODEL_STUF, ONLY            :  AGRID, ANY_STRN_OUTPUT, EDAT, EPNT, ETYPE, EID, ELGP, ELMTYP, ELOUT,                      &
-                                         METYPE, NUM_SEi, NUM_EMG_FATAL_ERRS, PCOMP_PROPS, PLY_NUM, STRAIN, TYPE
+                                         METYPE, NUM_SEi, NUM_EMG_FATAL_ERRS, PCOMP_PROPS, PLY_NUM, STRAIN, TYPE, SHELL_STR_ANGLE
       USE CC_OUTPUT_DESCRIBERS, ONLY  :  STRN_LOC, STRN_OPT
       USE LINK9_STUFF, ONLY           :  EID_OUT_ARRAY, GID_OUT_ARRAY, MAXREQ, OGEL, POLY_FIT_ERR, POLY_FIT_ERR_INDEX
       USE OUTPUT4_MATRICES, ONLY      :  OTM_STRN, TXT_STRN
   
+      USE PLANE_COORD_TRANS_21_Interface
+      USE TRANSFORM_SHELL_STR_Interface
       USE OFP3_STRN_NO_PCOMP_USE_IFs
 
       IMPLICIT NONE
@@ -93,6 +95,7 @@
 
                                                            ! Array of output stress values after surface fit
       REAL(DOUBLE)                    :: STRAIN_OUT(9,MAX_STRESS_POINTS)
+      REAL(DOUBLE)                    :: TEL(3,3)          ! Transformation matrix from cartesian local (L) to element (E) coordinates.
 
       ! OP2 stuff
       CHARACTER(8*BYTE)               :: TABLE_NAME   ! name of the op2 table name
@@ -129,8 +132,7 @@
       DO I=1,METYPE                                        ! Only count requests for elem types that can have strain output
          IF((ELMTYP(I)(1:5) == 'TRIA3') .OR. (ELMTYP(I)(1:5) == 'QUAD4') .OR. (ELMTYP(I)(1:5) == 'SHEAR') .OR.                     &
             (ELMTYP(I)(1:4) == 'HEXA' ) .OR. (ELMTYP(I)(1:5) == 'PENTA') .OR. (ELMTYP(I)(1:5) == 'TETRA') .OR.                     &
-            (ELMTYP(I)(1:4) == 'BUSH' )) THEN
-!            (ELMTYP(I)(1:4) == 'BUSH' ) .OR. (ELMTYP(I)(1:3) == 'ROD') .OR. (ELMTYP(I)(1:4) == 'ELAS')) THEN
+            (ELMTYP(I)(1:4) == 'BUSH' ) .OR. (ELMTYP(I)(1:5) == 'QUAD8')) THEN
             DO J=1,NELE
                CALL IS_ELEM_PCOMP_PROPS ( J )
                IF (PCOMP_PROPS == 'N') THEN
@@ -139,7 +141,8 @@
                       (STRN_LOC == 'GAUSS   ') .OR.                                                                                &
                       (ETYPE(J)(1:4) == 'HEXA') .OR.                                                                               &
                       (ETYPE(J)(1:5) == 'PENTA') .OR.                                                                              &
-                      (ETYPE(J)(1:5) == 'TETRA')) THEN
+                      (ETYPE(J)(1:5) == 'TETRA') .OR.                                                                              &
+                      (ETYPE(J)(1:5) == 'QUAD8')) THEN
                         NUM_PTS(I) = NUM_SEi(I)
                      ELSE
                         NUM_PTS(I) = 1
@@ -199,21 +202,37 @@ elems_7: DO J = 1,NELE
                       (STRN_LOC == 'GAUSS   ') .OR.                                                                                &
                       (TYPE(1:4) == 'HEXA') .OR.                                                                                   &
                       (TYPE(1:5) == 'PENTA') .OR.                                                                                  &
-                      (TYPE(1:5) == 'TETRA')) THEN
-                     IF (TYPE(1:5) == 'QUAD4') THEN        ! Calc STRAIN_OUT for QUAD4
+                      (TYPE(1:5) == 'TETRA') .OR.                                                                                  &
+                      (TYPE(1:5) == 'QUAD8')) THEN
+
+                     IF (TYPE(1:5) == 'QUAD4') THEN
                         CALL POLYNOM_FIT_STRE_STRN ( STRAIN_RAW, 9, NUM_PTS(I), STRAIN_OUT, STRAIN_OUT_PCT_ERR,                    &
                                                      STRAIN_OUT_ERR_INDEX, PCT_ERR_MAX )
+
+                     ELSE IF (TYPE(1:5) == 'QUAD8') THEN
+                        CALL POLYNOM_FIT_STRE_STRN ( STRAIN_RAW, 9, NUM_PTS(I), STRAIN_OUT, STRAIN_OUT_PCT_ERR,                    &
+                                                     STRAIN_OUT_ERR_INDEX, PCT_ERR_MAX )
+
+                                                           ! Transform strain from the cartesian local coordinate system to 
+                                                           ! the element coordinate system
+                        DO M=1,NUM_PTS(I)
+                           CALL PLANE_COORD_TRANS_21( SHELL_STR_ANGLE( M ), TEL, '')
+                           CALL TRANSFORM_SHELL_STR( TEL, STRAIN_OUT(:,M), TWO)
+                        ENDDO
+
+                                                           ! Center strain is the average of corner strain in element coordinates.
+                                                           ! This is how MSC does it.
+                        STRAIN_OUT(:,1) = (STRAIN_OUT(:,2) + STRAIN_OUT(:,3) + STRAIN_OUT(:,4) + STRAIN_OUT(:,5)) / FOUR
+
                      ELSE IF ((TYPE(1:4) == 'HEXA') .OR.                                                                           &
                               (TYPE(1:5) == 'PENTA') .OR.                                                                          &
                               (TYPE(1:5) == 'TETRA')) THEN
-! Strains are directly evaluated at the corner grid points. If they are going to be evaluated at gauss points
-! then extrapolated to grid points, that should be done here or in POLYNOM_FIT_STRE_STRN
-                        DO M=1,NUM_PTS(I)
-                          DO K=1,9
-                             STRAIN_OUT(K,M) = STRAIN_RAW(K,M)
-                          ENDDO
-                        ENDDO
+! Strains are directly evaluated at the corner grid points. If they are going to be evaluated at Gauss points
+! then extrapolated to grid points, that should be done here, in POLYNOM_FIT_STRE_STRN, or in an equivalent subroutine.
+                        STRAIN_OUT(:,:) = STRAIN_RAW(:,:)
+                                                
                      ENDIF
+
                   ENDIF
 
 do_strain_pts:    DO M=1,NUM_PTS(I)

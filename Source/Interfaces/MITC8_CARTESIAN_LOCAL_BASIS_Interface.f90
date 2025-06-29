@@ -51,14 +51,11 @@
       REAL(DOUBLE)                    :: DPSHG(2,ELGP)     ! Derivatives of shape functions with respect to R and S.
       REAL(DOUBLE)                    :: E_XI(3)
       REAL(DOUBLE)                    :: E_ETA(3)
-      REAL(DOUBLE)                    :: A(3)
-      REAL(DOUBLE)                    :: B(3)
-      REAL(DOUBLE)                    :: X_L_ACB(3)
-      REAL(DOUBLE)                    :: Y_L_ACB(3)
-      REAL(DOUBLE)                    :: T(3,3)
-
-      INTRINSIC                       :: DSQRT
-
+      REAL(DOUBLE)                    :: Z_REF(3)
+      REAL(DOUBLE)                    :: R_G1G2(3)
+      REAL(DOUBLE)                    :: X(3)
+      REAL(DOUBLE)                    :: Y(3)
+      REAL(DOUBLE)                    :: Z(3)
       
       END FUNCTION MITC8_CARTESIAN_LOCAL_BASIS
 

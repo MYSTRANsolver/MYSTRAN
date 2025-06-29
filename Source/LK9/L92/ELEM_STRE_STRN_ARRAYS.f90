@@ -45,7 +45,7 @@
       USE SUBR_BEGEND_LEVELS, ONLY    :  ELEM_STRE_STRN_ARRAYS_BEGEND
       USE CONSTANTS_1, ONLY           :  ZERO, one, four
       USE MODEL_STUF, ONLY            :  ALPVEC, BE1, BE2, BE3, DT, EM, EB, ES, ET, ELDOF, PEL, PHI_SQ, STRAIN, STRESS, SUBLOD,    &
-                                         TREF, TYPE, UEL, SE1, SE2, SE3, STE1, STE2, STE3, ELGP
+                                         TREF, TYPE, UEL, UEB, SE1, SE2, SE3, STE1, STE2, STE3, ELGP
       USE DEBUG_PARAMETERS
       USE PARAMS, ONLY                :  STR_CID
 
@@ -85,6 +85,7 @@
       REAL(DOUBLE)                    :: STRESS3_MECH(3)   ! Part of array STRESS3
       REAL(DOUBLE)                    :: TBAR              ! Average elem temperature 
       REAL(DOUBLE)                    :: STR_TENSOR(3,3)   ! 2D stress or strain tensor
+      REAL(DOUBLE)                    :: UE(ELDOF)         ! Displacements used for shell strain
 
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
@@ -164,19 +165,25 @@
       ELSE IF ((TYPE(1:5) == 'TRIA3') .OR. (TYPE(1:5) == 'QUAD4') .OR. (TYPE(1:5) == 'QUAD8') .OR.                                 &
                (TYPE(1:5) == 'SHEAR') .OR. (TYPE(1:5) == 'USER1')) THEN
 
+         IF (TYPE(1:5) == 'QUAD8') then
+            UE(1:ELDOF) = UEB(1:ELDOF)                     ! CQUAD8 uses basic coordinates for strain-displacement matrix.
+         ELSE
+            UE(1:ELDOF) = UEL(1:ELDOF)
+         ENDIF
+         
          DO I=1,3
             STRAIN(I) = ZERO
             STRAIN(I+3) = ZERO
             DO J=1,ELDOF
-               STRAIN(I)   = STRAIN(I)   + BE1(I,J,STR_PT_NUM)*UEL(J)
-               STRAIN(I+3) = STRAIN(I+3) + BE2(I,J,STR_PT_NUM)*UEL(J)
+               STRAIN(I)   = STRAIN(I)   + BE1(I,J,STR_PT_NUM)*UE(J)
+               STRAIN(I+3) = STRAIN(I+3) + BE2(I,J,STR_PT_NUM)*UE(J)
             ENDDO
          ENDDO   
 
          DO I=1,2
             STRAIN(I+6) = ZERO
             DO J=1,ELDOF
-               STRAIN(I+6) = STRAIN(I+6) + BE3(I,J,STR_PT_NUM)*UEL(J)
+               STRAIN(I+6) = STRAIN(I+6) + BE3(I,J,STR_PT_NUM)*UE(J)
             ENDDO
          ENDDO   
 
@@ -346,6 +353,7 @@
             FATAL_ERR = FATAL_ERR + 1
             CALL OUTA_HERE ( 'Y' )
 
+! Some of this code could be replaced with calls to TRANSFORM_SHELL_STR
                                                            ! Transform 2D membrane and transverse shear stresses
             STR_TENSOR(1,1) = STRESS(1)   ;   STR_TENSOR(1,2) = STRESS(3)   ;   STR_TENSOR(1,3) = STRESS(7)
             STR_TENSOR(2,1) = STRESS(3)   ;   STR_TENSOR(2,2) = STRESS(2)   ;   STR_TENSOR(2,3) = STRESS(8)

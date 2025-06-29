@@ -41,19 +41,68 @@
       USE PARAMS, ONLY                :  EPSIL, IORQ1M, QUAD4TYP, PCOMPEQ, PCMPTSTM, SHRFXFAC, SUPWARN, TSTM_DEF
 
       USE MODEL_STUF, ONLY            :  ALPVEC, EB, EBM, EM, ET, EDAT, EID, EMAT, EPNT, EPROP, ETYPE, FAILURE_THEORY, FCONV,      &
-                                         FCONV_SHEAR_THICK, INTL_MID, INTL_PID, MASS_PER_UNIT_AREA, MATL, MEPROP, MTRL_TYPE,       &
+                                         INTL_MID, INTL_PID, MASS_PER_UNIT_AREA, MATL, MEPROP, MTRL_TYPE,                          &
                                          NUM_EMG_FATAL_ERRS, NUM_PLIES, PLY_NUM, PCOMP, PCOMP_LAM, PCOMP_PROPS, RPCOMP, PSHEL,     &
                                          RPSHEL, RHO, RMATL, SHELL_A, SHELL_B, SHELL_D, SHELL_T, SHELL_AALP, SHELL_BALP,           &
                                          SHELL_DALP, SHELL_TALP, SHELL_T_MOD, THETA_PLY, TPLY, TYPE, ULT_STRE, ULT_STRN, ZPLY, ZS
 
       USE SUBR_BEGEND_LEVELS, ONLY    :  SHELL_ABD_MATRICES_BEGEND
 
+      USE SHELL_ABD_MATRICES_USE_IFs
+
       IMPLICIT NONE
 
+      CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: SUBR_NAME = 'SHELL_ABD_MATRICES'
       CHARACTER(LEN=*), INTENT(IN)    :: WRITE_WARN        ! If 'Y" write warning messages, otherwise do not
 
+! Variables common to homogeneous and composite shell elements
+
       INTEGER(LONG), INTENT(IN)       :: INT_ELEM_ID        ! Internal element ID for which
+      INTEGER(LONG)                   :: I,J,K              ! DO loop indices
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = SHELL_ABD_MATRICES_BEGEND
+
+      REAL(DOUBLE)                    :: DET_SHELL_T        ! Determinant of SHELL_T
+      REAL(DOUBLE)                    :: EPS1               ! Small number with which to comapre zero
+      REAL(DOUBLE)                    :: NSM                ! Nonstructural mass
+
+! Variables for homogeneous shell elements
+
+      REAL(DOUBLE)                    :: IB                 ! Bending moment of inertia
+      REAL(DOUBLE)                    :: TM                 ! Membrane thickness
+      REAL(DOUBLE)                    :: TS                 ! Shear thickness
+
+! Variables for composite elements
+
+      INTEGER(LONG)                   :: FT                 ! Failure theory (1=HILL, 2=HOFF, 3=TSAI, 4=STRN)
+      INTEGER(LONG)                   :: JPLY               ! = either PLY_NUM or K in the DO loop over K=1,NUM_PLIES_TO_PROC
+      INTEGER(LONG)                   :: MTRL_ACT_ID(4)     ! Material ID from MATi B.D. entries, in MATL(INTL_MID(I),1)
+      INTEGER(LONG)                   :: NUM_PLIES_TO_PROC  ! = 1 if we are processing only 1 ply or NUM_PLIES if processing all
+      INTEGER(LONG)                   :: PLY_PCOMP_INDEX    ! Index in array  PCOMP where data for ply K begins
+      INTEGER(LONG)                   :: PLY_RPCOMP_INDEX   ! Index in array RPCOMP where data for ply K begins
+      INTEGER(LONG)                   :: SOUTK              ! Stress or strain output request (1=YES or 0=NO) for ply K
+
+      REAL(DOUBLE)                    :: ALPB(3)            ! The 3 rows of ALPVEC for mem/bend  strains
+      REAL(DOUBLE)                    :: ALPD(3)            ! The 3 rows of ALPVEC for bending   strains
+      REAL(DOUBLE)                    :: ALPM(3)            ! The 3 rows of ALPVEC for membrane  strains
+      REAL(DOUBLE)                    :: ALPT(3)            ! The 3 rows of ALPVEC for trans shr strains
+      REAL(DOUBLE)                    :: BALP(3)            ! Intermediate matrix
+      REAL(DOUBLE)                    :: DALP(3)            ! Intermediate matrix
+      REAL(DOUBLE)                    :: DUM(3)             ! Intermediate matrix
+      REAL(DOUBLE)                    :: AALP(3)            ! Intermediate matrix
+      REAL(DOUBLE)                    :: TALP(3)            ! Intermediate matrix
+      REAL(DOUBLE)                    :: PCOMP_TM           ! Membrane thickness of PCOMP for equivalent PSHELL
+      REAL(DOUBLE)                    :: PCOMP_IB           ! Bending MOI of PCOMP for equivalent PSHELL
+      REAL(DOUBLE)                    :: PCOMP_TS           ! Transverse shear thickness of PCOMP for equivalent PSHELL
+      REAL(DOUBLE)                    :: PLY_A(3,3)         ! Transformed material matrix A for a ply 
+      REAL(DOUBLE)                    :: PLY_B(3,3)         ! Transformed material matrix B for a ply 
+      REAL(DOUBLE)                    :: PLY_D(3,3)         ! Transformed material matrix D for a ply 
+      REAL(DOUBLE)                    :: PLY_T(2,2)         ! Transformed material matrix T for a ply 
+      REAL(DOUBLE)                    :: SB                 ! Allowable interlaminar shear stress. Required if FT is specified
+      REAL(DOUBLE)                    :: TREFK              ! Ref temperature for ply K
+      REAL(DOUBLE)                    :: Z0                 ! Coord from ref plane to bottom surface of element
+      REAL(DOUBLE)                    :: ZBK,ZTK            ! Coord from ref plane to bot and top of ply K
+      REAL(DOUBLE)                    :: ZBK2,ZTK2          ! ZBK^2, ZTK^2
+      REAL(DOUBLE)                    :: ZBK3,ZTK3          ! ZBK^3, ZTK^3
 
       END SUBROUTINE SHELL_ABD_MATRICES
 

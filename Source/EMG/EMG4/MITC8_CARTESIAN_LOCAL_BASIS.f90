@@ -26,7 +26,11 @@
       FUNCTION MITC8_CARTESIAN_LOCAL_BASIS ( R, S )
  
 ! Finds the basis vectors of the cartesian local coordinate system expressed in the basic coordinate system.
-! This is the element coordinate system (x_l, y_l, normal) and is defined the same way as in MSC Nastran.
+! This is defined the same way as the material coordinate system in Simcenter Nastran with THETA=0.
+! This definition is chosen because it is uniform over the surface of the element so stress and strain outputs
+! can be interpolated/extrapolated in this coordinate system then transformed to the local element coordinate
+! system at the corner grid points and center for output.
+!
 ! First index of the result is a vector component in basic coordinates (x,y,z)
 ! Second index of the result is basis vector (x_l, y_l, normal)
 
@@ -51,13 +55,11 @@
       REAL(DOUBLE)                    :: DPSHG(2,ELGP)     ! Derivatives of shape functions with respect to R and S.
       REAL(DOUBLE)                    :: E_XI(3)
       REAL(DOUBLE)                    :: E_ETA(3)
-      REAL(DOUBLE)                    :: A(3)
-      REAL(DOUBLE)                    :: B(3)
-      REAL(DOUBLE)                    :: X_L_ACB(3)
-      REAL(DOUBLE)                    :: Y_L_ACB(3)
-      REAL(DOUBLE)                    :: T(3,3)
-
-      INTRINSIC                       :: DSQRT
+      REAL(DOUBLE)                    :: Z_REF(3)
+      REAL(DOUBLE)                    :: R_G1G2(3)
+      REAL(DOUBLE)                    :: X(3)
+      REAL(DOUBLE)                    :: Y(3)
+      REAL(DOUBLE)                    :: Z(3)
 
 
 ! **********************************************************************************************************************************
@@ -76,41 +78,34 @@
 
       ENDIF
 
+                                                           ! Unit normal to the reference plane
+      CALL CROSS(XEB(3,:) - XEB(1,:), XEB(4,:) - XEB(2,:), Z_REF)
+      Z_REF = Z_REF / DSQRT(DOT_PRODUCT(Z_REF, Z_REF))
 
-                                                           ! e_ξ(r, s) = d/dR X = sum over nodes[ dN/dR X ]
-                                                           ! e_η(r, s) = d/dS X = sum over nodes[ dN/dS X ]
+                                                           ! Project R_G1G2 onto the reference plane
+      R_G1G2 = XEB(2,:) - XEB(1,:)
+      R_G1G2 = R_G1G2 - Z_REF * DOT_PRODUCT(R_G1G2, Z_REF) / DOT_PRODUCT(Z_REF, Z_REF)
+
+                                                           ! Unit normal to shell surface (Z)
       E_XI(:)=ZERO
       E_ETA(:)=ZERO
       DO I=1,ELGP
         E_XI(:) = E_XI(:) + XEB(I,:) * DPSHG(1,I)
         E_ETA(:) = E_ETA(:) + XEB(I,:) * DPSHG(2,I)
       ENDDO
+      CALL CROSS(E_XI, E_ETA, Z)
+      Z = Z / DSQRT(DOT_PRODUCT(Z, Z))
 
-                                                           !Normalize e_ξ and e_η
-      E_XI = E_XI / DSQRT(DOT_PRODUCT(E_XI, E_XI))
-      E_ETA = E_ETA / DSQRT(DOT_PRODUCT(E_ETA, E_ETA))
+                                                           ! Y tangent to the surface
+      CALL CROSS(Z, R_G1G2, Y)
+      Y = Y / DSQRT(DOT_PRODUCT(Y, Y))
 
-                                                           ! A = bisection of e_ξ and e_η
-      A = E_XI + E_ETA
-      A = A / DSQRT(DOT_PRODUCT(A, A))
+                                                           ! Rotate the projected R_G1G2 about Y to be tangent to the surface
+      CALL CROSS(Y, Z, X)
 
-                                                           ! B = common normal of e_ξ and e_η
-      CALL CROSS(E_XI, E_ETA, B)
-      B = B / DSQRT(DOT_PRODUCT(B, B))
-
-                                                           ! x_l and y_l in the A C B coordinate system.
-      X_L_ACB = (/ ONE/DSQRT(TWO), -ONE/DSQRT(TWO), ZERO /)
-      Y_L_ACB = (/ ONE/DSQRT(TWO),  ONE/DSQRT(TWO), ZERO /)
-
-                                                           ! Rotation matrix from A C B to basic coordinates
-      T(:,1) = A
-      CALL CROSS(B, A, T(:,2))
-      T(:,3) = B
-                                                           
-                                                           ! Transform x_l and y_l to the basic coordinate system
-      MITC8_CARTESIAN_LOCAL_BASIS(:,1) = MATMUL(T, X_L_ACB)
-      MITC8_CARTESIAN_LOCAL_BASIS(:,2) = MATMUL(T, Y_L_ACB)
-      MITC8_CARTESIAN_LOCAL_BASIS(:,3) = B
+      MITC8_CARTESIAN_LOCAL_BASIS(:,1) = X
+      MITC8_CARTESIAN_LOCAL_BASIS(:,2) = Y
+      MITC8_CARTESIAN_LOCAL_BASIS(:,3) = Z
 
 
       RETURN

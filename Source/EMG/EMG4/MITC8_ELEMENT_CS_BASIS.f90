@@ -23,52 +23,49 @@
 ! _______________________________________________________________________________________________________
                                                                                                         
 ! End MIT license text.                                                                                      
-      SUBROUTINE MITC_COVARIANT_BASIS ( R, S, T, G )
+      FUNCTION MITC8_ELEMENT_CS_BASIS ( R, S )
  
-! Calculates g_r, g_s, g_t in global coordinates.
-! These are also the columns of the Jacobian matrix.
-! G(:,1) is g_r, etc.
-
+! Finds the basis vectors of the local element coordinate system expressed in the basic coordinate system.
+! This is defined the same way as in MSC Nastran and is used for element stress, strain and force output.
+! First index of the result is a vector component in basic coordinates (x,y,z)
+! Second index of the result is basis vector (x_l, y_l, normal)
 
       USE PENTIUM_II_KIND, ONLY       :  LONG, DOUBLE
-      USE MODEL_STUF, ONLY            :  ELGP, XEB, EPROP, TYPE
-      USE CONSTANTS_1, ONLY           :  ZERO, TWO
+      USE MODEL_STUF, ONLY            :  ELGP, XEB, TYPE
+      USE CONSTANTS_1, ONLY           :  ZERO, ONE, TWO
       USE IOUNT1, ONLY                :  ERR, F06
       USE SCONTR, ONLY                :  FATAL_ERR
 
       USE SHP2DQ_Interface
-      USE MITC_GP_RS_Interface
-      USE MITC_DIRECTOR_VECTOR_Interface
+      USE CROSS_Interface
       USE OUTA_HERE_Interface
 
       IMPLICIT NONE 
       
-      INTEGER(LONG)                   :: I,J               ! DO loop indices
-      INTEGER(LONG)                   :: GP                ! Element grid point number
+      INTEGER(LONG)                   :: I                 ! DO loop indices
 
-      REAL(DOUBLE) , INTENT(IN)       :: R, S, T           ! Isoparametric coordinates
-      REAL(DOUBLE) , INTENT(OUT)      :: G(3,3)            ! basis vector in basic coordinates
+      REAL(DOUBLE)                    :: MITC8_ELEMENT_CS_BASIS(3,3)
+      REAL(DOUBLE) , INTENT(IN)       :: R
+      REAL(DOUBLE) , INTENT(IN)       :: S
       REAL(DOUBLE)                    :: PSH(ELGP)       
-      REAL(DOUBLE)                    :: DPSHG(2,ELGP)     ! Derivatives of shape functions with respect to xi and eta.
-      REAL(DOUBLE)                    :: DIRECTOR(3)       ! Director vector
-      REAL(DOUBLE)                    :: GP_RS(2,ELGP)     ! Isoparametric coordinates of the nodes
-      REAL(DOUBLE)                    :: RS_THICKNESS      ! Element thickness at R,S
-      REAL(DOUBLE)                    :: THICKNESS(ELGP)   ! Element thickness at grid points
+      REAL(DOUBLE)                    :: DPSHG(2,ELGP)     ! Derivatives of shape functions with respect to R and S.
+      REAL(DOUBLE)                    :: E_XI(3)
+      REAL(DOUBLE)                    :: E_ETA(3)
+      REAL(DOUBLE)                    :: A(3)
+      REAL(DOUBLE)                    :: B(3)
+      REAL(DOUBLE)                    :: X_L_ACB(3)
+      REAL(DOUBLE)                    :: Y_L_ACB(3)
+      REAL(DOUBLE)                    :: T(3,3)
+
+      INTRINSIC                       :: DSQRT
 
 
 ! **********************************************************************************************************************************
-
-
-      ! Thickness is treated as uniform.
-      ! To allow grid point thicknesses, this should be interpolated to midside nodes and at (R,S).
-      DO I=1,ELGP
-        THICKNESS(I) = EPROP(1)
-      ENDDO
-      RS_THICKNESS = EPROP(1)
-
+      
+ 
       IF (TYPE(1:5) == 'QUAD8') THEN
 
-        CALL SHP2DQ ( 0, 0, ELGP, 'MITC_COVARIANT_BASIS', '', 0, R, S, 'N', PSH, DPSHG )
+        CALL SHP2DQ ( 0, 0, ELGP, 'MITC8_ELEMENT_CS_BASIS', '', 0, R, S, 'N', PSH, DPSHG )
 
       ELSE
 
@@ -78,32 +75,47 @@
         CALL OUTA_HERE ( 'Y' )
 
       ENDIF
- 
 
-      G(:,:) = ZERO
 
-      GP_RS = MITC_GP_RS()
-
-      ! Interpolate from the values at nodes
-      ! g_r(r, s, t) = dX/dr = d/dr X + t/2 * d/dr (hv)
-      !     = sum over nodes[ dN/dr X + t/2 * dN/dr (hv) ]
-      DO GP=1,ELGP
-        DIRECTOR = MITC_DIRECTOR_VECTOR(GP_RS(1,GP), GP_RS(2,GP))
-        DO J=1,3
-          G(J,1) = G(J,1) + XEB(GP,J) * DPSHG(1,GP) + DIRECTOR(J) * T/TWO * DPSHG(1,GP) * THICKNESS(GP)
-          G(J,2) = G(J,2) + XEB(GP,J) * DPSHG(2,GP) + DIRECTOR(J) * T/TWO * DPSHG(2,GP) * THICKNESS(GP)
-        ENDDO
+                                                           ! e_ξ(r, s) = d/dR X = sum over nodes[ dN/dR X ]
+                                                           ! e_η(r, s) = d/dS X = sum over nodes[ dN/dS X ]
+      E_XI(:)=ZERO
+      E_ETA(:)=ZERO
+      DO I=1,ELGP
+        E_XI(:) = E_XI(:) + XEB(I,:) * DPSHG(1,I)
+        E_ETA(:) = E_ETA(:) + XEB(I,:) * DPSHG(2,I)
       ENDDO
 
-      DIRECTOR = MITC_DIRECTOR_VECTOR(R, S)
-      DO J=1,3
-        G(J,3) = DIRECTOR(J) * RS_THICKNESS/TWO
-      ENDDO
-    
+                                                           !Normalize e_ξ and e_η
+      E_XI = E_XI / DSQRT(DOT_PRODUCT(E_XI, E_XI))
+      E_ETA = E_ETA / DSQRT(DOT_PRODUCT(E_ETA, E_ETA))
+
+                                                           ! A = bisection of e_ξ and e_η
+      A = E_XI + E_ETA
+      A = A / DSQRT(DOT_PRODUCT(A, A))
+
+                                                           ! B = common normal of e_ξ and e_η
+      CALL CROSS(E_XI, E_ETA, B)
+      B = B / DSQRT(DOT_PRODUCT(B, B))
+
+                                                           ! x_l and y_l in the A C B coordinate system.
+      X_L_ACB = (/ ONE/DSQRT(TWO), -ONE/DSQRT(TWO), ZERO /)
+      Y_L_ACB = (/ ONE/DSQRT(TWO),  ONE/DSQRT(TWO), ZERO /)
+
+                                                           ! Rotation matrix from A C B to basic coordinates
+      T(:,1) = A
+      CALL CROSS(B, A, T(:,2))
+      T(:,3) = B
+                                                           
+                                                           ! Transform x_l and y_l to the basic coordinate system
+      MITC8_ELEMENT_CS_BASIS(:,1) = MATMUL(T, X_L_ACB)
+      MITC8_ELEMENT_CS_BASIS(:,2) = MATMUL(T, Y_L_ACB)
+      MITC8_ELEMENT_CS_BASIS(:,3) = B
+
 
       RETURN
 
 
 ! **********************************************************************************************************************************
   
-      END SUBROUTINE MITC_COVARIANT_BASIS
+      END FUNCTION MITC8_ELEMENT_CS_BASIS

@@ -366,7 +366,7 @@ elems_2: DO J = 1,NELE
                         WRITE(ERR,100) "F1",ETYPE(J),TABLE_NAME,ITABLE
                         CALL SET_OEF_TABLE_NAME(ETYPE(J), TABLE_NAME, ITABLE)
                         WRITE(ERR,100) "F2",ETYPE(J),TABLE_NAME,ITABLE
-                        CALL WRITE_ELEM_ENGR_FORCE ( JVEC, NUM_ELEM, IHDR, ITABLE )
+                        CALL WRITE_ELEM_ENGR_FORCE ( JVEC, NUM_ELEM, IHDR, 1, ITABLE )
                         EXIT
                      ENDIF
  

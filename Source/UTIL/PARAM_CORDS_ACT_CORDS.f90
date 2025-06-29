@@ -57,8 +57,8 @@
       ENDIF
 
 ! **********************************************************************************************************************************
-      IF      (TYPE(1:5) == 'QUAD4') THEN
-         CALL GET_QUAD4_COORDS
+      IF     ((TYPE(1:5) == 'QUAD4') .OR. (TYPE(1:5) == 'QUAD8')) THEN
+         CALL GET_QUAD_COORDS
       ELSE
          Write(err,*) ' *ERROR      : Code not written in subr PARAM_CORDS_ACT_CORDS for', type
          Write(f06,*) ' *ERROR      : Code not written in subr PARAM_CORDS_ACT_CORDS for', type
@@ -81,78 +81,43 @@
  
 ! ##################################################################################################################################
 
-      SUBROUTINE GET_QUAD4_COORDS
+
+      SUBROUTINE GET_QUAD_COORDS
 
 ! Parametric coords of points are in array XEP. They are obtained from the corner node coords in array XEL from:
 
 !                                   XEA = PSH_MAT*XEL
 
-! Only the 1st 4 rows of XEL and XEA are processed (using DUM1 = 1st 4 rows of XEL and DUM2 = 1st 4 rows of XEA).
 ! The terms in PSH_MAT are the shape functions from the PSH rows from subr SHP2DQ for each of the 4 XEP points.
-! Each of these rows is called matrix PSHi (i=1,2,3,4) below.
 
       USE PENTIUM_II_KIND
-      USE IOUNT1, ONLY                :  ERR, F04, F06, WRT_BUG
-      USE MODEL_STUF, ONLY            :  XEL
+      USE IOUNT1, ONLY                :  WRT_BUG
+      USE MODEL_STUF, ONLY            :  XEL, ELGP
 
       IMPLICIT NONE
 
-      INTEGER(LONG)                   :: I,J                 ! DO loop indices
+      INTEGER(LONG)                   :: J                   ! DO loop index
 
-      REAL(DOUBLE)                    :: PSH1(4)             ! Shape functions for Gauss point 1,1
-      REAL(DOUBLE)                    :: PSH2(4)             ! Shape functions for Gauss point 2,1
-      REAL(DOUBLE)                    :: PSH3(4)             ! Shape functions for Gauss point 2,2
-      REAL(DOUBLE)                    :: PSH4(4)             ! Shape functions for Gauss point 1,2
-      REAL(DOUBLE)                    :: DUM1(4,3)           ! Intermediate matrix
-      REAL(DOUBLE)                    :: DUM2(4,3)           ! Intermediate matrix
-      REAL(DOUBLE)                    :: DPSHG(2,4)          ! Derivatives of PSH wrt elem isopar coords (not used here).
+      REAL(DOUBLE)                    :: DPSHG(2,ELGP)       ! Derivatives of PSH wrt elem isopar coords (not used here).
 
                                                              ! 4x4 matrix used to calc Gauss pt coords from node coords
-      REAL(DOUBLE)                    :: PSH_MAT(IORD*IORD,4)
+      REAL(DOUBLE)                    :: PSH_MAT(IORD*IORD,ELGP)
 
 ! **********************************************************************************************************************************
-! Initialize
 
-      DO I=1,IORD*IORD
-         DO J=1,4
-            PSH_MAT(I,J) = ZERO
-         ENDDO
-      ENDDO
-
-! The PSH rows are from subr SHP2DQ for each of the 4 XEP parametric coord points for the element. 
+! The PSH_MAT rows are from subr SHP2DQ for each of the 4 XEP parametric coord points for the element. 
 ! We want the XEA orderd in the same fashion as the element node coords in XEL (namely 1-2-3-4 clockwise around the element).
 
-      CALL SHP2DQ ( 1, 1, 4, SUBR_NAME, ' ', IORD, XEP(1,1), XEP(1,2), 'Y', PSH1, DPSHG )
-      CALL SHP2DQ ( 2, 1, 4, SUBR_NAME, ' ', IORD, XEP(2,1), XEP(2,2), 'Y', PSH2, DPSHG )
-      CALL SHP2DQ ( 2, 2, 4, SUBR_NAME, ' ', IORD, XEP(3,1), XEP(3,2), 'Y', PSH3, DPSHG )
-      CALL SHP2DQ ( 1, 2, 4, SUBR_NAME, ' ', IORD, XEP(4,1), XEP(4,2), 'Y', PSH4, DPSHG )
+      CALL SHP2DQ ( 1, 1, ELGP, SUBR_NAME, ' ', IORD, XEP(1,1), XEP(1,2), 'Y', PSH_MAT(1,:), DPSHG )
+      CALL SHP2DQ ( 2, 1, ELGP, SUBR_NAME, ' ', IORD, XEP(2,1), XEP(2,2), 'Y', PSH_MAT(2,:), DPSHG )
+      CALL SHP2DQ ( 2, 2, ELGP, SUBR_NAME, ' ', IORD, XEP(3,1), XEP(3,2), 'Y', PSH_MAT(3,:), DPSHG )
+      CALL SHP2DQ ( 1, 2, ELGP, SUBR_NAME, ' ', IORD, XEP(4,1), XEP(4,2), 'Y', PSH_MAT(4,:), DPSHG )
 
-! Put the PSHi into matrix PSH_MAT which will multiply XEL to get XGL
 
-      PSH_MAT(1,1) = PSH1(1)  ;  PSH_MAT(1,2) = PSH1(2)  ;  PSH_MAT(1,3) = PSH1(3)  ;  PSH_MAT(1,4) = PSH1(4)
-      PSH_MAT(2,1) = PSH2(1)  ;  PSH_MAT(2,2) = PSH2(2)  ;  PSH_MAT(2,3) = PSH2(3)  ;  PSH_MAT(2,4) = PSH2(4)
-      PSH_MAT(3,1) = PSH3(1)  ;  PSH_MAT(3,2) = PSH3(2)  ;  PSH_MAT(3,3) = PSH3(3)  ;  PSH_MAT(3,4) = PSH3(4)
-      PSH_MAT(4,1) = PSH4(1)  ;  PSH_MAT(4,2) = PSH4(2)  ;  PSH_MAT(4,3) = PSH4(3)  ;  PSH_MAT(4,4) = PSH4(4)
+! Multiply shape functions by grid point coordinates to get Gauss point coordinates
+! Only the first ELGP rows of XEL are used because it may have additional unused rows.
+      CALL MATMULT_FFF ( PSH_MAT, XEL(1:ELGP,:), IORD*IORD, ELGP, 3, XEA )
 
-! Get 1st 4 rows of XEL in DUM1
-
-      DO I=1,4
-         DO J=1,3
-            DUM1(I,J) = XEL(I,J)
-         ENDDO
-      ENDDO
-
-! Mult 1st 3 rows of XEL (node coords) by PSH_MAT to get 1st 3 rows of XGL (Gauss pt coords in local elem axes)
-
-      CALL MATMULT_FFF ( PSH_MAT, DUM1, 4, 4, 3, DUM2 )
-
-! Set XEA ist 4 rows equal to DUM2 from above
-
-      DO I=1,4
-         DO J=1,3
-            XEA(I,J) = DUM2(I,J)
-         ENDDO
-      ENDDO
 
 ! Debug output
 
@@ -173,6 +138,7 @@
 
 ! **********************************************************************************************************************************
 
-      END SUBROUTINE GET_QUAD4_COORDS
+      END SUBROUTINE GET_QUAD_COORDS
+
 
       END SUBROUTINE PARAM_CORDS_ACT_CORDS

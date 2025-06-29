@@ -1,4 +1,4 @@
-! ##################################################################################################################################
+! ###############################################################################################################################
 ! Begin MIT license text.                                                                                    
 ! _______________________________________________________________________________________________________
                                                                                                          
@@ -21,43 +21,29 @@
 ! OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN                              
 ! THE SOFTWARE.                                                                                          
 ! _______________________________________________________________________________________________________
-                                                                                                      
+                                                                                                        
 ! End MIT license text.                                                                                      
 
-      SUBROUTINE IS_ELEM_PCOMP_PROPS ( INT_ELEM_ID )
+   MODULE TRANSFORM_SHELL_STR_Interface
+
+   INTERFACE
+
+      SUBROUTINE TRANSFORM_SHELL_STR ( T, STR_VEC, SHR_FAC )
  
-! Given a shell (TRIA3 or QUAD4) element's internal ID, determine if its properties are defined on a Bulk Data PCOMP entry
+      USE PENTIUM_II_KIND, ONLY       :  DOUBLE
+      USE CONSTANTS_1, ONLY           :  ZERO
 
-      USE PENTIUM_II_KIND, ONLY       :  LONG
-      USE SCONTR, ONLY                :  DEDAT_T3_SHELL_KEY, DEDAT_Q4_SHELL_KEY, DEDAT_Q8_SHELL_KEY
-      USE MODEL_STUF, ONLY            :  EDAT, EPNT, ETYPE, PCOMP_PROPS, TYPE
+      IMPLICIT NONE 
 
-      USE IS_ELEM_PCOMP_PROPS_USE_IFs
+      REAL(DOUBLE),  INTENT(IN)       :: T(3,3)
+      REAL(DOUBLE),  INTENT(INOUT)    :: STR_VEC(9)
+      REAL(DOUBLE),  INTENT(IN)       :: SHR_FAC
+      REAL(DOUBLE)                    :: STR_TENSOR(3,3)
+      REAL(DOUBLE)                    :: DUM33(3,3)
 
-      IMPLICIT NONE
+      END SUBROUTINE TRANSFORM_SHELL_STR
 
-      INTEGER(LONG), INTENT(IN)       :: INT_ELEM_ID        ! Internal element ID for which
-      INTEGER(LONG)                   :: EPNTK              ! Value from array EPNT at the row for this internal elem ID. It is the
-!                                                             row number in array EDAT where data begins for this element. 
-! **********************************************************************************************************************************
-      EPNTK = EPNT(INT_ELEM_ID)
-      TYPE  = ETYPE(INT_ELEM_ID)
+   END INTERFACE
 
-      PCOMP_PROPS = 'N'
-      IF      (TYPE(1:5) == 'TRIA3') THEN
-         IF (EDAT(EPNTK+DEDAT_T3_SHELL_KEY) == 2) THEN
-            PCOMP_PROPS = 'Y'
-         ENDIF
-      ELSE IF (TYPE(1:5) == 'QUAD4') THEN
-         IF (EDAT(EPNTK+DEDAT_Q4_SHELL_KEY) == 2) THEN
-            PCOMP_PROPS = 'Y'
-         ENDIF
-      ELSE IF (TYPE(1:5) == 'QUAD8') THEN
-         IF (EDAT(EPNTK+DEDAT_Q8_SHELL_KEY) == 2) THEN
-            PCOMP_PROPS = 'Y'
-         ENDIF
-      ENDIF
+   END MODULE TRANSFORM_SHELL_STR_Interface
 
-! **********************************************************************************************************************************
-
-      END SUBROUTINE IS_ELEM_PCOMP_PROPS

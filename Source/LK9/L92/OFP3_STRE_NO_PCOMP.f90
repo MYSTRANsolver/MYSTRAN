@@ -38,15 +38,17 @@
                                          SOL_NAME
       USE TIMDAT, ONLY                :  TSEC
       USE SUBR_BEGEND_LEVELS, ONLY    :  OFP3_STRE_NO_PCOMP_BEGEND
-      USE CONSTANTS_1, ONLY           :  ZERO
+      USE CONSTANTS_1, ONLY           :  ZERO, ONE, FOUR
       USE FEMAP_ARRAYS, ONLY          :  FEMAP_EL_NUMS
       USE PARAMS, ONLY                :  OTMSKIP, PRTNEU
       USE MODEL_STUF, ONLY            :  AGRID, ANY_STRE_OUTPUT, EDAT, EPNT, ETYPE, EID, ELGP, ELMTYP, ELOUT,                      &
-                                         METYPE, NUM_SEi, NUM_EMG_FATAL_ERRS, PCOMP_PROPS, PLY_NUM, STRESS, TYPE
+                                         METYPE, NUM_SEi, NUM_EMG_FATAL_ERRS, PCOMP_PROPS, PLY_NUM, STRESS, TYPE, SHELL_STR_ANGLE
       USE CC_OUTPUT_DESCRIBERS, ONLY  :  STRE_LOC, STRE_OPT
       USE LINK9_STUFF, ONLY           :  EID_OUT_ARRAY, GID_OUT_ARRAY, MAXREQ, OGEL, POLY_FIT_ERR, POLY_FIT_ERR_INDEX
       USE OUTPUT4_MATRICES, ONLY      :  OTM_STRE, TXT_STRE
-  
+
+      USE PLANE_COORD_TRANS_21_Interface
+      USE TRANSFORM_SHELL_STR_Interface
       USE OFP3_STRE_NO_PCOMP_USE_IFs
 
       IMPLICIT NONE
@@ -94,6 +96,7 @@
 
                                                            ! Array of output stress values after surface fit
       REAL(DOUBLE)                    :: STRESS_OUT(9,MAX_STRESS_POINTS)
+      REAL(DOUBLE)                    :: TEL(3,3)          ! Transformation matrix from cartesian local (L) to element (E) coordinates.
 
       ! OP2 stuff
       CHARACTER(8*BYTE)               :: TABLE_NAME   ! name of the op2 table name
@@ -188,38 +191,45 @@ elems_5: DO J = 1,NELE
 
                   DO M=1,NUM_PTS(I)
                      CALL ELEM_STRE_STRN_ARRAYS ( M )
-                     DO K=1,9
-                        STRESS_RAW(K,M) = STRESS(K) 
-                     ENDDO
+                     STRESS_RAW(:,M) = STRESS(:) 
                   ENDDO
-                  DO K=1,9                                 ! Set STRESS_OUT for NUM_PTS(I) = 1
-                     STRESS_OUT(K,1) = STRESS(K)
-                  ENDDO
+                  
+                  STRESS_OUT(:,1) = STRESS(:)            ! Set STRESS_OUT for NUM_PTS(I) = 1
+
                   IF ((STRE_LOC == 'CORNER  ') .OR.                                                                                & 
                       (STRE_LOC == 'GAUSS   ') .OR.                                                                                &
                       (TYPE(1:4) == 'HEXA') .OR.                                                                                   &
                       (TYPE(1:5) == 'PENTA') .OR.                                                                                  &
                       (TYPE(1:5) == 'TETRA') .OR.                                                                                  &
                       (TYPE(1:5) == 'QUAD8')) THEN
-                     IF (TYPE(1:5) == 'QUAD4') THEN        ! Calc STRESS_OUT for QUAD4
+
+                     IF (TYPE(1:5) == 'QUAD4') THEN
                         CALL POLYNOM_FIT_STRE_STRN ( STRESS_RAW, 9, NUM_PTS(I), STRESS_OUT, STRESS_OUT_PCT_ERR,                    &
                                                      STRESS_OUT_ERR_INDEX, PCT_ERR_MAX )
+                    
                      ELSE IF (TYPE(1:5) == 'QUAD8') THEN
-! Victor todo
-! Stress is evaluated at Gauss points not corners, so it must extrapolate here, not just copy. Possibly use POLYNOM_FIT_STRE_STRN
-! or the traditional Gauss element with extrapolation approach.
-                        STRESS_OUT(:,:) = STRESS_RAW(:,:)
+                        CALL POLYNOM_FIT_STRE_STRN ( STRESS_RAW, 9, NUM_PTS(I), STRESS_OUT, STRESS_OUT_PCT_ERR,                    &
+                                                     STRESS_OUT_ERR_INDEX, PCT_ERR_MAX )
+
+                                                           ! Transform stress from the cartesian local coordinate system to 
+                                                           ! the element coordinate system
+                        DO M=2,NUM_PTS(I)
+                           CALL PLANE_COORD_TRANS_21( SHELL_STR_ANGLE( M ), TEL, '')
+                           CALL TRANSFORM_SHELL_STR( TEL, STRESS_OUT(:,M), ONE)
+                        ENDDO
+                                                           ! Center stress is the average of corner stress in element coordinates.
+                                                           ! This is how MSC does it.
+                        STRESS_OUT(:,1) = (STRESS_OUT(:,2) + STRESS_OUT(:,3) + STRESS_OUT(:,4) + STRESS_OUT(:,5)) / FOUR
+                     
                      ELSE IF ((TYPE(1:4) == 'HEXA') .OR.                                                                           &
                               (TYPE(1:5) == 'PENTA') .OR.                                                                          &
                               (TYPE(1:5) == 'TETRA')) THEN
-! Stresses are directly evaluated at the corner grid points. If they are going to be evaluated at gauss points
-! then extrapolated to grid points, that should be done here or in POLYNOM_FIT_STRE_STRN
-                        DO M=1,NUM_PTS(I)
-                          DO K=1,9
-                             STRESS_OUT(K,M) = STRESS_RAW(K,M)
-                          ENDDO
-                        ENDDO
+! Stresses are directly evaluated at the corner grid points. If they are going to be evaluated at Gauss points
+! then extrapolated to grid points, that should be done here, in POLYNOM_FIT_STRE_STRN, or in an equivalent subroutine.
+                        STRESS_OUT(:,:) = STRESS_RAW(:,:)
+                        
                      ENDIF
+
                   ENDIF
 
 do_stress_pts:    DO M=1,NUM_PTS(I)

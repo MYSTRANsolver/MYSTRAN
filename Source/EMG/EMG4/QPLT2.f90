@@ -46,7 +46,7 @@
       USE SUBR_BEGEND_LEVELS, ONLY    :  QPLT2_BEGEND
       USE CONSTANTS_1, ONLY           :  ZERO, HALF, ONE, FOUR
       USE PARAMS, ONLY                :  EPSIL, IORQ2B, IORQ2T
-      USE MODEL_STUF, ONLY            :  ALPVEC, BE2, BE3, BENSUM, DT, EID, ELDOF, FCONV_SHEAR_THICK, EB, ET,                      &
+      USE MODEL_STUF, ONLY            :  ALPVEC, BE2, BE3, BENSUM, DT, EID, ELDOF, EB, ET,                                         &
                                          ERR_SUB_NAM, FCONV, KE, INTL_MID, PCOMP_LAM, PCOMP_PROPS, PHI_SQ, PPE,                    &
                                          PRESS, PTE, SE2, SE3, SHELL_D, SHELL_DALP, SHELL_T, SHRSUM, STE2, TYPE
       USE DEBUG_PARAMETERS, ONLY      :  DEBUG
@@ -418,7 +418,6 @@
             ENDDO    
          ENDDO
 
-         FCONV(3) = FCONV_SHEAR_THICK                      ! NOTE: PHI_SQ removed as multiplier based on error found on 10/12/11
       ENDIF
   
 ! **********************************************************************************************************************************

@@ -197,6 +197,10 @@
             UEL(I1+2) = TE(3,1)*UEB(I1)+ TE(3,2)*UEB(I1+1)+ TE(3,3)*UEB(I1+2)
          ENDDO   
 
+         IF (TYPE(1:5) == 'QUAD8') THEN                    ! Zero UEL for CQUAD8 to prevent accidental use.
+            UEL(:) = ZERO
+         ENDIF
+
          IF (DEBUG(56) > 0) THEN
             WRITE(F06,5104)
             WRITE(F06,5002) ' UEL for G.P. ', AGRID(1), ':       ', (UEL(I),I=1, 6)
