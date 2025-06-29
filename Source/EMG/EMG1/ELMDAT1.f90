@@ -40,7 +40,7 @@
       USE IOUNT1, ONLY                :  WRT_ERR, WRT_LOG, ERR, F04, F06
       USE SCONTR, ONLY                :  FATAL_ERR, MEDAT0_CUSERIN, MELGP, MEMATC, MEMATR, MEPROP, METYPE, MOFFSET, MRMATLC,       &
                                          MRPBAR, MRPBEAM, MRPBUSH, MRPELAS, MRPROD, MRPSHEAR, MRPUSER1, MPSOLID, BLNK_SUB_NAM,     &
-                                         NCORD, NGRID
+                                         NCORD, NGRID, SOL_NAME
       USE SCONTR, ONLY                :  DEDAT_Q4_MATANG_KEY, DEDAT_Q4_THICK_KEY, DEDAT_Q4_POFFS_KEY,                              &
                                          DEDAT_T3_MATANG_KEY, DEDAT_T3_THICK_KEY, DEDAT_T3_POFFS_KEY,                              &
                                                               DEDAT_Q8_THICK_KEY, DEDAT_Q8_POFFS_KEY
@@ -380,6 +380,14 @@
          IF (PCOMP_PROPS == 'N') THEN                      ! Shell properties are in array PSHELL (except maybe membrane thickness)
 
             IF(TYPE(1:5) == 'QUAD8') THEN                  ! Features that aren't currently supported by CQUAD8.
+
+               IF(SOL_NAME(1:7) /= 'STATICS') THEN
+                  WRITE(ERR,*) ' *ERROR: CQUAD8 IS NOT ALLOWED WITH SOL', SOL_NAME
+                  WRITE(F06,*) ' *ERROR: CQUAD8 IS NOT ALLOWED WITH SOL', SOL_NAME
+                  NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
+                  FATAL_ERR          = FATAL_ERR + 1
+               ENDIF
+
                                                               ! MID2 /= MID3
                IF(PSHEL(INTL_PID, 2) /= PSHEL(INTL_PID, 3)) THEN
                   WRITE(ERR,*) ' *ERROR: PSHELL FIELDS MID1 AND MID2 MUST HAVE THE SAME VALUE FOR QUAD8'
@@ -627,7 +635,28 @@
 
             NUMMAT = 4
 
-            DO I=1,NUMMAT                                  ! Must be MAT1 or MAT8 for plate elems
+            IF (TYPE(1:5) == 'QUAD8') THEN
+               DO I=1,NUMMAT                               ! Must be MAT1 for CQUAD8 elements
+                  IF (MTRL_TYPE(I) /= 0) THEN              ! as long as a material was defined
+                     IF (MTRL_TYPE(I) /= 1) THEN
+                        WRITE(ERR,1921) TYPE, EID
+                        WRITE(F06,1921) TYPE, EID
+                        NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
+                        FATAL_ERR = FATAL_ERR + 1
+                     ENDIF
+                  ENDIF
+               ENDDO
+                                                           ! Density is now allowed in case it's used for 
+                                                           ! gravity which doesn't currently work.
+               IF(RMATL(INTL_MID(1),4) /= ZERO) THEN
+                  WRITE(ERR,*) ' *ERROR: MAT1 DENSITY MUST BE 0.0 OR BLANK FOR QUAD8'
+                  WRITE(F06,*) ' *ERROR: MAT1 DENSITY MUST BE 0.0 OR BLANK FOR QUAD8'
+                  NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
+                  FATAL_ERR          = FATAL_ERR + 1
+               ENDIF
+            ENDIF
+
+            DO I=1,NUMMAT                                  ! Must be MAT1, MAT2 or MAT8 for plate elems
                IF (MTRL_TYPE(I) /= 0) THEN                 ! as long as a material was defined
                   IF ((MTRL_TYPE(I) /= 1) .AND. (MTRL_TYPE(I) /= 2) .AND. (MTRL_TYPE(I) /= 8)) THEN
                      WRITE(ERR,1920) TYPE, EID
@@ -988,6 +1017,8 @@
  1915 FORMAT(' *ERROR  1915: MATERIAL PROPERTIES FOR ',A8,' ID = ',I8,' MUST BE DEFINED ON A MAT1 BULK DATA ENTRY')
 
  1920 FORMAT(' *ERROR  1920: MATERIAL PROPERTIES FOR ',A8,' ID = ',I8,' MUST BE DEFINED ON A MAT1, MAT2 OR MAT8 BULK DATA ENTRY')
+
+ 1921 FORMAT(' *ERROR  1921: MATERIAL PROPERTIES FOR ',A8,' ID = ',I8,' MUST BE DEFINED ON A MAT1 BULK DATA ENTRY')
 
  1945 FORMAT(' *ERROR  1945: ',A,' ELEMENT ',I8,' HAS OFFSET ZOFFS = ',1ES9.2,' SPECIFIED. HOWEVER, IT HAS PROPERTIES DEFINED ON', &
                              ' PCOMP ',I8,'.'                                                                                      &
