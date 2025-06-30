@@ -24,7 +24,7 @@
                                                                                                         
 ! End MIT license text.                                                                                      
   
-      SUBROUTINE WRITE_ELEM_ENGR_FORCE ( JSUB, NUM, IHDR, ITABLE )
+      SUBROUTINE WRITE_ELEM_ENGR_FORCE ( JSUB, NUM, IHDR, NUM_PTS, ITABLE )
 
       ! Writes blocks of element engineering force output for one element type, one
       ! subcase. Elements that can have engineering force output are the ones 
@@ -36,7 +36,7 @@
       USE PARAMS, ONLY                :  PRTANS
       USE DEBUG_PARAMETERS, ONLY      :  DEBUG
       USE NONLINEAR_PARAMS, ONLY      :  LOAD_ISTEP
-      USE LINK9_STUFF, ONLY           :  EID_OUT_ARRAY, OGEL
+      USE LINK9_STUFF, ONLY           :  EID_OUT_ARRAY, GID_OUT_ARRAY, OGEL
       USE SUBR_BEGEND_LEVELS, ONLY    :  WRITE_ELEM_ENGR_FORCE_BEGEND
       USE MODEL_STUF, ONLY            :  ELEM_ONAME, LABEL, SCNUM, STITLE, TITLE, TYPE
       USE CC_OUTPUT_DESCRIBERS, ONLY  :  FORC_OUT
@@ -51,11 +51,12 @@
 
       INTEGER(LONG), INTENT(IN)       :: JSUB              ! Solution vector number
       INTEGER(LONG), INTENT(IN)       :: NUM               ! The number of rows of OGEL to write out
+      INTEGER(LONG), INTENT(IN)       :: NUM_PTS           ! Num diff stress points for one element
       INTEGER(LONG), INTENT(INOUT)    :: ITABLE            ! the current op2 subtable, should be -3, -5, ...
       INTEGER(LONG)                   :: BDY_COMP          ! Component (1-6) for a boundary DOF in CB analyses
       INTEGER(LONG)                   :: BDY_GRID          ! Grid for a boundary DOF in CB analyses
       INTEGER(LONG)                   :: BDY_DOF_NUM       ! DOF number for BDY_GRID/BDY_COMP
-      INTEGER(LONG)                   :: I,J,J1            ! DO loop indices or counters
+      INTEGER(LONG)                   :: I,J,J1,K,L        ! DO loop indices or counters
       INTEGER(LONG)                   :: NUM_TERMS         ! Number of terms to write out for shell elems
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = WRITE_ELEM_ENGR_FORCE_BEGEND
       LOGICAL                         :: WRITE_F06, WRITE_OP2, WRITE_ANS   ! flag
@@ -235,7 +236,7 @@ headr:IF (IHDR == 'Y') THEN
                 ENDIF
                 WRITE(F06,401) FILL(1:32), ONAME
   
-             ELSE IF((TYPE(1:5) == 'TRIA3') .OR. (TYPE(1:5) == 'QUAD4')) THEN
+             ELSE IF((TYPE(1:5) == 'TRIA3') .OR. (TYPE(1:5) == 'QUAD4') .OR. (TYPE(1:5) == 'QUAD8')) THEN
                 IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
                    WRITE(F06,302) FILL(1:33)
                 ELSE
@@ -257,7 +258,7 @@ headr:IF (IHDR == 'Y') THEN
              ELSE IF (TYPE(1:5) == 'SHEAR') THEN
                 WRITE(F06,1401) FILL(1: 0), FILL(1: 0)
 
-             ELSE IF ((TYPE(1:5) == 'TRIA3') .OR. (TYPE(1:5) == 'QUAD4')) THEN 
+             ELSE IF ((TYPE(1:5) == 'TRIA3') .OR. (TYPE(1:5) == 'QUAD4') .OR. (TYPE(1:5) == 'QUAD8')) THEN 
                 WRITE(F06,1501) FILL(1: 0), FILL(1: 0), FILL(1: 0)
 
              ELSE IF (TYPE(1:4) == 'BUSH') THEN
@@ -409,7 +410,7 @@ headr:IF (IHDR == 'Y') THEN
          NUM_TERMS = 6
          IF (WRITE_ANS) CALL FWRITE_ANS ( 'SHELL' )
 
-      ELSE IF ((TYPE == 'TRIA3   ') .OR. (TYPE == 'QUAD4   ')) THEN
+      ELSE IF ((TYPE == 'TRIA3   ') .OR. (TYPE == 'QUAD4   ') .OR. (TYPE == 'QUAD8   ')) THEN
         IF (WRITE_OP2)  THEN
           IF (TYPE == 'TRIA3   ') THEN
               ELEMENT_TYPE = 74
@@ -430,8 +431,20 @@ headr:IF (IHDR == 'Y') THEN
         ENDIF
 
         IF (WRITE_F06)  THEN  ! f06
-          DO I=1,NUM
-             WRITE(F06,1522) FILL(1: 0), EID_OUT_ARRAY(I,1),(OGEL(I,J),J=1,8)
+          K = 0
+          DO I=1,NUM,NUM_PTS
+             K = K + 1
+                                                           ! Center forces
+             IF(TYPE == 'QUAD8   ') THEN
+               WRITE(F06,1524) FILL(1: 0), EID_OUT_ARRAY(I,1), 'CENTER  ', (OGEL(K,J),J=1,8)
+             ELSE
+               WRITE(F06,1524) FILL(1: 0), EID_OUT_ARRAY(I,1), '        ', (OGEL(K,J),J=1,8)
+             ENDIF
+                                                           
+             DO L=2,NUM_PTS                                ! Corner forces
+               K = K + 1
+               WRITE(F06,1525) FILL(1: 0), GID_OUT_ARRAY(I,L),(OGEL(K,J),J=1,8) 
+             ENDDO
           ENDDO   
           CALL GET_MAX_MIN_ABS ( 1, 8 )
           WRITE(F06,1523) FILL(1: 0), FILL(1: 0), (MAX_ANS(J),J=1,8), FILL(1: 0), (MIN_ANS(J),J=1,8), FILL(1: 0),  &
@@ -541,13 +554,13 @@ headr:IF (IHDR == 'Y') THEN
              16X,A,'*for output set')
 
 ! SHELL >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
- 1501 FORMAT(16X,A,' Element         N o r m a l   F o r c e s                       M o m e n t s'                                &
-          ,19X,'T r a n s v e r s e',/16X,A,'    ID', 89X,'S h e a r   F o r c e s'                                                &
+ 1501 FORMAT(1X,A,' Element Location               N o r m a l   F o r c e s                       M o m e n t s'                  &
+          ,19X,'T r a n s v e r s e',/1X,A,'    ID', 104X,'S h e a r   F o r c e s'                                                &
           ,/,16X,A,'              Nxx           Nyy           Nxy           Mxx           Myy           Mxy            Qx         '&
           ,'  Qy')
 
 !            WRITE(F06,1501) FILL(1: 0), FILL(1: 0), FILL(1: 0)
- 1512 FORMAT(16X,A,I8,6(1ES14.6))
+ 1512 FORMAT(1X,A,I8,15X,6(1ES14.6))
  
  1513 FORMAT(16X,A,'          ------------- ------------- ------------- ------------- ------------- -------------',/,              &
              16X,A,'MAX* :  ',6(ES14.6),/,                                                                                         &
@@ -555,8 +568,6 @@ headr:IF (IHDR == 'Y') THEN
              16X,A,'ABS* :  ',6(ES14.6),/,                                                                                         &
              16X,A,'*for output set')
 
- 1522 FORMAT(16X,A,I8,8(1ES14.6))
- 
  1523 FORMAT(16X,A,'          ------------- ------------- ------------- ------------- ------------- ------------- -------------',  &
                         ' -------------',/,                                                                                        &
              16X,A,'MAX* :  ',8(ES14.6),/,                                                                                         &
@@ -564,6 +575,11 @@ headr:IF (IHDR == 'Y') THEN
              16X,A,'ABS* :  ',8(ES14.6),/,                                                                                         &
              16X,A,'*for output set')
 
+ 1524 FORMAT(1X,A,I8,2X,A,5X,8(1ES14.6))
+ 
+ 1525 FORMAT(1X,A,10X,'GRD',I8,2X,8(1ES14.6))
+
+ 
 ! BUSH >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
  1601 FORMAT(16X,A,' Element      Force         Force         Force        Moment        Moment        Moment'                     &
           ,/,16X,A,'    ID         XE            YE            ZE            XE            YE            ZE')

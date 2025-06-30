@@ -36,7 +36,6 @@
                                          MEDAT_CQUAD8, NCQUAD8, NEDAT, NELE, NMATANGLE, NPLATEOFF, NPLATETHICK
       USE CONSTANTS_1, ONLY           :  ZERO
       USE MODEL_STUF, ONLY            :  EDAT, ETYPE, MATANGLE, PLATEOFF, PLATETHICK
-      USE DEBUG_PARAMETERS, ONLY      :  DEBUG
  
       USE MKJCARD_Interface
       USE ELEPRO_Interface
@@ -95,15 +94,6 @@
 !    8      Matl angle     NMATANGLE (MATANGLE key) goes in EDAT(nedat+11)
 !    9      Offset         NPLATEOFF (PLATEOFF key) goes in EDAT(nedat+12)
 !                          EDAT(nedat+13)
-
-                                                           ! Remove this check and DEBUG(250) comment from DEBUG_PARAMETERS
-                                                           ! when CQUAD8 is finished.
-      IF(DEBUG(250) == 0) THEN
-        FATAL_ERR = FATAL_ERR + 1
-        WRITE (ERR,*) " *ERROR  : CQUAD8 NOT ALLOWED WITHOUT DEBUG,250,1"
-        WRITE (F06,*) " *ERROR  : CQUAD8 NOT ALLOWED WITHOUT DEBUG,250,1"
-        CALL OUTA_HERE ( 'Y' )
-      ENDIF
  
 ! Make JCARD from CARD
 
@@ -222,6 +212,12 @@
           EDAT(NEDAT) = NPLATEOFF
           CALL R8FLD ( JCARD(9), JF(9), R8INP )
           IF (IERRFL(9) == 'N') THEN
+            IF(R8INP /= 0.0) THEN
+               FATAL_ERR = FATAL_ERR + 1
+               WRITE(ERR,*) ' *ERROR : ZOFFS NOT ALLOWED ON CQUAD8'
+               WRITE(F06,*) ' *ERROR : ZOFFS NOT ALLOWED ON CQUAD8'
+               CALL OUTA_HERE ( 'Y' )
+            ENDIF
             PLATEOFF(NPLATEOFF) = R8INP
           ENDIF
         ELSE
@@ -245,33 +241,38 @@
 
   
 ! Optional fields 4-7 (to define membrane thicknesses as grid values):
+         IF ((JCARD(4)(1:) /= ' ') .OR. (JCARD(5)(1:) /= ' ') .OR. (JCARD(6)(1:) /= ' ') .OR. (JCARD(7)(1:) /= ' ')) THEN
+            FATAL_ERR = FATAL_ERR + 1
+            WRITE(ERR,*) ' *ERROR : GRID POINT THICKNESSES T1, T2, T3, T4 ARE NOT ALLOWED ON CQUAD8'
+            WRITE(F06,*) ' *ERROR : GRID POINT THICKNESSES T1, T2, T3, T4 ARE NOT ALLOWED ON CQUAD8'
+            CALL OUTA_HERE ( 'Y' )
+         ENDIF
+         IF (JCARD(4)(1:) /= ' ') THEN
 
-        IF (JCARD(4)(1:) /= ' ') THEN
+            EDAT(NEDAT) = NPLATETHICK + 1
 
-          EDAT(NEDAT) = NPLATETHICK + 1
+            DO J=4,7                                         ! Read 4 thicknesses
+               NPLATETHICK = NPLATETHICK + 1
+               IF (NPLATETHICK > LPLATETHICK) THEN
+                  FATAL_ERR = FATAL_ERR + 1
+                  WRITE(ERR,1144) SUBR_NAME,' TOO MANY PLATE THICKNESSES. LIMIT IS NPLATETHICK = ',LPLATETHICK
+                  WRITE(F06,1144) SUBR_NAME,' TOO MANY PLATE THICKNESSES. LIMIT IS NPLATETHICK = ',LPLATETHICK
+                  CALL OUTA_HERE ( 'Y' )
+               ENDIF
+               CALL R8FLD ( JCARD(J), JF(J), R8INP )
+               IF (IERRFL(J) == 'N') THEN
+                  PLATETHICK(NPLATETHICK) = R8INP
+               ENDIF
+            ENDDO
 
-          DO J=4,7                                         ! Read 4 thicknesses
-            NPLATETHICK = NPLATETHICK + 1
-            IF (NPLATETHICK > LPLATETHICK) THEN
-              FATAL_ERR = FATAL_ERR + 1
-              WRITE(ERR,1144) SUBR_NAME,' TOO MANY PLATE THICKNESSES. LIMIT IS NPLATETHICK = ',LPLATETHICK
-              WRITE(F06,1144) SUBR_NAME,' TOO MANY PLATE THICKNESSES. LIMIT IS NPLATETHICK = ',LPLATETHICK
-              CALL OUTA_HERE ( 'Y' )
-            ENDIF
-            CALL R8FLD ( JCARD(J), JF(J), R8INP )
-            IF (IERRFL(J) == 'N') THEN
-              PLATETHICK(NPLATETHICK) = R8INP
-            ENDIF
-          ENDDO
+            CALL BD_IMBEDDED_BLANK ( JCARD,2,3,4,5,6,7,8,9 )
 
-          CALL BD_IMBEDDED_BLANK ( JCARD,2,3,4,5,6,7,8,9 )
+         ELSE
 
-        ELSE
+            CALL BD_IMBEDDED_BLANK ( JCARD,2,3,0,0,0,0,8,9 )  ! Make sure that there are no imbedded blanks in fields 2,3,8,9
+            CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,4,5,6,7,0,0 )! Issue warning if fields 4-7 not blank
 
-          CALL BD_IMBEDDED_BLANK ( JCARD,2,3,0,0,0,0,8,9 )  ! Make sure that there are no imbedded blanks in fields 2,3,8,9
-          CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,4,5,6,7,0,0 )! Issue warning if fields 4-7 not blank
-
-        ENDIF
+         ENDIF
               
         CALL CRDERR ( CARD )                               ! CRDERR prints errors found when reading fields
       

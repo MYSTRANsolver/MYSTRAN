@@ -1,4 +1,4 @@
-! ##################################################################################################################################
+! ###############################################################################################################################
 ! Begin MIT license text.                                                                                    
 ! _______________________________________________________________________________________________________
                                                                                                          
@@ -21,43 +21,48 @@
 ! OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN                              
 ! THE SOFTWARE.                                                                                          
 ! _______________________________________________________________________________________________________
-                                                                                                      
+                                                                                                        
 ! End MIT license text.                                                                                      
 
-      SUBROUTINE IS_ELEM_PCOMP_PROPS ( INT_ELEM_ID )
+   MODULE MITC8_ELEMENT_CS_BASIS_Interface
+
+   INTERFACE
+
+      FUNCTION MITC8_ELEMENT_CS_BASIS ( R, S )
  
-! Given a shell (TRIA3 or QUAD4) element's internal ID, determine if its properties are defined on a Bulk Data PCOMP entry
+      USE PENTIUM_II_KIND, ONLY       :  LONG, DOUBLE
+      USE MODEL_STUF, ONLY            :  ELGP, XEB, TYPE
+      USE CONSTANTS_1, ONLY           :  ZERO, ONE, TWO
+      USE IOUNT1, ONLY                :  ERR, F06
+      USE SCONTR, ONLY                :  FATAL_ERR
 
-      USE PENTIUM_II_KIND, ONLY       :  LONG
-      USE SCONTR, ONLY                :  DEDAT_T3_SHELL_KEY, DEDAT_Q4_SHELL_KEY, DEDAT_Q8_SHELL_KEY
-      USE MODEL_STUF, ONLY            :  EDAT, EPNT, ETYPE, PCOMP_PROPS, TYPE
+      USE SHP2DQ_Interface
+      USE CROSS_Interface
+      USE OUTA_HERE_Interface
 
-      USE IS_ELEM_PCOMP_PROPS_USE_IFs
+      IMPLICIT NONE 
+      
+      INTEGER(LONG)                   :: I                 ! DO loop indices
 
-      IMPLICIT NONE
+      REAL(DOUBLE)                    :: MITC8_ELEMENT_CS_BASIS(3,3)
+      REAL(DOUBLE) , INTENT(IN)       :: R
+      REAL(DOUBLE) , INTENT(IN)       :: S
+      REAL(DOUBLE)                    :: PSH(ELGP)       
+      REAL(DOUBLE)                    :: DPSHG(2,ELGP)     ! Derivatives of shape functions with respect to R and S.
+      REAL(DOUBLE)                    :: E_XI(3)
+      REAL(DOUBLE)                    :: E_ETA(3)
+      REAL(DOUBLE)                    :: A(3)
+      REAL(DOUBLE)                    :: B(3)
+      REAL(DOUBLE)                    :: X_L_ACB(3)
+      REAL(DOUBLE)                    :: Y_L_ACB(3)
+      REAL(DOUBLE)                    :: T(3,3)
 
-      INTEGER(LONG), INTENT(IN)       :: INT_ELEM_ID        ! Internal element ID for which
-      INTEGER(LONG)                   :: EPNTK              ! Value from array EPNT at the row for this internal elem ID. It is the
-!                                                             row number in array EDAT where data begins for this element. 
-! **********************************************************************************************************************************
-      EPNTK = EPNT(INT_ELEM_ID)
-      TYPE  = ETYPE(INT_ELEM_ID)
+      INTRINSIC                       :: DSQRT
 
-      PCOMP_PROPS = 'N'
-      IF      (TYPE(1:5) == 'TRIA3') THEN
-         IF (EDAT(EPNTK+DEDAT_T3_SHELL_KEY) == 2) THEN
-            PCOMP_PROPS = 'Y'
-         ENDIF
-      ELSE IF (TYPE(1:5) == 'QUAD4') THEN
-         IF (EDAT(EPNTK+DEDAT_Q4_SHELL_KEY) == 2) THEN
-            PCOMP_PROPS = 'Y'
-         ENDIF
-      ELSE IF (TYPE(1:5) == 'QUAD8') THEN
-         IF (EDAT(EPNTK+DEDAT_Q8_SHELL_KEY) == 2) THEN
-            PCOMP_PROPS = 'Y'
-         ENDIF
-      ENDIF
+      
+      END FUNCTION MITC8_ELEMENT_CS_BASIS
 
-! **********************************************************************************************************************************
+   END INTERFACE
 
-      END SUBROUTINE IS_ELEM_PCOMP_PROPS
+   END MODULE MITC8_ELEMENT_CS_BASIS_Interface
+

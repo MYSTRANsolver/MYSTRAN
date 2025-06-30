@@ -45,7 +45,7 @@
       USE TIMDAT, ONLY                :  TSEC
       USE SUBR_BEGEND_LEVELS, ONLY    :  TPLT2_BEGEND
       USE CONSTANTS_1, ONLY           :  ZERO, ONE, TWO, THREE, FOUR, SIX, EIGHT, TWELVE, CONV_RAD_DEG
-      USE MODEL_STUF, ONLY            :  ALPVEC, BE2, BE3, BENSUM, DT, FCONV_SHEAR_THICK, EB, EBM, EID, ET, ELDOF, FCONV, KE,      &
+      USE MODEL_STUF, ONLY            :  ALPVEC, BE2, BE3, BENSUM, DT, EB, EBM, EID, ET, ELDOF, FCONV, KE,                         &
                                          MTRL_TYPE, PCOMP_LAM, PCOMP_PROPS, PHI_SQ, PPE, PRESS, PTE, SE2, SE3, SHELL_B, SHELL_DALP,&
                                          SHELL_D, SHELL_T, SHRSUM, STE2, TYPE
       USE PARAMS, ONLY                :  EPSIL, CBMIN3, CBMIN4T
@@ -578,7 +578,6 @@
             ENDDO
          ENDIF 
   
-         FCONV(3) = FCONV_SHEAR_THICK                      ! NOTE: PHI_SQ removed as multiplier based on error found on 10/12/11
       ENDIF
   
 ! **********************************************************************************************************************************

@@ -1,4 +1,4 @@
-! ##################################################################################################################################
+! #################################################################################################################################
 ! Begin MIT license text.                                                                                    
 ! _______________________________________________________________________________________________________
                                                                                                          
@@ -21,43 +21,58 @@
 ! OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN                              
 ! THE SOFTWARE.                                                                                          
 ! _______________________________________________________________________________________________________
-                                                                                                      
+                                                                                                        
 ! End MIT license text.                                                                                      
+      SUBROUTINE TRANSFORM_SHELL_STR ( T, STR_VEC, SHR_FAC )
 
-      SUBROUTINE IS_ELEM_PCOMP_PROPS ( INT_ELEM_ID )
- 
-! Given a shell (TRIA3 or QUAD4) element's internal ID, determine if its properties are defined on a Bulk Data PCOMP entry
+! Transforms a shell stress or strain vector with separate membrane, bending, and transverse shear terms.
+! Use SHR_FAC = ONE for stress
+! Use SHR_FAC = TWO for engineering strain to make it convert to tensor strain for transforming
 
-      USE PENTIUM_II_KIND, ONLY       :  LONG
-      USE SCONTR, ONLY                :  DEDAT_T3_SHELL_KEY, DEDAT_Q4_SHELL_KEY, DEDAT_Q8_SHELL_KEY
-      USE MODEL_STUF, ONLY            :  EDAT, EPNT, ETYPE, PCOMP_PROPS, TYPE
+      USE PENTIUM_II_KIND, ONLY       :  DOUBLE
+      USE CONSTANTS_1, ONLY           :  ZERO
 
-      USE IS_ELEM_PCOMP_PROPS_USE_IFs
+      IMPLICIT NONE 
 
-      IMPLICIT NONE
+      REAL(DOUBLE),  INTENT(IN)       :: T(3,3)
+      REAL(DOUBLE),  INTENT(INOUT)    :: STR_VEC(9)
+      REAL(DOUBLE),  INTENT(IN)       :: SHR_FAC
+      REAL(DOUBLE)                    :: STR_TENSOR(3,3)
+      REAL(DOUBLE)                    :: DUM33(3,3)
 
-      INTEGER(LONG), INTENT(IN)       :: INT_ELEM_ID        ! Internal element ID for which
-      INTEGER(LONG)                   :: EPNTK              ! Value from array EPNT at the row for this internal elem ID. It is the
-!                                                             row number in array EDAT where data begins for this element. 
-! **********************************************************************************************************************************
-      EPNTK = EPNT(INT_ELEM_ID)
-      TYPE  = ETYPE(INT_ELEM_ID)
-
-      PCOMP_PROPS = 'N'
-      IF      (TYPE(1:5) == 'TRIA3') THEN
-         IF (EDAT(EPNTK+DEDAT_T3_SHELL_KEY) == 2) THEN
-            PCOMP_PROPS = 'Y'
-         ENDIF
-      ELSE IF (TYPE(1:5) == 'QUAD4') THEN
-         IF (EDAT(EPNTK+DEDAT_Q4_SHELL_KEY) == 2) THEN
-            PCOMP_PROPS = 'Y'
-         ENDIF
-      ELSE IF (TYPE(1:5) == 'QUAD8') THEN
-         IF (EDAT(EPNTK+DEDAT_Q8_SHELL_KEY) == 2) THEN
-            PCOMP_PROPS = 'Y'
-         ENDIF
-      ENDIF
 
 ! **********************************************************************************************************************************
 
-      END SUBROUTINE IS_ELEM_PCOMP_PROPS
+                                                           ! Membrane and transverse shear
+      STR_TENSOR(1,1) = STR_VEC(1)           ; STR_TENSOR(1,2) = STR_VEC(3) / SHR_FAC ;   STR_TENSOR(1,3) = STR_VEC(7) / SHR_FAC
+      STR_TENSOR(2,1) = STR_VEC(3) / SHR_FAC ; STR_TENSOR(2,2) = STR_VEC(2)           ;   STR_TENSOR(2,3) = STR_VEC(8) / SHR_FAC
+      STR_TENSOR(3,1) = STR_VEC(7) / SHR_FAC ; STR_TENSOR(3,2) = STR_VEC(8) / SHR_FAC ;   STR_TENSOR(3,3) = ZERO
+
+      CALL MATMULT_FFF (STR_TENSOR, TRANSPOSE(T), 3, 3, 3, DUM33 )
+      CALL MATMULT_FFF (T, DUM33, 3, 3, 3, STR_TENSOR )
+
+      STR_VEC(1) = STR_TENSOR(1,1)
+      STR_VEC(2) = STR_TENSOR(2,2)
+      STR_VEC(3) = STR_TENSOR(1,2) * SHR_FAC
+      STR_VEC(7) = STR_TENSOR(1,3) * SHR_FAC
+      STR_VEC(8) = STR_TENSOR(2,3) * SHR_FAC
+
+                                                           ! Bending
+      STR_TENSOR(1,1) = STR_VEC(4)           ;   STR_TENSOR(1,2) = STR_VEC(6) / SHR_FAC ;   STR_TENSOR(1,3) = ZERO
+      STR_TENSOR(2,1) = STR_VEC(6) / SHR_FAC ;   STR_TENSOR(2,2) = STR_VEC(5)           ;   STR_TENSOR(2,3) = ZERO
+      STR_TENSOR(3,1) = ZERO                 ;   STR_TENSOR(3,2) = ZERO                 ;   STR_TENSOR(3,3) = ZERO
+
+      CALL MATMULT_FFF (STR_TENSOR, TRANSPOSE(T), 3, 3, 3, DUM33 )
+      CALL MATMULT_FFF (T, DUM33, 3, 3, 3, STR_TENSOR )
+
+      STR_VEC(4) = STR_TENSOR(1,1)
+      STR_VEC(5) = STR_TENSOR(2,2)
+      STR_VEC(6) = STR_TENSOR(1,2) * SHR_FAC
+
+
+      RETURN
+
+
+! **********************************************************************************************************************************
+  
+      END SUBROUTINE TRANSFORM_SHELL_STR
