@@ -51,7 +51,7 @@
                                          WARN_ERR
       USE TIMDAT, ONLY                :  TSEC
       USE DEBUG_PARAMETERS, ONLY      :  DEBUG
-      USE PARAMS, ONLY                :  SUPINFO, SUPWARN
+      USE PARAMS, ONLY                :  SUPINFO, SUPWARN, QUAD4TYP
       USE SUBR_BEGEND_LEVELS, ONLY    :  EMG_BEGEND
       USE CONSTANTS_1, ONLY           :  CONV_DEG_RAD, CONV_RAD_DEG, ZERO, ONE
       USE MODEL_STUF, ONLY            :  CAN_ELEM_TYPE_OFFSET, EDAT, EID, EPNT, ETYPE, ISOLID, MATANGLE, NUM_EMG_FATAL_ERRS,       &
@@ -59,6 +59,7 @@
 
 
       USE EMG_USE_IFs
+      USE MITC8_Interface
 
       IMPLICIT NONE
 
@@ -152,10 +153,13 @@
       ELSE IF (TYPE == 'BUSH    ') THEN
          CALL ELMGM1_BUSH ( INT_ELEM_ID, WRITE_WARN )
 
-      ELSE IF ((TYPE(1:5) == 'QUAD4') .OR. (TYPE == 'SHEAR   ')) THEN
+      ELSE IF (((TYPE == 'QUAD4   ') .AND. ((QUAD4TYP == 'MIN4 ') .OR. (QUAD4TYP == 'MIN4T'))) .OR.                                &
+                (TYPE == 'QUAD4K  ') .OR.                                                                                          &
+                (TYPE == 'SHEAR   ')) THEN
          CALL ELMGM2 ( WRITE_WARN )
 
-      ELSE IF (TYPE(1:5) == 'QUAD8') THEN
+      ELSE IF (((TYPE == 'QUAD4   ') .AND. (QUAD4TYP == 'MITC4')) .OR.                                                             &
+                (TYPE == 'QUAD8   ')) THEN
 
          CALL ELMGM2 ( WRITE_WARN )                        ! Get grid point coordinates (XEL) in a 2D element coordinate system
                                                            ! that's used for extrapolating stress/strain from Gauss points.
@@ -168,7 +172,6 @@
             TE(I,I) = ONE
          ENDDO
          TE_IDENT = 'Y'
-
 
       ELSE IF ((TYPE == 'HEXA8   ') .OR. (TYPE == 'HEXA20  ')) THEN
          CALL ELMGM3 ( WRITE_WARN )
@@ -367,8 +370,14 @@
          CALL TREL1 ( OPT, WRITE_WARN )
          IF (NUM_EMG_FATAL_ERRS > 0)   CALL EMG_QUIT
 
-      ELSE IF ((TYPE(1:5) == 'QUAD4') .OR. (TYPE == 'SHEAR   ')) THEN
+      ELSE IF (((TYPE == 'QUAD4   ') .AND. ((QUAD4TYP == 'MIN4 ') .OR. (QUAD4TYP == 'MIN4T'))) .OR.                                &
+                (TYPE == 'QUAD4K  ') .OR.                                                                                          &
+                (TYPE == 'SHEAR   ')) THEN
          CALL QDEL1 ( OPT, INT_ELEM_ID, WRITE_WARN )
+         IF (NUM_EMG_FATAL_ERRS > 0)   CALL EMG_QUIT
+
+      ELSE IF ((TYPE == 'QUAD4   ') .AND. (QUAD4TYP == 'MITC4')) THEN
+         CALL MITC4 ( OPT, INT_ELEM_ID )
          IF (NUM_EMG_FATAL_ERRS > 0)   CALL EMG_QUIT
 
       ELSE IF (TYPE(1:5) == 'QUAD8') THEN

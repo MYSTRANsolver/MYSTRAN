@@ -76,14 +76,14 @@
       ENDDO
 
 ! Shape function derivatives at R,S
-      IF (TYPE(1:5) == 'QUAD8') THEN
+      IF ((TYPE(1:5) == 'QUAD4') .OR. (TYPE(1:5) == 'QUAD8')) THEN
 
         CALL SHP2DQ ( 0, 0, ELGP, 'MITC_COVARIANT_STRAIN_DIRECT_INTERPOLATION', '', 0, R, S, 'N', PSH, DPSHG )
 
       ELSE
 
-        WRITE(ERR,*) ' *ERROR: INCORRECT ELEMENT TYPE', TYPE
-        WRITE(F06,*) ' *ERROR: INCORRECT ELEMENT TYPE', TYPE
+        WRITE(ERR,*) ' *ERROR: INCORRECT ELEMENT TYPE ', TYPE
+        WRITE(F06,*) ' *ERROR: INCORRECT ELEMENT TYPE ', TYPE
         FATAL_ERR = FATAL_ERR + 1
         CALL OUTA_HERE ( 'Y' )
 

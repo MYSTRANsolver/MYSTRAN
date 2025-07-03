@@ -23,71 +23,48 @@
 ! _______________________________________________________________________________________________________
                                                                                                         
 ! End MIT license text.                                                                                      
-      FUNCTION MITC_GP_RS ()
+      SUBROUTINE MITC_TRANSFORM_CONTRAVARIANT_TO_LOCAL ( R, S, T, B )
 
-! Returns the isoparametric coordinates R,S of all grid points of the element.
-! Index 1 is 1=R, 2=S
-! Index 2 is element grid point number
- 
-      USE PENTIUM_II_KIND, ONLY       :  DOUBLE
-      USE MODEL_STUF, ONLY            :  TYPE
-      USE CONSTANTS_1, ONLY           :  ZERO, ONE
-      USE IOUNT1, ONLY                :  ERR, F06
-      USE SCONTR, ONLY                :  FATAL_ERR
+! Transform covariant strain components from the contravariant basis to the cartesian local basis.
+!   ε_kl = ε~_ij (g^i dot e_k)(g^j dot e_l)
+
+      USE PENTIUM_II_KIND, ONLY       :  LONG, DOUBLE
       USE MODEL_STUF, ONLY            :  ELGP
+      USE CONSTANTS_1, ONLY           :  ZERO, QUARTER, ONE, TWO, THREE
+
+      USE MITC_COVARIANT_BASIS_Interface
+      USE MITC_CONTRAVARIANT_BASIS_Interface
+      USE MITC4_CARTESIAN_LOCAL_BASIS_Interface
+      USE MITC_TRANSFORM_B_Interface
+      USE MATMULT_FFF_Interface
       
-      USE OUTA_HERE_Interface
 
       IMPLICIT NONE 
 
-      REAL(DOUBLE)                    :: MITC_GP_RS(2,ELGP)
+      REAL(DOUBLE) , INTENT(IN)       :: R, S, T           ! Isoparametric coordinates
+      REAL(DOUBLE) , INTENT(OUT)      :: B(6, 6*ELGP)      ! Strain-displacement matrix
+      REAL(DOUBLE)                    :: TRANSFORM(3,3)    ! Transformation matrix
+      REAL(DOUBLE)                    :: G(3,3)            ! Array of 3 covariant basis vectors in basic coordinates
+      REAL(DOUBLE)                    :: G_CONTRA(3,3)     ! Array of 3 contravariant basis vectors in basic coordinates
+      REAL(DOUBLE)                    :: E(3,3)            ! Basis vectors
 
 ! **********************************************************************************************************************************
-      
-      IF (TYPE(1:5) == 'QUAD4') THEN
 
-         MITC_GP_RS(1,1) = -ONE
-         MITC_GP_RS(1,2) =  ONE
-         MITC_GP_RS(1,3) =  ONE
-         MITC_GP_RS(1,4) = -ONE
-  
-         MITC_GP_RS(2,1) = -ONE
-         MITC_GP_RS(2,2) = -ONE
-         MITC_GP_RS(2,3) =  ONE
-         MITC_GP_RS(2,4) =  ONE
 
-      ELSEIF (TYPE(1:5) == 'QUAD8') THEN
+      CALL MITC_COVARIANT_BASIS( R, S, T, G )
+      CALL MITC_CONTRAVARIANT_BASIS( G, G_CONTRA )
+      E = MITC4_CARTESIAN_LOCAL_BASIS(R, S)
 
-         MITC_GP_RS(1,1) = -ONE
-         MITC_GP_RS(1,2) =  ONE
-         MITC_GP_RS(1,3) =  ONE
-         MITC_GP_RS(1,4) = -ONE
-         MITC_GP_RS(1,5) =  ZERO
-         MITC_GP_RS(1,6) =  ONE
-         MITC_GP_RS(1,7) =  ZERO
-         MITC_GP_RS(1,8) = -ONE
-  
-         MITC_GP_RS(2,1) = -ONE
-         MITC_GP_RS(2,2) = -ONE
-         MITC_GP_RS(2,3) =  ONE
-         MITC_GP_RS(2,4) =  ONE
-         MITC_GP_RS(2,5) = -ONE
-         MITC_GP_RS(2,6) =  ZERO
-         MITC_GP_RS(2,7) =  ONE
-         MITC_GP_RS(2,8) =  ZERO
+      ! The 3x3 transformation matrix A is defined by
+      !    A_xy = g^y dot e_x
+      ! or two transformation matrices multiplied
+      CALL MATMULT_FFF(TRANSPOSE(E), G_CONTRA, 3, 3, 3, TRANSFORM)
 
-      ELSE
+      CALL MITC_TRANSFORM_B( TRANSFORM, B)
 
-        WRITE(ERR,*) ' *ERROR: INCORRECT ELEMENT TYPE ', TYPE
-        WRITE(F06,*) ' *ERROR: INCORRECT ELEMENT TYPE ', TYPE
-        FATAL_ERR = FATAL_ERR + 1
-        CALL OUTA_HERE ( 'Y' )
-
-      ENDIF
 
       RETURN
 
-
 ! **********************************************************************************************************************************
   
-      END FUNCTION MITC_GP_RS
+      END SUBROUTINE MITC_TRANSFORM_CONTRAVARIANT_TO_LOCAL

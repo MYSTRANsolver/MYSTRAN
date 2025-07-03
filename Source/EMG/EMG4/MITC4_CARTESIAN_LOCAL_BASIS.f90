@@ -23,7 +23,7 @@
 ! _______________________________________________________________________________________________________
                                                                                                         
 ! End MIT license text.                                                                                      
-      FUNCTION MITC8_CARTESIAN_LOCAL_BASIS ( R, S )
+      FUNCTION MITC4_CARTESIAN_LOCAL_BASIS ( R, S )
  
 ! Finds the basis vectors of the cartesian local coordinate system expressed in the basic coordinate system.
 ! This is defined the same way as the material coordinate system in Simcenter Nastran with THETA=0.
@@ -48,7 +48,7 @@
       
       INTEGER(LONG)                   :: I                 ! DO loop indices
 
-      REAL(DOUBLE)                    :: MITC8_CARTESIAN_LOCAL_BASIS(3,3)
+      REAL(DOUBLE)                    :: MITC4_CARTESIAN_LOCAL_BASIS(3,3)
       REAL(DOUBLE) , INTENT(IN)       :: R
       REAL(DOUBLE) , INTENT(IN)       :: S
       REAL(DOUBLE)                    :: PSH(ELGP)       
@@ -65,9 +65,9 @@
 ! **********************************************************************************************************************************
       
  
-      IF (TYPE(1:5) == 'QUAD8') THEN
+      IF (TYPE(1:5) == 'QUAD4') THEN
 
-        CALL SHP2DQ ( 0, 0, ELGP, 'MITC8_CARTESIAN_LOCAL_BASIS', '', 0, R, S, 'N', PSH, DPSHG )
+        CALL SHP2DQ ( 0, 0, ELGP, 'MITC4_CARTESIAN_LOCAL_BASIS', '', 0, R, S, 'N', PSH, DPSHG )
 
       ELSE
 
@@ -77,6 +77,8 @@
         CALL OUTA_HERE ( 'Y' )
 
       ENDIF
+!victor todo choose a suitable coordiante system for mitc4. The same as MITC8 should be fine but it might be nice if
+! it's the same as the nastrn element (stress) coordinate system
 
                                                            ! Unit normal to the reference plane
       CALL CROSS(XEB(3,:) - XEB(1,:), XEB(4,:) - XEB(2,:), Z_REF)
@@ -103,9 +105,9 @@
                                                            ! Rotate the projected R_G1G2 about Y to be tangent to the surface
       CALL CROSS(Y, Z, X)
 
-      MITC8_CARTESIAN_LOCAL_BASIS(:,1) = X
-      MITC8_CARTESIAN_LOCAL_BASIS(:,2) = Y
-      MITC8_CARTESIAN_LOCAL_BASIS(:,3) = Z
+      MITC4_CARTESIAN_LOCAL_BASIS(:,1) = X
+      MITC4_CARTESIAN_LOCAL_BASIS(:,2) = Y
+      MITC4_CARTESIAN_LOCAL_BASIS(:,3) = Z
 
 
       RETURN
@@ -113,4 +115,4 @@
 
 ! **********************************************************************************************************************************
   
-      END FUNCTION MITC8_CARTESIAN_LOCAL_BASIS
+      END FUNCTION MITC4_CARTESIAN_LOCAL_BASIS

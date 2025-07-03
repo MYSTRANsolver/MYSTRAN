@@ -23,87 +23,90 @@
 ! _______________________________________________________________________________________________________
                                                                                                         
 ! End MIT license text.                                                                                      
-      SUBROUTINE MITC_COVARIANT_BASIS ( R, S, T, G )
+      SUBROUTINE MITC4_B ( R, S, T, B )
  
-! Calculates g_r, g_s, g_t in global coordinates.
-! These are also the columns of the Jacobian matrix.
-! G(:,1) is g_r, etc.
+! Calculates the strain-displacement matrix in the cartesian local coordinate system
+! for MITC4 shell at one point in isoparametric coordinates.
+! Based on
+! MITC4 paper "A continuum mechanics based four-node shell element for general nonlinear analysis" 
+!   by Dvorkin and Bathe
 
 
       USE PENTIUM_II_KIND, ONLY       :  LONG, DOUBLE
-      USE MODEL_STUF, ONLY            :  ELGP, XEB, EPROP, TYPE
-      USE CONSTANTS_1, ONLY           :  ZERO, TWO
-      USE IOUNT1, ONLY                :  ERR, F06
-      USE SCONTR, ONLY                :  FATAL_ERR
+      USE MODEL_STUF, ONLY            :  ELGP
+      USE CONSTANTS_1, ONLY           :  ZERO, HALF, ONE
 
-      USE SHP2DQ_Interface
-      USE MITC_GP_RS_Interface
-      USE MITC_DIRECTOR_VECTOR_Interface
-      USE OUTA_HERE_Interface
+      USE MITC_COVARIANT_STRAIN_DIRECT_INTERPOLATION_Interface
+      USE MITC_TRANSFORM_CONTRAVARIANT_TO_LOCAL_Interface
 
       IMPLICIT NONE 
-      
-      INTEGER(LONG)                   :: I,J               ! DO loop indices
-      INTEGER(LONG)                   :: GP                ! Element grid point number
+
+      INTEGER(LONG)                   :: COL               ! A column (element DOF) of B. 1-24.
 
       REAL(DOUBLE) , INTENT(IN)       :: R, S, T           ! Isoparametric coordinates
-      REAL(DOUBLE) , INTENT(OUT)      :: G(3,3)            ! basis vector in basic coordinates
-      REAL(DOUBLE)                    :: PSH(ELGP)       
-      REAL(DOUBLE)                    :: DPSHG(2,ELGP)     ! Derivatives of shape functions with respect to xi and eta.
-      REAL(DOUBLE)                    :: DIRECTOR(3)       ! Director vector
-      REAL(DOUBLE)                    :: GP_RS(2,ELGP)     ! Isoparametric coordinates of the nodes
-      REAL(DOUBLE)                    :: RS_THICKNESS      ! Element thickness at R,S
-      REAL(DOUBLE)                    :: THICKNESS(ELGP)   ! Element thickness at grid points
+      REAL(DOUBLE) , INTENT(OUT)      :: B(6, 6*ELGP)      ! Strain-displacement matrix
+      REAL(DOUBLE)                    :: E(6, 6*ELGP)      ! Strain-displacement matrix directly interpolated
+      REAL(DOUBLE)                    :: B_SHEAR_A(6, 6*ELGP)
+      REAL(DOUBLE)                    :: B_SHEAR_B(6, 6*ELGP)
+      REAL(DOUBLE)                    :: B_SHEAR_C(6, 6*ELGP)
+      REAL(DOUBLE)                    :: B_SHEAR_D(6, 6*ELGP)
+      
+! **********************************************************************************************************************************
+! Initialize empty matrix
+
+      B(:,:) = ZERO
+ 
+
+! **********************************************************************************************************************************
+! Add in-layer strain-displacement terms
+
+      CALL MITC_COVARIANT_STRAIN_DIRECT_INTERPOLATION( R, S, T, 1, 4, E )
+
+      B(1:4,:) = B(1:4,:) + E(1:4,:)
 
 
 ! **********************************************************************************************************************************
+! Add transverse shear strain-displacement terms
 
+      !
+      !Tying points A,B,C,D are the same as in Bathe wrt R and S (Bathe's r_1 and r_2) but the node numbering is different:
+      ! 4     A     3
+      !  +----o----+
+      !  |    ^s   |
+      !  |    |    |
+      !B o    +->r o D
+      !  |         |
+      !  |         |
+      !  +----o----+
+      ! 1     C     2
+      !
 
-      ! Thickness is treated as uniform.
-      ! To allow grid point thicknesses, this should be interpolated to midside nodes and at (R,S).
-      DO I=1,ELGP
-        THICKNESS(I) = EPROP(1)
-      ENDDO
-      RS_THICKNESS = EPROP(1)
+      CALL MITC_COVARIANT_STRAIN_DIRECT_INTERPOLATION( ZERO, ONE,  ZERO, 5, 6, B_SHEAR_A )
+      CALL MITC_COVARIANT_STRAIN_DIRECT_INTERPOLATION(-ONE,  ZERO, ZERO, 5, 6, B_SHEAR_B )
+      CALL MITC_COVARIANT_STRAIN_DIRECT_INTERPOLATION( ZERO,-ONE,  ZERO, 5, 6, B_SHEAR_C )
+      CALL MITC_COVARIANT_STRAIN_DIRECT_INTERPOLATION( ONE,  ZERO, ZERO, 5, 6, B_SHEAR_D )
 
-      IF ((TYPE(1:5) == 'QUAD4') .OR. (TYPE(1:5) == 'QUAD8')) THEN
-
-        CALL SHP2DQ ( 0, 0, ELGP, 'MITC_COVARIANT_BASIS', '', 0, R, S, 'N', PSH, DPSHG )
-
-      ELSE
-
-        WRITE(ERR,*) ' *ERROR: INCORRECT ELEMENT TYPE ', TYPE
-        WRITE(F06,*) ' *ERROR: INCORRECT ELEMENT TYPE ', TYPE
-        FATAL_ERR = FATAL_ERR + 1
-        CALL OUTA_HERE ( 'Y' )
-
-      ENDIF
- 
-
-      G(:,:) = ZERO
-
-      GP_RS = MITC_GP_RS()
-
-      ! Interpolate from the values at nodes
-      ! g_r(r, s, t) = dX/dr = d/dr X + t/2 * d/dr (hv)
-      !     = sum over nodes[ dN/dr X + t/2 * dN/dr (hv) ]
-      DO GP=1,ELGP
-        DIRECTOR = MITC_DIRECTOR_VECTOR(GP_RS(1,GP), GP_RS(2,GP))
-        DO J=1,3
-          G(J,1) = G(J,1) + XEB(GP,J) * DPSHG(1,GP) + DIRECTOR(J) * T/TWO * DPSHG(1,GP) * THICKNESS(GP)
-          G(J,2) = G(J,2) + XEB(GP,J) * DPSHG(2,GP) + DIRECTOR(J) * T/TWO * DPSHG(2,GP) * THICKNESS(GP)
-        ENDDO
+      DO COL=1,6*ELGP
+        !e_st
+        B(5, COL) = HALF * (ONE + R) * B_SHEAR_D(5, COL) + HALF * (ONE - R) * B_SHEAR_B(5, COL)
+        !e_rt
+        B(6, COL) = HALF * (ONE + S) * B_SHEAR_A(6, COL) + HALF * (ONE - S) * B_SHEAR_C(6, COL)
       ENDDO
 
-      DIRECTOR = MITC_DIRECTOR_VECTOR(R, S)
-      DO J=1,3
-        G(J,3) = DIRECTOR(J) * RS_THICKNESS/TWO
-      ENDDO
-    
+
+
+! **********************************************************************************************************************************
+! Transform covariant strain components from the contravariant basis to the cartesian local basis.
+
+      CALL MITC_TRANSFORM_CONTRAVARIANT_TO_LOCAL( R, S, T, B )
+
+
+      ! Double shear terms because it's now treated as vectors instead of tensors.
+      B(4:6,:) = B(4:6,:) * 2
 
       RETURN
 
 
 ! **********************************************************************************************************************************
   
-      END SUBROUTINE MITC_COVARIANT_BASIS
+      END SUBROUTINE MITC4_B
