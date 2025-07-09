@@ -71,10 +71,12 @@
       REAL(DOUBLE)                    :: DUM(2,ELGP)
       REAL(DOUBLE)                    :: V1(ELGP,3)        ! Basis vector orthogonal to the director vector.
       REAL(DOUBLE)                    :: V2(ELGP,3)        ! Basis vector orthogonal to the director vector and V1.
+      REAL(DOUBLE)                    :: TRANSFORM(3,3)    ! Transformation matrix.
 
       INTEGER(LONG)                   :: GP                ! Grid point number. 1-4.
       INTEGER(LONG)                   :: I, J              ! Tensor indices.
       INTEGER(LONG)                   :: ROW               ! Row number of B
+      INTEGER(LONG)                   :: K                 ! Column of B before the column for DOF 1 of the current node.
 
       LOGICAL      , INTENT(IN)       :: MEMBRANE          ! If true, generate membrane parts of B
       LOGICAL      , INTENT(IN)       :: BENDING           ! If true, generate bending parts of B
@@ -152,8 +154,8 @@
                                                            ! orthogonal right-handed coordinate system V1, V2, Vn
                                                            ! where Vn is the director vector.
          DO GP=1,ELGP
-!victor todo for now just use basic x for V1 (and thus y for V2) so it's only valid for elements in the xy plane.
-            V1(GP,:) = (/ ONE , ZERO, ZERO /)
+!victor todo for now just use anything in xy plane for V1 so it's only valid for elements in the xy plane.
+            V1(GP,:) = (/ ONE/SQRT(TWO) , ONE/SQRT(TWO), ZERO /)
             CALL CROSS(DIRECTOR(GP,:), V1(GP,:), V2(GP,:))
          ENDDO
          
@@ -172,180 +174,147 @@
          IF(MEMBRANE) THEN
                                                            ! Membrane e^m_xx, e^m_yy, e^m_xy terms of eqn (7a)
                                                            ! described in eqn (7b) in ref [1]
-            CALL ADD_TERM_MM(ROW, I, J)
-            CALL ADD_TERM_MM(ROW, J, I)
+                                                           
+                                                           !              1  / ∂x_m     ∂u_m \
+                                                           ! B(ROW,:) +=  - (  ---- dot ----  )
+                                                           !              2  \ ∂r_i     ∂r_j /
+            CALL ADD_TERM_M(ROW, DXMDRS(I,:), J, ONE)
+                                                           !              1  / ∂x_m     ∂u_m \
+                                                           ! B(ROW,:) +=  - (  ---- dot ----  )
+                                                           !              2  \ ∂r_j     ∂r_i /
+            CALL ADD_TERM_M(ROW, DXMDRS(J,:), I, ONE)
+        
+
          ENDIF
 
          IF(BENDING) THEN
                                                            ! Bending e^b1_xx, e^b1_yy, e^b1_xy terms of eqn (7a)
                                                            ! described in eqn (7c) in ref [1]
-            CALL ADD_TERM_MB(ROW, I, J)
-            CALL ADD_TERM_MB(ROW, J, I)
-            CALL ADD_TERM_BM(ROW, I, J)
-            CALL ADD_TERM_BM(ROW, J, I)
+
+                                                           !              t  / ∂x_m     ∂u_b \
+                                                           ! B(ROW,:) +=  - (  ---- dot ----  )
+                                                           !              2  \ ∂r_i     ∂r_j /
+            CALL ADD_TERM_B(ROW, DXMDRS(I,:), J, T)
+                                                           !              t  / ∂x_m     ∂u_b \
+                                                           ! B(ROW,:) +=  - (  ---- dot ----  )
+                                                           !              2  \ ∂r_j     ∂r_i /
+            CALL ADD_TERM_B(ROW, DXMDRS(J,:), I, T)
+
+
+                                                           !              t  / ∂x_b     ∂u_m \
+                                                           ! B(ROW,:) +=  - (  ---- dot ----  )
+                                                           !              2  \ ∂r_i     ∂r_j /
+            CALL ADD_TERM_M(ROW, DXBDRS(I,:), J, T)
+                                                           !              t  / ∂x_b     ∂u_m \
+                                                           ! B(ROW,:) +=  - (  ---- dot ----  )
+                                                           !              2  \ ∂r_j     ∂r_i /
+            CALL ADD_TERM_M(ROW, DXBDRS(J,:), I, T)
 
                                                            ! Bending e^b2_xx, e^b2_yy, e^b2_xy terms of eqn (7a)
                                                            ! described in eqn (7d) in ref [1]
-            CALL ADD_TERM_BB(ROW, I, J)
-            CALL ADD_TERM_BB(ROW, J, I)
+
+                                                           !              t^2  / ∂x_b     ∂u_b \
+                                                           ! B(ROW,:) +=  --- (  ---- dot ----  )
+                                                           !               2   \ ∂r_i     ∂r_j /
+            CALL ADD_TERM_B(ROW, DXBDRS(I,:), J, T*T)
+                                                           !              t^2  / ∂x_b     ∂u_b \
+                                                           ! B(ROW,:) +=  --- (  ---- dot ----  )
+                                                           !               2   \ ∂r_j     ∂r_i /
+            CALL ADD_TERM_B(ROW, DXBDRS(J,:), I, T*T)
+
          ENDIF
          
       ENDDO
 
 
       IF(BENDING) THEN
-! At this point, alpha and beta are the columns of B for dofs 4 and 5 for each node.
-! We need to transform the dof 4,5,6 columns of each row and each node from V1,V2,Vn coordinates to basic x,y,z
-! victor todo do that here.
+                                                           ! Transform the rotational dof terms of B from V1,V2,Vn
+                                                           ! coordinates to basic x,y,z.
+         DO GP=1,ELGP
+            K = (GP-1) * 6
+            TRANSFORM(:,1) = V1(GP,:)
+            TRANSFORM(:,2) = V2(GP,:)
+            TRANSFORM(:,3) = DIRECTOR(GP,:)
+            DO ROW=1,4
+               IF(ROW /= 3) THEN
+                  B(ROW,K+4:K+6) = MATMUL(TRANSFORM, B(ROW,K+4:K+6))
+               ENDIF
+            ENDDO
+         ENDDO
+
       ENDIF
 
 
       RETURN
 
 ! **********************************************************************************************************************************
+
       CONTAINS
 
-      
-      SUBROUTINE ADD_TERM_MM(ROW, IX, IU)
-
-      REAL(DOUBLE)                    :: DUMDRS(2,3)       ! One grid point's term in the sum for the coefficients of the partial 
-                                                           ! derivatives of u_m with respect to R and S.
-
-      INTEGER(LONG), INTENT(IN)       :: ROW               ! Row of B to add the result to. 1, 2, or 4.
-      INTEGER(LONG), INTENT(IN)       :: IX                ! Index of dr in the x derivative. 1 or 2.
-      INTEGER(LONG), INTENT(IN)       :: IU                ! Index of dr in the u derivative. 1 or 2.
-      INTEGER(LONG)                   :: K                 ! Column of B before the column for DOF 1 of the current node.
-
-      ! One term of eqn (7b) in ref [1]
-
-      !              1  / ∂x_m      ∂u_m  \
-      ! B(ROW,:) +=  - (  ----- dot -----  )
-      !              2  \ ∂r_IX     ∂r_IU /
-      !
-      ! MM in the subroutine name identifies it as using derivatives of x_m and u_m.
-
-          
-      DO GP=1,ELGP
-         K = (GP-1) * 6
-                        
-                                                                               ! Eqn (9) of ref [1]. This node's term of:
-         DUMDRS(1,:) = ( GP_RS(1,GP) + S * GP_RS(1,GP) * GP_RS(2,GP) ) / FOUR  ! ∂u_m/∂r = u_r + s * u_d
-         DUMDRS(2,:) = ( GP_RS(2,GP) + R * GP_RS(1,GP) * GP_RS(2,GP) ) / FOUR  ! ∂u_m/∂s = u_s + r * u_d
-
-         B(ROW, K+1) = B(ROW, K+1) + ONE / TWO * DXMDRS(IX,1) * DUMDRS(IU,1)
-         B(ROW, K+2) = B(ROW, K+2) + ONE / TWO * DXMDRS(IX,2) * DUMDRS(IU,2)
-         B(ROW, K+3) = B(ROW, K+3) + ONE / TWO * DXMDRS(IX,3) * DUMDRS(IU,3)
-      ENDDO
-         
-      END SUBROUTINE ADD_TERM_MM
-
 ! **********************************************************************************************************************************
 
-      SUBROUTINE ADD_TERM_BM(ROW, IX, IU)
+      SUBROUTINE ADD_TERM_M(ROW, LEFT, IU, COEFFICIENT)
 
-      REAL(DOUBLE)                    :: DUMDRS(2,3)       ! One grid point's term in the sum for the coefficients of the partial 
-                                                           ! derivatives of u_m with respect to R and S.
+      !              COEFFICIENT  /           ∂u_m  \
+      ! B(ROW,:) +=  ----------- (  LEFT  dot -----  )
+      !                   2       \           ∂r_IU /
+
+      REAL(DOUBLE) , INTENT(IN)       :: LEFT(3)           ! The vector on the left of the dot product
+      REAL(DOUBLE) , INTENT(IN)       :: COEFFICIENT       ! Scalar to multiply each term by. Coefficient in eqn (7a) of ref [1]
+      REAL(DOUBLE)                    :: DUMDRS(3)         ! One grid point's term in the sum for the coefficients of the partial 
+                                                           ! derivatives of u_m with respect to R or S.
 
       INTEGER(LONG), INTENT(IN)       :: ROW               ! Row of B to add the result to. 1, 2, or 4.
-      INTEGER(LONG), INTENT(IN)       :: IX                ! Index of dr in the x derivative. 1 or 2.
       INTEGER(LONG), INTENT(IN)       :: IU                ! Index of dr in the u derivative. 1 or 2.
-      INTEGER(LONG)                   :: K                 ! Column of B before the column for DOF 1 of the current node.
-
-      ! One term of eqn (7c) in ref [1]
-
-      !              t  / ∂x_b      ∂u_m  \
-      ! B(ROW,:) +=  - (  ----- dot -----  )
-      !              2  \ ∂r_IX     ∂r_IU /
-      !
-      ! BM in the subroutine name identifies it as using derivatives of x_b and u_m.
-      ! t is the isparametric coordinate T and the coefficient of e^b1 in eqn (7a) of ref [1].
           
       DO GP=1,ELGP
          K = (GP-1) * 6
-                        
-                                                                               ! Eqn (9) of ref [1]. This node's term of:
-         DUMDRS(1,:) = ( GP_RS(1,GP) + S * GP_RS(1,GP) * GP_RS(2,GP) ) / FOUR  ! ∂u_m/∂r = u_r + s * u_d
-         DUMDRS(2,:) = ( GP_RS(2,GP) + R * GP_RS(1,GP) * GP_RS(2,GP) ) / FOUR  ! ∂u_m/∂s = u_s + r * u_d
+                                                           ! Eqn (9) of ref [1]. This node's term of:
+         IF (IU == 1) THEN                                 ! ∂u_m/∂r = u_r + s * u_d
+            DUMDRS = ( GP_RS(1,GP) + S * GP_RS(1,GP) * GP_RS(2,GP) ) / FOUR
+         ELSEIF (IU == 2) THEN                             ! ∂u_m/∂s = u_s + r * u_d
+            DUMDRS = ( GP_RS(2,GP) + R * GP_RS(1,GP) * GP_RS(2,GP) ) / FOUR
+         ENDIF
 
-         B(ROW, K+1) = B(ROW, K+1) + T / TWO * DXBDRS(IX,1) * DUMDRS(IU,1)
-         B(ROW, K+2) = B(ROW, K+2) + T / TWO * DXBDRS(IX,2) * DUMDRS(IU,2)
-         B(ROW, K+3) = B(ROW, K+3) + T / TWO * DXBDRS(IX,3) * DUMDRS(IU,3)
+         B(ROW, K+1) = B(ROW, K+1) + COEFFICIENT / TWO * LEFT(1) * DUMDRS(1)
+         B(ROW, K+2) = B(ROW, K+2) + COEFFICIENT / TWO * LEFT(2) * DUMDRS(2)
+         B(ROW, K+3) = B(ROW, K+3) + COEFFICIENT / TWO * LEFT(3) * DUMDRS(3)
       ENDDO
                
-      END SUBROUTINE ADD_TERM_BM
+      END SUBROUTINE ADD_TERM_M
 
 ! **********************************************************************************************************************************
 
-      SUBROUTINE ADD_TERM_MB(ROW, IX, IU)
+      SUBROUTINE ADD_TERM_B(ROW, LEFT, IU, COEFFICIENT)
 
+      !              COEFFICIENT  /           ∂u_b  \
+      ! B(ROW,:) +=  ----------- (  LEFT  dot -----  )
+      !                   2       \           ∂r_IU /
+
+      REAL(DOUBLE) , INTENT(IN)       :: LEFT(3)           ! The vector on the left of the dot product
+      REAL(DOUBLE) , INTENT(IN)       :: COEFFICIENT       ! Scalar to multiply each term by. Coefficient in eqn (7a) of ref [1]
       REAL(DOUBLE)                    :: DUMa(3)           ! Coefficient of alpha in ∂u_b/∂r_IU for one node.
       REAL(DOUBLE)                    :: DUMb(3)           ! Coefficient of beta  in ∂u_b/∂r_IU for one node.
 
       INTEGER(LONG), INTENT(IN)       :: ROW               ! Row of B to add the result to. 1, 2, or 4.
-      INTEGER(LONG), INTENT(IN)       :: IX                ! Index of dr in the x derivative. 1 or 2.
       INTEGER(LONG), INTENT(IN)       :: IU                ! Index of dr in the u derivative. 1 or 2.
-      INTEGER(LONG)                   :: K                 ! Column of B before the column for DOF 1 of the current node.
-
-      ! One term of eqn (7c) in ref [1]
-
-      !              t  / ∂x_m      ∂u_b  \
-      ! B(ROW,:) +=  - (  ----- dot -----  )
-      !              2  \ ∂r_IX     ∂r_IU /
-      !
-      ! MB in the subroutine name identifies it as using derivatives of x_m and u_b.
-      ! t is the isparametric coordinate T and the coefficient of e^b1 in eqn (7a) of ref [1].
           
       DO GP=1,ELGP
          K = (GP-1) * 6
 
                                                            ! Put coefficients of alpha in DOF 4.
          DUMa = THICKNESS(GP) / TWO * DPSHG(IU,GP) * (-V2(GP,:))
-         B(ROW, K+4) = B(ROW, K+4) + T / TWO * DOT_PRODUCT(DXMDRS(IX,:), DUMa)
+         B(ROW, K+4) = B(ROW, K+4) + COEFFICIENT / TWO * DOT_PRODUCT(LEFT, DUMa)
 
                                                            ! Put coefficients of beta in DOF 5.
          DUMb = THICKNESS(GP) / TWO * DPSHG(IU,GP) * ( V1(GP,:))
-         B(ROW, K+5) = B(ROW, K+5) + T / TWO * DOT_PRODUCT(DXMDRS(IX,:), DUMb)
+         B(ROW, K+5) = B(ROW, K+5) + COEFFICIENT / TWO * DOT_PRODUCT(LEFT, DUMb)
 
       ENDDO
                
-      END SUBROUTINE ADD_TERM_MB
+      END SUBROUTINE ADD_TERM_B
 
 ! **********************************************************************************************************************************
 
-      SUBROUTINE ADD_TERM_BB(ROW, IX, IU)
-
-      REAL(DOUBLE)                    :: DUMa(3)           ! Coefficient of alpha in ∂u_b/∂r_IU for one node.
-      REAL(DOUBLE)                    :: DUMb(3)           ! Coefficient of beta  in ∂u_b/∂r_IU for one node.
-
-      INTEGER(LONG), INTENT(IN)       :: ROW               ! Row of B to add the result to. 1, 2, or 4.
-      INTEGER(LONG), INTENT(IN)       :: IX                ! Index of dr in the x derivative. 1 or 2.
-      INTEGER(LONG), INTENT(IN)       :: IU                ! Index of dr in the u derivative. 1 or 2.
-      INTEGER(LONG)                   :: K                 ! Column of B before the column for DOF 1 of the current node.
-
-      ! One term of eqn (7d) in ref [1]
-
-      !              t^2  / ∂x_b      ∂u_b  \
-      ! B(ROW,:) +=  --- (  ----- dot -----  )
-      !               2   \ ∂r_IX     ∂r_IU /
-      !
-      ! BB in the subroutine name identifies it as using derivatives of x_b and u_b.
-      ! t is the isparametric coordinate T and t^2 the coefficient of e^b2 in eqn (7a) of ref [1].
-          
-      DO GP=1,ELGP
-         K = (GP-1) * 6
-
-                                                           ! Put coefficients of alpha in DOF 4.
-         DUMa = THICKNESS(GP) / TWO * DPSHG(IU,GP) * (-V2(GP,:))
-         B(ROW, K+4) = B(ROW, K+4) + T*T / TWO * DOT_PRODUCT(DXBDRS(IX,:), DUMa)
-
-                                                           ! Put coefficients of beta in DOF 5.
-         DUMb = THICKNESS(GP) / TWO * DPSHG(IU,GP) * ( V1(GP,:))
-         B(ROW, K+5) = B(ROW, K+5) + T*T / TWO * DOT_PRODUCT(DXBDRS(IX,:), DUMb)
-
-      ENDDO
-               
-      END SUBROUTINE ADD_TERM_BB
-
-! **********************************************************************************************************************************
   
       END SUBROUTINE MITC4_COVARIANT_STRAIN_DIRECT_INTERPOLATION
