@@ -49,6 +49,7 @@
       REAL(DOUBLE)                    :: TANGENT_R(3)
       REAL(DOUBLE)                    :: TANGENT_S(3)
       REAL(DOUBLE)                    :: NORMAL(3)
+      REAL(DOUBLE)                    :: DUM(2,ELGP)
 
       INTRINSIC                       :: DSQRT
 
@@ -60,29 +61,38 @@
  
       IF ((TYPE(1:5) == 'QUAD4') .OR. (TYPE(1:5) == 'QUAD8')) THEN
 
-        CALL SHP2DQ ( 0, 0, ELGP, 'MITC_DIRECTOR_VECTOR', '', 0, R, S, 'N', PSH, DPSHG )
+         CALL SHP2DQ ( 0, 0, ELGP, 'MITC_DIRECTOR_VECTOR', '', 0, R, S, 'N', PSH, DPSHG )
+
+                                                           ! Change node numbering to match Bathe's MITC4+ paper.
+         IF (TYPE(1:5) == 'QUAD4') THEN
+            DUM = DPSHG
+            DPSHG(:,1) = DUM(:,3)
+            DPSHG(:,2) = DUM(:,4)
+            DPSHG(:,3) = DUM(:,1)
+            DPSHG(:,4) = DUM(:,2)
+         ENDIF
 
       ELSE
 
-        WRITE(ERR,*) ' *ERROR: INCORRECT ELEMENT TYPE ', TYPE
-        WRITE(F06,*) ' *ERROR: INCORRECT ELEMENT TYPE ', TYPE
-        FATAL_ERR = FATAL_ERR + 1
-        CALL OUTA_HERE ( 'Y' )
+         WRITE(ERR,*) ' *ERROR: INCORRECT ELEMENT TYPE ', TYPE
+         WRITE(F06,*) ' *ERROR: INCORRECT ELEMENT TYPE ', TYPE
+         FATAL_ERR = FATAL_ERR + 1
+         CALL OUTA_HERE ( 'Y' )
 
       ENDIF
 
       DO I=1,3
-        TANGENT_R(I)=ZERO
-        TANGENT_S(I)=ZERO
+         TANGENT_R(I)=ZERO
+         TANGENT_S(I)=ZERO
       ENDDO
 
       ! TANGENT_R(r, s) = dX/dR = d/dR X = sum over nodes[ dN/dR X ]
       ! TANGENT_S(r, s) = dX/dS = d/dS X = sum over nodes[ dN/dS X ]
       DO I=1,ELGP
-        DO J=1,3
-          TANGENT_R(J) = TANGENT_R(J) + XEB(I,J) * DPSHG(1,I)
-          TANGENT_S(J) = TANGENT_S(J) + XEB(I,J) * DPSHG(2,I)
-        ENDDO
+         DO J=1,3
+            TANGENT_R(J) = TANGENT_R(J) + XEB(I,J) * DPSHG(1,I)
+            TANGENT_S(J) = TANGENT_S(J) + XEB(I,J) * DPSHG(2,I)
+         ENDDO
       ENDDO
 
       CALL CROSS(TANGENT_R, TANGENT_S, NORMAL)

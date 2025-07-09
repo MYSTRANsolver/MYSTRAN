@@ -60,6 +60,7 @@
       REAL(DOUBLE)                    :: X(3)
       REAL(DOUBLE)                    :: Y(3)
       REAL(DOUBLE)                    :: Z(3)
+      REAL(DOUBLE)                    :: DUM(2,ELGP)
 
 
 ! **********************************************************************************************************************************
@@ -67,14 +68,23 @@
  
       IF (TYPE(1:5) == 'QUAD4') THEN
 
-        CALL SHP2DQ ( 0, 0, ELGP, 'MITC4_CARTESIAN_LOCAL_BASIS', '', 0, R, S, 'N', PSH, DPSHG )
+         CALL SHP2DQ ( 0, 0, ELGP, 'MITC4_CARTESIAN_LOCAL_BASIS', '', 0, R, S, 'N', PSH, DPSHG )
+
+                                                           ! Change node numbering to match Bathe's MITC4+ paper.
+         IF (TYPE(1:5) == 'QUAD4') THEN
+            DUM = DPSHG
+            DPSHG(:,1) = DUM(:,3)
+            DPSHG(:,2) = DUM(:,4)
+            DPSHG(:,3) = DUM(:,1)
+            DPSHG(:,4) = DUM(:,2)
+         ENDIF
 
       ELSE
 
-        WRITE(ERR,*) ' *ERROR: INCORRECT ELEMENT TYPE ', TYPE
-        WRITE(F06,*) ' *ERROR: INCORRECT ELEMENT TYPE ', TYPE
-        FATAL_ERR = FATAL_ERR + 1
-        CALL OUTA_HERE ( 'Y' )
+         WRITE(ERR,*) ' *ERROR: INCORRECT ELEMENT TYPE ', TYPE
+         WRITE(F06,*) ' *ERROR: INCORRECT ELEMENT TYPE ', TYPE
+         FATAL_ERR = FATAL_ERR + 1
+         CALL OUTA_HERE ( 'Y' )
 
       ENDIF
 !victor todo choose a suitable coordiante system for mitc4. The same as MITC8 should be fine but it might be nice if
@@ -92,8 +102,8 @@
       E_XI(:)=ZERO
       E_ETA(:)=ZERO
       DO I=1,ELGP
-        E_XI(:) = E_XI(:) + XEB(I,:) * DPSHG(1,I)
-        E_ETA(:) = E_ETA(:) + XEB(I,:) * DPSHG(2,I)
+         E_XI(:) = E_XI(:) + XEB(I,:) * DPSHG(1,I)
+         E_ETA(:) = E_ETA(:) + XEB(I,:) * DPSHG(2,I)
       ENDDO
       CALL CROSS(E_XI, E_ETA, Z)
       Z = Z / DSQRT(DOT_PRODUCT(Z, Z))

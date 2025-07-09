@@ -135,7 +135,7 @@
 !
 ! Covariant
 !  g_r, g_s, g_t. g_1, g_2, g_3 in Bathe.
-!  Parallel to the isometric coordinates but scaled by the element size. Eg. |g_t| = half thickness.
+!  Parallel to the isoparametric coordinates but scaled by the element size. Eg. |g_t| = half thickness.
 !  Not orthogonal
 !
 ! Contravariant

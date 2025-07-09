@@ -27,9 +27,13 @@
  
 ! Calculates the strain-displacement matrix in the cartesian local coordinate system
 ! for MITC4 shell at one point in isoparametric coordinates.
-! Based on
-! MITC4 paper "A continuum mechanics based four-node shell element for general nonlinear analysis" 
-!   by Dvorkin and Bathe
+!
+! Reference [1]:
+!  "A new MITC4+ shell element" by Ko, Lee, Bathe, 2016
+!
+! Reference [2]:
+!  MITC4 paper "A continuum mechanics based four-node shell element for general nonlinear analysis" 
+!     by Dvorkin and Bathe
 
 
       USE PENTIUM_II_KIND, ONLY       :  LONG, DOUBLE
@@ -60,7 +64,13 @@
 ! **********************************************************************************************************************************
 ! Add in-layer strain-displacement terms
 
-      CALL MITC_COVARIANT_STRAIN_DIRECT_INTERPOLATION( R, S, T, 1, 4, E )
+      IF(.TRUE.) THEN
+                                                           ! MITC4+ form of MITC4 according to ref [1]
+         CALL MITC4_COVARIANT_STRAIN_DIRECT_INTERPOLATION( R, S, T, .TRUE., .TRUE., E )
+      ELSE
+                                                           ! MITC4 according to ref [2]
+         CALL MITC_COVARIANT_STRAIN_DIRECT_INTERPOLATION( R, S, T, 1, 4, E )
+      ENDIF
 
       B(1:4,:) = B(1:4,:) + E(1:4,:)
 
@@ -68,9 +78,11 @@
 ! **********************************************************************************************************************************
 ! Add transverse shear strain-displacement terms
 
+      ! According to ref [2]. Tying point labels are different from ref [1] but it's otherwise equivalent.
+
       !
-      !Tying points A,B,C,D are the same as in Bathe wrt R and S (Bathe's r_1 and r_2) but the node numbering is different:
-      ! 4     A     3
+      !Tying points A,B,C,D are the same as in Bathe wrt R and S (Bathe's r_1 and r_2) and same node numbering:
+      ! 2     A     1
       !  +----o----+
       !  |    ^s   |
       !  |    |    |
@@ -78,7 +90,7 @@
       !  |         |
       !  |         |
       !  +----o----+
-      ! 1     C     2
+      ! 3     C     4
       !
 
       CALL MITC_COVARIANT_STRAIN_DIRECT_INTERPOLATION( ZERO, ONE,  ZERO, 5, 6, B_SHEAR_A )

@@ -66,19 +66,36 @@
       INTEGER(LONG)                   :: GP                ! Element grid point number
       INTEGER(LONG)                   :: I,J,K,L           ! Loop and tensor indices
       INTEGER(LONG)                   :: ROW               
-
+      REAL(DOUBLE)                    :: DUM(2,ELGP)
+      REAL(DOUBLE)                    :: DUM2(ELGP)
+      
 ! **********************************************************************************************************************************
 
-! Thickness is currently treated as uniform.
-! To allow grid point thicknesses, a different value should be used for each node, interpolating to midside nodes.
+                                                           ! Thickness is currently treated as uniform.
+                                                           ! To allow grid point thicknesses, a different value should be used
+                                                           ! for each node, interpolating to midside nodes.
       DO I=1,ELGP
-        THICKNESS(I) = EPROP(1)
+         THICKNESS(I) = EPROP(1)
       ENDDO
 
-! Shape function derivatives at R,S
+                                                           ! Shape function derivatives at R,S
       IF ((TYPE(1:5) == 'QUAD4') .OR. (TYPE(1:5) == 'QUAD8')) THEN
 
-        CALL SHP2DQ ( 0, 0, ELGP, 'MITC_COVARIANT_STRAIN_DIRECT_INTERPOLATION', '', 0, R, S, 'N', PSH, DPSHG )
+         CALL SHP2DQ ( 0, 0, ELGP, 'MITC_COVARIANT_STRAIN_DIRECT_INTERPOLATION', '', 0, R, S, 'N', PSH, DPSHG )
+
+                                                           ! Change node numbering to match Bathe's MITC4+ paper.
+         IF (TYPE(1:5) == 'QUAD4') THEN
+            DUM = DPSHG
+            DPSHG(:,1) = DUM(:,3)
+            DPSHG(:,2) = DUM(:,4)
+            DPSHG(:,3) = DUM(:,1)
+            DPSHG(:,4) = DUM(:,2)
+            DUM2 = PSH
+            PSH(1) = DUM2(3)
+            PSH(2) = DUM2(4)
+            PSH(3) = DUM2(1)
+            PSH(4) = DUM2(2)
+         ENDIF
 
       ELSE
 
