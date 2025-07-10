@@ -28,7 +28,7 @@
 
    INTERFACE
 
-      SUBROUTINE MITC4_COVARIANT_STRAIN_DIRECT_INTERPOLATION ( R, S, T, MEMBRANE, BENDING, B )
+      SUBROUTINE MITC4_COVARIANT_STRAIN_DIRECT_INTERPOLATION ( R, S, T, X_R, X_S, X_D, MEMBRANE, BENDING, B )
       
       USE PENTIUM_II_KIND, ONLY       :  LONG, DOUBLE
       USE MODEL_STUF, ONLY            :  ELGP
@@ -36,6 +36,9 @@
       IMPLICIT NONE 
       
       REAL(DOUBLE) , INTENT(IN)       :: R,S,T             ! Isparametric coordinates
+      REAL(DOUBLE) , INTENT(IN)       :: X_R(3)            ! Characteristic geometry vector x_r
+      REAL(DOUBLE) , INTENT(IN)       :: X_S(3)            ! Characteristic geometry vector x_s
+      REAL(DOUBLE) , INTENT(IN)       :: X_D(3)            ! Characteristic geometry vector x_d (distortion vector)
       REAL(DOUBLE) , INTENT(OUT)      :: B(6, 6*ELGP)      ! Strain-displacement matrix.
 
       LOGICAL      , INTENT(IN)       :: MEMBRANE          ! If true, generate membrane parts of B

@@ -23,7 +23,7 @@
 ! _______________________________________________________________________________________________________
                                                                                                         
 ! End MIT license text.                                                                                      
-      SUBROUTINE MITC4_COVARIANT_STRAIN_DIRECT_INTERPOLATION ( R, S, T, MEMBRANE, BENDING, B )
+      SUBROUTINE MITC4_COVARIANT_STRAIN_DIRECT_INTERPOLATION ( R, S, T, X_R, X_S, X_D, MEMBRANE, BENDING, B )
  
 ! Reference [1]:
 ! "A new MITC4+ shell element" by Ko, Lee, Bathe, 2016
@@ -56,14 +56,19 @@
 
       IMPLICIT NONE 
       
+      INTEGER(LONG)                   :: GP                ! Grid point number. 1-4.
+      INTEGER(LONG)                   :: I, J              ! Tensor indices.
+      INTEGER(LONG)                   :: ROW               ! Row number of B
+      INTEGER(LONG)                   :: K                 ! Column of B before the column for DOF 1 of the current node.
+
       REAL(DOUBLE) , INTENT(IN)       :: R,S,T             ! Isparametric coordinates
+      REAL(DOUBLE) , INTENT(IN)       :: X_R(3)            ! Characteristic geometry vector x_r
+      REAL(DOUBLE) , INTENT(IN)       :: X_S(3)            ! Characteristic geometry vector x_s
+      REAL(DOUBLE) , INTENT(IN)       :: X_D(3)            ! Characteristic geometry vector x_d (distortion vector)
       REAL(DOUBLE) , INTENT(OUT)      :: B(6, 6*ELGP)      ! Strain-displacement matrix.
       REAL(DOUBLE)                    :: PSH(ELGP)         ! Shape functions
       REAL(DOUBLE)                    :: DPSHG(2,ELGP)     ! Derivatives of shape functions with respect to R and S.
       REAL(DOUBLE)                    :: GP_RS(2,ELGP)     ! Isoparametric coordinates of the nodes
-      REAL(DOUBLE)                    :: X_R(3)            ! Characteristic geometry vector x_r
-      REAL(DOUBLE)                    :: X_S(3)            ! Characteristic geometry vector x_s
-      REAL(DOUBLE)                    :: X_D(3)            ! Characteristic geometry vector x_d (distortion vector)
       REAL(DOUBLE)                    :: DXMDRS(2,3)       ! Partial derivatives of x_m with respect to r and s
       REAL(DOUBLE)                    :: DXBDRS(2,3)       ! Partial derivatives of x_b with respect to r and s
       REAL(DOUBLE)                    :: DIRECTOR(ELGP,3)  ! Director vector at each grid point. Called Vn^i in ref [1]
@@ -72,11 +77,6 @@
       REAL(DOUBLE)                    :: V1(ELGP,3)        ! Basis vector orthogonal to the director vector.
       REAL(DOUBLE)                    :: V2(ELGP,3)        ! Basis vector orthogonal to the director vector and V1.
       REAL(DOUBLE)                    :: TRANSFORM(3,3)    ! Transformation matrix.
-
-      INTEGER(LONG)                   :: GP                ! Grid point number. 1-4.
-      INTEGER(LONG)                   :: I, J              ! Tensor indices.
-      INTEGER(LONG)                   :: ROW               ! Row number of B
-      INTEGER(LONG)                   :: K                 ! Column of B before the column for DOF 1 of the current node.
 
       LOGICAL      , INTENT(IN)       :: MEMBRANE          ! If true, generate membrane parts of B
       LOGICAL      , INTENT(IN)       :: BENDING           ! If true, generate bending parts of B
@@ -120,15 +120,6 @@
                                                            ! Isoparametric coordinates of the nodes.
       GP_RS = MITC_GP_RS()
 
-                                                           ! Characteristic geometry vectors for the element
-      X_R(:) = ZERO
-      X_S(:) = ZERO
-      X_D(:) = ZERO
-      DO GP=1,ELGP
-         X_R(:) = X_R(:) + QUARTER * GP_RS(1, GP)                * XEB(GP, :)
-         X_S(:) = X_S(:) + QUARTER *                GP_RS(2, GP) * XEB(GP, :)
-         X_D(:) = X_D(:) + QUARTER * GP_RS(1, GP) * GP_RS(2, GP) * XEB(GP, :)
-      ENDDO
                                                            
                                                            ! Eqn (9) of ref [1].
       DXMDRS(1,:) = X_R + S * X_D                          ! ∂x_m/∂r
@@ -150,12 +141,16 @@
             DXBDRS(2,:) = DXBDRS(2,:) + HALF * THICKNESS(GP) * DIRECTOR(GP,:) * DPSHG(2,GP)
          ENDDO
 
-                                                           ! Pick a V1 and V2 for each node which form an 
+                                                           ! Find a V1 and V2 for each node which form an 
                                                            ! orthogonal right-handed coordinate system V1, V2, Vn
                                                            ! where Vn is the director vector.
          DO GP=1,ELGP
-!victor todo for now just use anything in xy plane for V1 so it's only valid for elements in the xy plane.
-            V1(GP,:) = (/ ONE/SQRT(TWO) , ONE/SQRT(TWO), ZERO /)
+                                                           ! X_R is a convenient vector that's never parallel to Vn.
+                                                           ! Project X_R onto the plane normal to the director vector.
+            V1(GP,:) = X_R - DIRECTOR(GP,:) * DOT_PRODUCT(X_R, DIRECTOR(GP,:)) / DOT_PRODUCT(DIRECTOR(GP,:), DIRECTOR(GP,:))
+                                                           ! Normalize V1
+            V1(GP,:) = V1(GP,:) / DSQRT(DOT_PRODUCT(V1(GP,:), V1(GP,:)))
+                                                           ! Calculate V2
             CALL CROSS(DIRECTOR(GP,:), V1(GP,:), V2(GP,:))
          ENDDO
          
