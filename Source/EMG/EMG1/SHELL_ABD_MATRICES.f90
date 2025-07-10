@@ -247,7 +247,7 @@ pcom0:IF (PCOMP_PROPS == 'N') THEN                         ! Element is not a co
             PCOMP_LAM = 'SYM'
          ELSE
             PCOMP_LAM = 'NON'                              ! If nonsym layup, make sure int order = 2 (BIG_BB, BIG_BM for QUAD)
-            IF ((TYPE(1:6) == 'QUAD4 ') .AND. (QUAD4TYP == 'MIN4T')) THEN
+            IF ((TYPE(1:6) == 'QUAD4 ') .AND. (QUAD4TYP == 'MIN4T ')) THEN
                IF (IORQ1M /= 2) THEN
                   WARN_ERR = WARN_ERR + 1
                   WRITE(ERR, 1948) 'IORQ1M', IORQ1M

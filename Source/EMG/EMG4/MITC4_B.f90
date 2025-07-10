@@ -39,6 +39,7 @@
       USE PENTIUM_II_KIND, ONLY       :  LONG, DOUBLE
       USE MODEL_STUF, ONLY            :  ELGP, XEB
       USE CONSTANTS_1, ONLY           :  ZERO, HALF, ONE, QUARTER, TWO, FOUR
+      USE PARAMS, ONLY                :  QUAD4TYP
 
       USE MITC_GP_RS_Interface
       USE CROSS_Interface
@@ -101,7 +102,7 @@
       ENDDO
 
      
-      IF(.TRUE.) THEN
+      IF(QUAD4TYP == 'MITC4+') THEN
                                                            ! MITC4+ according to ref [1]
 
                                                            ! BM at each membrane strain tying point.
@@ -175,7 +176,7 @@
          B(1:4,:) = B(1:4,:) + BB(1:4,:)
 
 
-      ELSEIF(.FALSE.) THEN
+      ELSEIF(QUAD4TYP == 'MITC4 ') THEN
                                                            ! MITC4+ form of MITC4 according to ref [1]
          CALL MITC4_COVARIANT_STRAIN_DIRECT_INTERPOLATION( R, S, T, X_R, X_S, X_D, .TRUE., .FALSE., BM )
          B(1:4,:) = B(1:4,:) + BM(1:4,:)
@@ -185,6 +186,8 @@
 
       ELSE
                                                            ! MITC4 according to ref [2]
+                                                           ! Equivalent to the MITC4+ form of MITC4.
+                                                           ! Could be removed and this branch is never reached.
          CALL MITC_COVARIANT_STRAIN_DIRECT_INTERPOLATION( R, S, T, 1, 4, E )
          B(1:4,:) = B(1:4,:) + E(1:4,:)
 

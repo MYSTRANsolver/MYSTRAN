@@ -245,9 +245,9 @@
          ELSE IF (TYPE(1:6) == 'QUAD4 ') THEN
             IF (INTL_MID(2) /= 0) THEN                     ! If MID2 = 0, do not calculate bending or transverse shear stiffness
 
-               IF      (QUAD4TYP == 'MIN4 ') THEN
+               IF      (QUAD4TYP == 'MIN4  ') THEN
                   CALL QPLT2 ( OPT, AREA, XSD, YSD, BIG_BB )
-               ELSE IF (QUAD4TYP == 'MIN4T') THEN
+               ELSE IF (QUAD4TYP == 'MIN4T ') THEN
                   CALL QPLT3 ( OPT, AREA, XSD, YSD, BIG_BB )
                ELSE
                   NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
@@ -373,7 +373,7 @@
  1925 FORMAT(' *ERROR  1925: ELEMENT ',I8,', TYPE ',A,', HAS ZERO OR NEGATIVE ',A,' = ',1ES9.1)
 
  1927 FORMAT(' *ERROR  1927: PROGRAMMING ERROR IN SUBROUTINE ',A                                                                   &
-                    ,/,14X,' CHAR PARAMETER QUAD4TYP MUST BE EITHER "MIN4T" OR "MIN4 " BUT IS "',A,'"')
+                    ,/,14X,' CHAR PARAMETER QUAD4TYP MUST BE EITHER "MIN4T " OR "MIN4  " BUT IS "',A,'"')
 
  1948 FORMAT(' *ERROR  1948: ',A,I8,' MUST HAVE INTEGRATION ORDERS FOR PARAMS ',A,' = ',I3,' IF THE ELEMENT IS A PCOMP'            &
                              ,/,14X,' WITH SYM LAYUP. HOWEVER, THE TWO INTEGRATION ORDERS WERE: ',A,' = ',I3,' AND ',A,' = ',I3)

@@ -153,12 +153,12 @@
       ELSE IF (TYPE == 'BUSH    ') THEN
          CALL ELMGM1_BUSH ( INT_ELEM_ID, WRITE_WARN )
 
-      ELSE IF (((TYPE == 'QUAD4   ') .AND. ((QUAD4TYP == 'MIN4 ') .OR. (QUAD4TYP == 'MIN4T'))) .OR.                                &
+      ELSE IF (((TYPE == 'QUAD4   ') .AND. ((QUAD4TYP == 'MIN4  ') .OR. (QUAD4TYP == 'MIN4T '))) .OR.                              &
                 (TYPE == 'QUAD4K  ') .OR.                                                                                          &
                 (TYPE == 'SHEAR   ')) THEN
          CALL ELMGM2 ( WRITE_WARN )
 
-      ELSE IF (((TYPE == 'QUAD4   ') .AND. (QUAD4TYP == 'MITC4')) .OR.                                                             &
+      ELSE IF (((TYPE == 'QUAD4   ') .AND. ((QUAD4TYP == 'MITC4 ') .OR. (QUAD4TYP == 'MITC4+')))  .OR.                             &
                 (TYPE == 'QUAD8   ')) THEN
 
          CALL ELMGM2 ( WRITE_WARN )                        ! Get grid point coordinates (XEL) in a 2D element coordinate system
@@ -370,13 +370,13 @@
          CALL TREL1 ( OPT, WRITE_WARN )
          IF (NUM_EMG_FATAL_ERRS > 0)   CALL EMG_QUIT
 
-      ELSE IF (((TYPE == 'QUAD4   ') .AND. ((QUAD4TYP == 'MIN4 ') .OR. (QUAD4TYP == 'MIN4T'))) .OR.                                &
+      ELSE IF (((TYPE == 'QUAD4   ') .AND. ((QUAD4TYP == 'MIN4  ') .OR. (QUAD4TYP == 'MIN4T '))) .OR.                              &
                 (TYPE == 'QUAD4K  ') .OR.                                                                                          &
                 (TYPE == 'SHEAR   ')) THEN
          CALL QDEL1 ( OPT, INT_ELEM_ID, WRITE_WARN )
          IF (NUM_EMG_FATAL_ERRS > 0)   CALL EMG_QUIT
 
-      ELSE IF ((TYPE == 'QUAD4   ') .AND. (QUAD4TYP == 'MITC4')) THEN
+      ELSE IF ((TYPE == 'QUAD4   ') .AND. ((QUAD4TYP == 'MITC4 ') .OR. (QUAD4TYP == 'MITC4+'))) THEN
          CALL MITC4 ( OPT, INT_ELEM_ID )
          IF (NUM_EMG_FATAL_ERRS > 0)   CALL EMG_QUIT
 

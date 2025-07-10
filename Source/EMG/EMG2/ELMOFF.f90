@@ -583,7 +583,7 @@
 !1926 FORMAT("K6ROT DEBUG: EID=", I8, ", TYPE=", A, ", AREA=", ES0.2, ", EPS1=", ES0.2, /)
 
 1927 FORMAT(' *ERROR  1927: PROGRAMMING ERROR IN SUBROUTINE ',A                                                                   &
-                    ,/,14X,' CHAR PARAMETER QUAD4TYP MUST BE EITHER "MIN4T" OR "MIN4 " BUT IS "',A,'"')
+                    ,/,14X,' CHAR PARAMETER QUAD4TYP MUST BE EITHER "MIN4T " OR "MIN4  " BUT IS "',A,'"')
 
 1948 FORMAT(' *ERROR  1948: ',A,I8,' MUST HAVE INTEGRATION ORDERS FOR PARAMS ',A,' = ',I3,' IF THE ELEMENT IS A PCOMP'            &
                              ,/,14X,' WITH SYM LAYUP. HOWEVER, THE TWO INTEGRATION ORDERS WERE: ',A,' = ',I3,' AND ',A,' = ',I3)
