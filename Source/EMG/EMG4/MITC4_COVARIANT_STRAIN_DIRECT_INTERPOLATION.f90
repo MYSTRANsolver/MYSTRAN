@@ -23,7 +23,7 @@
 ! _______________________________________________________________________________________________________
                                                                                                         
 ! End MIT license text.                                                                                      
-      SUBROUTINE MITC4_COVARIANT_STRAIN_DIRECT_INTERPOLATION ( R, S, T, X_R, X_S, X_D, MEMBRANE, BENDING, B )
+      SUBROUTINE MITC4_COVARIANT_STRAIN_DIRECT_INTERPOLATION ( R, S, T, X_R, X_S, X_D, MEMBRANE, BENDING, ROW_FROM, ROW_TO, B )
  
 ! Reference [1]:
 ! "A new MITC4+ shell element" by Ko, Lee, Bathe, 2016
@@ -55,7 +55,9 @@
       USE CROSS_Interface
 
       IMPLICIT NONE 
-      
+
+      INTEGER(LONG), INTENT(IN)       :: ROW_FROM          ! First row of B to generate. Strain component index 1-4.
+      INTEGER(LONG), INTENT(IN)       :: ROW_TO            ! Last row of B to generate. Strain component index 1-4.
       INTEGER(LONG)                   :: GP                ! Grid point number. 1-4.
       INTEGER(LONG)                   :: I, J              ! Tensor indices.
       INTEGER(LONG)                   :: ROW               ! Row number of B
@@ -115,7 +117,7 @@
       
       
                                                            ! Initialize B
-      B(:,:) = ZERO
+      B(ROW_FROM:ROW_TO,:) = ZERO
 
                                                            ! Isoparametric coordinates of the nodes.
       GP_RS = MITC_GP_RS()
@@ -156,7 +158,7 @@
          
       ENDIF
 
-      DO ROW=1,4
+      DO ROW=ROW_FROM,ROW_TO
 
                                                            ! Tensor indices for the row
          SELECT CASE (ROW)
@@ -230,7 +232,7 @@
             TRANSFORM(:,1) = V1(GP,:)
             TRANSFORM(:,2) = V2(GP,:)
             TRANSFORM(:,3) = DIRECTOR(GP,:)
-            DO ROW=1,4
+            DO ROW=ROW_FROM,ROW_TO
                IF(ROW /= 3) THEN
                   B(ROW,K+4:K+6) = MATMUL(TRANSFORM, B(ROW,K+4:K+6))
                ENDIF

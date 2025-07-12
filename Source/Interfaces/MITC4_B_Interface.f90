@@ -28,13 +28,17 @@
 
    INTERFACE
 
-      SUBROUTINE MITC4_B ( R, S, T, B )
-
+      SUBROUTINE MITC4_B ( R, S, T, MEMBRANE, BENDING, SHEAR, B )
+      
       USE PENTIUM_II_KIND, ONLY       :  LONG, DOUBLE
       USE MODEL_STUF, ONLY            :  ELGP
 
       REAL(DOUBLE) , INTENT(IN)       :: R, S, T           ! Isoparametric coordinates
       REAL(DOUBLE) , INTENT(OUT)      :: B(6, 6*ELGP)      ! Strain-displacement matrix
+
+      LOGICAL      , INTENT(IN)       :: MEMBRANE          ! If true, generate membrane parts of B (rows 1,2,4)
+      LOGICAL      , INTENT(IN)       :: BENDING           ! If true, generate bending parts of B (rows 1,2,4)
+      LOGICAL      , INTENT(IN)       :: SHEAR             ! If true, generate shear parts of B (rows 5,6)
 
       END SUBROUTINE MITC4_B
 

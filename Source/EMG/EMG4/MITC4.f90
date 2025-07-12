@@ -212,17 +212,32 @@
                   R = SS_IJ(I)
                   S = SS_IJ(J)
                   T = SS_K(K)
-                  CALL MITC4_B( R, S, T, BI)
 
                   ! For non-isotropic materials, this should be rotated from the material coordinate system to the cartesian local
                   ! coordinate system here. The rotation angle may be different at each Gauss point.
                   EE(:,:) = E(:,:)
-
-                  CALL MATMULT_FFF ( EE, BI, 6, 6, 6*ELGP, DUM1 )
-                  CALL MATMULT_FFF_T ( BI, DUM1, 6, 6*ELGP, 6*ELGP, DUM2 )
                   DETJ = MITC_DETJ ( R, S, T )
                   INTFAC = DETJ*HH_IJ(I)*HH_IJ(J)*HH_K(K)
-                  KE(:,:) = KE(:,:) + DUM2(:,:)*INTFAC
+
+                  IF(.TRUE.) THEN
+                     ! Membrane, bending, and shear
+                     CALL MITC4_B( R, S, T, .TRUE., .TRUE., .TRUE., BI)
+                     CALL MATMULT_FFF ( EE, BI, 6, 6, 6*ELGP, DUM1 )
+                     CALL MATMULT_FFF_T ( BI, DUM1, 6, 6*ELGP, 6*ELGP, DUM2 )
+                     KE(:,:) = KE(:,:) + DUM2(:,:)*INTFAC
+                  ELSE
+                     ! Membrane
+                     CALL MITC4_B( R, S, T, .TRUE., .FALSE., .FALSE., BI)
+                     CALL MATMULT_FFF ( EE, BI, 6, 6, 6*ELGP, DUM1 )
+                     CALL MATMULT_FFF_T ( BI, DUM1, 6, 6*ELGP, 6*ELGP, DUM2 )
+                     KE(:,:) = KE(:,:) + DUM2(:,:)*INTFAC
+                     ! Bending and shear
+                     CALL MITC4_B( R, S, T, .FALSE., .TRUE., .TRUE., BI)
+                     CALL MATMULT_FFF ( EE, BI, 6, 6, 6*ELGP, DUM1 )
+                     CALL MATMULT_FFF_T ( BI, DUM1, 6, 6*ELGP, 6*ELGP, DUM2 )
+                     KE(:,:) = KE(:,:) + DUM2(:,:)*INTFAC
+                  ENDIF                  
+                                    
                ENDDO
             ENDDO 
          ENDDO   
