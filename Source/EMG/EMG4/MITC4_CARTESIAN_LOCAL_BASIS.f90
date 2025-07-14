@@ -37,12 +37,9 @@
       USE PENTIUM_II_KIND, ONLY       :  LONG, DOUBLE
       USE MODEL_STUF, ONLY            :  ELGP, XEB, TYPE
       USE CONSTANTS_1, ONLY           :  ZERO, ONE, TWO
-      USE IOUNT1, ONLY                :  ERR, F06
-      USE SCONTR, ONLY                :  FATAL_ERR
 
-      USE SHP2DQ_Interface
+      USE MITC_SHAPE_FUNCTIONS_Interface
       USE CROSS_Interface
-      USE OUTA_HERE_Interface
 
       IMPLICIT NONE 
       
@@ -60,33 +57,12 @@
       REAL(DOUBLE)                    :: X(3)
       REAL(DOUBLE)                    :: Y(3)
       REAL(DOUBLE)                    :: Z(3)
-      REAL(DOUBLE)                    :: DUM(2,ELGP)
 
 
 ! **********************************************************************************************************************************
       
- 
-      IF (TYPE(1:5) == 'QUAD4') THEN
+      CALL MITC_SHAPE_FUNCTIONS(R, S, PSH, DPSHG)
 
-         CALL SHP2DQ ( 0, 0, ELGP, 'MITC4_CARTESIAN_LOCAL_BASIS', '', 0, R, S, 'N', PSH, DPSHG )
-
-                                                           ! Change node numbering to match Bathe's MITC4+ paper.
-         IF (TYPE(1:5) == 'QUAD4') THEN
-            DUM = DPSHG
-            DPSHG(:,1) = DUM(:,3)
-            DPSHG(:,2) = DUM(:,4)
-            DPSHG(:,3) = DUM(:,1)
-            DPSHG(:,4) = DUM(:,2)
-         ENDIF
-
-      ELSE
-
-         WRITE(ERR,*) ' *ERROR: INCORRECT ELEMENT TYPE ', TYPE
-         WRITE(F06,*) ' *ERROR: INCORRECT ELEMENT TYPE ', TYPE
-         FATAL_ERR = FATAL_ERR + 1
-         CALL OUTA_HERE ( 'Y' )
-
-      ENDIF
 !victor todo choose a suitable coordiante system for mitc4. The same as MITC8 should be fine but it might be nice if
 ! it's the same as the nastrn element (stress) coordinate system
 

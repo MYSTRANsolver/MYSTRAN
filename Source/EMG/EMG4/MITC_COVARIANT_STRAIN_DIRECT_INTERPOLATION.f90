@@ -40,11 +40,8 @@
       USE PENTIUM_II_KIND, ONLY       :  LONG, DOUBLE
       USE MODEL_STUF, ONLY            :  ELGP, EPROP, TYPE
       USE CONSTANTS_1, ONLY           :  ZERO, TWO, FOUR
-      USE IOUNT1, ONLY                :  ERR, F06
-      USE SCONTR, ONLY                :  FATAL_ERR
 
-      USE SHP2DQ_Interface
-      USE OUTA_HERE_Interface
+      USE MITC_SHAPE_FUNCTIONS_Interface
       USE MITC_COVARIANT_BASIS_Interface
       USE MITC_GP_RS_Interface
       USE MITC_DIRECTOR_VECTOR_Interface
@@ -66,8 +63,6 @@
       INTEGER(LONG)                   :: GP                ! Element grid point number
       INTEGER(LONG)                   :: I,J,K,L           ! Loop and tensor indices
       INTEGER(LONG)                   :: ROW               
-      REAL(DOUBLE)                    :: DUM(2,ELGP)
-      REAL(DOUBLE)                    :: DUM2(ELGP)
       
 ! **********************************************************************************************************************************
 
@@ -79,32 +74,8 @@
       ENDDO
 
                                                            ! Shape function derivatives at R,S
-      IF ((TYPE(1:5) == 'QUAD4') .OR. (TYPE(1:5) == 'QUAD8')) THEN
+      CALL MITC_SHAPE_FUNCTIONS(R, S, PSH, DPSHG)
 
-         CALL SHP2DQ ( 0, 0, ELGP, 'MITC_COVARIANT_STRAIN_DIRECT_INTERPOLATION', '', 0, R, S, 'N', PSH, DPSHG )
-
-                                                           ! Change node numbering to match Bathe's MITC4+ paper.
-         IF (TYPE(1:5) == 'QUAD4') THEN
-            DUM = DPSHG
-            DPSHG(:,1) = DUM(:,3)
-            DPSHG(:,2) = DUM(:,4)
-            DPSHG(:,3) = DUM(:,1)
-            DPSHG(:,4) = DUM(:,2)
-            DUM2 = PSH
-            PSH(1) = DUM2(3)
-            PSH(2) = DUM2(4)
-            PSH(3) = DUM2(1)
-            PSH(4) = DUM2(2)
-         ENDIF
-
-      ELSE
-
-        WRITE(ERR,*) ' *ERROR: INCORRECT ELEMENT TYPE ', TYPE
-        WRITE(F06,*) ' *ERROR: INCORRECT ELEMENT TYPE ', TYPE
-        FATAL_ERR = FATAL_ERR + 1
-        CALL OUTA_HERE ( 'Y' )
-
-      ENDIF
                                                            ! Extend shape function derivates to include 
                                                            ! thickness direction (0) for convenience.
       DO GP=1,ELGP

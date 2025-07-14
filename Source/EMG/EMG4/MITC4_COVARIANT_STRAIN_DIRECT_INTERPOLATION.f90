@@ -45,10 +45,9 @@
       USE PENTIUM_II_KIND, ONLY       :  LONG, DOUBLE
       USE MODEL_STUF, ONLY            :  ELGP, EPROP, TYPE, XEB
       USE CONSTANTS_1, ONLY           :  ZERO, HALF, ONE, TWO, FOUR, QUARTER
-      USE IOUNT1, ONLY                :  ERR, F06
       USE SCONTR, ONLY                :  FATAL_ERR
 
-      USE SHP2DQ_Interface
+      USE MITC_SHAPE_FUNCTIONS_Interface
       USE OUTA_HERE_Interface
       USE MITC_GP_RS_Interface
       USE MITC_DIRECTOR_VECTOR_Interface
@@ -75,7 +74,6 @@
       REAL(DOUBLE)                    :: DXBDRS(2,3)       ! Partial derivatives of x_b with respect to r and s
       REAL(DOUBLE)                    :: DIRECTOR(ELGP,3)  ! Director vector at each grid point. Called Vn^i in ref [1]
       REAL(DOUBLE)                    :: THICKNESS(ELGP)   ! Element thicknesses at grid points
-      REAL(DOUBLE)                    :: DUM(2,ELGP)
       REAL(DOUBLE)                    :: V1(ELGP,3)        ! Basis vector orthogonal to the director vector.
       REAL(DOUBLE)                    :: V2(ELGP,3)        ! Basis vector orthogonal to the director vector and V1.
       REAL(DOUBLE)                    :: TRANSFORM(3,3)    ! Transformation matrix.
@@ -93,28 +91,7 @@
       ENDDO
       
                                                            ! Shape function derivatives at R,S
-      IF ((TYPE(1:5) == 'QUAD4') .OR. (TYPE(1:5) == 'QUAD8')) THEN
-
-         CALL SHP2DQ ( 0, 0, ELGP, 'MITC4_COVARIANT_STRAIN_DIRECT_INTERPOLATION', '', 0, R, S, 'N', PSH, DPSHG )
-
-                                                           ! Change node numbering to match Bathe's MITC4+ paper.
-         IF (TYPE(1:5) == 'QUAD4') THEN
-            DUM = DPSHG
-            DPSHG(:,1) = DUM(:,3)
-            DPSHG(:,2) = DUM(:,4)
-            DPSHG(:,3) = DUM(:,1)
-            DPSHG(:,4) = DUM(:,2)
-         ENDIF
-
-      ELSE
-
-         WRITE(ERR,*) ' *ERROR: INCORRECT ELEMENT TYPE ', TYPE
-         WRITE(F06,*) ' *ERROR: INCORRECT ELEMENT TYPE ', TYPE
-         FATAL_ERR = FATAL_ERR + 1
-         CALL OUTA_HERE ( 'Y' )
-
-      ENDIF
-      
+      CALL MITC_SHAPE_FUNCTIONS(R, S, PSH, DPSHG)
       
                                                            ! Initialize B
       B(ROW_FROM:ROW_TO,:) = ZERO

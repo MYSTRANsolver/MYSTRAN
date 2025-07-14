@@ -23,77 +23,61 @@
 ! _______________________________________________________________________________________________________
                                                                                                         
 ! End MIT license text.                                                                                      
-      FUNCTION MITC_DIRECTOR_VECTOR ( R, S )
+      SUBROUTINE MITC_SHAPE_FUNCTIONS ( R, S, PSH, DPSHG )
  
-! Calculates the director vector in basic coordinates at a point in isoparametric coordinates.
 
-      USE PENTIUM_II_KIND, ONLY       :  LONG, DOUBLE
-      USE MODEL_STUF, ONLY            :  ELGP, XEB
-      USE CONSTANTS_1, ONLY           :  ZERO
+      USE PENTIUM_II_KIND, ONLY       :  DOUBLE
+      USE MODEL_STUF, ONLY            :  ELGP, TYPE
+      USE IOUNT1, ONLY                :  ERR, F06
+      USE SCONTR, ONLY                :  FATAL_ERR
 
-      USE MITC_SHAPE_FUNCTIONS_Interface
-      USE CROSS_Interface
+      USE SHP2DQ_Interface
+      USE OUTA_HERE_Interface
 
       IMPLICIT NONE 
+
+      REAL(DOUBLE) , INTENT(IN)       :: R,S               ! Isoparametric coordinates
+      REAL(DOUBLE) , INTENT(OUT)      :: PSH(ELGP)         ! Shape functions
+      REAL(DOUBLE) , INTENT(OUT)      :: DPSHG(2,ELGP)     ! Derivatives of shape functions with respect to R and S.
+      REAL(DOUBLE)                    :: DUM(2,ELGP)
+      REAL(DOUBLE)                    :: DUM2(ELGP)
+
       
-      INTEGER(LONG)                   :: I,J               ! DO loop indices
-
-      REAL(DOUBLE)                    :: MITC_DIRECTOR_VECTOR(3)
-      REAL(DOUBLE) , INTENT(IN)       :: R
-      REAL(DOUBLE) , INTENT(IN)       :: S
-      REAL(DOUBLE)                    :: PSH(ELGP)       
-      REAL(DOUBLE)                    :: DPSHG(2,ELGP)     ! Derivatives of shape functions with respect to R and S.
-      REAL(DOUBLE)                    :: TANGENT_R(3)
-      REAL(DOUBLE)                    :: TANGENT_S(3)
-      REAL(DOUBLE)                    :: NORMAL(3)
-
-      INTRINSIC                       :: DSQRT
-
-
 ! **********************************************************************************************************************************
-     
-! Choose the director vector to be normal to the nodal surface everywhere.
-! This isn't required for MITC and could be averaged from adjacent elements.
- 
-      CALL MITC_SHAPE_FUNCTIONS(R, S, PSH, DPSHG)
 
+                                                           ! Shape function derivatives at R,S
+      IF ((TYPE(1:5) == 'QUAD4') .OR. (TYPE(1:5) == 'QUAD8')) THEN
 
-      IF(.FALSE.) THEN
-         ! For debugging
-         ! Hardcoded radial director vector for making spheres centered on the origin.
-         ! Eventually, it could support SNORM which would interpolate the director vector from the grid point normals.
-         ! Only used for CQUAD4 and CTRIA3 in Nastran.
-      
-         NORMAL(:) = ZERO
-         DO I=1,ELGP
-            NORMAL = NORMAL + XEB(I,:) * PSH(I)
-         ENDDO
+         CALL SHP2DQ ( 0, 0, ELGP, 'MITC_SHAPE_FUNCTIONS', '', 0, R, S, 'N', PSH, DPSHG )
+
+                                                           ! Change node numbering to match Bathe's MITC4+ paper.
+         IF (TYPE(1:5) == 'QUAD4') THEN
+            DUM = DPSHG
+            DPSHG(:,1) = DUM(:,3)
+            DPSHG(:,2) = DUM(:,4)
+            DPSHG(:,3) = DUM(:,1)
+            DPSHG(:,4) = DUM(:,2)
+            DUM2 = PSH
+            PSH(1) = DUM2(3)
+            PSH(2) = DUM2(4)
+            PSH(3) = DUM2(1)
+            PSH(4) = DUM2(2)
+         ENDIF
 
       ELSE
-      
-         TANGENT_R(:)=ZERO
-         TANGENT_S(:)=ZERO
 
-         ! TANGENT_R(r, s) = dX/dR = d/dR X = sum over nodes[ dN/dR X ]
-         ! TANGENT_S(r, s) = dX/dS = d/dS X = sum over nodes[ dN/dS X ]
-         DO I=1,ELGP
-            DO J=1,3
-               TANGENT_R(J) = TANGENT_R(J) + XEB(I,J) * DPSHG(1,I)
-               TANGENT_S(J) = TANGENT_S(J) + XEB(I,J) * DPSHG(2,I)
-            ENDDO
-         ENDDO
+        WRITE(ERR,*) ' *ERROR: INCORRECT ELEMENT TYPE ', TYPE
+        WRITE(F06,*) ' *ERROR: INCORRECT ELEMENT TYPE ', TYPE
+        FATAL_ERR = FATAL_ERR + 1
+        CALL OUTA_HERE ( 'Y' )
 
-         CALL CROSS(TANGENT_R, TANGENT_S, NORMAL)
-      
       ENDIF
 
-      NORMAL = NORMAL / DSQRT(DOT_PRODUCT(NORMAL, NORMAL))
-      
-      MITC_DIRECTOR_VECTOR = NORMAL
+
 
       RETURN
 
 
 ! **********************************************************************************************************************************
   
-      END FUNCTION MITC_DIRECTOR_VECTOR
+      END SUBROUTINE MITC_SHAPE_FUNCTIONS

@@ -33,17 +33,13 @@
       USE PENTIUM_II_KIND, ONLY       :  LONG, DOUBLE
       USE MODEL_STUF, ONLY            :  ELGP, XEB, EPROP, TYPE
       USE CONSTANTS_1, ONLY           :  ZERO, TWO
-      USE IOUNT1, ONLY                :  ERR, F06
-      USE SCONTR, ONLY                :  FATAL_ERR
 
-      USE SHP2DQ_Interface
+      USE MITC_SHAPE_FUNCTIONS_Interface
       USE MITC_GP_RS_Interface
       USE MITC_DIRECTOR_VECTOR_Interface
-      USE OUTA_HERE_Interface
 
       IMPLICIT NONE 
       
-      INTEGER(LONG)                   :: I,J               ! DO loop indices
       INTEGER(LONG)                   :: GP                ! Element grid point number
 
       REAL(DOUBLE) , INTENT(IN)       :: R, S, T           ! Isoparametric coordinates
@@ -54,41 +50,18 @@
       REAL(DOUBLE)                    :: GP_RS(2,ELGP)     ! Isoparametric coordinates of the nodes
       REAL(DOUBLE)                    :: RS_THICKNESS      ! Element thickness at R,S
       REAL(DOUBLE)                    :: THICKNESS(ELGP)   ! Element thickness at grid points
-      REAL(DOUBLE)                    :: DUM(2,ELGP)
 
 ! **********************************************************************************************************************************
 
 
       ! Thickness is treated as uniform.
       ! To allow grid point thicknesses, this should be interpolated to midside nodes and at (R,S).
-      DO I=1,ELGP
-         THICKNESS(I) = EPROP(1)
+      DO GP=1,ELGP
+         THICKNESS(GP) = EPROP(1)
       ENDDO
       RS_THICKNESS = EPROP(1)
 
-      IF ((TYPE(1:5) == 'QUAD4') .OR. (TYPE(1:5) == 'QUAD8')) THEN
-
-         CALL SHP2DQ ( 0, 0, ELGP, 'MITC_COVARIANT_BASIS', '', 0, R, S, 'N', PSH, DPSHG )
-
-                                                           ! Change node numbering to match Bathe's MITC4+ paper.
-         IF (TYPE(1:5) == 'QUAD4') THEN
-            DUM = DPSHG
-            DPSHG(:,1) = DUM(:,3)
-            DPSHG(:,2) = DUM(:,4)
-            DPSHG(:,3) = DUM(:,1)
-            DPSHG(:,4) = DUM(:,2)
-         ENDIF
-
-      ELSE
-
-         WRITE(ERR,*) ' *ERROR: INCORRECT ELEMENT TYPE ', TYPE
-         WRITE(F06,*) ' *ERROR: INCORRECT ELEMENT TYPE ', TYPE
-         FATAL_ERR = FATAL_ERR + 1
-         CALL OUTA_HERE ( 'Y' )
-
-      ENDIF
-
-
+      CALL MITC_SHAPE_FUNCTIONS(R, S, PSH, DPSHG)
 
       G(:,:) = ZERO
 
@@ -99,17 +72,36 @@
       !     = sum over nodes[ dN/dr X + t/2 * dN/dr (hv) ]
       DO GP=1,ELGP
          DIRECTOR = MITC_DIRECTOR_VECTOR(GP_RS(1,GP), GP_RS(2,GP))
-         DO J=1,3
-            G(J,1) = G(J,1) + XEB(GP,J) * DPSHG(1,GP) + DIRECTOR(J) * T/TWO * DPSHG(1,GP) * THICKNESS(GP)
-            G(J,2) = G(J,2) + XEB(GP,J) * DPSHG(2,GP) + DIRECTOR(J) * T/TWO * DPSHG(2,GP) * THICKNESS(GP)
-         ENDDO
+         G(:,1) = G(:,1) + XEB(GP,:) * DPSHG(1,GP) + DIRECTOR * T/TWO * DPSHG(1,GP) * THICKNESS(GP)
+         G(:,2) = G(:,2) + XEB(GP,:) * DPSHG(2,GP) + DIRECTOR * T/TWO * DPSHG(2,GP) * THICKNESS(GP)
       ENDDO
 
-      DIRECTOR = MITC_DIRECTOR_VECTOR(R, S)
-      DO J=1,3
-         G(J,3) = DIRECTOR(J) * RS_THICKNESS/TWO
-      ENDDO
-    
+
+      IF(.TRUE.) THEN
+         ! Interpolate director vector from nodes.
+         ! This is different from evaluating it directly at R,S but it might still be OK.
+         !
+         ! Using this, the MITC_DIRECTOR_VECTOR function can be changed to only return values at nodes, not R,S.
+         ! That will enable grid point normals more easily.
+         
+         DO GP=1,ELGP
+            DIRECTOR = MITC_DIRECTOR_VECTOR(GP_RS(1,GP), GP_RS(2,GP))
+            G(:,3) = G(:,3) + DIRECTOR * PSH(GP)
+         ENDDO
+                                                           ! Normalize to half thickness at R,S.
+         G(:,3) = G(:,3) / DSQRT(DOT_PRODUCT(G(:,3), G(:,3))) * RS_THICKNESS/TWO
+      
+      ELSE
+
+         DIRECTOR = MITC_DIRECTOR_VECTOR(R, S)
+         G(:,3) = DIRECTOR * RS_THICKNESS/TWO
+      
+      ENDIF
+
+
+
+
+
 
       RETURN
 
