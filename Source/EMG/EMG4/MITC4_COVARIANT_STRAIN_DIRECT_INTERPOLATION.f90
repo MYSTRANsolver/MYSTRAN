@@ -164,8 +164,11 @@
          SELECT CASE (ROW)
             CASE (1); I=1; J=1                             ! In-layer normal strain
             CASE (2); I=2; J=2                             ! In-layer normal strain
-            CASE (3); CYCLE                                ! No zz strain
+            CASE (3); I=0; J=0; CYCLE                      ! No zz strain
             CASE (4); I=1; J=2                             ! In-layer shear strain
+            CASE DEFAULT   
+               FATAL_ERR = FATAL_ERR + 1
+               CALL OUTA_HERE ( 'Y' )
          END SELECT
 
          IF(MEMBRANE) THEN
@@ -269,7 +272,7 @@
                                                            ! Eqn (9) of ref [1]. This node's term of:
          IF (IU == 1) THEN                                 ! ∂u_m/∂r = u_r + s * u_d
             DUMDRS = ( GP_RS(1,GP) + S * GP_RS(1,GP) * GP_RS(2,GP) ) / FOUR
-         ELSEIF (IU == 2) THEN                             ! ∂u_m/∂s = u_s + r * u_d
+         ELSE                                              ! IU == 2
             DUMDRS = ( GP_RS(2,GP) + R * GP_RS(1,GP) * GP_RS(2,GP) ) / FOUR
          ENDIF
 

@@ -150,24 +150,24 @@
             a_E = 2 * c_r * c_s / d
 
                                                            ! Eqn (27a) in ref [1]
-            BM(1,:) = HALF * (ONE - TWO * a_A + S + 2 * a_A * S*S ) * BM_A(1,:)                                                       &
-                    + HALF * (ONE - TWO * a_B - S + 2 * a_B * S*S ) * BM_B(1,:)                                                       &
-                    + a_C * (-ONE + S*S) * BM_C(2,:)                                                                                  &
-                    + a_D * (-ONE + S*S) * BM_D(2,:)                                                                                  &
+            BM(1,:) = HALF * (ONE - TWO * a_A + S + 2 * a_A * S*S ) * BM_A(1,:)                                                    &
+                    + HALF * (ONE - TWO * a_B - S + 2 * a_B * S*S ) * BM_B(1,:)                                                    &
+                    + a_C * (-ONE + S*S) * BM_C(2,:)                                                                               &
+                    + a_D * (-ONE + S*S) * BM_D(2,:)                                                                               &
                     + a_E * (-ONE + S*S) * BM_E(4,:)
                                                            ! Eqn (27b) in ref [1]
-            BM(2,:) = a_A * (-ONE + R*R) * BM_A(1,:)                                                                                  &
-                    + a_B * (-ONE + R*R) * BM_B(1,:)                                                                                  &
-                    + HALF * (ONE - TWO * a_C + R + 2 * a_C * R*R ) * BM_C(2,:)                                                       &
-                    + HALF * (ONE - TWO * a_D - R + 2 * a_D * R*R ) * BM_D(2,:)                                                       &
+            BM(2,:) = a_A * (-ONE + R*R) * BM_A(1,:)                                                                               &
+                    + a_B * (-ONE + R*R) * BM_B(1,:)                                                                               &
+                    + HALF * (ONE - TWO * a_C + R + 2 * a_C * R*R ) * BM_C(2,:)                                                    &
+                    + HALF * (ONE - TWO * a_D - R + 2 * a_D * R*R ) * BM_D(2,:)                                                    &
                     + a_E * (-ONE + R*R) * BM_E(4,:)
 
             BM(3,:) = ZERO
                                                            ! Eqn (27c) in ref [1]
-            BM(4,:) = QUARTER * ( R + FOUR * a_A * R * S) * BM_A(1,:)                                                                 &
-                    + QUARTER * (-R + FOUR * a_B * R * S) * BM_B(1,:)                                                                 &
-                    + QUARTER * ( S + FOUR * a_C * R * S) * BM_C(2,:)                                                                 &
-                    + QUARTER * (-S + FOUR * a_D * R * S) * BM_D(2,:)                                                                 &
+            BM(4,:) = QUARTER * ( R + FOUR * a_A * R * S) * BM_A(1,:)                                                              &
+                    + QUARTER * (-R + FOUR * a_B * R * S) * BM_B(1,:)                                                              &
+                    + QUARTER * ( S + FOUR * a_C * R * S) * BM_C(2,:)                                                              &
+                    + QUARTER * (-S + FOUR * a_D * R * S) * BM_D(2,:)                                                              &
                     + (1 + a_E * R * S) * BM_E(4,:)
 
             B(1:4,:) = B(1:4,:) + BM(1:4,:)
