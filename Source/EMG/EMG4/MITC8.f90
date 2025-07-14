@@ -334,7 +334,7 @@
 
 
 
-         KE(:,:) = ZERO
+         KE(1:6*ELGP,1:6*ELGP) = ZERO
 
          CALL ORDER_GAUSS ( IORD_IJ, SS_IJ, HH_IJ )
          CALL ORDER_GAUSS ( IORD_K, SS_K, HH_K )
@@ -355,7 +355,7 @@
                   CALL MATMULT_FFF_T ( BI, DUM1, 6, 6*ELGP, 6*ELGP, DUM2 )
                   DETJ = MITC_DETJ ( R, S, T )
                   INTFAC = DETJ*HH_IJ(I)*HH_IJ(J)*HH_K(K)
-                  KE(:,:) = KE(:,:) + DUM2(:,:)*INTFAC
+                  KE(1:6*ELGP,1:6*ELGP) = KE(1:6*ELGP,1:6*ELGP) + DUM2(:,:)*INTFAC
                ENDDO
             ENDDO 
          ENDDO   

@@ -201,7 +201,7 @@
 
 
 
-         KE(:,:) = ZERO
+         KE(1:6*ELGP,1:6*ELGP) = ZERO
 
          CALL ORDER_GAUSS ( IORD_IJ, SS_IJ, HH_IJ )
          CALL ORDER_GAUSS ( IORD_K, SS_K, HH_K )
@@ -224,24 +224,26 @@
                      CALL MITC4_B( R, S, T, .TRUE., .TRUE., .TRUE., BI)
                      CALL MATMULT_FFF ( EE, BI, 6, 6, 6*ELGP, DUM1 )
                      CALL MATMULT_FFF_T ( BI, DUM1, 6, 6*ELGP, 6*ELGP, DUM2 )
-                     KE(:,:) = KE(:,:) + DUM2(:,:)*INTFAC
+                     KE(1:6*ELGP,1:6*ELGP) = KE(1:6*ELGP,1:6*ELGP) + DUM2(:,:)*INTFAC
                   ELSE
                      ! Membrane
                      CALL MITC4_B( R, S, T, .TRUE., .FALSE., .FALSE., BI)
                      CALL MATMULT_FFF ( EE, BI, 6, 6, 6*ELGP, DUM1 )
                      CALL MATMULT_FFF_T ( BI, DUM1, 6, 6*ELGP, 6*ELGP, DUM2 )
-                     KE(:,:) = KE(:,:) + DUM2(:,:)*INTFAC
+                     KE(1:6*ELGP,1:6*ELGP) = KE(1:6*ELGP,1:6*ELGP) + DUM2(:,:)*INTFAC
                      ! Bending and shear
                      CALL MITC4_B( R, S, T, .FALSE., .TRUE., .TRUE., BI)
                      CALL MATMULT_FFF ( EE, BI, 6, 6, 6*ELGP, DUM1 )
                      CALL MATMULT_FFF_T ( BI, DUM1, 6, 6*ELGP, 6*ELGP, DUM2 )
-                     KE(:,:) = KE(:,:) + DUM2(:,:)*INTFAC
+                     KE(1:6*ELGP,1:6*ELGP) = KE(1:6*ELGP,1:6*ELGP) + DUM2(:,:)*INTFAC
                   ENDIF                  
                                     
                ENDDO
             ENDDO 
          ENDDO   
 
+
+    
  
   
       ENDIF
