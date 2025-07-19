@@ -128,7 +128,8 @@
             CASE (2); I=2; J=2                             ! In-layer normal strain
             CASE (3); I=0; J=0; CYCLE                      ! No zz strain
             CASE (4); I=1; J=2                             ! In-layer shear strain
-            CASE DEFAULT   
+            CASE DEFAULT
+               I=0; J=0
                FATAL_ERR = FATAL_ERR + 1
                CALL OUTA_HERE ( 'Y' )
          END SELECT
