@@ -40,8 +40,8 @@
       USE MODEL_STUF, ONLY            :  ELGP, XEB
       USE CONSTANTS_1, ONLY           :  ZERO, HALF, ONE, QUARTER, TWO, FOUR
       USE PARAMS, ONLY                :  QUAD4TYP
+      USE MITC_STUF, ONLY             :  GP_RS
 
-      USE MITC_GP_RS_Interface
       USE CROSS_Interface
       USE MITC_COVARIANT_STRAIN_DIRECT_INTERPOLATION_Interface
       USE MITC4_COVARIANT_STRAIN_DIRECT_INTERPOLATION_Interface
@@ -54,7 +54,6 @@
 
       REAL(DOUBLE) , INTENT(IN)       :: R, S, T           ! Isoparametric coordinates
       REAL(DOUBLE) , INTENT(OUT)      :: B(6, 6*ELGP)      ! Strain-displacement matrix
-      REAL(DOUBLE)                    :: GP_RS(2,ELGP)     ! Isoparametric coordinates of the nodes
       REAL(DOUBLE)                    :: X_R(3)            ! Characteristic geometry vector x_r
       REAL(DOUBLE)                    :: X_S(3)            ! Characteristic geometry vector x_s
       REAL(DOUBLE)                    :: X_D(3)            ! Characteristic geometry vector x_d (distortion vector)
@@ -92,9 +91,6 @@
 
 ! **********************************************************************************************************************************
 ! Add in-layer strain-displacement terms
-
-                                                           ! Isoparametric coordinates of the nodes.
-      GP_RS = MITC_GP_RS()
 
                                                            ! Characteristic geometry vectors
       X_R(:) = ZERO

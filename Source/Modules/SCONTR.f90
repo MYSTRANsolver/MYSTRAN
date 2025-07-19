@@ -147,6 +147,7 @@
       INTEGER(LONG)            :: LSETLN              =   0      ! Max allow num of chars in SET definitions (see Note (1)) 
       INTEGER(LONG)            :: LSETS               =   0      ! Max allow num of Case Control SET's       (see Note (1))
       INTEGER(LONG)            :: LSLOAD              =   0      ! Max allow num of SLOAD pairs              (see Note (1))
+      INTEGER(LONG)            :: LSNORM              =   0      ! Max allow num of SNORM Bulk Data cards    (see Note (1))
       INTEGER(LONG)            :: LSPC                =   0      ! Max allow num of SPC    Bulk Data cards   (see Note (1))
       INTEGER(LONG)            :: LSPC1               =   0      ! Max allow num of SPC1   Bulk Data cards   (see Note (1))
       INTEGER(LONG)            :: LSPCADDC            =   0      ! Max no. of pairs of set ID's over all SPCADD B.D. cards incl
@@ -286,6 +287,7 @@
       INTEGER(LONG)            :: NSEQ                =   0      ! Count of no. of grid points that are on SEQGP Bulk Data cards 
       INTEGER(LONG)            :: NSETS               =   0      ! Count of no. of SET's in Case Control 
       INTEGER(LONG)            :: NSLOAD              =   0      ! Count of no. of SLOAD pairs (point/mag) 
+      INTEGER(LONG)            :: NSNORM              =   0      ! Count of no. of SNORM Bulk Data cards 
       INTEGER(LONG)            :: NSPC                =   0      ! Count of no. of SPC  cards written to filename.L1O 
       INTEGER(LONG)            :: NSPC1               =   0      ! Count of no. of SPC1 cards written to filename.L1O 
       INTEGER(LONG)            :: NSPCADD             =   0      ! Count of no. of SPCADD cards
@@ -502,6 +504,9 @@
       INTEGER(LONG), PARAMETER :: MRCORD              =  12      ! No. cols allowed in dimensioning array RCORD 
       INTEGER(LONG), PARAMETER :: MRGRID              =   3      ! No. cols allowed in dimensioning array RGRID
       INTEGER(LONG), PARAMETER :: MRMATLC             =  30      ! No. cols allowed in dimensioning array RMATL
+      INTEGER(LONG), PARAMETER :: MRSNORM             =   3      ! No. cols allowed in dimensioning array RSNORM
+      INTEGER(LONG), PARAMETER :: MGRID_SNORM         =   3      ! No. cols allowed in dimensioning array GRID_SNORM
+      INTEGER(LONG), PARAMETER :: MSNORM              =   2      ! No. cols allowed in dimensioning array SNORM
       INTEGER(LONG), PARAMETER :: MEMATR              = MRMATLC+2! No. rows allowed in dimensioning array EMAT
       INTEGER(LONG), PARAMETER :: MEMATC              =   4      ! No. cols allowed in dimensioning array EMAT
       INTEGER(LONG), PARAMETER :: MRPBAR              =  17      ! No. cols allowed in dimensioning array RPBAR

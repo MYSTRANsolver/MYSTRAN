@@ -38,7 +38,6 @@
       REAL(DOUBLE),  INTENT(INOUT)    :: B(6,6*ELGP)
       REAL(DOUBLE),  INTENT(IN)       :: TRANSFORM(3,3)
       REAL(DOUBLE)                    :: B_TRANSFORMED(6,6*ELGP)
-      REAL(DOUBLE)                    :: FACTOR
 
       INTEGER(LONG)                   :: I,J,K,L           ! Tensor indices
       INTEGER(LONG)                   :: INDEX1(6)         ! Mapping of 6x1 vector index to 3x3 tensor first index.
@@ -65,8 +64,7 @@
         DO I=1,3
           DO J=1,3
             IJ_ROW = ROWS(I,J)
-            FACTOR = TRANSFORM(K,I) * TRANSFORM(L,J)
-            B_TRANSFORMED(ROW,:) = B_TRANSFORMED(ROW,:) + B(IJ_ROW,:) * FACTOR
+            B_TRANSFORMED(ROW,:) = B_TRANSFORMED(ROW,:) + TRANSFORM(K,I) * TRANSFORM(L,J) * B(IJ_ROW,:)
           ENDDO
         ENDDO
       ENDDO

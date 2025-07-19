@@ -1,4 +1,4 @@
-! #################################################################################################################################
+! ##################################################################################################################################
 ! Begin MIT license text.                                                                                    
 ! _______________________________________________________________________________________________________
                                                                                                          
@@ -23,77 +23,34 @@
 ! _______________________________________________________________________________________________________
                                                                                                         
 ! End MIT license text.                                                                                      
-      FUNCTION MITC_DIRECTOR_VECTOR ( R, S )
- 
-! Calculates the director vector in basic coordinates at a point in isoparametric coordinates.
 
-      USE PENTIUM_II_KIND, ONLY       :  LONG, DOUBLE
-      USE MODEL_STUF, ONLY            :  ELGP, XEB
-      USE CONSTANTS_1, ONLY           :  ZERO
+      MODULE MITC_STUF
 
-      USE MITC_SHAPE_FUNCTIONS_Interface
-      USE CROSS_Interface
-
-      IMPLICIT NONE 
-      
-      INTEGER(LONG)                   :: I,J               ! DO loop indices
-
-      REAL(DOUBLE)                    :: MITC_DIRECTOR_VECTOR(3)
-      REAL(DOUBLE) , INTENT(IN)       :: R
-      REAL(DOUBLE) , INTENT(IN)       :: S
-      REAL(DOUBLE)                    :: PSH(ELGP)       
-      REAL(DOUBLE)                    :: DPSHG(2,ELGP)     ! Derivatives of shape functions with respect to R and S.
-      REAL(DOUBLE)                    :: TANGENT_R(3)
-      REAL(DOUBLE)                    :: TANGENT_S(3)
-      REAL(DOUBLE)                    :: NORMAL(3)
-
-      INTRINSIC                       :: DSQRT
-
-
-! **********************************************************************************************************************************
-     
-! Choose the director vector to be normal to the nodal surface everywhere.
-! This isn't required for MITC and could be averaged from adjacent elements.
- 
-      CALL MITC_SHAPE_FUNCTIONS(R, S, PSH, DPSHG)
-
-
-      IF(.FALSE.) THEN
-         ! For debugging
-         ! Hardcoded radial director vector for making spheres centered on the origin.
-         ! Eventually, it could support SNORM which would interpolate the director vector from the grid point normals.
-         ! Only used for CQUAD4 and CTRIA3 in Nastran.
-      
-         NORMAL(:) = ZERO
-         DO I=1,ELGP
-            NORMAL = NORMAL + XEB(I,:) * PSH(I)
-         ENDDO
-
-      ELSE
-      
-         TANGENT_R(:)=ZERO
-         TANGENT_S(:)=ZERO
-
-         ! TANGENT_R(r, s) = dX/dR = d/dR X = sum over nodes[ dN/dR X ]
-         ! TANGENT_S(r, s) = dX/dS = d/dS X = sum over nodes[ dN/dS X ]
-         DO I=1,ELGP
-            DO J=1,3
-               TANGENT_R(J) = TANGENT_R(J) + XEB(I,J) * DPSHG(1,I)
-               TANGENT_S(J) = TANGENT_S(J) + XEB(I,J) * DPSHG(2,I)
-            ENDDO
-         ENDDO
-
-         CALL CROSS(TANGENT_R, TANGENT_S, NORMAL)
-      
-      ENDIF
-
-      NORMAL = NORMAL / DSQRT(DOT_PRODUCT(NORMAL, NORMAL))
-      
-      MITC_DIRECTOR_VECTOR = NORMAL
-
-      RETURN
-
-
-! **********************************************************************************************************************************
+! This module contains variables that are calculated once for each element and used in various places.
   
-      END FUNCTION MITC_DIRECTOR_VECTOR
+      USE PENTIUM_II_KIND, ONLY       :  LONG, DOUBLE
+  
+      IMPLICIT NONE
+
+      SAVE
+    
+
+! **********************************************************************************************************************************
+
+                                                           ! Maximum number of nodes for an element
+      INTEGER(LONG), PARAMETER        :: MELGP = 8         
+
+                                                           ! Director vector at each element node
+      REAL(DOUBLE)                    :: DIRECTOR(MELGP,3)  
+
+                                                           ! Thickness in the direction of the director vector at element nodes.
+                                                           ! Called a_k in ref [2] where k is node number.
+      REAL(DOUBLE)                    :: DIR_THICKNESS(MELGP)
+
+                                                           ! R and S coordinates of each element node
+      REAL(DOUBLE)                    :: GP_RS(2,MELGP)
+
+
+! **********************************************************************************************************************************
+
+      END MODULE MITC_STUF

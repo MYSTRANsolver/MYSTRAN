@@ -53,7 +53,7 @@
 
       CALL MITC_COVARIANT_BASIS( R, S, T, G )
       CALL MITC_CONTRAVARIANT_BASIS( G, G_CONTRA )
-      E = MITC4_CARTESIAN_LOCAL_BASIS(R, S)
+      E = MITC4_CARTESIAN_LOCAL_BASIS(R, S, T)
 
       ! The 3x3 transformation matrix A is defined by
       !    A_xy = g^y dot e_x

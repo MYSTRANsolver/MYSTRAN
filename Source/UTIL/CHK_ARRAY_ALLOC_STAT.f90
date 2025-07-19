@@ -55,7 +55,7 @@
 
       IMPLICIT NONE
 
-      INTEGER(LONG), PARAMETER        :: NUM_NAMES = 585   ! Number of arrays to check
+      INTEGER(LONG), PARAMETER        :: NUM_NAMES = 588   ! Number of arrays to check
 
       CHARACTER(31*BYTE)              :: NAME(NUM_NAMES)   ! Array name
 
@@ -654,6 +654,11 @@
       IF (ALLOCATED( XEL                            )) THEN;  NAME(583) = 'XEL                            ';  IA(583) = 1;   ENDIF
       IF (ALLOCATED( XGL                            )) THEN;  NAME(584) = 'XGL                            ';  IA(584) = 1;   ENDIF
       IF (ALLOCATED( YSe                            )) THEN;  NAME(585) = 'YSe                            ';  IA(585) = 1;   ENDIF
+      IF (ALLOCATED( SNORM                          )) THEN;  NAME(586) = 'SNORM                          ';  IA(586) = 1;   ENDIF
+      IF (ALLOCATED( RSNORM                         )) THEN;  NAME(587) = 'RSNORM                         ';  IA(587) = 1;   ENDIF
+      IF (ALLOCATED( GRID_SNORM                     )) THEN;  NAME(588) = 'GRID_SNORM                     ';  IA(588) = 1;   ENDIF
+! todo SNORM and RSNORM and GRID_SNORM aren't in alphabetical order.
+
 
       DO I=1,NUM_NAMES
          IF (IA(I) > 0) THEN

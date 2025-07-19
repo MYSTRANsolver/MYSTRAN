@@ -289,11 +289,9 @@
       ENDIF
 
       IF (TYPE == 'QUAD8   ') THEN
-! Victor todo sort out THETAM like above for the regular shells once I've worked out the coordinate systems.
       
         CALL MATERIAL_PROPS_2D ( WRITE_WARN )
         ! Don't transform the material properties here because the transformation is different at each point in the element.
-
 
       ENDIF
 

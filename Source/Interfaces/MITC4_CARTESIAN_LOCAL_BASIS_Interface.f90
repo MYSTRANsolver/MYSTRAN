@@ -28,15 +28,19 @@
 
    INTERFACE
 
-      FUNCTION MITC4_CARTESIAN_LOCAL_BASIS ( R, S )
- 
+      FUNCTION MITC4_CARTESIAN_LOCAL_BASIS ( R, S, T )
+
       USE PENTIUM_II_KIND, ONLY       :  DOUBLE
+
+      USE MITC_COVARIANT_BASIS_Interface
+      USE CROSS_Interface
 
       IMPLICIT NONE 
 
+      REAL(DOUBLE)                    :: MITC4_CARTESIAN_LOCAL_BASIS(3,3)
       REAL(DOUBLE) , INTENT(IN)       :: R
       REAL(DOUBLE) , INTENT(IN)       :: S
-      REAL(DOUBLE)                    :: MITC4_CARTESIAN_LOCAL_BASIS(3,3)
+      REAL(DOUBLE) , INTENT(IN)       :: T
       
       END FUNCTION MITC4_CARTESIAN_LOCAL_BASIS
 

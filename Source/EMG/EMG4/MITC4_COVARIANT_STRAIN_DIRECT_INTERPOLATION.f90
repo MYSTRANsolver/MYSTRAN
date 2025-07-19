@@ -27,6 +27,10 @@
  
 ! Reference [1]:
 ! "A new MITC4+ shell element" by Ko, Lee, Bathe, 2016
+!
+! Reference [2]:
+!  MITC4 paper "A continuum mechanics based four-node shell element for general nonlinear analysis" 
+!     by Dvorkin and Bathe
 
  
 ! Covariant strain-displacement components at point (R,S,T) directly evaluated from the displacement and rotation interpolations.
@@ -43,14 +47,13 @@
 
 
       USE PENTIUM_II_KIND, ONLY       :  LONG, DOUBLE
-      USE MODEL_STUF, ONLY            :  ELGP, EPROP, TYPE, XEB
+      USE MODEL_STUF, ONLY            :  ELGP, TYPE, XEB
       USE CONSTANTS_1, ONLY           :  ZERO, HALF, ONE, TWO, FOUR, QUARTER
       USE SCONTR, ONLY                :  FATAL_ERR
+      USE MITC_STUF, Only             :  DIRECTOR, DIR_THICKNESS, GP_RS
 
       USE MITC_SHAPE_FUNCTIONS_Interface
       USE OUTA_HERE_Interface
-      USE MITC_GP_RS_Interface
-      USE MITC_DIRECTOR_VECTOR_Interface
       USE CROSS_Interface
 
       IMPLICIT NONE 
@@ -69,11 +72,8 @@
       REAL(DOUBLE) , INTENT(OUT)      :: B(6, 6*ELGP)      ! Strain-displacement matrix.
       REAL(DOUBLE)                    :: PSH(ELGP)         ! Shape functions
       REAL(DOUBLE)                    :: DPSHG(2,ELGP)     ! Derivatives of shape functions with respect to R and S.
-      REAL(DOUBLE)                    :: GP_RS(2,ELGP)     ! Isoparametric coordinates of the nodes
       REAL(DOUBLE)                    :: DXMDRS(2,3)       ! Partial derivatives of x_m with respect to r and s
       REAL(DOUBLE)                    :: DXBDRS(2,3)       ! Partial derivatives of x_b with respect to r and s
-      REAL(DOUBLE)                    :: DIRECTOR(ELGP,3)  ! Director vector at each grid point. Called Vn^i in ref [1]
-      REAL(DOUBLE)                    :: THICKNESS(ELGP)   ! Element thicknesses at grid points
       REAL(DOUBLE)                    :: V1(ELGP,3)        ! Basis vector orthogonal to the director vector.
       REAL(DOUBLE)                    :: V2(ELGP,3)        ! Basis vector orthogonal to the director vector and V1.
       REAL(DOUBLE)                    :: TRANSFORM(3,3)    ! Transformation matrix.
@@ -82,23 +82,12 @@
       LOGICAL      , INTENT(IN)       :: BENDING           ! If true, generate bending parts of B
 
 ! **********************************************************************************************************************************
-
-                                                           ! Thickness is currently treated as uniform.
-                                                           ! To allow grid point thicknesses, a different value should be used
-                                                           ! for each node, interpolating to midside nodes.
-      DO GP=1,ELGP
-         THICKNESS(GP) = EPROP(1)
-      ENDDO
       
                                                            ! Shape function derivatives at R,S
       CALL MITC_SHAPE_FUNCTIONS(R, S, PSH, DPSHG)
       
                                                            ! Initialize B
       B(ROW_FROM:ROW_TO,:) = ZERO
-
-                                                           ! Isoparametric coordinates of the nodes.
-      GP_RS = MITC_GP_RS()
-
                                                            
                                                            ! Eqn (9) of ref [1].
       DXMDRS(1,:) = X_R + S * X_D                          ! ∂x_m/∂r
@@ -107,17 +96,13 @@
 
       IF(BENDING) THEN
 
-         DO GP=1,ELGP                                      ! Director vector at each node
-            DIRECTOR(GP,:) = MITC_DIRECTOR_VECTOR( GP_RS(1,GP), GP_RS(2,GP) )
-         ENDDO
-
                                                            ! ∂x_b/∂r
                                                            ! ∂x_b/∂s
                                                            ! From eqns (8a) and (2) of ref [1].
          DXBDRS(:,:) = ZERO
          DO GP=1,ELGP
-            DXBDRS(1,:) = DXBDRS(1,:) + HALF * THICKNESS(GP) * DIRECTOR(GP,:) * DPSHG(1,GP)
-            DXBDRS(2,:) = DXBDRS(2,:) + HALF * THICKNESS(GP) * DIRECTOR(GP,:) * DPSHG(2,GP)
+            DXBDRS(1,:) = DXBDRS(1,:) + HALF * DIR_THICKNESS(GP) * DIRECTOR(GP,:) * DPSHG(1,GP)
+            DXBDRS(2,:) = DXBDRS(2,:) + HALF * DIR_THICKNESS(GP) * DIRECTOR(GP,:) * DPSHG(2,GP)
          ENDDO
 
                                                            ! Find a V1 and V2 for each node which form an 
@@ -280,11 +265,11 @@
          K = (GP-1) * 6
 
                                                            ! Put coefficients of alpha in DOF 4.
-         DUMa = THICKNESS(GP) / TWO * DPSHG(IU,GP) * (-V2(GP,:))
+         DUMa = DIR_THICKNESS(GP) / TWO * DPSHG(IU,GP) * (-V2(GP,:))
          B(ROW, K+4) = B(ROW, K+4) + COEFFICIENT / TWO * DOT_PRODUCT(LEFT, DUMa)
 
                                                            ! Put coefficients of beta in DOF 5.
-         DUMb = THICKNESS(GP) / TWO * DPSHG(IU,GP) * ( V1(GP,:))
+         DUMb = DIR_THICKNESS(GP) / TWO * DPSHG(IU,GP) * ( V1(GP,:))
          B(ROW, K+5) = B(ROW, K+5) + COEFFICIENT / TWO * DOT_PRODUCT(LEFT, DUMb)
 
       ENDDO

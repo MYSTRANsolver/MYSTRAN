@@ -42,14 +42,15 @@
                                          EPROP, SHELL_STR_ANGLE
       USE CONSTANTS_1, ONLY           :  ZERO, ONE, TWO, FOUR
       USE PARAMS, ONLY                :  TSTM_DEF
+      USE MITC_STUF, ONLY             :  GP_RS
 
+      USE MITC_INITIALIZE_Interface
       USE ORDER_GAUSS_Interface
       USE OUTA_HERE_Interface
       USE MATMULT_FFF_Interface
       USE MATMULT_FFF_T_Interface
       USE MITC_DETJ_Interface
       USE MITC8_B_Interface
-      USE MITC_GP_RS_Interface
       USE MITC8_CARTESIAN_LOCAL_BASIS_Interface
       USE MITC8_ELEMENT_CS_BASIS_Interface
       
@@ -79,7 +80,6 @@
       REAL(DOUBLE)                    :: DETJ              ! Jacobian determinant
       REAL(DOUBLE)                    :: E(6,6)            ! Elasticity matrix in the material coordinate system.
       REAL(DOUBLE)                    :: EE(6,6)           ! Elasticity matrix in the cartesian local coordinate system.
-      REAL(DOUBLE)                    :: GP_RS(2,ELGP)     ! Isoparametric coordinates of grid points
       REAL(DOUBLE)                    :: LOCAL_BASIS(3,3)  ! Cartesian local basis
       REAL(DOUBLE)                    :: ELEMENT_BASIS(3,3)! Element coordinate system basis
       REAL(DOUBLE)                    :: XL(3)
@@ -99,7 +99,7 @@
 !
 ! Cartesian local
 !  e^_1, e^_2, e^_3 in Bathe but they are oriented differently there.
-!  e^_3 is the midsurface normal which may be different from the director vector.
+!  e^_3 is the midsurface normal which is the same as the director vector for MITC8 because it doesn't support SNORM.
 !  Used for strain in the strain-displacement matrix and the material elasticity matrix is transformed to this to integrate KE.
 !  Defined the same way as the zero THETA material coordinate system in Siemens SimCenter. This definition is used because it
 !  has uniform orientation on distorted flat elements and is only non-uniform as needed to accomodate out-of-plane curvature.
@@ -143,25 +143,13 @@
 !  Contravariant to the covariant.
 !  Not orthogonal
 !
-! NORMAL AND THICKNESS
-! ====================
-!
-! There are two definitions of the shell  normal:
-! 1) Normal to the midsurface. Defined by grid point positions.
-! 2) Director vector. Can be defined arbitrarily.
-! Both vary across the element if it's curved out of plane.
-! Currently, the director vector is equal to the midsurface normal so the distinction doesn't matter. However, 
-! they may be different if we include smoothing of shell normals by averaging with adjacent elements like MSC 
-! does. In that case, each occurrence of normal or director vector needs to be checked to make sure it's the
-! correct one. Also, element thickness might be defined as thickness in the direction of either of those
-! directions so some uses of thickness may need to be adjusted.
-!
 
 ! **********************************************************************************************************************************
   
 ! Initialize
       PHI_SQ  = ONE                                        ! Not used for this element
-      
+      CALL MITC_INITIALIZE ()
+
       
       IF (PCOMP_PROPS == 'Y') THEN
         WRITE(ERR,*) ' *ERROR: Code not written for composite material with QUAD8'
@@ -257,7 +245,6 @@
                                                            ! corner.
                                                            ! This will be used to transform stress and strain to the
                                                            ! element coordinate system after extrapolating to corners.
-         GP_RS = MITC_GP_RS()
          DO STR_PT_NUM=2,5
 
             R = GP_RS(1, STR_PT_NUM - 1)

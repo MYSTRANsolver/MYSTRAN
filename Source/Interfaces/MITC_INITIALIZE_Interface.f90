@@ -24,28 +24,17 @@
                                                                                                         
 ! End MIT license text.                                                                                      
 
-   MODULE MITC_GP_RS_Interface
+   MODULE MITC_INITIALIZE_Interface
 
    INTERFACE
 
-      FUNCTION MITC_GP_RS ()
+      SUBROUTINE MITC_INITIALIZE ()
 
-      USE PENTIUM_II_KIND, ONLY       :  DOUBLE
-      USE MODEL_STUF, ONLY            :  TYPE
-      USE CONSTANTS_1, ONLY           :  ZERO, ONE
-      USE IOUNT1, ONLY                :  ERR, F06
-      USE SCONTR, ONLY                :  FATAL_ERR
-      USE MODEL_STUF, ONLY            :  ELGP
-      
-      USE OUTA_HERE_Interface
+      IMPLICIT NONE
 
-      IMPLICIT NONE 
-
-      REAL(DOUBLE)                    :: MITC_GP_RS(2,ELGP)
-
-      END FUNCTION MITC_GP_RS
+      END SUBROUTINE MITC_INITIALIZE
 
    END INTERFACE
 
-   END MODULE MITC_GP_RS_Interface
+   END MODULE MITC_INITIALIZE_Interface
 

@@ -559,6 +559,9 @@ bdf:  DO
          ELSE IF (CARD(1:5) == 'SLOAD'   )  THEN
             CALL BD_SLOAD   ( CARD, CC_LOAD_FND )
 
+         ELSE IF (CARD(1:5) == 'SNORM'   )  THEN
+            CALL BD_SNORM   ( CARD )
+
          ELSE IF((CARD(1:4) == 'SPC '    ) .OR. (CARD(1:4) == 'SPC*'    )) THEN
             CALL BD_SPC     ( CARD, CC_SPC_FND )
 

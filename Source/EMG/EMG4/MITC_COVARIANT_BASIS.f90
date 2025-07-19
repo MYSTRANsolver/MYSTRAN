@@ -29,14 +29,14 @@
 ! These are also the columns of the Jacobian matrix.
 ! G(:,1) is g_r, etc.
 
+! Ref [3] SesamX blog https://www.sesamx.io/blog/shell_finite_element/
 
       USE PENTIUM_II_KIND, ONLY       :  LONG, DOUBLE
-      USE MODEL_STUF, ONLY            :  ELGP, XEB, EPROP, TYPE
+      USE MODEL_STUF, ONLY            :  ELGP, XEB
       USE CONSTANTS_1, ONLY           :  ZERO, TWO
+      USE MITC_STUF, ONLY             :  DIRECTOR, DIR_THICKNESS
 
       USE MITC_SHAPE_FUNCTIONS_Interface
-      USE MITC_GP_RS_Interface
-      USE MITC_DIRECTOR_VECTOR_Interface
 
       IMPLICIT NONE 
       
@@ -46,63 +46,23 @@
       REAL(DOUBLE) , INTENT(OUT)      :: G(3,3)            ! basis vector in basic coordinates
       REAL(DOUBLE)                    :: PSH(ELGP)       
       REAL(DOUBLE)                    :: DPSHG(2,ELGP)     ! Derivatives of shape functions with respect to xi and eta.
-      REAL(DOUBLE)                    :: DIRECTOR(3)       ! Director vector
-      REAL(DOUBLE)                    :: GP_RS(2,ELGP)     ! Isoparametric coordinates of the nodes
-      REAL(DOUBLE)                    :: RS_THICKNESS      ! Element thickness at R,S
-      REAL(DOUBLE)                    :: THICKNESS(ELGP)   ! Element thickness at grid points
 
 ! **********************************************************************************************************************************
-
-
-      ! Thickness is treated as uniform.
-      ! To allow grid point thicknesses, this should be interpolated to midside nodes and at (R,S).
-      DO GP=1,ELGP
-         THICKNESS(GP) = EPROP(1)
-      ENDDO
-      RS_THICKNESS = EPROP(1)
 
       CALL MITC_SHAPE_FUNCTIONS(R, S, PSH, DPSHG)
 
       G(:,:) = ZERO
 
-      GP_RS = MITC_GP_RS()
-
       ! Interpolate from the values at nodes
-      ! g_r(r, s, t) = dX/dr = d/dr X + t/2 * d/dr (hv)
-      !     = sum over nodes[ dN/dr X + t/2 * dN/dr (hv) ]
       DO GP=1,ELGP
-         DIRECTOR = MITC_DIRECTOR_VECTOR(GP_RS(1,GP), GP_RS(2,GP))
-         G(:,1) = G(:,1) + XEB(GP,:) * DPSHG(1,GP) + DIRECTOR * T/TWO * DPSHG(1,GP) * THICKNESS(GP)
-         G(:,2) = G(:,2) + XEB(GP,:) * DPSHG(2,GP) + DIRECTOR * T/TWO * DPSHG(2,GP) * THICKNESS(GP)
+         ! g_r(r, s, t) = dX/dr = d/dr X + t/2 * d/dr (hv)
+         !     = sum over nodes[ dN/dr X + t/2 * dN/dr (hv) ]
+         G(:,1) = G(:,1) + XEB(GP,:) * DPSHG(1,GP) + DIRECTOR(GP,:) * T/TWO * DPSHG(1,GP) * DIR_THICKNESS(GP)
+         G(:,2) = G(:,2) + XEB(GP,:) * DPSHG(2,GP) + DIRECTOR(GP,:) * T/TWO * DPSHG(2,GP) * DIR_THICKNESS(GP)
+         ! Interpolate director vector * thickness.
+         G(:,3) = G(:,3) + DIRECTOR(GP,:) * DIR_THICKNESS(GP) / TWO * PSH(GP)
       ENDDO
-
-
-      IF(.TRUE.) THEN
-         ! Interpolate director vector from nodes.
-         ! This is different from evaluating it directly at R,S but it might still be OK.
-         !
-         ! Using this, the MITC_DIRECTOR_VECTOR function can be changed to only return values at nodes, not R,S.
-         ! That will enable grid point normals more easily.
-         
-         DO GP=1,ELGP
-            DIRECTOR = MITC_DIRECTOR_VECTOR(GP_RS(1,GP), GP_RS(2,GP))
-            G(:,3) = G(:,3) + DIRECTOR * PSH(GP)
-         ENDDO
-                                                           ! Normalize to half thickness at R,S.
-         G(:,3) = G(:,3) / DSQRT(DOT_PRODUCT(G(:,3), G(:,3))) * RS_THICKNESS/TWO
-      
-      ELSE
-
-         DIRECTOR = MITC_DIRECTOR_VECTOR(R, S)
-         G(:,3) = DIRECTOR * RS_THICKNESS/TWO
-      
-      ENDIF
-
-
-
-
-
-
+   
       RETURN
 
 

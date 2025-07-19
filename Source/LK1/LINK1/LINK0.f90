@@ -57,8 +57,9 @@
       USE SCONTR, ONLY                :  BLNK_SUB_NAM, BANDIT_ERR, CHKPNT, COMM, DEMO_GRID_LIMIT, ENFORCED, EPSIL1_SET, FATAL_ERR, &
                                          IBIT, KMAT_BW, KMAT_DEN, LGRID, LINKNO, MBUG, MELDTS, NAOCARD, NCUSERIN,                  &
                                          NDOFG, NDOFR, NDOFSE, NELE, NFORCE, NGRAV, NGRID, NMPC, NPCARD,                           &
-                                         NPUSERIN, NRFORCE, NRIGEL, NSLOAD, NSPC, NSPC1, NTCARD, NTERM_KGG, NUM_PARTVEC_RECORDS,   &
-                                         NUM_SUPT_CARDS, NUM_USET_RECORDS, PROG_NAME, RESTART, SOL_NAME, WARN_ERR 
+                                         NPUSERIN, NRFORCE, NRIGEL, NSLOAD, NSNORM, NSPC, NSPC1, NTCARD, NTERM_KGG,                &
+                                         NUM_PARTVEC_RECORDS, NUM_SUPT_CARDS, NUM_USET_RECORDS, PROG_NAME, RESTART, SOL_NAME,      &
+                                         WARN_ERR
 
       USE SCONTR, ONLY                :  ELDT_BUG_DAT1_BIT, ELDT_BUG_DAT2_BIT, ELDT_BUG_ME_BIT  , ELDT_BUG_P_T_BIT ,               &
                                          ELDT_BUG_SE_BIT  , ELDT_BUG_KE_BIT  , ELDT_BUG_SHPJ_BIT, ELDT_BUG_BMAT_BIT,               &
@@ -72,7 +73,8 @@
                                          SUPWARN, WTMASS, PRTANS, PRTF06, PRTOP2
       USE NONLINEAR_PARAMS, ONLY      :  LOAD_ISTEP
       USE MACHINE_PARAMS, ONLY        :  MACH_PREC
-      USE MODEL_STUF, ONLY            :  ANY_GPFO_OUTPUT, EIG_METH, ELDT, ETYPE, MEFFMASS_CALC, NUM_EMG_FATAL_ERRS, PLY_NUM, OELDT
+      USE MODEL_STUF, ONLY            :  ANY_GPFO_OUTPUT, EIG_METH, ELDT, ETYPE, MEFFMASS_CALC, NUM_EMG_FATAL_ERRS, PLY_NUM, OELDT,&
+                                         GRID_ID, SNORM, RSNORM, GRID_SNORM
       USE DEBUG_PARAMETERS, ONLY      :  DEBUG
       USE BANDIT_MODULE
       USE RIGID_BODY_DISP_MATS, ONLY  :  RBGLOBAL_GSET, TR6_CG, TR6_MEFM, TR6_0            
@@ -114,6 +116,7 @@
       INTEGER(LONG)                   :: SETLKTK_DEF       ! Default value of SETLKTK
       INTEGER(LONG)                   :: SETLKTM_DEF       ! Default value of SETLKTM
       INTEGER(LONG) :: POST
+      INTEGER(LONG)                   :: BGRID             ! Internal grid point number
 
       REAL(DOUBLE)                    :: KGG_DIAG(NDOFG)   ! Diagonal of KGG (needed for equil check on RESTART)
       REAL(DOUBLE)                    :: KGG_MAX_DIAG      ! Max diag term from KGG (needed for equil check on RESTART)
@@ -345,6 +348,7 @@ res13:IF (RESTART == 'N') THEN
          CALL ALLOCATE_MODEL_STUF ( 'CMASS, PMASS, RPMASS', SUBR_NAME )
          CALL ALLOCATE_MODEL_STUF ( 'RFORCE_SIDS', SUBR_NAME )
          CALL ALLOCATE_MODEL_STUF ( 'SLOAD_SIDS', SUBR_NAME )
+         CALL ALLOCATE_MODEL_STUF ( 'SNORM, RSNORM', SUBR_NAME )
          CALL ALLOCATE_MODEL_STUF ( 'RIGID_ELEM_IDS', SUBR_NAME )
 
          CALL OURTIM
@@ -563,7 +567,7 @@ res14:IF (RESTART == 'N') THEN
          WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
          CALL GRID_PROC
          CALL DEALLOCATE_MODEL_STUF ( 'TN' )
-  
+
 ! Run through elements and make sure all grids on elem connection entries are defined. Need this so that if any are missing we
 ! won't send wrong NGRID value to Bandit. We don't need BGRID, but GET_ELEM_AGRID_BGRID checks that all grids on connection
 ! entries are defined
@@ -619,6 +623,33 @@ res14:IF (RESTART == 'N') THEN
          CALL SEQ_PROC
          CALL FILE_CLOSE ( L1B, LINK1B, 'KEEP', 'Y' )
          CALL DEALLOCATE_MODEL_STUF ( 'SEQ1,2' )
+
+         ! Surface normal processing
+         CALL ALLOCATE_MODEL_STUF ( 'GRID_SNORM', SUBR_NAME )
+         DO I=1,NSNORM
+            ! Find the internal grid point number for the actual grid point number specified in the SNORM entry.
+            CALL GET_ARRAY_ROW_NUM ( 'GRID_ID', SUBR_NAME, NGRID, GRID_ID, SNORM(I,1), BGRID )
+
+            IF (BGRID == -1) THEN
+               WRITE(ERR,1828) SNORM(I,1)
+               WRITE(F06,1828) SNORM(I,1)
+               FATAL_ERR = FATAL_ERR + 1
+               CALL OUTA_HERE ( 'Y' )
+            ENDIF
+
+            ! When CID is supported, transform the vector here. See how it's done reading GRID entries.
+            IF (SNORM(I,2) /= 0) THEN
+               WRITE(ERR,1829) SNORM(I,1)
+               WRITE(F06,1829) SNORM(I,1)
+               FATAL_ERR = FATAL_ERR + 1
+               CALL OUTA_HERE ( 'Y' )
+            ENDIF
+
+            ! Normalize and store in the array indexed by internal grid point number.
+            GRID_SNORM(BGRID,:) = RSNORM(I,:) / DSQRT(DOT_PRODUCT(RSNORM(I,:), RSNORM(I,:)))
+         ENDDO
+         CALL DEALLOCATE_MODEL_STUF ( 'SNORM, RSNORM' )
+  
 
       ENDIF res14
 
@@ -1217,6 +1248,10 @@ res20:IF (RESTART == 'N') THEN
  1820 FORMAT(' *ERROR  1820: THERE MUST BE AT LEAST 1 ELEMENT IN THE BULK DATA. HOWEVER, NELE = ',I8)
 
  1827 FORMAT(' *ERROR  1827: THERE MUST BE AT LEAST 1 GRID IN THE BULK DATA. HOWEVER, NGRID = ',I8)
+
+ 1828 FORMAT(' *ERROR  1828: GRID POINT ',I8,' ON BULK DATA SNORM ENTRY DOES NOT EXIST')
+
+ 1829 FORMAT(' *ERROR  1829: CID IS NOT 0 OR BLANK ON BULK DATA SNORM ENTRY FOR GRID POINT ',I8)
 
  9401 FORMAT(' *WARNING    : REQUEST FOR CHKPNT IS NOT ALLOWED IN SOLUTION ',A)
 

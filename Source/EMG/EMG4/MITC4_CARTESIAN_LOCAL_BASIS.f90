@@ -23,81 +23,48 @@
 ! _______________________________________________________________________________________________________
                                                                                                         
 ! End MIT license text.                                                                                      
-      FUNCTION MITC4_CARTESIAN_LOCAL_BASIS ( R, S )
+      FUNCTION MITC4_CARTESIAN_LOCAL_BASIS ( R, S, T )
  
-! Finds the basis vectors of the cartesian local coordinate system expressed in the basic coordinate system.
-! This is defined the same way as the material coordinate system in Simcenter Nastran with THETA=0.
-! This definition is chosen because it is uniform over the surface of the element so stress and strain outputs
-! can be interpolated/extrapolated in this coordinate system then transformed to the local element coordinate
-! system at the corner grid points and center for output.
-!
+! Reference [2]:
+!  MITC4 paper "A continuum mechanics based four-node shell element for general nonlinear analysis" 
+!     by Dvorkin and Bathe
+
 ! First index of the result (row) is a vector component in basic coordinates (x,y,z)
 ! Second index of the result (column) is basis vector (x_l, y_l, normal)
 
-      USE PENTIUM_II_KIND, ONLY       :  LONG, DOUBLE
-      USE MODEL_STUF, ONLY            :  ELGP, XEB, TYPE
-      USE CONSTANTS_1, ONLY           :  ZERO, ONE, TWO
+      USE PENTIUM_II_KIND, ONLY       :  DOUBLE
 
-      USE MITC_SHAPE_FUNCTIONS_Interface
+      USE MITC_COVARIANT_BASIS_Interface
       USE CROSS_Interface
 
       IMPLICIT NONE 
-      
-      INTEGER(LONG)                   :: I                 ! DO loop indices
 
       REAL(DOUBLE)                    :: MITC4_CARTESIAN_LOCAL_BASIS(3,3)
       REAL(DOUBLE) , INTENT(IN)       :: R
       REAL(DOUBLE) , INTENT(IN)       :: S
-      REAL(DOUBLE)                    :: PSH(ELGP)       
-      REAL(DOUBLE)                    :: DPSHG(2,ELGP)     ! Derivatives of shape functions with respect to R and S.
-      REAL(DOUBLE)                    :: E_XI(3)
-      REAL(DOUBLE)                    :: E_ETA(3)
-      REAL(DOUBLE)                    :: Z_REF(3)
-      REAL(DOUBLE)                    :: R_G1G2(3)
+      REAL(DOUBLE) , INTENT(IN)       :: T
+      REAL(DOUBLE)                    :: G(3,3)
       REAL(DOUBLE)                    :: X(3)
       REAL(DOUBLE)                    :: Y(3)
       REAL(DOUBLE)                    :: Z(3)
 
-
 ! **********************************************************************************************************************************
       
-      CALL MITC_SHAPE_FUNCTIONS(R, S, PSH, DPSHG)
-
-!victor todo choose a suitable coordiante system for mitc4. The same as MITC8 should be fine but it might be nice if
-! it's the same as the nastrn element (stress) coordinate system
-
-                                                           ! Unit normal to the reference plane
-      CALL CROSS(XEB(3,:) - XEB(1,:), XEB(4,:) - XEB(2,:), Z_REF)
-      Z_REF = Z_REF / DSQRT(DOT_PRODUCT(Z_REF, Z_REF))
-
-                                                           ! Project R_G1G2 onto the reference plane
-      R_G1G2 = XEB(2,:) - XEB(1,:)
-      R_G1G2 = R_G1G2 - Z_REF * DOT_PRODUCT(R_G1G2, Z_REF) / DOT_PRODUCT(Z_REF, Z_REF)
-
-                                                           ! Unit normal to shell surface (Z)
-      E_XI(:)=ZERO
-      E_ETA(:)=ZERO
-      DO I=1,ELGP
-         E_XI(:) = E_XI(:) + XEB(I,:) * DPSHG(1,I)
-         E_ETA(:) = E_ETA(:) + XEB(I,:) * DPSHG(2,I)
-      ENDDO
-      CALL CROSS(E_XI, E_ETA, Z)
+      CALL MITC_COVARIANT_BASIS( R, S, T, G )
+      
+      Z = G(:,3)
       Z = Z / DSQRT(DOT_PRODUCT(Z, Z))
 
-                                                           ! Y tangent to the surface
-      CALL CROSS(Z, R_G1G2, Y)
-      Y = Y / DSQRT(DOT_PRODUCT(Y, Y))
+      CALL CROSS(G(:,2), Z, X)
+      X = X / DSQRT(DOT_PRODUCT(X, X))
 
-                                                           ! Rotate the projected R_G1G2 about Y to be tangent to the surface
-      CALL CROSS(Y, Z, X)
+      CALL CROSS(Z, X, Y)
 
       MITC4_CARTESIAN_LOCAL_BASIS(:,1) = X
       MITC4_CARTESIAN_LOCAL_BASIS(:,2) = Y
       MITC4_CARTESIAN_LOCAL_BASIS(:,3) = Z
 
-
       RETURN
-
 
 ! **********************************************************************************************************************************
   

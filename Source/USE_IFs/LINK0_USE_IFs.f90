@@ -96,5 +96,6 @@
       USE WRITE_FIJFIL_Interface
       USE COUNTER_INIT_Interface
       USE COUNTER_PROGRESS_Interface
+      USE GET_ARRAY_ROW_NUM_Interface
 
       END MODULE LINK0_USE_IFs

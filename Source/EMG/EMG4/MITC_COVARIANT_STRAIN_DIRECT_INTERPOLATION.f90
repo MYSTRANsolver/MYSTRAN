@@ -38,13 +38,12 @@
 
 
       USE PENTIUM_II_KIND, ONLY       :  LONG, DOUBLE
-      USE MODEL_STUF, ONLY            :  ELGP, EPROP, TYPE
+      USE MODEL_STUF, ONLY            :  ELGP, TYPE
       USE CONSTANTS_1, ONLY           :  ZERO, TWO, FOUR
+      USE MITC_STUF, ONLY             :  DIRECTOR, DIR_THICKNESS
 
       USE MITC_SHAPE_FUNCTIONS_Interface
       USE MITC_COVARIANT_BASIS_Interface
-      USE MITC_GP_RS_Interface
-      USE MITC_DIRECTOR_VECTOR_Interface
 
       IMPLICIT NONE 
       
@@ -54,9 +53,6 @@
       REAL(DOUBLE)                    :: DPSHG(2,ELGP)     ! Derivatives of shape functions with respect to R and S.
       REAL(DOUBLE)                    :: DPSHG3(3,ELGP)    ! Derivatives of shape functions with respect to R, S, T.
       REAL(DOUBLE)                    :: G(3,3)            ! Covariant basis vectors (Jacobian matrix) in basic coordinates
-      REAL(DOUBLE)                    :: GP_RS(2,ELGP)     ! Isoparametric coordinates of the nodes
-      REAL(DOUBLE)                    :: DIRECTOR(3)       ! Director vector
-      REAL(DOUBLE)                    :: THICKNESS(ELGP)   ! Element thicknesses at grid points
 
       INTEGER(LONG), INTENT(IN)       :: ROW_FROM          ! First row of B to generate. Strain component index 1-6.
       INTEGER(LONG), INTENT(IN)       :: ROW_TO            ! Last row of B to generate. Strain component index 1-6.
@@ -66,12 +62,9 @@
       
 ! **********************************************************************************************************************************
 
-                                                           ! Thickness is currently treated as uniform.
-                                                           ! To allow grid point thicknesses, a different value should be used
-                                                           ! for each node, interpolating to midside nodes.
-      DO I=1,ELGP
-         THICKNESS(I) = EPROP(1)
-      ENDDO
+! Reference [2]:
+!  MITC4 paper "A continuum mechanics based four-node shell element for general nonlinear analysis" 
+!     by Dvorkin and Bathe
 
                                                            ! Shape function derivatives at R,S
       CALL MITC_SHAPE_FUNCTIONS(R, S, PSH, DPSHG)
@@ -93,12 +86,8 @@
 ! From "A continuum mechanics based four-node shell element for general nonlinear analysis" by Dvorkin and Bathe
 ! equations (21a), (22a), (23a), (24a)
 
-      GP_RS = MITC_GP_RS()
-
       DO ROW=1,6
         DO GP=1,ELGP
-        
-          DIRECTOR = MITC_DIRECTOR_VECTOR( GP_RS(1,GP), GP_RS(2,GP) )
 
           K = (GP-1) * 6
 
@@ -118,25 +107,25 @@
             B(ROW, K+2) = (DPSHG3(I,GP) * G(2,J) + DPSHG3(J,GP) * G(2,I)) / TWO
             B(ROW, K+3) = (DPSHG3(I,GP) * G(3,J) + DPSHG3(J,GP) * G(3,I)) / TWO
                                                            !... 1/4 d/di (t h phi) dot g_j  + ...
-            B(ROW, K+4) = THICKNESS(GP) * T * DPSHG3(I,GP) * (G(3,J) * DIRECTOR(2) - G(2,J) * DIRECTOR(3)) / FOUR
-            B(ROW, K+5) = THICKNESS(GP) * T * DPSHG3(I,GP) * (G(1,J) * DIRECTOR(3) - G(3,J) * DIRECTOR(1)) / FOUR
-            B(ROW, K+6) = THICKNESS(GP) * T * DPSHG3(I,GP) * (G(2,J) * DIRECTOR(1) - G(1,J) * DIRECTOR(2)) / FOUR
+            B(ROW, K+4) = DIR_THICKNESS(GP) * T * DPSHG3(I,GP) * (G(3,J) * DIRECTOR(GP,2) - G(2,J) * DIRECTOR(GP,3)) / FOUR
+            B(ROW, K+5) = DIR_THICKNESS(GP) * T * DPSHG3(I,GP) * (G(1,J) * DIRECTOR(GP,3) - G(3,J) * DIRECTOR(GP,1)) / FOUR
+            B(ROW, K+6) = DIR_THICKNESS(GP) * T * DPSHG3(I,GP) * (G(2,J) * DIRECTOR(GP,1) - G(1,J) * DIRECTOR(GP,2)) / FOUR
                                                            !... 1/4 d/dj (t h phi) dot g_i  ]
             IF (J == 3) THEN
                                                            ! Transverse shear rows are special. Eqn. (23a), (24a)
                                                            ! 1/4 d/dt (t h phi) = 1/4 h phi
-              B(ROW, K+4) = B(ROW, K+4) + THICKNESS(GP) * PSH(GP) * (G(3,I) * DIRECTOR(2) - G(2,I) * DIRECTOR(3)) / FOUR
-              B(ROW, K+5) = B(ROW, K+5) + THICKNESS(GP) * PSH(GP) * (G(1,I) * DIRECTOR(3) - G(3,I) * DIRECTOR(1)) / FOUR
-              B(ROW, K+6) = B(ROW, K+6) + THICKNESS(GP) * PSH(GP) * (G(2,I) * DIRECTOR(1) - G(1,I) * DIRECTOR(2)) / FOUR
+              B(ROW, K+4) = B(ROW, K+4) + DIR_THICKNESS(GP) * PSH(GP) * (G(3,I) * DIRECTOR(GP,2) - G(2,I) * DIRECTOR(GP,3)) / FOUR
+              B(ROW, K+5) = B(ROW, K+5) + DIR_THICKNESS(GP) * PSH(GP) * (G(1,I) * DIRECTOR(GP,3) - G(3,I) * DIRECTOR(GP,1)) / FOUR
+              B(ROW, K+6) = B(ROW, K+6) + DIR_THICKNESS(GP) * PSH(GP) * (G(2,I) * DIRECTOR(GP,1) - G(1,I) * DIRECTOR(GP,2)) / FOUR
             ELSE            
                                                            ! 1/4 d/dr (t h phi) = 1/4 t h dN/dr phi
                                                            ! 1/4 d/ds (t h phi) = 1/4 t h dN/ds phi
               B(ROW, K+4) = B(ROW, K+4) +                                                                                          &
-                THICKNESS(GP) * T * DPSHG3(J,GP) * (G(3,I) * DIRECTOR(2) - G(2,I) * DIRECTOR(3)) / FOUR
+                DIR_THICKNESS(GP) * T * DPSHG3(J,GP) * (G(3,I) * DIRECTOR(GP,2) - G(2,I) * DIRECTOR(GP,3)) / FOUR
               B(ROW, K+5) = B(ROW, K+5) +                                                                                          &
-                THICKNESS(GP) * T * DPSHG3(J,GP) * (G(1,I) * DIRECTOR(3) - G(3,I) * DIRECTOR(1)) / FOUR
+                DIR_THICKNESS(GP) * T * DPSHG3(J,GP) * (G(1,I) * DIRECTOR(GP,3) - G(3,I) * DIRECTOR(GP,1)) / FOUR
               B(ROW, K+6) = B(ROW, K+6) +                                                                                          &
-                THICKNESS(GP) * T * DPSHG3(J,GP) * (G(2,I) * DIRECTOR(1) - G(1,I) * DIRECTOR(2)) / FOUR
+                DIR_THICKNESS(GP) * T * DPSHG3(J,GP) * (G(2,I) * DIRECTOR(GP,1) - G(1,I) * DIRECTOR(GP,2)) / FOUR
             ENDIF
 
 

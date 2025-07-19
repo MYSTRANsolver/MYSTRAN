@@ -101,6 +101,7 @@
       USE BD_RSPLINE_Interface
       USE BD_SEQGP_Interface
       USE BD_SLOAD_Interface
+      USE BD_SNORM_Interface
       USE BD_SPC_Interface
       USE BD_SPC1_Interface
       USE BD_SPCADD_Interface

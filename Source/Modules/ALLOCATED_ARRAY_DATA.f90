@@ -38,7 +38,7 @@
       SAVE
 
       INTEGER(LONG), PRIVATE        :: II
-      INTEGER(LONG), PARAMETER      :: NUM_ALLOC_ARRAYS = 585
+      INTEGER(LONG), PARAMETER      :: NUM_ALLOC_ARRAYS = 588
 
       CHARACTER( 31*BYTE)           :: ALLOCATED_ARRAY_NAMES(NUM_ALLOC_ARRAYS)= (/'ABAND                          ', & ! NAME(  1)
                                                                                   'AGRID                          ', & ! NAME(  2)
@@ -624,7 +624,11 @@
                                                                                   'XEB                            ', & ! NAME(582)
                                                                                   'XEL                            ', & ! NAME(583)
                                                                                   'XGL                            ', & ! NAME(584)
-                                                                                  'YSe                            ' /) ! NAME(585)
+                                                                                  'YSe                            ', & ! NAME(585)
+                                                                                  'SNORM                          ', & ! NAME(586)
+                                                                                  'RSNORM                         ', & ! NAME(587)
+                                                                                  'GRID_SNORM                     ' /) ! NAME(588)
+! todo SNORM and RSNORM and GRID_SNORM aren't in alphabetical order.
 
       REAL(DOUBLE)                    :: ALLOCATED_ARRAY_MEM(NUM_ALLOC_ARRAYS) = (/(ZERO, II=1,NUM_ALLOC_ARRAYS)/)
 
