@@ -24,33 +24,33 @@
                                                                                                         
 ! End MIT license text.                                                                                      
 
-   MODULE MITC_COVARIANT_STRAIN_DIRECT_INTERPOLATION_Interface
+   MODULE MITC4_COVARIANT_STRAIN_DIRECT_INTERPOLATION_Interface
 
    INTERFACE
 
-      SUBROUTINE MITC_COVARIANT_STRAIN_DIRECT_INTERPOLATION ( R, S, T, ROW_FROM, ROW_TO, B )
+      SUBROUTINE MITC4_COVARIANT_STRAIN_DIRECT_INTERPOLATION ( R, S, T, X_R, X_S, X_D, MEMBRANE, BENDING, ROW_FROM, ROW_TO, B )
       
       USE PENTIUM_II_KIND, ONLY       :  LONG, DOUBLE
-      USE MODEL_STUF, ONLY            :  ELGP, EPROP, TYPE
-      USE CONSTANTS_1, ONLY           :  ZERO, TWO, FOUR
-      USE IOUNT1, ONLY                :  ERR, F06
-      USE SCONTR, ONLY                :  FATAL_ERR
-
-      USE SHP2DQ_Interface
-      USE OUTA_HERE_Interface
-      USE MITC_COVARIANT_BASIS_Interface
+      USE MODEL_STUF, ONLY            :  ELGP
 
       IMPLICIT NONE 
+
+      INTEGER(LONG), INTENT(IN)       :: ROW_FROM          ! First row of B to generate. Strain component index 1-4.
+      INTEGER(LONG), INTENT(IN)       :: ROW_TO            ! Last row of B to generate. Strain component index 1-4.
       
       REAL(DOUBLE) , INTENT(IN)       :: R,S,T             ! Isparametric coordinates
+      REAL(DOUBLE) , INTENT(IN)       :: X_R(3)            ! Characteristic geometry vector x_r
+      REAL(DOUBLE) , INTENT(IN)       :: X_S(3)            ! Characteristic geometry vector x_s
+      REAL(DOUBLE) , INTENT(IN)       :: X_D(3)            ! Characteristic geometry vector x_d (distortion vector)
       REAL(DOUBLE) , INTENT(OUT)      :: B(6, 6*ELGP)      ! Strain-displacement matrix.
 
-      INTEGER(LONG), INTENT(IN)       :: ROW_FROM          ! First row of B to generate. Strain component index 1-6.
-      INTEGER(LONG), INTENT(IN)       :: ROW_TO            ! Last row of B to generate. Strain component index 1-6.
-         
-      END SUBROUTINE MITC_COVARIANT_STRAIN_DIRECT_INTERPOLATION
+      LOGICAL      , INTENT(IN)       :: MEMBRANE          ! If true, generate membrane parts of B
+      LOGICAL      , INTENT(IN)       :: BENDING           ! If true, generate bending parts of B
+
+
+      END SUBROUTINE MITC4_COVARIANT_STRAIN_DIRECT_INTERPOLATION
 
    END INTERFACE
 
-   END MODULE MITC_COVARIANT_STRAIN_DIRECT_INTERPOLATION_Interface
+   END MODULE MITC4_COVARIANT_STRAIN_DIRECT_INTERPOLATION_Interface
 

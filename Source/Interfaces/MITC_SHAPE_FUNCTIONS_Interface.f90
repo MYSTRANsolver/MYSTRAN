@@ -24,33 +24,28 @@
                                                                                                         
 ! End MIT license text.                                                                                      
 
-   MODULE MITC_COVARIANT_STRAIN_DIRECT_INTERPOLATION_Interface
+   MODULE MITC_SHAPE_FUNCTIONS_Interface
 
    INTERFACE
 
-      SUBROUTINE MITC_COVARIANT_STRAIN_DIRECT_INTERPOLATION ( R, S, T, ROW_FROM, ROW_TO, B )
-      
-      USE PENTIUM_II_KIND, ONLY       :  LONG, DOUBLE
-      USE MODEL_STUF, ONLY            :  ELGP, EPROP, TYPE
-      USE CONSTANTS_1, ONLY           :  ZERO, TWO, FOUR
-      USE IOUNT1, ONLY                :  ERR, F06
-      USE SCONTR, ONLY                :  FATAL_ERR
+      SUBROUTINE MITC_SHAPE_FUNCTIONS ( R, S, PSH, DPSHG )
+ 
+
+      USE PENTIUM_II_KIND, ONLY       :  DOUBLE
+      USE MODEL_STUF, ONLY            :  ELGP
 
       USE SHP2DQ_Interface
       USE OUTA_HERE_Interface
-      USE MITC_COVARIANT_BASIS_Interface
 
       IMPLICIT NONE 
-      
-      REAL(DOUBLE) , INTENT(IN)       :: R,S,T             ! Isparametric coordinates
-      REAL(DOUBLE) , INTENT(OUT)      :: B(6, 6*ELGP)      ! Strain-displacement matrix.
 
-      INTEGER(LONG), INTENT(IN)       :: ROW_FROM          ! First row of B to generate. Strain component index 1-6.
-      INTEGER(LONG), INTENT(IN)       :: ROW_TO            ! Last row of B to generate. Strain component index 1-6.
-         
-      END SUBROUTINE MITC_COVARIANT_STRAIN_DIRECT_INTERPOLATION
+      REAL(DOUBLE) , INTENT(IN)       :: R,S               ! Isoparametric coordinates
+      REAL(DOUBLE) , INTENT(OUT)      :: PSH(ELGP)         ! Shape functions
+      REAL(DOUBLE) , INTENT(OUT)      :: DPSHG(2,ELGP)     ! Derivatives of shape functions with respect to R and S.
+      
+      END SUBROUTINE MITC_SHAPE_FUNCTIONS
 
    END INTERFACE
 
-   END MODULE MITC_COVARIANT_STRAIN_DIRECT_INTERPOLATION_Interface
+   END MODULE MITC_SHAPE_FUNCTIONS_Interface
 

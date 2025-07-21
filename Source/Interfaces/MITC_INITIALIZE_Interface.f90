@@ -24,42 +24,17 @@
                                                                                                         
 ! End MIT license text.                                                                                      
 
-   MODULE MITC_DIRECTOR_VECTOR_Interface
+   MODULE MITC_INITIALIZE_Interface
 
    INTERFACE
 
-      FUNCTION MITC_DIRECTOR_VECTOR ( R, S )
- 
-      USE PENTIUM_II_KIND, ONLY       :  LONG, DOUBLE
-      USE MODEL_STUF, ONLY            :  ELGP, XEB, TYPE
-      USE CONSTANTS_1, ONLY           :  ZERO
-      USE IOUNT1, ONLY                :  ERR, F06
-      USE SCONTR, ONLY                :  FATAL_ERR
+      SUBROUTINE MITC_INITIALIZE ()
 
-      USE SHP2DQ_Interface
-      USE CROSS_Interface
-      USE OUTA_HERE_Interface
+      IMPLICIT NONE
 
-      IMPLICIT NONE 
-      
-      INTEGER(LONG)                   :: I,J               ! DO loop indices
-
-      REAL(DOUBLE)                    :: MITC_DIRECTOR_VECTOR(3)
-      REAL(DOUBLE) , INTENT(IN)       :: R
-      REAL(DOUBLE) , INTENT(IN)       :: S
-      REAL(DOUBLE)                    :: PSH(ELGP)       
-      REAL(DOUBLE)                    :: DPSHG(2,ELGP)     ! Derivatives of shape functions with respect to R and S.
-      REAL(DOUBLE)                    :: TANGENT_R(3)
-      REAL(DOUBLE)                    :: TANGENT_S(3)
-      REAL(DOUBLE)                    :: NORMAL(3)
-      REAL(DOUBLE)                    :: MAG
-
-      INTRINSIC                       :: DSQRT
-
-
-      END FUNCTION MITC_DIRECTOR_VECTOR
+      END SUBROUTINE MITC_INITIALIZE
 
    END INTERFACE
 
-   END MODULE MITC_DIRECTOR_VECTOR_Interface
+   END MODULE MITC_INITIALIZE_Interface
 

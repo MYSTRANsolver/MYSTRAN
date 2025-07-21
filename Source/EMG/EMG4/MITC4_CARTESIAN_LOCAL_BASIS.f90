@@ -23,77 +23,49 @@
 ! _______________________________________________________________________________________________________
                                                                                                         
 ! End MIT license text.                                                                                      
-      FUNCTION MITC_DIRECTOR_VECTOR ( R, S )
+      FUNCTION MITC4_CARTESIAN_LOCAL_BASIS ( R, S, T )
  
-! Calculates the director vector in basic coordinates at a point in isoparametric coordinates.
+! Reference [2]:
+!  MITC4 paper "A continuum mechanics based four-node shell element for general nonlinear analysis" 
+!     by Dvorkin and Bathe
 
-      USE PENTIUM_II_KIND, ONLY       :  LONG, DOUBLE
-      USE MODEL_STUF, ONLY            :  ELGP, XEB, TYPE
-      USE CONSTANTS_1, ONLY           :  ZERO
-      USE IOUNT1, ONLY                :  ERR, F06
-      USE SCONTR, ONLY                :  FATAL_ERR
+! First index of the result (row) is a vector component in basic coordinates (x,y,z)
+! Second index of the result (column) is basis vector (x_l, y_l, normal)
 
-      USE SHP2DQ_Interface
+      USE PENTIUM_II_KIND, ONLY       :  DOUBLE
+
+      USE MITC_COVARIANT_BASIS_Interface
       USE CROSS_Interface
-      USE OUTA_HERE_Interface
 
       IMPLICIT NONE 
-      
-      INTEGER(LONG)                   :: I,J               ! DO loop indices
 
-      REAL(DOUBLE)                    :: MITC_DIRECTOR_VECTOR(3)
+      REAL(DOUBLE)                    :: MITC4_CARTESIAN_LOCAL_BASIS(3,3)
       REAL(DOUBLE) , INTENT(IN)       :: R
       REAL(DOUBLE) , INTENT(IN)       :: S
-      REAL(DOUBLE)                    :: PSH(ELGP)       
-      REAL(DOUBLE)                    :: DPSHG(2,ELGP)     ! Derivatives of shape functions with respect to R and S.
-      REAL(DOUBLE)                    :: TANGENT_R(3)
-      REAL(DOUBLE)                    :: TANGENT_S(3)
-      REAL(DOUBLE)                    :: NORMAL(3)
-
-      INTRINSIC                       :: DSQRT
-
+      REAL(DOUBLE) , INTENT(IN)       :: T
+      REAL(DOUBLE)                    :: G(3,3)
+      REAL(DOUBLE)                    :: X(3)
+      REAL(DOUBLE)                    :: Y(3)
+      REAL(DOUBLE)                    :: Z(3)
 
 ! **********************************************************************************************************************************
       
-! Choose the director vector to be normal to the nodal surface everywhere.
-! This isn't required for MITC and could be averaged from adjacent elements.
- 
-      IF (TYPE(1:5) == 'QUAD8') THEN
-
-        CALL SHP2DQ ( 0, 0, ELGP, 'MITC_DIRECTOR_VECTOR', '', 0, R, S, 'N', PSH, DPSHG )
-
-      ELSE
-
-        WRITE(ERR,*) ' *ERROR: INCORRECT ELEMENT TYPE', TYPE
-        WRITE(F06,*) ' *ERROR: INCORRECT ELEMENT TYPE', TYPE
-        FATAL_ERR = FATAL_ERR + 1
-        CALL OUTA_HERE ( 'Y' )
-
-      ENDIF
-
-      DO I=1,3
-        TANGENT_R(I)=ZERO
-        TANGENT_S(I)=ZERO
-      ENDDO
-
-      ! TANGENT_R(r, s) = dX/dR = d/dR X = sum over nodes[ dN/dR X ]
-      ! TANGENT_S(r, s) = dX/dS = d/dS X = sum over nodes[ dN/dS X ]
-      DO I=1,ELGP
-        DO J=1,3
-          TANGENT_R(J) = TANGENT_R(J) + XEB(I,J) * DPSHG(1,I)
-          TANGENT_S(J) = TANGENT_S(J) + XEB(I,J) * DPSHG(2,I)
-        ENDDO
-      ENDDO
-
-      CALL CROSS(TANGENT_R, TANGENT_S, NORMAL)
-
-      NORMAL = NORMAL / DSQRT(DOT_PRODUCT(NORMAL, NORMAL))
+      CALL MITC_COVARIANT_BASIS( R, S, T, G )
       
-      MITC_DIRECTOR_VECTOR = NORMAL
+      Z = G(:,3)
+      Z = Z / DSQRT(DOT_PRODUCT(Z, Z))
+
+      CALL CROSS(G(:,2), Z, X)
+      X = X / DSQRT(DOT_PRODUCT(X, X))
+
+      CALL CROSS(Z, X, Y)
+
+      MITC4_CARTESIAN_LOCAL_BASIS(:,1) = X
+      MITC4_CARTESIAN_LOCAL_BASIS(:,2) = Y
+      MITC4_CARTESIAN_LOCAL_BASIS(:,3) = Z
 
       RETURN
 
-
 ! **********************************************************************************************************************************
   
-      END FUNCTION MITC_DIRECTOR_VECTOR
+      END FUNCTION MITC4_CARTESIAN_LOCAL_BASIS

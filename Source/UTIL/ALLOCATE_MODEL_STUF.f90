@@ -36,13 +36,13 @@
                                          LIND_GRDS_MPCS, LLOADC, LLOADR, LMATANGLE, LMATL, LMPC, LMPCADDC, LMPCADDR, LPBAR, LPBEAM,&
                                          LPBUSH, LPCOMP, LPCOMP_PLIES, LPDAT, LPELAS, LPLATEOFF, LPLATETHICK, LPLOAD, LPMASS,      &
                                          LPROD, LPSHEAR, LPSHEL, LPSOLID, LPUSER1, LPUSERIN, LRFORCE, LRIGEL, LSEQ, LSETLN, LSETS, &
-                                         LSLOAD, LSPC, LSPC1, LSPCADDC, LSPCADDR, LSUB, LTDAT, LVVEC
+                                         LSLOAD, LSNORM, LSPC, LSPC1, LSPCADDC, LSPCADDR, LSUB, LTDAT, LVVEC
       USE SCONTR, ONLY                :  MAX_ELEM_DEGREE, MAX_GAUSS_POINTS, MAX_STRESS_POINTS, MCMASS, MCONM2, MCORD, MDT, MELDOF, &
                                          MELGP, MGRID, MMATL, MOFFSET, MPBAR, MPBEAM, MPBUSH, MPCOMP_PLIES, MPCOMP0, MPELAS,       &
                                          MPMASS, MPRESS, MPLOAD4_3D_DATA, MPROD, MPSHEAR, MPSHEL, MPSOLID, MPUSER1, MPUSERIN,      &
                                          MRCONM2, MRCORD,                                                                          &
                                          MRGRID, MRMATLC, MRPBAR, MRPBEAM, MRPBUSH, MRPCOMP_PLIES, MRPCOMP0, MRPELAS, MRPMASS,     &
-                                         MRPROD, MRPSHEAR, MRPSHEL, MRPUSER1, MUSERIN_MAT_NAMES
+                                         MRPROD, MRPSHEAR, MRPSHEL, MRPUSER1, MRSNORM, MSNORM, MGRID_SNORM, MUSERIN_MAT_NAMES
       USE SCONTR, ONLY                :  NDOFG, NGRID, NMPC, NPCOMP, NPLOAD4_3D, NRBAR, NRBE1, NRBE2, NSPC, NTSUB, NUM_MPCSIDS,    &
                                          NUM_SPCSIDS
       USE TIMDAT, ONLY                :  TSEC
@@ -62,6 +62,7 @@
       USE MODEL_STUF, ONLY            :  GRAV_SIDS, RFORCE_SIDS, SLOAD_SIDS
       USE MODEL_STUF, ONLY            :  GRID, RGRID
       USE MODEL_STUF, ONLY            :  GRID_ID, GRID_SEQ, INV_GRID_SEQ, MPC_IND_GRIDS
+      USE MODEL_STUF, ONLY            :  SNORM, RSNORM, GRID_SNORM
       USE MODEL_STUF, ONLY            :  MATL, RMATL, PBAR, RPBAR, PBEAM, RPBEAM, PBUSH, RPBUSH, PCOMP, RPCOMP, PELAS, RPELAS,     &
                                          PROD, RPROD, PSHEAR, RPSHEAR, PSHEL, RPSHEL, PSOLID, PUSER1, RPUSER1, PUSERIN,            &
                                          USERIN_ACT_COMPS, USERIN_ACT_GRIDS, USERIN_MAT_NAMES 
@@ -2376,6 +2377,92 @@
                CALL WRITE_MEM_SUM_TO_F04 ( NAME, 'ALLOC', MB_ALLOCATED, LGRID, 1, SUBR_BEGEND )
                DO I=1,LGRID
                   INV_GRID_SEQ(I) = 0
+               ENDDO
+            ELSE
+               WRITE(ERR,991) MB_ALLOCATED, NAME,SUBR_NAME, IERR
+               WRITE(F06,991) MB_ALLOCATED, NAME,SUBR_NAME, IERR
+               FATAL_ERR = FATAL_ERR + 1
+               JERR = JERR + 1
+            ENDIF
+         ENDIF
+
+
+      ELSE IF (NAME_IN == 'SNORM, RSNORM') THEN            ! Allocate arrays for SNORM, RSNORM
+
+         NAME = 'SNORM'
+         IF (ALLOCATED(SNORM)) THEN
+            WRITE(ERR,990) SUBR_NAME, NAME
+            WRITE(F06,990) SUBR_NAME, NAME
+            FATAL_ERR = FATAL_ERR + 1
+            JERR = JERR + 1
+         ELSE
+            ALLOCATE (SNORM(LSNORM,MSNORM),STAT=IERR)
+            NROWS = LSNORM
+            NCOLS = MSNORM
+            MB_ALLOCATED = RLONG*REAL(LSNORM)*REAL(MSNORM)/ONEPP6
+            IF (IERR == 0) THEN
+               CALL ALLOCATED_MEMORY ( NAME, MB_ALLOCATED, 'ALLOC', 'Y', CUR_MB_ALLOCATED, SUBR_NAME )
+               CALL WRITE_MEM_SUM_TO_F04 ( NAME, 'ALLOC', MB_ALLOCATED, LSNORM, MSNORM, SUBR_BEGEND )
+               DO I=1,LSNORM
+                  DO J=1,MSNORM
+                     SNORM(I,J) = 0
+                  ENDDO
+               ENDDO
+            ELSE
+               WRITE(ERR,991) MB_ALLOCATED, NAME,SUBR_NAME, IERR
+               WRITE(F06,991) MB_ALLOCATED, NAME,SUBR_NAME, IERR
+               FATAL_ERR = FATAL_ERR + 1
+               JERR = JERR + 1
+            ENDIF
+         ENDIF
+
+         NAME = 'RSNORM'
+         IF (ALLOCATED(RSNORM)) THEN
+            WRITE(ERR,990) SUBR_NAME, NAME
+            WRITE(F06,990) SUBR_NAME, NAME
+            FATAL_ERR = FATAL_ERR + 1
+            JERR = JERR + 1
+         ELSE
+            ALLOCATE (RSNORM(LSNORM,MRSNORM),STAT=IERR)
+            NROWS = LSNORM
+            NCOLS = MRSNORM
+            MB_ALLOCATED = RDOUBLE*REAL(LSNORM)*REAL(MRSNORM)/ONEPP6
+            IF (IERR == 0) THEN
+               CALL ALLOCATED_MEMORY ( NAME, MB_ALLOCATED, 'ALLOC', 'Y', CUR_MB_ALLOCATED, SUBR_NAME )
+               CALL WRITE_MEM_SUM_TO_F04 ( NAME, 'ALLOC', MB_ALLOCATED, LSNORM, MRSNORM, SUBR_BEGEND )
+               DO I=1,LSNORM
+                  DO J=1,MRSNORM
+                     RSNORM(I,J) = ZERO
+                  ENDDO
+               ENDDO
+            ELSE
+               WRITE(ERR,991) MB_ALLOCATED, NAME,SUBR_NAME, IERR
+               WRITE(F06,991) MB_ALLOCATED, NAME,SUBR_NAME, IERR
+               FATAL_ERR = FATAL_ERR + 1
+               JERR = JERR + 1
+            ENDIF
+         ENDIF
+
+      ELSE IF (NAME_IN == 'GRID_SNORM') THEN            ! Allocate array for GRID_SNORM
+
+         NAME = 'GRID_SNORM'
+         IF (ALLOCATED(GRID_SNORM)) THEN
+            WRITE(ERR,990) SUBR_NAME, NAME
+            WRITE(F06,990) SUBR_NAME, NAME
+            FATAL_ERR = FATAL_ERR + 1
+            JERR = JERR + 1
+         ELSE
+            ALLOCATE (GRID_SNORM(NGRID,MGRID_SNORM),STAT=IERR)
+            NROWS = NGRID
+            NCOLS = MGRID_SNORM
+            MB_ALLOCATED = RLONG*REAL(NGRID)*REAL(MGRID_SNORM)/ONEPP6
+            IF (IERR == 0) THEN
+               CALL ALLOCATED_MEMORY ( NAME, MB_ALLOCATED, 'ALLOC', 'Y', CUR_MB_ALLOCATED, SUBR_NAME )
+               CALL WRITE_MEM_SUM_TO_F04 ( NAME, 'ALLOC', MB_ALLOCATED, NGRID, MGRID_SNORM, SUBR_BEGEND )
+               DO I=1,NGRID
+                  DO J=1,MGRID_SNORM
+                     GRID_SNORM(I,J) = ZERO
+                  ENDDO
                ENDDO
             ELSE
                WRITE(ERR,991) MB_ALLOCATED, NAME,SUBR_NAME, IERR

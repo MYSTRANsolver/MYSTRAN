@@ -24,33 +24,31 @@
                                                                                                         
 ! End MIT license text.                                                                                      
 
-   MODULE MITC_COVARIANT_STRAIN_DIRECT_INTERPOLATION_Interface
+   MODULE MITC_TRANSFORM_CONTRAVARIANT_TO_LOCAL_Interface
 
    INTERFACE
 
-      SUBROUTINE MITC_COVARIANT_STRAIN_DIRECT_INTERPOLATION ( R, S, T, ROW_FROM, ROW_TO, B )
-      
-      USE PENTIUM_II_KIND, ONLY       :  LONG, DOUBLE
-      USE MODEL_STUF, ONLY            :  ELGP, EPROP, TYPE
-      USE CONSTANTS_1, ONLY           :  ZERO, TWO, FOUR
-      USE IOUNT1, ONLY                :  ERR, F06
-      USE SCONTR, ONLY                :  FATAL_ERR
+      SUBROUTINE MITC_TRANSFORM_CONTRAVARIANT_TO_LOCAL ( R, S, T, B )
 
-      USE SHP2DQ_Interface
-      USE OUTA_HERE_Interface
+      USE PENTIUM_II_KIND, ONLY       :  LONG, DOUBLE
+      USE MODEL_STUF, ONLY            :  ELGP
+      USE CONSTANTS_1, ONLY           :  ZERO, QUARTER, ONE, TWO, THREE
+
       USE MITC_COVARIANT_BASIS_Interface
+      USE MITC_CONTRAVARIANT_BASIS_Interface
+      USE MITC8_CARTESIAN_LOCAL_BASIS_Interface
+      USE MITC_TRANSFORM_B_Interface
 
       IMPLICIT NONE 
-      
-      REAL(DOUBLE) , INTENT(IN)       :: R,S,T             ! Isparametric coordinates
-      REAL(DOUBLE) , INTENT(OUT)      :: B(6, 6*ELGP)      ! Strain-displacement matrix.
 
-      INTEGER(LONG), INTENT(IN)       :: ROW_FROM          ! First row of B to generate. Strain component index 1-6.
-      INTEGER(LONG), INTENT(IN)       :: ROW_TO            ! Last row of B to generate. Strain component index 1-6.
-         
-      END SUBROUTINE MITC_COVARIANT_STRAIN_DIRECT_INTERPOLATION
+      REAL(DOUBLE) , INTENT(IN)       :: R, S, T           ! Isoparametric coordinates
+      REAL(DOUBLE) , INTENT(OUT)      :: B(6, 6*ELGP)      ! Strain-displacement matrix
+      REAL(DOUBLE)                    :: TRANSFORM(3,3)    ! Transformation matrix
+
+
+      END SUBROUTINE MITC_TRANSFORM_CONTRAVARIANT_TO_LOCAL
 
    END INTERFACE
 
-   END MODULE MITC_COVARIANT_STRAIN_DIRECT_INTERPOLATION_Interface
+   END MODULE MITC_TRANSFORM_CONTRAVARIANT_TO_LOCAL_Interface
 

@@ -1,4 +1,4 @@
-! ###############################################################################################################################
+! ##################################################################################################################################
 ! Begin MIT license text.                                                                                    
 ! _______________________________________________________________________________________________________
                                                                                                          
@@ -24,33 +24,33 @@
                                                                                                         
 ! End MIT license text.                                                                                      
 
-   MODULE MITC_COVARIANT_STRAIN_DIRECT_INTERPOLATION_Interface
+      MODULE MITC_STUF
 
-   INTERFACE
-
-      SUBROUTINE MITC_COVARIANT_STRAIN_DIRECT_INTERPOLATION ( R, S, T, ROW_FROM, ROW_TO, B )
-      
+! This module contains variables that are calculated once for each element and used in various places.
+  
       USE PENTIUM_II_KIND, ONLY       :  LONG, DOUBLE
-      USE MODEL_STUF, ONLY            :  ELGP, EPROP, TYPE
-      USE CONSTANTS_1, ONLY           :  ZERO, TWO, FOUR
-      USE IOUNT1, ONLY                :  ERR, F06
-      USE SCONTR, ONLY                :  FATAL_ERR
+  
+      IMPLICIT NONE
 
-      USE SHP2DQ_Interface
-      USE OUTA_HERE_Interface
-      USE MITC_COVARIANT_BASIS_Interface
+      SAVE
+    
 
-      IMPLICIT NONE 
-      
-      REAL(DOUBLE) , INTENT(IN)       :: R,S,T             ! Isparametric coordinates
-      REAL(DOUBLE) , INTENT(OUT)      :: B(6, 6*ELGP)      ! Strain-displacement matrix.
+! **********************************************************************************************************************************
 
-      INTEGER(LONG), INTENT(IN)       :: ROW_FROM          ! First row of B to generate. Strain component index 1-6.
-      INTEGER(LONG), INTENT(IN)       :: ROW_TO            ! Last row of B to generate. Strain component index 1-6.
-         
-      END SUBROUTINE MITC_COVARIANT_STRAIN_DIRECT_INTERPOLATION
+                                                           ! Maximum number of nodes for an element
+      INTEGER(LONG), PARAMETER        :: MELGP = 8         
 
-   END INTERFACE
+                                                           ! Director vector at each element node
+      REAL(DOUBLE)                    :: DIRECTOR(MELGP,3)  
 
-   END MODULE MITC_COVARIANT_STRAIN_DIRECT_INTERPOLATION_Interface
+                                                           ! Thickness in the direction of the director vector at element nodes.
+                                                           ! Called a_k in ref [2] where k is node number.
+      REAL(DOUBLE)                    :: DIR_THICKNESS(MELGP)
 
+                                                           ! R and S coordinates of each element node
+      REAL(DOUBLE)                    :: GP_RS(2,MELGP)
+
+
+! **********************************************************************************************************************************
+
+      END MODULE MITC_STUF

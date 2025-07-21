@@ -37,23 +37,12 @@
       USE SCONTR, ONLY                :  FATAL_ERR
 
       USE SHP2DQ_Interface
-      USE MITC_GP_RS_Interface
-      USE MITC_DIRECTOR_VECTOR_Interface
       USE OUTA_HERE_Interface
 
       IMPLICIT NONE 
-      
-      INTEGER(LONG)                   :: I,J               ! DO loop indices
-      INTEGER(LONG)                   :: GP                ! Element grid point number
 
       REAL(DOUBLE) , INTENT(IN)       :: R, S, T           ! Isoparametric coordinates
       REAL(DOUBLE) , INTENT(OUT)      :: G(3,3)            ! basis vector in basic coordinates
-      REAL(DOUBLE)                    :: PSH(ELGP)       
-      REAL(DOUBLE)                    :: DPSHG(2,ELGP)     ! Derivatives of shape functions with respect to xi and eta.
-      REAL(DOUBLE)                    :: DIRECTOR(3)       ! Director vector
-      REAL(DOUBLE)                    :: GP_RS(2,ELGP)     ! Isoparametric coordinates of the nodes
-      REAL(DOUBLE)                    :: RS_THICKNESS      ! Element thickness at R,S
-      REAL(DOUBLE)                    :: THICKNESS(ELGP)   ! Element thickness at grid points
 
       END SUBROUTINE MITC_COVARIANT_BASIS
 

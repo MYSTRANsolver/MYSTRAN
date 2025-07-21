@@ -2427,18 +2427,22 @@
          IF (IERRFL(3) == 'N') THEN
             CALL LEFT_ADJ_BDFLD ( CHRPARM )
             IF      (CHRPARM == 'MIN4T   ') THEN
-               QUAD4TYP = 'MIN4T'
+               QUAD4TYP = 'MIN4T '
             ELSE IF (CHRPARM == 'MIN4    ') THEN
-               QUAD4TYP = 'MIN4 '
+               QUAD4TYP = 'MIN4  '
+            ELSE IF (CHRPARM == 'MITC4   ') THEN
+               QUAD4TYP = 'MITC4 '
+            ELSE IF (CHRPARM == 'MITC4+  ') THEN
+               QUAD4TYP = 'MITC4+'
             ELSE
                WARN_ERR = WARN_ERR + 1
                WRITE(ERR,101) CARD
-               WRITE(ERR,1189) PARNAM,'MIN4T or MIN4',CHRPARM,QUAD4TYP
+               WRITE(ERR,1189) PARNAM,'MIN4T, MIN4, MITC4 or MITC4+',CHRPARM,QUAD4TYP
                IF (SUPWARN == 'N') THEN
                   IF (ECHO == 'NONE  ') THEN
                      WRITE(F06,101) CARD
                   ENDIF
-                  WRITE(F06,1189) PARNAM,'MIN4T or MIN4',CHRPARM,QUAD4TYP
+                  WRITE(F06,1189) PARNAM,'MIN4T, MIN4, MITC4 or MITC4+',CHRPARM,QUAD4TYP
                ENDIF
             ENDIF
          ENDIF

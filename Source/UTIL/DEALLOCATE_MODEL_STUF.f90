@@ -48,6 +48,7 @@
       USE MODEL_STUF, ONLY            :  GRAV_SIDS, RFORCE_SIDS, SLOAD_SIDS
       USE MODEL_STUF, ONLY            :  GRID, RGRID
       USE MODEL_STUF, ONLY            :  GRID_ID, GRID_SEQ, INV_GRID_SEQ, MPC_IND_GRIDS
+      USE MODEL_STUF, ONLY            :  SNORM, RSNORM, GRID_SNORM
       USE MODEL_STUF, ONLY            :  MATL, RMATL, PBAR, RPBAR, PBEAM, RPBEAM, PBUSH, RPBUSH, PCOMP, RPCOMP, PELAS, RPELAS,     &
                                          PROD, RPROD, PSHEAR, RPSHEAR, PSHEL, RPSHEL, PSOLID, PUSER1, RPUSER1, PUSERIN,            &
                                          USERIN_ACT_COMPS, USERIN_ACT_GRIDS, USERIN_MAT_NAMES 
@@ -1248,6 +1249,49 @@
          NAME = 'INV_GRID_SEQ'
          IF (ALLOCATED(INV_GRID_SEQ)) THEN
             DEALLOCATE (INV_GRID_SEQ,STAT=IERR)
+            IF (IERR == 0) THEN
+               CALL ALLOCATED_MEMORY ( NAME, ZERO, 'DEALLOC', 'Y', CUR_MB_ALLOCATED, SUBR_NAME )
+               CALL WRITE_MEM_SUM_TO_F04 ( NAME, 'DEALLOC', -CUR_MB_ALLOCATED, 0, 0, SUBR_BEGEND )
+            ELSE
+               WRITE(ERR,992) NAME, SUBR_NAME
+               WRITE(F06,992) NAME, SUBR_NAME
+               JERR = JERR + 1
+            ENDIF
+         ENDIF
+
+      ELSE IF (NAME_IN == 'SNORM, RSNORM') THEN            ! Deallocate arrays for SNORM, RSNORM
+
+         NAME = 'SNORM'
+         IF (ALLOCATED(SNORM)) THEN
+            DEALLOCATE (SNORM,STAT=IERR)
+            IF (IERR == 0) THEN
+               CALL ALLOCATED_MEMORY ( NAME, ZERO, 'DEALLOC', 'Y', CUR_MB_ALLOCATED, SUBR_NAME )
+               CALL WRITE_MEM_SUM_TO_F04 ( NAME, 'DEALLOC', -CUR_MB_ALLOCATED, 0, 0, SUBR_BEGEND )
+            ELSE
+               WRITE(ERR,992) NAME, SUBR_NAME
+               WRITE(F06,992) NAME, SUBR_NAME
+               JERR = JERR + 1
+            ENDIF
+         ENDIF
+
+         NAME = 'RSNORM'
+         IF (ALLOCATED(RSNORM)) THEN
+            DEALLOCATE (RSNORM,STAT=IERR)
+            IF (IERR == 0) THEN
+               CALL ALLOCATED_MEMORY ( NAME, ZERO, 'DEALLOC', 'Y', CUR_MB_ALLOCATED, SUBR_NAME )
+               CALL WRITE_MEM_SUM_TO_F04 ( NAME, 'DEALLOC', -CUR_MB_ALLOCATED, 0, 0, SUBR_BEGEND )
+            ELSE
+               WRITE(ERR,992) NAME, SUBR_NAME
+               WRITE(F06,992) NAME, SUBR_NAME
+               JERR = JERR + 1
+            ENDIF
+         ENDIF
+
+      ELSE IF (NAME_IN == 'GRID_SNORM') THEN            ! Deallocate arrays for GRID_SNORM
+
+         NAME = 'GRID_SNORM'
+         IF (ALLOCATED(GRID_SNORM)) THEN
+            DEALLOCATE (GRID_SNORM,STAT=IERR)
             IF (IERR == 0) THEN
                CALL ALLOCATED_MEMORY ( NAME, ZERO, 'DEALLOC', 'Y', CUR_MB_ALLOCATED, SUBR_NAME )
                CALL WRITE_MEM_SUM_TO_F04 ( NAME, 'DEALLOC', -CUR_MB_ALLOCATED, 0, 0, SUBR_BEGEND )

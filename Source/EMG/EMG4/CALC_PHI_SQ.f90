@@ -105,7 +105,7 @@
 ! Now calculate PHI_SQ (but only if the element has transverse shear flexibility)
 
       IF      (TYPE(1:5) == 'QUAD4') THEN                  ! Regardless of who calls this subr, TYPE will det which CBMIN to use
-         IF (QUAD4TYP == 'MIN4T') THEN                     ! quad TYPE's will use either CBMIN4 or CBMIN4T
+         IF (QUAD4TYP == 'MIN4T ') THEN                    ! quad TYPE's will use either CBMIN4 or CBMIN4T
             CBMIN = CBMIN4T
          ELSE
             CBMIN = CBMIN4

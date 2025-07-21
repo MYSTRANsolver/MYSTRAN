@@ -1,4 +1,4 @@
-! ###############################################################################################################################
+! #################################################################################################################################
 ! Begin MIT license text.                                                                                    
 ! _______________________________________________________________________________________________________
                                                                                                          
@@ -23,29 +23,48 @@
 ! _______________________________________________________________________________________________________
                                                                                                         
 ! End MIT license text.                                                                                      
+      SUBROUTINE MITC_TRANSFORM_CONTRAVARIANT_TO_LOCAL ( R, S, T, B )
 
-   MODULE MITC_GP_RS_Interface
+! Transform covariant strain components from the contravariant basis to the cartesian local basis.
+!   ε_kl = ε~_ij (g^i dot e_k)(g^j dot e_l)
 
-   INTERFACE
-
-      FUNCTION MITC_GP_RS ()
-
-      USE PENTIUM_II_KIND, ONLY       :  DOUBLE
-      USE MODEL_STUF, ONLY            :  TYPE
-      USE CONSTANTS_1, ONLY           :  ZERO, ONE
-      USE IOUNT1, ONLY                :  ERR, F06
-      USE SCONTR, ONLY                :  FATAL_ERR
+      USE PENTIUM_II_KIND, ONLY       :  LONG, DOUBLE
       USE MODEL_STUF, ONLY            :  ELGP
+      USE CONSTANTS_1, ONLY           :  ZERO, QUARTER, ONE, TWO, THREE
+
+      USE MITC_COVARIANT_BASIS_Interface
+      USE MITC_CONTRAVARIANT_BASIS_Interface
+      USE MITC4_CARTESIAN_LOCAL_BASIS_Interface
+      USE MITC_TRANSFORM_B_Interface
+      USE MATMULT_FFF_Interface
       
-      USE OUTA_HERE_Interface
 
       IMPLICIT NONE 
 
-      REAL(DOUBLE)                    :: MITC_GP_RS(2,ELGP)
+      REAL(DOUBLE) , INTENT(IN)       :: R, S, T           ! Isoparametric coordinates
+      REAL(DOUBLE) , INTENT(OUT)      :: B(6, 6*ELGP)      ! Strain-displacement matrix
+      REAL(DOUBLE)                    :: TRANSFORM(3,3)    ! Transformation matrix
+      REAL(DOUBLE)                    :: G(3,3)            ! Array of 3 covariant basis vectors in basic coordinates
+      REAL(DOUBLE)                    :: G_CONTRA(3,3)     ! Array of 3 contravariant basis vectors in basic coordinates
+      REAL(DOUBLE)                    :: E(3,3)            ! Basis vectors
 
-      END FUNCTION MITC_GP_RS
+! **********************************************************************************************************************************
 
-   END INTERFACE
 
-   END MODULE MITC_GP_RS_Interface
+      CALL MITC_COVARIANT_BASIS( R, S, T, G )
+      CALL MITC_CONTRAVARIANT_BASIS( G, G_CONTRA )
+      E = MITC4_CARTESIAN_LOCAL_BASIS(R, S, T)
 
+      ! The 3x3 transformation matrix A is defined by
+      !    A_xy = g^y dot e_x
+      ! or two transformation matrices multiplied
+      CALL MATMULT_FFF(TRANSPOSE(E), G_CONTRA, 3, 3, 3, TRANSFORM)
+
+      CALL MITC_TRANSFORM_B( TRANSFORM, B)
+
+
+      RETURN
+
+! **********************************************************************************************************************************
+  
+      END SUBROUTINE MITC_TRANSFORM_CONTRAVARIANT_TO_LOCAL

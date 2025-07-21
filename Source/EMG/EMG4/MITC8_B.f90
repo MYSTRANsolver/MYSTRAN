@@ -36,7 +36,7 @@
       USE MODEL_STUF, ONLY            :  ELGP
       USE CONSTANTS_1, ONLY           :  ZERO, QUARTER, ONE, TWO, THREE
 
-      USE SHP2DQ_Interface
+      USE MITC_SHAPE_FUNCTIONS_Interface
       USE MITC_COVARIANT_BASIS_Interface
       USE MITC_CONTRAVARIANT_BASIS_Interface
       USE MITC_COVARIANT_STRAIN_DIRECT_INTERPOLATION_Interface
@@ -122,7 +122,7 @@
         POINT_S = (/ A,  A, -A, -A, A,     ZERO, -A,    ZERO /)
 
                                                            ! Interpolation functions for the 8 sampling points.
-        CALL SHP2DQ ( 0, 0, ELGP, 'MITC8_B', '', 0, R/A, S/A, 'N', PSH, DPSHG )
+        CALL MITC_SHAPE_FUNCTIONS(R/A, S/A, PSH, DPSHG)
 
 
                                                             ! Convert interpolation functions from native node numbering

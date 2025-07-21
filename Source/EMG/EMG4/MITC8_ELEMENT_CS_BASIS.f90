@@ -33,12 +33,9 @@
       USE PENTIUM_II_KIND, ONLY       :  LONG, DOUBLE
       USE MODEL_STUF, ONLY            :  ELGP, XEB, TYPE
       USE CONSTANTS_1, ONLY           :  ZERO, ONE, TWO
-      USE IOUNT1, ONLY                :  ERR, F06
-      USE SCONTR, ONLY                :  FATAL_ERR
 
-      USE SHP2DQ_Interface
+      USE MITC_SHAPE_FUNCTIONS_Interface
       USE CROSS_Interface
-      USE OUTA_HERE_Interface
 
       IMPLICIT NONE 
       
@@ -63,19 +60,7 @@
 ! **********************************************************************************************************************************
       
  
-      IF (TYPE(1:5) == 'QUAD8') THEN
-
-        CALL SHP2DQ ( 0, 0, ELGP, 'MITC8_ELEMENT_CS_BASIS', '', 0, R, S, 'N', PSH, DPSHG )
-
-      ELSE
-
-        WRITE(ERR,*) ' *ERROR: INCORRECT ELEMENT TYPE', TYPE
-        WRITE(F06,*) ' *ERROR: INCORRECT ELEMENT TYPE', TYPE
-        FATAL_ERR = FATAL_ERR + 1
-        CALL OUTA_HERE ( 'Y' )
-
-      ENDIF
-
+      CALL MITC_SHAPE_FUNCTIONS(R, S, PSH, DPSHG)
 
                                                            ! e_ξ(r, s) = d/dR X = sum over nodes[ dN/dR X ]
                                                            ! e_η(r, s) = d/dS X = sum over nodes[ dN/dS X ]

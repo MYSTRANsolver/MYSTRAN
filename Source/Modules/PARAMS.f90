@@ -78,10 +78,10 @@
       REAL(DOUBLE)             :: CBMIN3         =  TWO      ! Trans shear factor for MIN3  triangle elems (TRIA3)
 
 ! ----------------------------------------------------------------------------------------------------------------------------------
-      REAL(DOUBLE)             :: CBMIN4         =  THREEP6  ! Trans shear factor for MIN4  quad     elems (QUAD4, QUAD4TYP='MIN4 ')
+      REAL(DOUBLE)             :: CBMIN4         =  THREEP6  ! Trans shear factor for MIN4  quad    elems (QUAD4, QUAD4TYP='MIN4  ')
 
 ! ----------------------------------------------------------------------------------------------------------------------------------
-      REAL(DOUBLE)             :: CBMIN4T        =  THREEP6  ! Trans shear factor for MIN4T quad     elems (QUAD4, QUAD4TYP='MIN4T')
+      REAL(DOUBLE)             :: CBMIN4T        =  THREEP6  ! Trans shear factor for MIN4T quad    elems (QUAD4, QUAD4TYP='MIN4T ')
 
 ! ----------------------------------------------------------------------------------------------------------------------------------
       CHARACTER(  1*BYTE)      :: CHKGRDS        =    'Y'    ! If 'Y' call GET_ELEM_AGRID_BGRID to check all grids on elems exist
@@ -393,9 +393,11 @@
 !                                                              'SPLITD', use angle that splits the 2 diags to define the elem x axis
 
 ! ----------------------------------------------------------------------------------------------------------------------------------
-      CHARACTER(  5*BYTE)      :: QUAD4TYP       =  'MIN4 '  ! Which element to use in MYSTRAN as the QUAD4 element
-!                                                              'MIN4T': Use Tessler's MIN4T element made up of 4 MIN3 triangles
-!                                                              'MIN4 ': Use Tessler's MIN4 element 
+      CHARACTER(  6*BYTE)      :: QUAD4TYP       =  'MIN4  ' ! Which element to use in MYSTRAN as the QUAD4 element
+!                                                              'MIN4T ': Use Tessler's MIN4T element made up of 4 MIN3 triangles
+!                                                              'MIN4  ': Use Tessler's MIN4 element 
+!                                                              'MITC4 ': Use Bathe's MITC4 (1983)
+!                                                              'MITC4+': Use Ko/Bathe's 2nd MITC4+ (Nov 2016)
 
 ! ----------------------------------------------------------------------------------------------------------------------------------
       CHARACTER(  1*BYTE)      :: RELINK3        =    'N'    ! 'Y', 'N' indicator to redo LINK3,5 on a restart

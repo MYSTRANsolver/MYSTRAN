@@ -34,7 +34,7 @@
                                          LEDAT, LFORCE, LCONM2, LCORD, LGRAV, LGRID, LGUSERIN, LLOADC, LLOADR,                     &
                                          LMATL, LMPC, LMPCADDC, LMPCADDR, LPBAR, LPBEAM, LPBUSH, LPCOMP, LPCOMP_PLIES, LPDAT,      &
                                          LPELAS, LPLOAD, LPMASS, LPROD, LPSHEL, LPSHEAR, LPSOLID, LPUSER1, LPUSERIN, LRFORCE,      &
-                                         LRIGEL, LSEQ, LSLOAD, LSPC, LSPC1, LSPCADDC, LSPCADDR, LSUSERIN, LTDAT,                   &
+                                         LRIGEL, LSEQ, LSLOAD, LSNORM, LSPC, LSPC1, LSPCADDC, LSPCADDR, LSUSERIN, LTDAT,           &
                                          MEDAT_CBAR, MEDAT_CBEAM, MEDAT_CBUSH,                                                     &
                                          MEDAT_CELAS1, MEDAT_CELAS2, MEDAT_CELAS3, MEDAT_CELAS4,                                   &
                                          MEDAT_CQUAD, MEDAT_CQUAD8, MEDAT_CROD, MEDAT_CSHEAR, MEDAT_CTRIA, MEDAT_CUSER1,           &
@@ -478,6 +478,9 @@
  
          ELSE IF (CARD(1:5) == 'SEQGP'   )  THEN
             LSEQ = LSEQ + 4                                ! Conservative estimate. There can only be 4 entries per card
+
+         ELSE IF (CARD(1:5) == 'SNORM'   )  THEN
+            LSNORM = LSNORM + 1
  
          ELSE IF((CARD(1:4) == 'SPC '    ) .OR. (CARD(1:4) == 'SPC*'    )) THEN
             LSPC = LSPC + 1

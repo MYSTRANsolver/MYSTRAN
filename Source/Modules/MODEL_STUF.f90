@@ -278,6 +278,21 @@
 !                                                              these grids since they may have no stiffness in KGG but do in KNN.
 
 ! **********************************************************************************************************************************
+! SNORM data (grid point surface normals)
+! ----------
+
+      INTEGER(LONG), ALLOCATABLE      :: SNORM(:,:)          ! Array SNORM GID and CID.
+                                                             ! One row for each SNORM entry in the file.
+                                                             ! Only used in LINK0 to read the entries.
+      REAL(DOUBLE), ALLOCATABLE       :: RSNORM(:,:)         ! Array SNORM vectors in the input (CID) coordinate systems. 
+                                                             ! One row for each SNORM entry in the file, corresponding to SNORM.
+                                                             ! Only used in LINK0 to read the entries.
+      REAL(DOUBLE), ALLOCATABLE       :: GRID_SNORM(:,:)     ! NGRID x MGRID_SNORM array normalized surface normal vectors in 
+                                                             ! the basic coordinate system indexed by internal grid point number
+                                                             ! (BGRID), the same as the GRID and RGRID arrays. Where all 3
+                                                             ! components are exactly zero, there is no normal for that grid point.
+
+! **********************************************************************************************************************************
 ! Force and load set ID's
 ! -----------------------
 
