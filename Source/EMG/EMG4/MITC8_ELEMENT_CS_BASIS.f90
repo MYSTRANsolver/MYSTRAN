@@ -31,7 +31,7 @@
 ! Second index of the result is basis vector (x_l, y_l, normal)
 
       USE PENTIUM_II_KIND, ONLY       :  LONG, DOUBLE
-      USE MODEL_STUF, ONLY            :  ELGP, XEB, TYPE
+      USE MODEL_STUF, ONLY            :  ELGP, XEL, TYPE
       USE CONSTANTS_1, ONLY           :  ZERO, ONE, TWO
 
       USE MITC_SHAPE_FUNCTIONS_Interface
@@ -67,8 +67,8 @@
       E_XI(:)=ZERO
       E_ETA(:)=ZERO
       DO I=1,ELGP
-        E_XI(:) = E_XI(:) + XEB(I,:) * DPSHG(1,I)
-        E_ETA(:) = E_ETA(:) + XEB(I,:) * DPSHG(2,I)
+        E_XI(:) = E_XI(:) + XEL(I,:) * DPSHG(1,I)
+        E_ETA(:) = E_ETA(:) + XEL(I,:) * DPSHG(2,I)
       ENDDO
 
                                                            !Normalize e_ξ and e_η

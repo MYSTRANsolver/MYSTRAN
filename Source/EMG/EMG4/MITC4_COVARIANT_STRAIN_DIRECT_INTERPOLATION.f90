@@ -47,7 +47,7 @@
 
 
       USE PENTIUM_II_KIND, ONLY       :  LONG, DOUBLE
-      USE MODEL_STUF, ONLY            :  ELGP, TYPE, XEB
+      USE MODEL_STUF, ONLY            :  ELGP, TYPE
       USE CONSTANTS_1, ONLY           :  ZERO, HALF, ONE, TWO, FOUR, QUARTER
       USE SCONTR, ONLY                :  FATAL_ERR
       USE MITC_STUF, Only             :  DIRECTOR, DIR_THICKNESS, GP_RS

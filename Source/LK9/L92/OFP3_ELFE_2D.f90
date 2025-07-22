@@ -41,6 +41,7 @@
       use model_stuf, only            :  pcomp_props
       USE MODEL_STUF, ONLY            :  ANY_ELFE_OUTPUT, EDAT, EPNT, ETYPE, FCONV, EID, ELMTYP, ELOUT, METYPE, NUM_EMG_FATAL_ERRS,&
                                          PLY_NUM, TYPE, STRESS, SHELL_STR_ANGLE, NUM_SEi, ELGP, AGRID
+      USE CC_OUTPUT_DESCRIBERS, ONLY  :  FORC_LOC
       USE LINK9_STUFF, ONLY           :  EID_OUT_ARRAY, GID_OUT_ARRAY, MAXREQ, OGEL
       USE OUTPUT4_MATRICES, ONLY      :  OTM_ELFE, TXT_ELFE
   
@@ -146,7 +147,8 @@
                IF (ETYPE(J) == ELMTYP(I)) THEN
                   call is_elem_pcomp_props ( j )
                   if (pcomp_props == 'N') then
-                     IF (ETYPE(J)(1:5) == 'QUAD8') THEN
+                     IF ((FORC_LOC == 'CORNER  ') .OR.                                                                                & 
+                         (ETYPE(J)(1:5) == 'QUAD8')) THEN
                         NUM_PTS(I) = NUM_SEi(I)
                      ELSE
                         NUM_PTS(I) = 1
@@ -219,7 +221,8 @@ elems_3: DO J = 1,NELE
                            STRESS_RAW(:,M) = STRESS(:) 
                         ENDDO
                                          
-                        IF (ETYPE(J)(1:5) == 'QUAD8') THEN
+                        IF ((FORC_LOC == 'CORNER  ') .OR.                                                                                & 
+                            (ETYPE(J)(1:5) == 'QUAD8')) THEN
                                                            ! Extrapolate stress to corners
                            CALL POLYNOM_FIT_STRE_STRN ( STRESS_RAW, 9, NUM_PTS(I), STRESS_OUT, STRESS_OUT_PCT_ERR,                 &
                              STRESS_OUT_ERR_INDEX, PCT_ERR_MAX )
@@ -235,7 +238,7 @@ elems_3: DO J = 1,NELE
                                                            ! this is equivalent.
                            STRESS_OUT(:,1) = (STRESS_OUT(:,2) + STRESS_OUT(:,3) + STRESS_OUT(:,4) + STRESS_OUT(:,5)) / FOUR
                         ELSE
-                        
+                        !victor todo quad4 center force should be calcualted some other way like average of corner forces/stresses
                            STRESS_OUT(:,1) = STRESS_RAW(:,1)
                         
                         ENDIF

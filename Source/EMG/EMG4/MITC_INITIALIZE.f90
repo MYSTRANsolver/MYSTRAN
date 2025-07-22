@@ -28,11 +28,13 @@
 ! Initialize element variables in MITC_STUF.
 
       USE PENTIUM_II_KIND, ONLY       :  LONG, DOUBLE
-      USE MODEL_STUF, ONLY            :  ELGP, EPROP, XEB, BGRID, GRID_SNORM, TYPE
+      USE MODEL_STUF, ONLY            :  ELGP, EPROP, XEL, BGRID, GRID_SNORM, TYPE, TE
       USE CONSTANTS_1, ONLY           :  ZERO, ONE
       USE MITC_STUF, ONLY             :  DIRECTOR, DIR_THICKNESS, GP_RS 
       USE IOUNT1, ONLY                :  ERR, F06
       USE SCONTR, ONLY                :  FATAL_ERR
+
+      USE MATMULT_FFF_Interface
 
       IMPLICIT NONE 
 
@@ -111,8 +113,8 @@
          ! TANGENT_S(r, s) = dX/dS = d/dS X = sum over nodes[ dN/dS X ]
          DO I=1,ELGP
             DO J=1,3
-               TANGENT_R(J) = TANGENT_R(J) + XEB(I,J) * DPSHG(1,I)
-               TANGENT_S(J) = TANGENT_S(J) + XEB(I,J) * DPSHG(2,I)
+               TANGENT_R(J) = TANGENT_R(J) + XEL(I,J) * DPSHG(1,I)
+               TANGENT_S(J) = TANGENT_S(J) + XEL(I,J) * DPSHG(2,I)
             ENDDO
          ENDDO
 
@@ -127,7 +129,8 @@
                                                            ! Use the midsurface normal unless SNORM exists and it's
                                                            ! a linear element.
          IF (ANY(NORMAL /= ZERO) .AND. (TYPE(1:5) == 'QUAD4')) THEN
-            DIRECTOR(GP,:) = NORMAL
+                                                           ! Transform SNORM from basic to XEL element coordinates.
+            CALL MATMULT_FFF(TE, NORMAL, 3, 3, 1, DIRECTOR(GP,:))
          ELSE
             DIRECTOR(GP,:) = MIDSURFACE_NORMAL(GP,:)
          ENDIF
