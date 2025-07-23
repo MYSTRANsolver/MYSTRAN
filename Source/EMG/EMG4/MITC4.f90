@@ -51,7 +51,11 @@
       USE MITC4_B_Interface
       USE MITC4_CARTESIAN_LOCAL_BASIS_Interface
       USE MITC_TRANSFORM_B_Interface
-      
+      USE PLANE_COORD_TRANS_21_Interface
+      USE MATL_TRANSFORM_MATRIX_Interface
+      USE MATMULT_FFF_Interface
+      USE MATMULT_FFF_T_Interface
+
       IMPLICIT NONE 
   
       CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: SUBR_NAME = 'MITC4'
@@ -78,8 +82,11 @@
       REAL(DOUBLE)                    :: DETJ              ! Jacobian determinant
       REAL(DOUBLE)                    :: E(6,6)            ! Elasticity matrix in the material coordinate system.
       REAL(DOUBLE)                    :: EE(6,6)           ! Elasticity matrix in the cartesian local coordinate system.
+      REAL(DOUBLE)                    :: CLB(3,3)          ! Cartesian local basis basis vectors
+      REAL(DOUBLE)                    :: MATL_AXES_ROTATE
       REAL(DOUBLE)                    :: TRANSFORM(3,3)
-
+      REAL(DOUBLE)                    :: DUM66(6,6)        ! Intermediate matrix in calculating outputs
+      REAL(DOUBLE)                    :: T66(6,6)          ! 6x6 transformation matrix for elasticity
 
 ! **********************************************************************************************************************************
 
@@ -106,8 +113,6 @@
 !
 ! Material
 !  Used for material elasticity read from the input file.
-!  Currently, this is the same as the cartesian local coordinate system. To allow non-isotropic materials, it
-!  should transform the material elasticity matrix when building the stiffness matrix KE.
 !  Orthogonal
 !
 ! Isoparametric (natural)
@@ -181,18 +186,17 @@
 
          CALL ORDER_GAUSS ( IORD_STRESS_Q4, SS_IJ, HH_IJ )
 
-         DO I=1,IORD_STRESS_Q4
-            DO J=1,IORD_STRESS_Q4
+         DO STR_PT_NUM = 1,5
 
                                                            ! Account for Bathe's R,S coordinates vs node numbering being different
                                                            ! from Mystran's
-               IF ( I == 1 .AND. J == 1 ) THEN; STR_PT_NUM = 1+4; ENDIF
-               IF ( I == 1 .AND. J == 2 ) THEN; STR_PT_NUM = 1+3; ENDIF
-               IF ( I == 2 .AND. J == 1 ) THEN; STR_PT_NUM = 1+2; ENDIF
-               IF ( I == 2 .AND. J == 2 ) THEN; STR_PT_NUM = 1+1; ENDIF
-
-               R = SS_IJ(I)
-               S = SS_IJ(J)
+               SELECT CASE (STR_PT_NUM)
+                  CASE (1); R=ZERO    ; S=ZERO             ! Center
+                  CASE (2); R=SS_IJ(2); S=SS_IJ(2)         ! Gauss point 1
+                  CASE (3); R=SS_IJ(2); S=SS_IJ(1)         ! Gauss point 2
+                  CASE (4); R=SS_IJ(1); S=SS_IJ(2)         ! Gauss point 3
+                  CASE (5); R=SS_IJ(1); S=SS_IJ(1)         ! Gauss point 4
+               END SELECT
 
                                                            ! Get the strain-displacement matrix at top and bottom
                                                            ! and transform strain terms to the element coordinate system.
@@ -231,8 +235,7 @@
                                                            ! Transverse shear strain. Note reversed order of rows.
                BE3(1,:,STR_PT_NUM) = (BI2(6,:) + BI1(6,:)) / TWO           ! zx
                BE3(2,:,STR_PT_NUM) = (BI2(5,:) + BI1(5,:)) / TWO           ! yz
-                              
-            ENDDO
+         
          ENDDO
 
 
@@ -306,9 +309,22 @@
                   S = SS_IJ(J)
                   T = SS_K(K)
 
-                  ! For non-isotropic materials, this should be rotated from the material coordinate system to the cartesian local
-                  ! coordinate system here. The rotation angle may be different at each Gauss point.
-                  EE(:,:) = E(:,:)
+                                                           ! Find the angle of the cartesian local coordinate
+                                                           ! system's x axis projected onto the element coordinate system's
+                                                           ! xy plane. Projection is simply ignoring the z component.
+                  CLB = MITC4_CARTESIAN_LOCAL_BASIS( R, S, T )
+                  MATL_AXES_ROTATE = -ATAN2(CLB(2,1), CLB(1,1))
+                                                           ! Rotate the material elasticity matrix so it's expressed in projected
+                                                           ! cartesian local coordinates. When the elasticity matrix is used
+                                                           ! it will be assumed to be in the non-projected cartesial local 
+                                                           ! coordinate system but pretend they're the same so that material
+                                                           ! properties follow the curved surface of warped elements.
+                  CALL PLANE_COORD_TRANS_21 ( MATL_AXES_ROTATE, TRANSFORM, SUBR_NAME )
+                  CALL MATL_TRANSFORM_MATRIX ( TRANSFORM, T66 )
+                  T66 = TRANSPOSE(T66)
+                  CALL MATMULT_FFF   ( E , T66   , 6, 6, 6, DUM66 )
+                  CALL MATMULT_FFF_T ( T66 , DUM66, 6, 6, 6, EE   )
+
                   DETJ = MITC_DETJ ( R, S, T )
                   INTFAC = DETJ*HH_IJ(I)*HH_IJ(J)*HH_K(K)
                   CALL MITC4_B( R, S, T, .TRUE., .TRUE., .TRUE., BI)

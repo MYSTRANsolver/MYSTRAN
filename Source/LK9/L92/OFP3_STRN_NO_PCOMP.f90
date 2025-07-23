@@ -170,7 +170,6 @@ reqs7:DO I=1,METYPE
          IF (NELREQ(I) == 0) CYCLE reqs7
          NUM_OGEL_ROWS = 0
          NUM_OGEL = 0
- 
 elems_7: DO J = 1,NELE
 
             EID   = EDAT(EPNT(J))
@@ -195,9 +194,9 @@ elems_7: DO J = 1,NELE
                         STRAIN_RAW(K,M) = STRAIN(K) 
                      ENDDO
                   ENDDO
-                  DO K=1,9                                 ! Set STRAIN_OUT for NUM_PTS(I) = 1
-                     STRAIN_OUT(K,1) = STRAIN(K)
-                  ENDDO
+
+                  STRAIN_OUT(:,1) = STRAIN(:)              ! Set STRAIN_OUT for NUM_PTS(I) = 1
+
                   IF ((STRN_LOC == 'CORNER  ') .OR.                                                                                & 
                       (STRN_LOC == 'GAUSS   ') .OR.                                                                                &
                       (TYPE(1:4) == 'HEXA') .OR.                                                                                   &
