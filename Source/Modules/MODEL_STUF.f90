@@ -1371,7 +1371,8 @@
                                                              ! The ply number in a composite layup defined by a PCOMP
 
       REAL(DOUBLE)                    :: ALPVEC(6,MEMATC)    = RESHAPE ( (/(ZERO, I=1,6*MEMATC)/), (/6,MEMATC/) )
-                                                             ! Vector of CTE's. x,y,z,xy,yz,zx in material coordinates.
+                                                             ! Vector of CTE's. x,y,z,xy,yz,zx in material coordinates initially
+                                                             ! then transformed to element coordinates for most element types.
                                                              ! For shells, column i is for material MIDi. i=1..4.
                                                              ! For solids, only the column 1 is used.
                                                              ! They are engineering strain per unit temperature change

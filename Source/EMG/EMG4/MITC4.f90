@@ -36,10 +36,10 @@
   
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
       USE IOUNT1, ONLY                :  ERR, F06
-      USE SCONTR, ONLY                :  BLNK_SUB_NAM, FATAL_ERR, MAX_ORDER_GAUSS, MAX_STRESS_POINTS
+      USE SCONTR, ONLY                :  BLNK_SUB_NAM, FATAL_ERR, MAX_ORDER_GAUSS, MAX_STRESS_POINTS, NTSUB
       USE NONLINEAR_PARAMS, ONLY      :  LOAD_ISTEP
       USE MODEL_STUF, ONLY            :  NUM_EMG_FATAL_ERRS, PCOMP_PROPS, ELGP, ES, KE, EM, ET, BE1, BE2, BE3, PHI_SQ, FCONV,      &
-                                         EPROP
+                                         EPROP, PTE, ALPVEC, TREF, DT
       USE CONSTANTS_1, ONLY           :  ZERO, ONE, TWO, FOUR
 
       USE MITC_INITIALIZE_Interface
@@ -55,6 +55,7 @@
       USE MATL_TRANSFORM_MATRIX_Interface
       USE MATMULT_FFF_Interface
       USE MATMULT_FFF_T_Interface
+      USE MITC_ELASTICITY_Interface
 
       IMPLICIT NONE 
   
@@ -78,6 +79,7 @@
       REAL(DOUBLE)                    :: BI2(6,6*ELGP)     ! Strain-displ matrix for this element for one Gauss point top
       REAL(DOUBLE)                    :: DUM1(6,6*ELGP)    ! Intermediate matrix
       REAL(DOUBLE)                    :: DUM2(6*ELGP,6*ELGP)    ! Intermediate matrix
+      REAL(DOUBLE)                    :: DUM3(6*ELGP,6)    ! Intermediate matrix
       REAL(DOUBLE)                    :: INTFAC            ! An integration factor (constant multiplier for the Gauss integration)
       REAL(DOUBLE)                    :: DETJ              ! Jacobian determinant
       REAL(DOUBLE)                    :: E(6,6)            ! Elasticity matrix in the material coordinate system.
@@ -87,6 +89,10 @@
       REAL(DOUBLE)                    :: TRANSFORM(3,3)
       REAL(DOUBLE)                    :: DUM66(6,6)        ! Intermediate matrix in calculating outputs
       REAL(DOUBLE)                    :: T66(6,6)          ! 6x6 transformation matrix for elasticity
+      REAL(DOUBLE)                    :: CTE(6)            ! Coefficient of thermal expansion vector
+      REAL(DOUBLE)                    :: THERMAL_STRAIN(6) ! Thermal strain vector
+      REAL(DOUBLE)                    :: TBAR              ! Average elem temperature 
+      REAL(DOUBLE)                    :: UNIT_PTE(6*ELGP)  ! Thermal load vector for unit temperature change.
 
 ! **********************************************************************************************************************************
 
@@ -94,7 +100,7 @@
 ! ==================
 !
 ! Basic
-!  SNORM vector components are stored in this and transformed to XEL element coordinates before use.
+!  SNORM vector components are stored in this and transformed to element coordinates before use.
 !
 ! Cartesian local
 !  e^_1, e^_2, e^_3 in Bathe.
@@ -102,13 +108,14 @@
 !  Used for strain in the strain-displacement matrix and the material elasticity matrix is transformed to this to integrate KE.
 !  Orthogonal
 !
-! XEL Element
+! Element
 !  x_element, y_element, z_element
 !  Used for the grid point DOFs of the strain-displacement and the element stiffness matrices.
 !  Used for extrapolating stress and strain from Gauss points to corners.
 !  Used for element stress, strain, and force outputs
 !  Defined the same way as MSC (element coordinate system).
 !  Defined by x_element being the bisection of the diagonals and z_element being normal to both diagonals.
+!  It's flat even when the element is warped.
 !  Orthogonal
 !
 ! Material
@@ -133,7 +140,7 @@
 !  Not orthogonal
 !
 ! V1, V2, Vn
-! Used to express node rotations when building the strain-displacement matrix before being transformed to the basic 
+! Used to express node rotations when building the strain-displacement matrix before being transformed to the element 
 ! coordinate system.
 ! Vn is the director vector. V1 and V2 are in arbitrary orthogonal directions.
 ! Orthogonal
@@ -168,12 +175,70 @@
 ! Calculate element thermal loads. 
   
       IF (OPT(2) == 'Y') THEN
-      
-        WRITE(ERR,*) ' *ERROR: Code not written for MITC4 thermal loads'
-        WRITE(F06,*) ' *ERROR: Code not written for MITC4 thermal loads'
-        NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
-        FATAL_ERR = FATAL_ERR + 1
-        CALL OUTA_HERE ( 'Y' )
+
+         E = MITC_ELASTICITY()
+         
+         UNIT_PTE(:) = ZERO
+
+         CALL ORDER_GAUSS ( IORD_IJ, SS_IJ, HH_IJ )
+         CALL ORDER_GAUSS ( IORD_K, SS_K, HH_K )
+
+         DO I=1,IORD_IJ
+            DO J=1,IORD_IJ
+               DO K=1,IORD_K
+                  R = SS_IJ(I)
+                  S = SS_IJ(J)
+                  T = SS_K(K)
+
+                                                           ! Find the angle of the cartesian local coordinate
+                                                           ! system's x axis projected onto the element coordinate system's
+                                                           ! xy plane. Since the basis vectors are already expressed in
+                                                           ! element coordinates, projection is simply ignoring the z component.
+                  CLB = MITC4_CARTESIAN_LOCAL_BASIS( R, S, T )
+                  MATL_AXES_ROTATE = -ATAN2(CLB(2,1), CLB(1,1))
+                                                           ! Rotate the material elasticity matrix from element coordinates 
+                                                           ! to projected cartesian local coordinates. When the elasticity 
+                                                           ! matrix is used, it will be assumed to be in the non-projected 
+                                                           ! cartesian local coordinate system but pretend they're the same
+                                                           ! so that material properties follow the curved surface of warped
+                                                           ! elements.
+                  CALL PLANE_COORD_TRANS_21 ( MATL_AXES_ROTATE, TRANSFORM, SUBR_NAME )
+                  CALL MATL_TRANSFORM_MATRIX ( TRANSFORM, T66 )
+                  T66 = TRANSPOSE(T66)
+                  CALL MATMULT_FFF   ( E , T66   , 6, 6, 6, DUM66 )
+                  CALL MATMULT_FFF_T ( T66 , DUM66, 6, 6, 6, EE   )
+
+                                                           ! Transform membrane thermal expansion coefficient vector
+                                                           ! the same way as the elasticity matrix.
+                  CTE(:) = ALPVEC(:,1)
+                  CTE(4:6) = CTE(4:6) / TWO                ! Remove shear factor of 2 to transform.
+                  CTE = MATMUL(TRANSPOSE(T66), CTE)
+                  CTE(4:6) = CTE(4:6) * TWO                ! Reinstate shear factor of 2 after transform.
+
+                  DETJ = MITC_DETJ ( R, S, T )
+                  INTFAC = DETJ*HH_IJ(I)*HH_IJ(J)*HH_K(K)  ! det(J) * Gauss point weight
+                  CALL MITC4_B( R, S, T, .TRUE., .TRUE., .TRUE., BI)
+
+                                                           ! DUM3 = BI^T * EE
+                  CALL MATMULT_FFF_T ( BI, EE, 6, 6*ELGP, 6, DUM3 )
+
+                                                           ! PTE += DUM3 * unit_ε_thermal * det(J) * GaussWeight
+                  UNIT_PTE = UNIT_PTE + MATMUL ( DUM3, CTE ) * INTFAC
+                                    
+               ENDDO
+            ENDDO 
+         ENDDO   
+
+                                                  ! Scale the thermal load vector by the temperature differences in each
+                                                  ! subcase with thermal load.
+         DO J=1,NTSUB
+                                                  ! Use constant temperature to match the strain field of
+                                                  ! linear elements.
+            TBAR = (DT(1,J) + DT(2,J) + DT(3,J) + DT(4,J))/FOUR
+
+            PTE(1:6*ELGP,J) = UNIT_PTE(1:6*ELGP) * (TBAR - TREF(1))
+         ENDDO
+     
       
       ENDIF
   
@@ -261,41 +326,7 @@
          ! K is in the basic coordinate system
 
 
-                                                           ! Convert 2D material elasticity matrices to 3D.
-         E(1,1) = EM(1,1)
-         E(1,2) = EM(1,2)
-         E(1,3) = ZERO
-         E(1,4) = EM(1,3)
-         E(1,5) = ZERO
-         E(1,6) = ZERO
-
-         E(2,2) = EM(2,2)
-         E(2,3) = ZERO
-         E(2,4) = EM(2,3)
-         E(2,5) = ZERO
-         E(2,6) = ZERO
-
-         E(3,3) = ZERO
-         E(3,4) = ZERO
-         E(3,5) = ZERO
-         E(3,6) = ZERO
-
-         E(4,4) = EM(3,3)
-         E(4,5) = ZERO
-         E(4,6) = ZERO
-
-         E(5,5) = ET(2,2) * EPROP(3)
-         E(5,6) = ET(2,1) * EPROP(3)
-
-         E(6,6) = ET(1,1) * EPROP(3)
-
-         DO I=2,6                                           ! Copy UT to LT because it's symmetric.
-            DO J=1,I-1
-               E(I,J) = E(J,I)
-            ENDDO 
-         ENDDO   
-
-
+         E = MITC_ELASTICITY()
 
          KE(1:6*ELGP,1:6*ELGP) = ZERO
 
@@ -348,11 +379,7 @@
   
       IF (OPT(5) == 'Y') THEN
 
-        WRITE(ERR,*) ' *ERROR: Code not written for MITC4 pressure loads'
-        WRITE(F06,*) ' *ERROR: Code not written for MITC4 pressure loads'
-        NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
-        FATAL_ERR = FATAL_ERR + 1
-        CALL OUTA_HERE ( 'Y' )
+        !Not implememented yet but we can't make it a fatal error because this gets called with thermal loads.
           
       ENDIF
   

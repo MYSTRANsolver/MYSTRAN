@@ -53,6 +53,7 @@
       USE MITC8_B_Interface
       USE MITC8_CARTESIAN_LOCAL_BASIS_Interface
       USE MITC8_ELEMENT_CS_BASIS_Interface
+      USE MITC_ELASTICITY_Interface
       
       IMPLICIT NONE 
   
@@ -281,42 +282,7 @@
          ! strain = [B] * displacement
          ! K is in the basic coordinate system
 
-
-                                                           ! Convert 2D material elasticity matrices to 3D.
-         E(1,1) = EM(1,1)
-         E(1,2) = EM(1,2)
-         E(1,3) = ZERO
-         E(1,4) = EM(1,3)
-         E(1,5) = ZERO
-         E(1,6) = ZERO
-
-         E(2,2) = EM(2,2)
-         E(2,3) = ZERO
-         E(2,4) = EM(2,3)
-         E(2,5) = ZERO
-         E(2,6) = ZERO
-
-         E(3,3) = ZERO
-         E(3,4) = ZERO
-         E(3,5) = ZERO
-         E(3,6) = ZERO
-
-         E(4,4) = EM(3,3)
-         E(4,5) = ZERO
-         E(4,6) = ZERO
-
-         E(5,5) = ET(2,2) * EPROP(3)
-         E(5,6) = ET(2,1) * EPROP(3)
-
-         E(6,6) = ET(1,1) * EPROP(3)
-
-         DO I=2,6                                           ! Copy UT to LT because it's symmetric.
-            DO J=1,I-1
-               E(I,J) = E(J,I)
-            ENDDO 
-         ENDDO   
-
-
+         E = MITC_ELASTICITY()
 
          KE(1:6*ELGP,1:6*ELGP) = ZERO
 

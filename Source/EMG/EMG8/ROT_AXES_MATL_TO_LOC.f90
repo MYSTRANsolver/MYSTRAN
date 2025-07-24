@@ -56,7 +56,6 @@
 
       REAL(DOUBLE)                    :: DUM22(2,2)        ! Intermediate matrix in calculating outputs
       REAL(DOUBLE)                    :: DUM33(3,3)        ! Intermediate matrix in calculating outputs
-      REAL(DOUBLE)                    :: DUM64(6,4)        ! Intermediate matrix in calculating outputs
       REAL(DOUBLE)                    :: DUM66(6,6)        ! Intermediate matrix in calculating outputs
       REAL(DOUBLE)                    :: EPS1              ! A small number to compare real zero
       REAL(DOUBLE)                    :: MATL_AXES_ROTATE  ! Angle to rotate material axes to coincide with local elem x axis
@@ -74,8 +73,6 @@
       REAL(DOUBLE)                    :: EBM0(3,3)         ! Bend/membr coupling matl matrix before coord transformation
       REAL(DOUBLE)                    :: ES0(6,6)          ! 3D stress matl matrix before coord transformation
       REAL(DOUBLE)                    :: ET0(2,2)          ! 2D transverse shear matl matrix before coord transformation
-  
-      REAL(DOUBLE)                    :: T1transposed(6,6) ! Victor - Bug fix for solid elem default coord issue
 
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
@@ -127,21 +124,8 @@
          IF (DABS(MATL_AXES_ROTATE) > EPS1) THEN
 
             CALL PLANE_COORD_TRANS_21 ( MATL_AXES_ROTATE, TME, SUBR_NAME )
-!xx         CALL GET_T1_TRANSFORM_MAT
             CALL MATL_TRANSFORM_MATRIX ( TME, T1 )
-
-            !Victor - Shell element default cooord system issue #98 - Add start
-            DO I=1,6
-               DO J=1,6
-                  T1transposed(I,J) = T1(J,I)
-               ENDDO
-            ENDDO
-            DO I=1,6
-               DO J=1,6
-                  T1(I,J) = T1transposed(I,J)
-               ENDDO
-            ENDDO
-            !Victor - Shell element default cooord system issue #98 - Add end
+            T1 = TRANSPOSE(T1)
             
                                                            ! T1_MB is for Sxx, Syy, Sxy which are rows and cols 1,2,4 from T1
             T1_MB(1,1) = T1(1,1)     ;     T1_MB(1,2) = T1(1,2)     ;     T1_MB(1,3) = T1(1,4)
@@ -171,22 +155,9 @@
                CALL MATMULT_FFF_T ( T1_MB, DUM33, 3, 3, 3, EBM   )
             ENDIF
 
-            DO I=4,6
-               DO J=1,MEMATC
-                  ALPVEC(I,J) = ALPVEC(I,J) / TWO                    ! Remove shear factor of 2 to transform.
-               ENDDO
-            ENDDO
-            CALL MATMULT_FFF_T (T1, ALPVEC, 6, 6, MEMATC, DUM64 )    ! Transform CTE matrix
-            DO I=1,6
-               DO J=1,MEMATC
-                  ALPVEC(I,J) = DUM64(I,J)
-               ENDDO
-            ENDDO
-            DO I=4,6
-               DO J=1,MEMATC
-                  ALPVEC(I,J) = ALPVEC(I,J) * TWO                     ! Reinstate shear factor of 2 after transform.
-               ENDDO
-            ENDDO
+            ALPVEC(4:6,:) = ALPVEC(4:6,:) / TWO                      ! Remove shear factor of 2 to transform.
+            ALPVEC = MATMUL(TRANSPOSE(T1), ALPVEC)
+            ALPVEC(4:6,:) = ALPVEC(4:6,:) * TWO                      ! Reinstate shear factor of 2 after transform.
 
          ENDIF
 
@@ -200,18 +171,11 @@
 
             CORDM = ISOLID(3)                              ! Get transf matrix T0M. CORDM mtrl coord sys from PSOLID Bulk data entry
 
-            DO I=1,3
-               DO J=1,3
-                  T0M(I,J) = ZERO
-               ENDDO
-            ENDDO
+            T0M(:,:) = ZERO
 
             IF (CORDM == 0) THEN                           ! CORDM was basic so set T0M to the identity matrix
 
                DO I=1,3
-                  DO J=1,3
-                     T0M(I,J) = ZERO
-                  ENDDO
                   T0M(I,I) = ONE
                ENDDO
 
@@ -243,47 +207,17 @@
             ENDIF
 
             CALL MATMULT_FFF ( TE , T0M  , 3, 3, 3, TEM )
-            DO I=1,3                                       ! Transform TEM to TME
-               DO J=1,3
-                  TME(I,J) = TEM(J,I)
-               ENDDO
-            ENDDO
+            TME = TRANSPOSE(TEM)
 
-!xx         CALL GET_T1_TRANSFORM_MAT
             CALL MATL_TRANSFORM_MATRIX ( TME, T1 )
-
-            !Victor - Solid element default cooord system issues #95 and #96 - Add start
-            DO I=1,6
-               DO J=1,6
-                  T1transposed(I,J) = T1(J,I)
-               ENDDO
-            ENDDO
-            DO I=1,6
-               DO J=1,6
-                  T1(I,J) = T1transposed(I,J)
-               ENDDO
-            ENDDO
-            !Victor - Solid element default cooord system issues #95 and #96 - Add end
+            T1 = TRANSPOSE(T1)
             
             CALL MATMULT_FFF   ( ES , T1   , 6, 6, 6, DUM66 )
             CALL MATMULT_FFF_T ( T1 , DUM66, 6, 6, 6, ES    )
 
-            DO I=4,6
-               DO J=1,MEMATC
-                  ALPVEC(I,J) = ALPVEC(I,J) / TWO                    ! Remove shear factor of 2 to transform.
-               ENDDO
-            ENDDO
-            CALL MATMULT_FFF_T (T1, ALPVEC, 6, 6, MEMATC, DUM64 )    ! Transform CTE matrix
-            DO I=1,6
-               DO J=1,MEMATC
-                  ALPVEC(I,J) = DUM64(I,J)
-               ENDDO
-            ENDDO
-            DO I=4,6
-               DO J=1,MEMATC
-                  ALPVEC(I,J) = ALPVEC(I,J) * TWO                     ! Reinstate shear factor of 2 after transform.
-               ENDDO
-            ENDDO
+            ALPVEC(4:6,:) = ALPVEC(4:6,:) / TWO                      ! Remove shear factor of 2 to transform.
+            ALPVEC = MATMUL(TRANSPOSE(T1), ALPVEC)
+            ALPVEC(4:6,:) = ALPVEC(4:6,:) * TWO                      ! Reinstate shear factor of 2 after transform.
 
          ENDIF
 

@@ -57,7 +57,6 @@
       USE MODEL_STUF, ONLY            :  CAN_ELEM_TYPE_OFFSET, EDAT, EID, EPNT, ETYPE, ISOLID, MATANGLE, NUM_EMG_FATAL_ERRS,       &
                                          PCOMP_PROPS, PLY_NUM, TE_IDENT, THETAM, TYPE, XEL, TE
 
-
       USE EMG_USE_IFs
       USE MITC8_Interface
 
