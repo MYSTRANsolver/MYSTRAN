@@ -36,10 +36,10 @@
   
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
       USE IOUNT1, ONLY                :  ERR, F06
-      USE SCONTR, ONLY                :  BLNK_SUB_NAM, FATAL_ERR, MAX_ORDER_GAUSS, MAX_STRESS_POINTS, NTSUB
+      USE SCONTR, ONLY                :  BLNK_SUB_NAM, FATAL_ERR, MAX_ORDER_GAUSS, MAX_STRESS_POINTS, NTSUB, NSUB
       USE NONLINEAR_PARAMS, ONLY      :  LOAD_ISTEP
       USE MODEL_STUF, ONLY            :  NUM_EMG_FATAL_ERRS, PCOMP_PROPS, ELGP, ES, KE, EM, ET, BE1, BE2, BE3, PHI_SQ, FCONV,      &
-                                         EPROP, PTE, ALPVEC, TREF, DT
+                                         EPROP, PTE, ALPVEC, TREF, DT, PPE, PRESS
       USE CONSTANTS_1, ONLY           :  ZERO, ONE, TWO, FOUR
 
       USE MITC_INITIALIZE_Interface
@@ -56,6 +56,9 @@
       USE MATMULT_FFF_Interface
       USE MATMULT_FFF_T_Interface
       USE MITC_ELASTICITY_Interface
+      USE CROSS_Interface
+      USE MITC_SHAPE_FUNCTIONS_Interface
+      USE MITC_COVARIANT_BASIS_Interface
 
       IMPLICIT NONE 
   
@@ -68,6 +71,7 @@
       INTEGER(LONG), PARAMETER        :: IORD_STRESS_Q4 = 2! Gauss integration order for stress/strain recovery matrices
       INTEGER(LONG)                   :: I,J,K,L,M         ! DO loop indices
       INTEGER(LONG)                   :: STR_PT_NUM        ! Stress recovery point number
+      INTEGER(LONG)                   :: GP                ! Element grid point number
 
       REAL(DOUBLE)                    :: HH_IJ(MAX_ORDER_GAUSS) ! Gauss weights for integration in in-layer directions
       REAL(DOUBLE)                    :: SS_IJ(MAX_ORDER_GAUSS) ! Gauss abscissa's for integration in in-layer directions
@@ -80,6 +84,7 @@
       REAL(DOUBLE)                    :: DUM1(6,6*ELGP)    ! Intermediate matrix
       REAL(DOUBLE)                    :: DUM2(6*ELGP,6*ELGP)    ! Intermediate matrix
       REAL(DOUBLE)                    :: DUM3(6*ELGP,6)    ! Intermediate matrix
+      REAL(DOUBLE)                    :: DUM4(3)           ! Intermediate matrix
       REAL(DOUBLE)                    :: INTFAC            ! An integration factor (constant multiplier for the Gauss integration)
       REAL(DOUBLE)                    :: DETJ              ! Jacobian determinant
       REAL(DOUBLE)                    :: E(6,6)            ! Elasticity matrix in the material coordinate system.
@@ -93,6 +98,11 @@
       REAL(DOUBLE)                    :: THERMAL_STRAIN(6) ! Thermal strain vector
       REAL(DOUBLE)                    :: TBAR              ! Average elem temperature 
       REAL(DOUBLE)                    :: UNIT_PTE(6*ELGP)  ! Thermal load vector for unit temperature change.
+      REAL(DOUBLE)                    :: UNIT_PPE(6*ELGP)  ! Pressure load vector for unit pressure.
+      REAL(DOUBLE)                    :: PSH(ELGP)       
+      REAL(DOUBLE)                    :: DPSHG(2,ELGP)     ! Derivatives of shape functions with respect to R and S.
+      REAL(DOUBLE)                    :: G(3,3)
+      REAL(DOUBLE)                    :: NORMAL(3)
 
 ! **********************************************************************************************************************************
 
@@ -379,7 +389,40 @@
   
       IF (OPT(5) == 'Y') THEN
 
-        !Not implememented yet but we can't make it a fatal error because this gets called with thermal loads.
+         UNIT_PPE(:) = ZERO
+
+         CALL ORDER_GAUSS ( IORD_IJ, SS_IJ, HH_IJ )
+
+         DO I=1,IORD_IJ
+            DO J=1,IORD_IJ
+               R = SS_IJ(I)
+               S = SS_IJ(J)
+
+               CALL MITC_SHAPE_FUNCTIONS(R, S, PSH, DPSHG)
+                                                           ! Normalized normal vector at R,S
+                                                           ! This is the interpolated director vector
+                                                           ! and follows SNORM if specified.
+               CALL MITC_COVARIANT_BASIS( R, S, ZERO, G )
+               NORMAL(:) = G(:,3) / SQRT(DOT_PRODUCT(G(:,3), G(:,3)))
+
+               CALL CROSS(G(:,1),G(:,2),DUM4)
+               DETJ = SQRT(DOT_PRODUCT(DUM4, DUM4))
+               INTFAC = DETJ * HH_IJ(I) * HH_IJ(J)         ! Contribution to area for this Gauss point
+
+               DO GP=1,ELGP
+                  K = (GP-1) * 6
+                  UNIT_PPE(K+1:K+3) = UNIT_PPE(K+1:K+3) + NORMAL * PSH(GP) * INTFAC
+               ENDDO
+                              
+            ENDDO 
+         ENDDO   
+
+                                                           ! Scale the unit pressure load vector by the pressure in each subcase.
+         DO J=1,NSUB
+            PPE(1:6*ELGP,J) = UNIT_PPE(1:6*ELGP) * PRESS(3,J)
+         ENDDO
+
+
           
       ENDIF
   
@@ -388,11 +431,11 @@
   
       IF ((OPT(6) == 'Y') .AND. (LOAD_ISTEP > 1)) THEN
 
-        WRITE(ERR,*) ' *ERROR: Code not written for MITC4 differential stiffness matrix'
-        WRITE(F06,*) ' *ERROR: Code not written for MITC4 differential stiffness matrix'
-        NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
-        FATAL_ERR = FATAL_ERR + 1
-        CALL OUTA_HERE ( 'Y' )
+         WRITE(ERR,*) ' *ERROR: Code not written for MITC4 differential stiffness matrix'
+         WRITE(F06,*) ' *ERROR: Code not written for MITC4 differential stiffness matrix'
+         NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
+         FATAL_ERR = FATAL_ERR + 1
+         CALL OUTA_HERE ( 'Y' )
 
       ENDIF
 
