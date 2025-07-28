@@ -38,8 +38,8 @@
       USE IOUNT1, ONLY                :  ERR, F06
       USE SCONTR, ONLY                :  BLNK_SUB_NAM, FATAL_ERR, MAX_ORDER_GAUSS, MAX_STRESS_POINTS, NTSUB, NSUB
       USE NONLINEAR_PARAMS, ONLY      :  LOAD_ISTEP
-      USE MODEL_STUF, ONLY            :  NUM_EMG_FATAL_ERRS, PCOMP_PROPS, ELGP, ES, KE, EM, ET, BE1, BE2, BE3, PHI_SQ, FCONV,      &
-                                         EPROP, PTE, ALPVEC, TREF, DT, PPE, PRESS
+      USE MODEL_STUF, ONLY            :  NUM_EMG_FATAL_ERRS, PCOMP_PROPS, ELGP, ES, KE, EM, EB, EBM, ET, BE1, BE2, BE3, PHI_SQ,    &
+                                         FCONV, EPROP, PTE, ALPVEC, TREF, DT, PPE, PRESS
       USE CONSTANTS_1, ONLY           :  ZERO, ONE, TWO, FOUR
 
       USE MITC_INITIALIZE_Interface
@@ -87,8 +87,16 @@
       REAL(DOUBLE)                    :: DUM4(3)           ! Intermediate matrix
       REAL(DOUBLE)                    :: INTFAC            ! An integration factor (constant multiplier for the Gauss integration)
       REAL(DOUBLE)                    :: DETJ              ! Jacobian determinant
-      REAL(DOUBLE)                    :: E(6,6)            ! Elasticity matrix in the material coordinate system.
-      REAL(DOUBLE)                    :: EE(6,6)           ! Elasticity matrix in the cartesian local coordinate system.
+      REAL(DOUBLE)                    :: E2(6,6)           ! Membrane and shear elasticity matrix in the element coordinate system.
+      REAL(DOUBLE)                    :: E3(6,6)           ! Membrane and shear elasticity matrix in the cartesian local coordinate system.
+      REAL(DOUBLE)                    :: EM2(6,6)          ! Membrane elasticity matrix in the element coordinate system.
+      REAL(DOUBLE)                    :: EM3(6,6)          ! Membrane elasticity matrix in the cartesian local coordinate system.
+      REAL(DOUBLE)                    :: EB2(6,6)          ! Bending elasticity matrix in the element coordinate system.
+      REAL(DOUBLE)                    :: EB3(6,6)          ! Bending elasticity matrix in the cartesian local coordinate system.
+      REAL(DOUBLE)                    :: EBM2(6,6)         ! Bending-membrane coupling elasticity matrix in the element coordinate system.
+      REAL(DOUBLE)                    :: EBM3(6,6)         ! Bending-membrane coupling elasticity matrix in the cartesian local coordinate system.
+      REAL(DOUBLE)                    :: ET2(6,6)          ! Transverse shear elasticity matrix in the element coordinate system.
+      REAL(DOUBLE)                    :: ET3(6,6)          ! Transverse shear elasticity matrix in the cartesian local coordinate system.
       REAL(DOUBLE)                    :: CLB(3,3)          ! Cartesian local basis basis vectors
       REAL(DOUBLE)                    :: MATL_AXES_ROTATE
       REAL(DOUBLE)                    :: TRANSFORM(3,3)
@@ -103,6 +111,11 @@
       REAL(DOUBLE)                    :: DPSHG(2,ELGP)     ! Derivatives of shape functions with respect to R and S.
       REAL(DOUBLE)                    :: G(3,3)
       REAL(DOUBLE)                    :: NORMAL(3)
+
+      REAL(DOUBLE)                    :: BMI(6,6*ELGP)     ! Strain-displ matrix for membrane for one Gauss point
+      REAL(DOUBLE)                    :: BBI(6,6*ELGP)     ! Strain-displ matrix for bending for one Gauss point
+      REAL(DOUBLE)                    :: BSI(6,6*ELGP)     ! Strain-displ matrix for shear for one Gauss point
+
 
 ! **********************************************************************************************************************************
 
@@ -186,7 +199,7 @@
   
       IF (OPT(2) == 'Y') THEN
 
-         E = MITC_ELASTICITY()
+         E2 = MITC_ELASTICITY()
          
          UNIT_PTE(:) = ZERO
 
@@ -215,8 +228,8 @@
                   CALL PLANE_COORD_TRANS_21 ( MATL_AXES_ROTATE, TRANSFORM, SUBR_NAME )
                   CALL MATL_TRANSFORM_MATRIX ( TRANSFORM, T66 )
                   T66 = TRANSPOSE(T66)
-                  CALL MATMULT_FFF   ( E , T66   , 6, 6, 6, DUM66 )
-                  CALL MATMULT_FFF_T ( T66 , DUM66, 6, 6, 6, EE   )
+                  CALL MATMULT_FFF   ( E2  , T66   , 6, 6, 6, DUM66 )
+                  CALL MATMULT_FFF_T ( T66 , DUM66 , 6, 6, 6, E3    )
 
                                                            ! Transform membrane thermal expansion coefficient vector
                                                            ! the same way as the elasticity matrix.
@@ -229,8 +242,8 @@
                   INTFAC = DETJ*HH_IJ(I)*HH_IJ(J)*HH_K(K)  ! det(J) * Gauss point weight
                   CALL MITC4_B( R, S, T, .TRUE., .TRUE., .TRUE., BI)
 
-                                                           ! DUM3 = BI^T * EE
-                  CALL MATMULT_FFF_T ( BI, EE, 6, 6*ELGP, 6, DUM3 )
+                                                           ! DUM3 = BI^T * E3
+                  CALL MATMULT_FFF_T ( BI, E3, 6, 6*ELGP, 6, DUM3 )
 
                                                            ! PTE += DUM3 * unit_ε_thermal * det(J) * GaussWeight
                   UNIT_PTE = UNIT_PTE + MATMUL ( DUM3, CTE ) * INTFAC
@@ -326,17 +339,60 @@
 !   by Dvorkin and Bathe
 
 
-         ! K = int( [B]^T [EE] [B] dV )
+         ! K = int( [B]^T [E3] [B] dV )
          !    dV = |det(J)|dr ds dt
-         ! K = int( [B]^T [EE] [B] |det(J)| dr ds dt )
+         ! K = int( [B]^T [E3] [B] |det(J)| dr ds dt )
          !
-         ! [EE] is material elasticity matrix in cartesian local coordinates
-         ! stress = [EE] * strain
+         ! [E3] is material elasticity matrix in cartesian local coordinates
+         ! stress = [E3] * strain
          ! strain = [B] * displacement
          ! K is in the basic coordinate system
 
 
-         E = MITC_ELASTICITY()
+         E2 = MITC_ELASTICITY()
+
+                                                           ! Membrane
+         EM2(:,:) = ZERO
+         EM2(1,1) = EM(1,1)
+         EM2(1,2) = EM(1,2)
+         EM2(1,4) = EM(1,3)
+         EM2(2,2) = EM(2,2)
+         EM2(2,4) = EM(2,3)
+         EM2(4,4) = EM(3,3)
+
+                                                           ! Bending and transverse shear
+         EB2(:,:) = ZERO
+         EB2(1,1) = EB(1,1)
+         EB2(1,2) = EB(1,2)
+         EB2(1,4) = EB(1,3)
+         EB2(2,2) = EB(2,2)
+         EB2(2,4) = EB(2,3)
+         EB2(4,4) = EB(3,3)
+         EB2(5,5) = ET(2,2) * EPROP(3)
+         EB2(5,6) = ET(2,1) * EPROP(3)
+         EB2(6,6) = ET(1,1) * EPROP(3)
+
+                                                           ! Transverse shear
+         ET2(:,:) = ZERO
+         ET2(5,5) = ET(2,2) * EPROP(3)
+         ET2(5,6) = ET(2,1) * EPROP(3)
+         ET2(6,6) = ET(1,1) * EPROP(3)
+
+                                                           ! Include bending instead of membrane in transverse shear because 
+                                                           ! transverse shear requires MID2 (bending) but does not require MID1 (membrane).
+         ET2 = EB2
+
+         DO I=2,6                                          ! Copy UT to LT because it's symmetric.
+            DO J=1,I-1
+               EM2(I,J) = EM2(J,I)
+               EB2(I,J) = EB2(J,I)
+               ET2(I,J) = ET2(J,I)
+            ENDDO 
+         ENDDO   
+
+
+
+
 
          KE(1:6*ELGP,1:6*ELGP) = ZERO
 
@@ -363,15 +419,111 @@
                   CALL PLANE_COORD_TRANS_21 ( MATL_AXES_ROTATE, TRANSFORM, SUBR_NAME )
                   CALL MATL_TRANSFORM_MATRIX ( TRANSFORM, T66 )
                   T66 = TRANSPOSE(T66)
-                  CALL MATMULT_FFF   ( E , T66   , 6, 6, 6, DUM66 )
-                  CALL MATMULT_FFF_T ( T66 , DUM66, 6, 6, 6, EE   )
+
 
                   DETJ = MITC_DETJ ( R, S, T )
                   INTFAC = DETJ*HH_IJ(I)*HH_IJ(J)*HH_K(K)
-                  CALL MITC4_B( R, S, T, .TRUE., .TRUE., .TRUE., BI)
-                  CALL MATMULT_FFF ( EE, BI, 6, 6, 6*ELGP, DUM1 )
-                  CALL MATMULT_FFF_T ( BI, DUM1, 6, 6*ELGP, 6*ELGP, DUM2 )
-                  KE(1:6*ELGP,1:6*ELGP) = KE(1:6*ELGP,1:6*ELGP) + DUM2(:,:)*INTFAC
+
+                  IF(.FALSE.) THEN
+                                                           ! Single material for membrane and bending
+                                                           ! Not used. Delete this.
+                     CALL MATMULT_FFF   ( E2  , T66   , 6, 6, 6, DUM66 )
+                     CALL MATMULT_FFF_T ( T66 , DUM66 , 6, 6, 6, E3    )
+
+                     CALL MITC4_B( R, S, T, .TRUE., .TRUE., .TRUE., BI)
+                     CALL MATMULT_FFF ( E3, BI, 6, 6, 6*ELGP, DUM1 )
+                     CALL MATMULT_FFF_T ( BI, DUM1, 6, 6*ELGP, 6*ELGP, DUM2 )
+                     KE(1:6*ELGP,1:6*ELGP) = KE(1:6*ELGP,1:6*ELGP) + DUM2(:,:)*INTFAC
+
+                  ELSEIF(.TRUE.) THEN
+
+                     CALL MATMULT_FFF   ( EM2 , T66   , 6, 6, 6, DUM66 )
+                     CALL MATMULT_FFF_T ( T66 , DUM66 , 6, 6, 6, EM3   )
+
+                     CALL MATMULT_FFF   ( EB2 , T66   , 6, 6, 6, DUM66 )
+                     CALL MATMULT_FFF_T ( T66 , DUM66 , 6, 6, 6, EB3   )
+
+                                                           ! Membrane
+                     CALL MITC4_B( R, S, T, .TRUE., .FALSE., .FALSE., BMI)
+                     CALL MATMULT_FFF ( EM3, BMI, 6, 6, 6*ELGP, DUM1 )
+                     CALL MATMULT_FFF_T ( BMI, DUM1, 6, 6*ELGP, 6*ELGP, DUM2 )
+                     KE(1:6*ELGP,1:6*ELGP) = KE(1:6*ELGP,1:6*ELGP) + DUM2(:,:)*INTFAC
+
+                                                           ! Bending and transverse shear
+                                                           ! including bending-shear coupling
+                     CALL MITC4_B( R, S, T, .FALSE., .TRUE., .TRUE., BBI)
+                     CALL MATMULT_FFF ( EB3, BBI, 6, 6, 6*ELGP, DUM1 )
+                     CALL MATMULT_FFF_T ( BBI, DUM1, 6, 6*ELGP, 6*ELGP, DUM2 )
+                     KE(1:6*ELGP,1:6*ELGP) = KE(1:6*ELGP,1:6*ELGP) + DUM2(:,:)*INTFAC
+
+                                                           ! Geometric bending-membrane coupling
+                                                           ! This is coupling due to the geometry of the element (warped or
+                                                           ! with SNORM), not unsymmetric composites or MID4 on PSHELL.
+                     CALL MATMULT_FFF ( EM3, BBI, 6, 6, 6*ELGP, DUM1 )
+                     CALL MATMULT_FFF_T ( BMI, DUM1, 6, 6*ELGP, 6*ELGP, DUM2 )
+                     KE(1:6*ELGP,1:6*ELGP) = KE(1:6*ELGP,1:6*ELGP) + DUM2(:,:)*INTFAC
+                     CALL MATMULT_FFF ( TRANSPOSE(EM3), BMI, 6, 6, 6*ELGP, DUM1 )
+                     CALL MATMULT_FFF_T ( BBI, DUM1, 6, 6*ELGP, 6*ELGP, DUM2 )
+                     KE(1:6*ELGP,1:6*ELGP) = KE(1:6*ELGP,1:6*ELGP) + DUM2(:,:)*INTFAC
+                  
+                  ELSE
+                                                           ! All the phenomena fully separated.
+                                                           ! Not used. Delete this.
+                     CALL MATMULT_FFF   ( EM2 , T66   , 6, 6, 6, DUM66 )
+                     CALL MATMULT_FFF_T ( T66 , DUM66 , 6, 6, 6, EM3   )
+
+                     CALL MATMULT_FFF   ( EB2 , T66   , 6, 6, 6, DUM66 )
+                     CALL MATMULT_FFF_T ( T66 , DUM66 , 6, 6, 6, EB3   )
+
+                     CALL MATMULT_FFF   ( ET2 , T66   , 6, 6, 6, DUM66 )
+                     CALL MATMULT_FFF_T ( T66 , DUM66 , 6, 6, 6, ET3   )
+
+                                                           ! Membrane
+                     CALL MITC4_B( R, S, T, .TRUE., .FALSE., .FALSE., BMI)
+                     CALL MATMULT_FFF ( EM3, BMI, 6, 6, 6*ELGP, DUM1 )
+                     CALL MATMULT_FFF_T ( BMI, DUM1, 6, 6*ELGP, 6*ELGP, DUM2 )
+                     KE(1:6*ELGP,1:6*ELGP) = KE(1:6*ELGP,1:6*ELGP) + DUM2(:,:)*INTFAC
+
+                                                           ! Bending
+                     CALL MITC4_B( R, S, T, .FALSE., .TRUE., .FALSE., BBI)
+                     CALL MATMULT_FFF ( EB3, BBI, 6, 6, 6*ELGP, DUM1 )
+                     CALL MATMULT_FFF_T ( BBI, DUM1, 6, 6*ELGP, 6*ELGP, DUM2 )
+                     KE(1:6*ELGP,1:6*ELGP) = KE(1:6*ELGP,1:6*ELGP) + DUM2(:,:)*INTFAC
+
+                                                           ! Transverse shear
+                     CALL MITC4_B( R, S, T, .FALSE., .FALSE., .TRUE., BSI)
+                     CALL MATMULT_FFF ( ET3, BSI, 6, 6, 6*ELGP, DUM1 )
+                     CALL MATMULT_FFF_T ( BSI, DUM1, 6, 6*ELGP, 6*ELGP, DUM2 )
+                     KE(1:6*ELGP,1:6*ELGP) = KE(1:6*ELGP,1:6*ELGP) + DUM2(:,:)*INTFAC
+
+                                                           ! Bending-membrane coupling
+                     CALL MATMULT_FFF ( EM3, BBI, 6, 6, 6*ELGP, DUM1 )
+                     CALL MATMULT_FFF_T ( BMI, DUM1, 6, 6*ELGP, 6*ELGP, DUM2 )
+                     KE(1:6*ELGP,1:6*ELGP) = KE(1:6*ELGP,1:6*ELGP) + DUM2(:,:)*INTFAC
+                     CALL MATMULT_FFF ( TRANSPOSE(EM3), BMI, 6, 6, 6*ELGP, DUM1 )
+                     CALL MATMULT_FFF_T ( BBI, DUM1, 6, 6*ELGP, 6*ELGP, DUM2 )
+                     KE(1:6*ELGP,1:6*ELGP) = KE(1:6*ELGP,1:6*ELGP) + DUM2(:,:)*INTFAC
+
+                                                           ! Membrane-shear coupling
+                     CALL MATMULT_FFF ( EM3, BSI, 6, 6, 6*ELGP, DUM1 )
+                     CALL MATMULT_FFF_T ( BMI, DUM1, 6, 6*ELGP, 6*ELGP, DUM2 )
+                     KE(1:6*ELGP,1:6*ELGP) = KE(1:6*ELGP,1:6*ELGP) + DUM2(:,:)*INTFAC
+                     CALL MATMULT_FFF ( TRANSPOSE(EM3), BMI, 6, 6, 6*ELGP, DUM1 )
+                     CALL MATMULT_FFF_T ( BSI, DUM1, 6, 6*ELGP, 6*ELGP, DUM2 )
+                     KE(1:6*ELGP,1:6*ELGP) = KE(1:6*ELGP,1:6*ELGP) + DUM2(:,:)*INTFAC
+
+                                                           ! Bending-shear coupling
+                     CALL MATMULT_FFF ( EB3, BSI, 6, 6, 6*ELGP, DUM1 )
+                     CALL MATMULT_FFF_T ( BBI, DUM1, 6, 6*ELGP, 6*ELGP, DUM2 )
+                     KE(1:6*ELGP,1:6*ELGP) = KE(1:6*ELGP,1:6*ELGP) + DUM2(:,:)*INTFAC
+                     CALL MATMULT_FFF ( TRANSPOSE(EB3), BBI, 6, 6, 6*ELGP, DUM1 )
+                     CALL MATMULT_FFF_T ( BSI, DUM1, 6, 6*ELGP, 6*ELGP, DUM2 )
+                     KE(1:6*ELGP,1:6*ELGP) = KE(1:6*ELGP,1:6*ELGP) + DUM2(:,:)*INTFAC
+
+                  
+                  ENDIF
+
+
                                     
                ENDDO
             ENDDO 

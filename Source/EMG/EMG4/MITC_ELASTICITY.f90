@@ -41,33 +41,18 @@
 
 
 ! **********************************************************************************************************************************
+! Victor todo check all callers of this to see if they need specific membrane, bending, etc. matrices.
 
                                                            ! Convert 2D material elasticity matrices to 3D.
+      MITC_ELASTICITY(:,:) = ZERO
       MITC_ELASTICITY(1,1) = EM(1,1)
       MITC_ELASTICITY(1,2) = EM(1,2)
-      MITC_ELASTICITY(1,3) = ZERO
       MITC_ELASTICITY(1,4) = EM(1,3)
-      MITC_ELASTICITY(1,5) = ZERO
-      MITC_ELASTICITY(1,6) = ZERO
-
       MITC_ELASTICITY(2,2) = EM(2,2)
-      MITC_ELASTICITY(2,3) = ZERO
       MITC_ELASTICITY(2,4) = EM(2,3)
-      MITC_ELASTICITY(2,5) = ZERO
-      MITC_ELASTICITY(2,6) = ZERO
-
-      MITC_ELASTICITY(3,3) = ZERO
-      MITC_ELASTICITY(3,4) = ZERO
-      MITC_ELASTICITY(3,5) = ZERO
-      MITC_ELASTICITY(3,6) = ZERO
-
       MITC_ELASTICITY(4,4) = EM(3,3)
-      MITC_ELASTICITY(4,5) = ZERO
-      MITC_ELASTICITY(4,6) = ZERO
-
       MITC_ELASTICITY(5,5) = ET(2,2) * EPROP(3)
       MITC_ELASTICITY(5,6) = ET(2,1) * EPROP(3)
-
       MITC_ELASTICITY(6,6) = ET(1,1) * EPROP(3)
 
       DO I=2,6                                             ! Copy UT to LT because it's symmetric.
