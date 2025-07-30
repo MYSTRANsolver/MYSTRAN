@@ -646,7 +646,7 @@
                      ENDIF
                   ENDIF
                ENDDO
-                                                           ! Density is now allowed in case it's used for 
+                                                           ! Density is not allowed in case it's used for 
                                                            ! gravity which doesn't currently work.
                IF(RMATL(INTL_MID(1),4) /= ZERO) THEN
                   WRITE(ERR,*) ' *ERROR: MAT1 DENSITY MUST BE 0.0 OR BLANK FOR QUAD8'
