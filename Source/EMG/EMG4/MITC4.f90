@@ -467,7 +467,7 @@
                      CALL MATMULT_FFF ( EM3, BBI, 6, 6, 6*ELGP, DUM1 )
                      CALL MATMULT_FFF_T ( BMI, DUM1, 6, 6*ELGP, 6*ELGP, DUM2 )
                      KE(1:6*ELGP,1:6*ELGP) = KE(1:6*ELGP,1:6*ELGP) + DUM2(:,:)*INTFAC
-                     CALL MATMULT_FFF ( TRANSPOSE(EM3), BMI, 6, 6, 6*ELGP, DUM1 )
+                     CALL MATMULT_FFF_T ( EM3, BMI, 6, 6, 6*ELGP, DUM1 )
                      CALL MATMULT_FFF_T ( BBI, DUM1, 6, 6*ELGP, 6*ELGP, DUM2 )
                      KE(1:6*ELGP,1:6*ELGP) = KE(1:6*ELGP,1:6*ELGP) + DUM2(:,:)*INTFAC
                   
@@ -661,7 +661,7 @@
             CLB = MITC4_CARTESIAN_LOCAL_BASIS( R, S, ZERO )
 
             CALL MATMULT_FFF (DUM14, CLB, 3, 3, 3, DUM33 )
-            CALL MATMULT_FFF (TRANSPOSE(CLB), DUM33, 3, 3, 3, DUM14 )
+            CALL MATMULT_FFF_T (CLB, DUM33, 3, 3, 3, DUM14 )
 
             FORCEx(GAUSS_PT) = DUM14(1,1)
             FORCEy(GAUSS_PT) = DUM14(2,2)

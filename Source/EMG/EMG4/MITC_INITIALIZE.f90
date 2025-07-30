@@ -48,7 +48,7 @@
       REAL(DOUBLE)                    :: NORMAL(3)         ! Intermediate value of some normal.
 
                                                            ! Normal defined by node positions at each node
-      REAL(DOUBLE)                    :: MIDSURFACE_NORMAL(ELGP,3)
+      REAL(DOUBLE)                    :: MIDSURFACE_NORMAL(3,ELGP)
       REAL(DOUBLE)                    :: THICKNESS_FACTOR
 
 ! **********************************************************************************************************************************
@@ -122,7 +122,7 @@
 
          NORMAL = NORMAL / DSQRT(DOT_PRODUCT(NORMAL, NORMAL))
 
-         MIDSURFACE_NORMAL(GP,:) = NORMAL
+         MIDSURFACE_NORMAL(:,GP) = NORMAL
 
          NORMAL = GRID_SNORM(BGRID(GP),:)
                                      
@@ -130,9 +130,9 @@
                                                            ! a linear element.
          IF (ANY(NORMAL /= ZERO) .AND. (TYPE(1:5) == 'QUAD4')) THEN
                                                            ! Transform SNORM from basic to XEL element coordinates.
-            CALL MATMULT_FFF(TE, NORMAL, 3, 3, 1, DIRECTOR(GP,:))
+            CALL MATMULT_FFF(TE, NORMAL, 3, 3, 1, DIRECTOR(:,GP))
          ELSE
-            DIRECTOR(GP,:) = MIDSURFACE_NORMAL(GP,:)
+            DIRECTOR(:,GP) = MIDSURFACE_NORMAL(:,GP)
          ENDIF
 
       ENDDO
@@ -146,7 +146,7 @@
 
          ! If SNORM is used, the director vector may be different from the midsurface normal where thickness is defined
          ! by the user. Scale the thickness to make it in the direction of the director vector.
-         THICKNESS_FACTOR = DOT_PRODUCT(DIRECTOR(GP,:), MIDSURFACE_NORMAL(GP,:))
+         THICKNESS_FACTOR = DOT_PRODUCT(DIRECTOR(:,GP), MIDSURFACE_NORMAL(:,GP))
 
                                                            ! Error if the angle betwen them is greater than ~=89 degrees.
                                                            ! 90 degrees would divide by zero and >90 degrees would be

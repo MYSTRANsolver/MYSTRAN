@@ -57,10 +57,10 @@
       DO GP=1,ELGP
          ! g_r(r, s, t) = dX/dr = d/dr X + t/2 * d/dr (hv)
          !     = sum over nodes[ dN/dr X + t/2 * dN/dr (hv) ]
-         G(:,1) = G(:,1) + XEL(GP,:) * DPSHG(1,GP) + DIRECTOR(GP,:) * T/TWO * DPSHG(1,GP) * DIR_THICKNESS(GP)
-         G(:,2) = G(:,2) + XEL(GP,:) * DPSHG(2,GP) + DIRECTOR(GP,:) * T/TWO * DPSHG(2,GP) * DIR_THICKNESS(GP)
+         G(:,1) = G(:,1) + XEL(GP,:) * DPSHG(1,GP) + DIRECTOR(:,GP) * T/TWO * DPSHG(1,GP) * DIR_THICKNESS(GP)
+         G(:,2) = G(:,2) + XEL(GP,:) * DPSHG(2,GP) + DIRECTOR(:,GP) * T/TWO * DPSHG(2,GP) * DIR_THICKNESS(GP)
          ! Interpolate director vector * thickness.
-         G(:,3) = G(:,3) + DIRECTOR(GP,:) * DIR_THICKNESS(GP) / TWO * PSH(GP)
+         G(:,3) = G(:,3) + DIRECTOR(:,GP) * DIR_THICKNESS(GP) / TWO * PSH(GP)
       ENDDO
    
       RETURN

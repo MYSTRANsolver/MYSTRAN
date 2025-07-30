@@ -41,7 +41,7 @@
       INTEGER(LONG), PARAMETER        :: MELGP = 8         
 
                                                            ! Director vector at each element node
-      REAL(DOUBLE)                    :: DIRECTOR(MELGP,3)  
+      REAL(DOUBLE)                    :: DIRECTOR(3,MELGP)
 
                                                            ! Thickness in the direction of the director vector at element nodes.
                                                            ! Called a_k in ref [2] where k is node number.
