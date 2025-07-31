@@ -133,7 +133,7 @@
       DO I=1,3
          DO J =1,3
             PCOMP_MEM_MAT2(I,J) = SHELL_A(I,J)/PCOMP_TM
-            PCOMP_MBC_MAT2(I,J) = SHELL_B(I,J)
+            PCOMP_MBC_MAT2(I,J) = SHELL_B(I,J)/-(PCOMP_TM * PCOMP_TM)
             PCOMP_BEN_MAT2(I,J) = SHELL_D(I,J)/PCOMP_IB
          ENDDO
       ENDDO
@@ -210,7 +210,6 @@
       IF (IERR(4) == 0) THEN
          WRITE(F06,9912) PCOMP(INTL_PID,1), MID1_PCOMP_EQ, C8FLD_TM, MID2_PCOMP_EQ, MID3_PCOMP_EQ,ICONT,                           &
                          ICONT, C8FLD_ZS(2), C8FLD_ZS(2), MID4_PCOMP_EQ
-
       ELSE
          WRITE(F06,9913) PCOMP(INTL_PID,1), MID1_PCOMP_EQ, C8FLD_TM, MID2_PCOMP_EQ, MID3_PCOMP_EQ,ICONT,                           &
                             ICONT, C8FLD_ZS(1), C8FLD_ZS(2)
