@@ -35,7 +35,7 @@
 ! Second index of the result (column) is basis vector (x_l, y_l, normal)
 
       USE PENTIUM_II_KIND, ONLY       :  LONG, DOUBLE
-      USE MODEL_STUF, ONLY            :  ELGP, XEB, TYPE
+      USE MODEL_STUF, ONLY            :  ELGP, XEL, TYPE
       USE CONSTANTS_1, ONLY           :  ZERO, ONE, TWO
 
       USE MITC_SHAPE_FUNCTIONS_Interface
@@ -65,19 +65,19 @@
       CALL MITC_SHAPE_FUNCTIONS(R, S, PSH, DPSHG)
       
                                                            ! Unit normal to the reference plane
-      CALL CROSS(XEB(3,:) - XEB(1,:), XEB(4,:) - XEB(2,:), Z_REF)
+      CALL CROSS(XEL(3,:) - XEL(1,:), XEL(4,:) - XEL(2,:), Z_REF)
       Z_REF = Z_REF / DSQRT(DOT_PRODUCT(Z_REF, Z_REF))
 
                                                            ! Project R_G1G2 onto the reference plane
-      R_G1G2 = XEB(2,:) - XEB(1,:)
+      R_G1G2 = XEL(2,:) - XEL(1,:)
       R_G1G2 = R_G1G2 - Z_REF * DOT_PRODUCT(R_G1G2, Z_REF) / DOT_PRODUCT(Z_REF, Z_REF)
 
                                                            ! Unit normal to shell surface (Z)
       E_XI(:)=ZERO
       E_ETA(:)=ZERO
       DO I=1,ELGP
-        E_XI(:) = E_XI(:) + XEB(I,:) * DPSHG(1,I)
-        E_ETA(:) = E_ETA(:) + XEB(I,:) * DPSHG(2,I)
+        E_XI(:) = E_XI(:) + XEL(I,:) * DPSHG(1,I)
+        E_ETA(:) = E_ETA(:) + XEL(I,:) * DPSHG(2,I)
       ENDDO
       CALL CROSS(E_XI, E_ETA, Z)
       Z = Z / DSQRT(DOT_PRODUCT(Z, Z))

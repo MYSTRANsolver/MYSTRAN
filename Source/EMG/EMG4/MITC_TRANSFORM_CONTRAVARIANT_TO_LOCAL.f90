@@ -36,7 +36,7 @@
       USE MITC_CONTRAVARIANT_BASIS_Interface
       USE MITC4_CARTESIAN_LOCAL_BASIS_Interface
       USE MITC_TRANSFORM_B_Interface
-      USE MATMULT_FFF_Interface
+      USE MATMULT_FFF_T_Interface
       
 
       IMPLICIT NONE 
@@ -58,7 +58,7 @@
       ! The 3x3 transformation matrix A is defined by
       !    A_xy = g^y dot e_x
       ! or two transformation matrices multiplied
-      CALL MATMULT_FFF(TRANSPOSE(E), G_CONTRA, 3, 3, 3, TRANSFORM)
+      CALL MATMULT_FFF_T (E, G_CONTRA, 3, 3, 3, TRANSFORM)
 
       CALL MITC_TRANSFORM_B( TRANSFORM, B)
 

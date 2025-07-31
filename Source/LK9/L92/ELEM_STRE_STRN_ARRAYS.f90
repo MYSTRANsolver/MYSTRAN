@@ -47,7 +47,7 @@
       USE MODEL_STUF, ONLY            :  ALPVEC, BE1, BE2, BE3, DT, EM, EB, ES, ET, ELDOF, PEL, PHI_SQ, STRAIN, STRESS, SUBLOD,    &
                                          TREF, TYPE, UEL, UEB, SE1, SE2, SE3, STE1, STE2, STE3, ELGP
       USE DEBUG_PARAMETERS
-      USE PARAMS, ONLY                :  STR_CID
+      USE PARAMS, ONLY                :  STR_CID, QUAD4TYP
 
 
       USE ELEM_STRE_STRN_ARRAYS_USE_IFs
@@ -85,7 +85,6 @@
       REAL(DOUBLE)                    :: STRESS3_MECH(3)   ! Part of array STRESS3
       REAL(DOUBLE)                    :: TBAR              ! Average elem temperature 
       REAL(DOUBLE)                    :: STR_TENSOR(3,3)   ! 2D stress or strain tensor
-      REAL(DOUBLE)                    :: UE(ELDOF)         ! Displacements used for shell strain
 
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
@@ -164,44 +163,36 @@
 
       ELSE IF ((TYPE(1:5) == 'TRIA3') .OR. (TYPE(1:5) == 'QUAD4') .OR. (TYPE(1:5) == 'QUAD8') .OR.                                 &
                (TYPE(1:5) == 'SHEAR') .OR. (TYPE(1:5) == 'USER1')) THEN
-
-         IF (TYPE(1:5) == 'QUAD8') then
-            UE(1:ELDOF) = UEB(1:ELDOF)                     ! CQUAD8 uses basic coordinates for strain-displacement matrix.
-         ELSE
-            UE(1:ELDOF) = UEL(1:ELDOF)
-         ENDIF
          
          DO I=1,3
             STRAIN(I) = ZERO
             STRAIN(I+3) = ZERO
             DO J=1,ELDOF
-               STRAIN(I)   = STRAIN(I)   + BE1(I,J,STR_PT_NUM)*UE(J)
-               STRAIN(I+3) = STRAIN(I+3) + BE2(I,J,STR_PT_NUM)*UE(J)
+               STRAIN(I)   = STRAIN(I)   + BE1(I,J,STR_PT_NUM)*UEL(J)
+               STRAIN(I+3) = STRAIN(I+3) + BE2(I,J,STR_PT_NUM)*UEL(J)
             ENDDO
          ENDDO   
 
          DO I=1,2
             STRAIN(I+6) = ZERO
             DO J=1,ELDOF
-               STRAIN(I+6) = STRAIN(I+6) + BE3(I,J,STR_PT_NUM)*UE(J)
+               STRAIN(I+6) = STRAIN(I+6) + BE3(I,J,STR_PT_NUM)*UEL(J)
             ENDDO
          ENDDO   
 
-         DO I=1,3                                          ! Calc stresses from strains
+                                                           ! Calc stresses from strains
 
-            STRESS1(I)       = ZERO
-            STRESS2(I)       = ZERO
-            STRESS3(I)       = ZERO
+         STRESS1(:)       = ZERO
+         STRESS2(:)       = ZERO
+         STRESS3(:)       = ZERO
 
-            STRESS1_MECH(I)  = ZERO
-            STRESS2_MECH(I)  = ZERO
-            STRESS3_MECH(I)  = ZERO
+         STRESS1_MECH(:)  = ZERO
+         STRESS2_MECH(:)  = ZERO
+         STRESS3_MECH(:)  = ZERO
 
-            STRESS1_THERM(I) = ZERO
-            STRESS2_THERM(I) = ZERO
-            STRESS3_THERM(I) = ZERO
-
-         ENDDO
+         STRESS1_THERM(:) = ZERO
+         STRESS2_THERM(:) = ZERO
+         STRESS3_THERM(:) = ZERO
 
          DO I=1,3
             STRAIN1(I) = STRAIN(I)
@@ -223,20 +214,13 @@
              ALPTT(I) = ALPVEC(I+3,3)*(TBAR - TREF(1))
            ENDDO
          ELSE
-           DO I=1,3
-             ALPTM(I) = ZERO
-             ALPTB(I) = ZERO
-             ALPTT(I) = ZERO
-           ENDDO
+            ALPTM(:) = ZERO
+            ALPTB(:) = ZERO
+            ALPTT(:) = ZERO
          ENDIF
-      
+     
 
-         DO I=1,3
-            DO J=1,3
-               ET3(I,J) = ZERO
-            ENDDO
-         ENDDO
-
+         ET3(:,:) = ZERO
          DO I=1,2
             DO J=1,2
                ET3(I,J) = ET(I,J)
@@ -246,13 +230,12 @@
          CALL MATMULT_FFF ( EM , STRAIN1, 3, 3, 1, DUM31 )
          CALL MATMULT_FFF ( EB , STRAIN2, 3, 3, 1, DUM32 )
          CALL MATMULT_FFF ( ET3, STRAIN3, 3, 3, 1, DUM33 )
-         DO I=1,3
 
-            STRESS1_MECH(I) =        DUM31(I)
-            STRESS2_MECH(I) =        DUM32(I)
-            STRESS3_MECH(I) = PHI_SQ*DUM33(I)              ! Need PHI_SQ on transv shear stress since this calc is from strains and
+         STRESS1_MECH =        DUM31
+         STRESS2_MECH =        DUM32
+         STRESS3_MECH = PHI_SQ*DUM33                       ! Need PHI_SQ on transv shear stress since this calc is from strains and
                                                            ! BE3, not SE3. If DEBUG(176) > 0 then stresses are calc'd from the SE3
-         ENDDO                                             ! below and SE3 has PHI_SQ incorporated in subrs QPLT1, QPLT3, TPLT2.
+                                                           ! below and SE3 has PHI_SQ incorporated in subrs QPLT1, QPLT3, TPLT2.
               
   
          IF (SUBLOD(INT_SC_NUM,2) > 0) THEN
@@ -270,6 +253,9 @@
             STRESS(I+3) = STRESS2(I)
             STRESS(I+6) = STRESS3(I)
          ENDDO
+
+
+
 
          IF (DEBUG(176) > 0) THEN                          ! If DEBUG(176) > 0, calc stresses using SEi instead of above from STRAIN
             DO I=1,3                                       ! NOTE: PHI_SQ is incorporated into SE3

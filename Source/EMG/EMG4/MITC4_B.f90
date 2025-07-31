@@ -37,7 +37,7 @@
 
 
       USE PENTIUM_II_KIND, ONLY       :  LONG, DOUBLE
-      USE MODEL_STUF, ONLY            :  ELGP, XEB
+      USE MODEL_STUF, ONLY            :  ELGP, XEL
       USE CONSTANTS_1, ONLY           :  ZERO, HALF, ONE, QUARTER, TWO, FOUR
       USE PARAMS, ONLY                :  QUAD4TYP
       USE MITC_STUF, ONLY             :  GP_RS
@@ -97,9 +97,9 @@
       X_S(:) = ZERO
       X_D(:) = ZERO
       DO GP=1,ELGP
-         X_R(:) = X_R(:) + QUARTER * GP_RS(1, GP)                * XEB(GP, :)
-         X_S(:) = X_S(:) + QUARTER *                GP_RS(2, GP) * XEB(GP, :)
-         X_D(:) = X_D(:) + QUARTER * GP_RS(1, GP) * GP_RS(2, GP) * XEB(GP, :)
+         X_R(:) = X_R(:) + QUARTER * GP_RS(1, GP)                * XEL(GP, :)
+         X_S(:) = X_S(:) + QUARTER *                GP_RS(2, GP) * XEL(GP, :)
+         X_D(:) = X_D(:) + QUARTER * GP_RS(1, GP) * GP_RS(2, GP) * XEL(GP, :)
       ENDDO
 
      

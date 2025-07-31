@@ -34,7 +34,7 @@
       USE IOUNT1, ONLY                 :  WRT_ERR, WRT_LOG, ERR, F04, F06
       USE SCONTR, ONLY                 :  BLNK_SUB_NAM, CC_CMD_DESCRIBERS, ECHO, FATAL_ERR, WARN_ERR
       USE TIMDAT, ONLY                 :  TSEC
-      USE CC_OUTPUT_DESCRIBERS, ONLY   :  STRN_LOC, STRN_OPT, STRE_LOC, STRE_OPT
+      USE CC_OUTPUT_DESCRIBERS, ONLY   :  STRN_LOC, STRN_OPT, STRE_LOC, STRE_OPT, FORC_LOC
       USE PARAMS, ONLY                 :  SUPWARN 
       USE SUBR_BEGEND_LEVELS, ONLY     :  CHK_CC_CMD_DESCRIBERS_BEGEND
 
@@ -300,7 +300,6 @@ jdo_1:   DO J=1,NUM_POSS_CCD
          DO I=1,NUM_WORDS
 
             ! TODO: CEN is valid for CENTER (test this)
-            ! TODO: implement CORNER/BILIN
             IF      (CC_CMD_DESCRIBERS(I)(1:6) == 'CENTER') THEN
                STRE_LOC = 'CENTER'
             ELSE IF (CC_CMD_DESCRIBERS(I)(1:6) == 'CORNER') THEN
@@ -326,7 +325,6 @@ jdo_1:   DO J=1,NUM_POSS_CCD
 
          DO I=1,NUM_WORDS
             ! TODO: CEN is valid for CENTER (test this)
-            ! TODO: implement CORNER/BILIN
             IF      (CC_CMD_DESCRIBERS(I)(1:6) == 'CENTER') THEN
                STRN_LOC = 'CENTER'
             ELSE IF (CC_CMD_DESCRIBERS(I)(1:6) == 'CORNER') THEN
@@ -347,6 +345,24 @@ jdo_1:   DO J=1,NUM_POSS_CCD
          ENDDO
 
       ENDIF
+
+      IF (WHAT == 'ELFO' ) THEN
+
+         DO I=1,NUM_WORDS
+
+            ! TODO: CEN is valid for CENTER (test this)
+            IF      (CC_CMD_DESCRIBERS(I)(1:6) == 'CENTER') THEN
+               FORC_LOC = 'CENTER'
+            ELSE IF (CC_CMD_DESCRIBERS(I)(1:6) == 'CORNER') THEN
+               FORC_LOC = 'CORNER'
+            ELSE IF (CC_CMD_DESCRIBERS(I)(1:5) == 'BILIN' ) THEN
+               FORC_LOC = 'CORNER'
+            ENDIF
+
+         ENDDO
+
+      ENDIF
+
 
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN

@@ -25,14 +25,14 @@
 ! End MIT license text.                                                                                      
       SUBROUTINE MITC_COVARIANT_BASIS ( R, S, T, G )
  
-! Calculates g_r, g_s, g_t in global coordinates.
+! Calculates g_r, g_s, g_t in XEL element coordinates.
 ! These are also the columns of the Jacobian matrix.
 ! G(:,1) is g_r, etc.
 
 ! Ref [3] SesamX blog https://www.sesamx.io/blog/shell_finite_element/
 
       USE PENTIUM_II_KIND, ONLY       :  LONG, DOUBLE
-      USE MODEL_STUF, ONLY            :  ELGP, XEB
+      USE MODEL_STUF, ONLY            :  ELGP, XEL
       USE CONSTANTS_1, ONLY           :  ZERO, TWO
       USE MITC_STUF, ONLY             :  DIRECTOR, DIR_THICKNESS
 
@@ -57,10 +57,10 @@
       DO GP=1,ELGP
          ! g_r(r, s, t) = dX/dr = d/dr X + t/2 * d/dr (hv)
          !     = sum over nodes[ dN/dr X + t/2 * dN/dr (hv) ]
-         G(:,1) = G(:,1) + XEB(GP,:) * DPSHG(1,GP) + DIRECTOR(GP,:) * T/TWO * DPSHG(1,GP) * DIR_THICKNESS(GP)
-         G(:,2) = G(:,2) + XEB(GP,:) * DPSHG(2,GP) + DIRECTOR(GP,:) * T/TWO * DPSHG(2,GP) * DIR_THICKNESS(GP)
+         G(:,1) = G(:,1) + XEL(GP,:) * DPSHG(1,GP) + DIRECTOR(:,GP) * T/TWO * DPSHG(1,GP) * DIR_THICKNESS(GP)
+         G(:,2) = G(:,2) + XEL(GP,:) * DPSHG(2,GP) + DIRECTOR(:,GP) * T/TWO * DPSHG(2,GP) * DIR_THICKNESS(GP)
          ! Interpolate director vector * thickness.
-         G(:,3) = G(:,3) + DIRECTOR(GP,:) * DIR_THICKNESS(GP) / TWO * PSH(GP)
+         G(:,3) = G(:,3) + DIRECTOR(:,GP) * DIR_THICKNESS(GP) / TWO * PSH(GP)
       ENDDO
    
       RETURN

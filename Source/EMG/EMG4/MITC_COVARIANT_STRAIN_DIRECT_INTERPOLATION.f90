@@ -107,25 +107,25 @@
             B(ROW, K+2) = (DPSHG3(I,GP) * G(2,J) + DPSHG3(J,GP) * G(2,I)) / TWO
             B(ROW, K+3) = (DPSHG3(I,GP) * G(3,J) + DPSHG3(J,GP) * G(3,I)) / TWO
                                                            !... 1/4 d/di (t h phi) dot g_j  + ...
-            B(ROW, K+4) = DIR_THICKNESS(GP) * T * DPSHG3(I,GP) * (G(3,J) * DIRECTOR(GP,2) - G(2,J) * DIRECTOR(GP,3)) / FOUR
-            B(ROW, K+5) = DIR_THICKNESS(GP) * T * DPSHG3(I,GP) * (G(1,J) * DIRECTOR(GP,3) - G(3,J) * DIRECTOR(GP,1)) / FOUR
-            B(ROW, K+6) = DIR_THICKNESS(GP) * T * DPSHG3(I,GP) * (G(2,J) * DIRECTOR(GP,1) - G(1,J) * DIRECTOR(GP,2)) / FOUR
+            B(ROW, K+4) = DIR_THICKNESS(GP) * T * DPSHG3(I,GP) * (G(3,J) * DIRECTOR(2,GP) - G(2,J) * DIRECTOR(3,GP)) / FOUR
+            B(ROW, K+5) = DIR_THICKNESS(GP) * T * DPSHG3(I,GP) * (G(1,J) * DIRECTOR(3,GP) - G(3,J) * DIRECTOR(1,GP)) / FOUR
+            B(ROW, K+6) = DIR_THICKNESS(GP) * T * DPSHG3(I,GP) * (G(2,J) * DIRECTOR(1,GP) - G(1,J) * DIRECTOR(2,GP)) / FOUR
                                                            !... 1/4 d/dj (t h phi) dot g_i  ]
             IF (J == 3) THEN
                                                            ! Transverse shear rows are special. Eqn. (23a), (24a)
                                                            ! 1/4 d/dt (t h phi) = 1/4 h phi
-              B(ROW, K+4) = B(ROW, K+4) + DIR_THICKNESS(GP) * PSH(GP) * (G(3,I) * DIRECTOR(GP,2) - G(2,I) * DIRECTOR(GP,3)) / FOUR
-              B(ROW, K+5) = B(ROW, K+5) + DIR_THICKNESS(GP) * PSH(GP) * (G(1,I) * DIRECTOR(GP,3) - G(3,I) * DIRECTOR(GP,1)) / FOUR
-              B(ROW, K+6) = B(ROW, K+6) + DIR_THICKNESS(GP) * PSH(GP) * (G(2,I) * DIRECTOR(GP,1) - G(1,I) * DIRECTOR(GP,2)) / FOUR
+              B(ROW, K+4) = B(ROW, K+4) + DIR_THICKNESS(GP) * PSH(GP) * (G(3,I) * DIRECTOR(2,GP) - G(2,I) * DIRECTOR(3,GP)) / FOUR
+              B(ROW, K+5) = B(ROW, K+5) + DIR_THICKNESS(GP) * PSH(GP) * (G(1,I) * DIRECTOR(3,GP) - G(3,I) * DIRECTOR(1,GP)) / FOUR
+              B(ROW, K+6) = B(ROW, K+6) + DIR_THICKNESS(GP) * PSH(GP) * (G(2,I) * DIRECTOR(1,GP) - G(1,I) * DIRECTOR(2,GP)) / FOUR
             ELSE            
                                                            ! 1/4 d/dr (t h phi) = 1/4 t h dN/dr phi
                                                            ! 1/4 d/ds (t h phi) = 1/4 t h dN/ds phi
               B(ROW, K+4) = B(ROW, K+4) +                                                                                          &
-                DIR_THICKNESS(GP) * T * DPSHG3(J,GP) * (G(3,I) * DIRECTOR(GP,2) - G(2,I) * DIRECTOR(GP,3)) / FOUR
+                DIR_THICKNESS(GP) * T * DPSHG3(J,GP) * (G(3,I) * DIRECTOR(2,GP) - G(2,I) * DIRECTOR(3,GP)) / FOUR
               B(ROW, K+5) = B(ROW, K+5) +                                                                                          &
-                DIR_THICKNESS(GP) * T * DPSHG3(J,GP) * (G(1,I) * DIRECTOR(GP,3) - G(3,I) * DIRECTOR(GP,1)) / FOUR
+                DIR_THICKNESS(GP) * T * DPSHG3(J,GP) * (G(1,I) * DIRECTOR(3,GP) - G(3,I) * DIRECTOR(1,GP)) / FOUR
               B(ROW, K+6) = B(ROW, K+6) +                                                                                          &
-                DIR_THICKNESS(GP) * T * DPSHG3(J,GP) * (G(2,I) * DIRECTOR(GP,1) - G(1,I) * DIRECTOR(GP,2)) / FOUR
+                DIR_THICKNESS(GP) * T * DPSHG3(J,GP) * (G(2,I) * DIRECTOR(1,GP) - G(1,I) * DIRECTOR(2,GP)) / FOUR
             ENDIF
 
 

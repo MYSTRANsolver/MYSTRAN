@@ -47,7 +47,7 @@
 
 
       USE PENTIUM_II_KIND, ONLY       :  LONG, DOUBLE
-      USE MODEL_STUF, ONLY            :  ELGP, TYPE, XEB
+      USE MODEL_STUF, ONLY            :  ELGP, TYPE
       USE CONSTANTS_1, ONLY           :  ZERO, HALF, ONE, TWO, FOUR, QUARTER
       USE SCONTR, ONLY                :  FATAL_ERR
       USE MITC_STUF, Only             :  DIRECTOR, DIR_THICKNESS, GP_RS
@@ -72,10 +72,10 @@
       REAL(DOUBLE) , INTENT(OUT)      :: B(6, 6*ELGP)      ! Strain-displacement matrix.
       REAL(DOUBLE)                    :: PSH(ELGP)         ! Shape functions
       REAL(DOUBLE)                    :: DPSHG(2,ELGP)     ! Derivatives of shape functions with respect to R and S.
-      REAL(DOUBLE)                    :: DXMDRS(2,3)       ! Partial derivatives of x_m with respect to r and s
-      REAL(DOUBLE)                    :: DXBDRS(2,3)       ! Partial derivatives of x_b with respect to r and s
-      REAL(DOUBLE)                    :: V1(ELGP,3)        ! Basis vector orthogonal to the director vector.
-      REAL(DOUBLE)                    :: V2(ELGP,3)        ! Basis vector orthogonal to the director vector and V1.
+      REAL(DOUBLE)                    :: DXMDRS(3,2)       ! Partial derivatives of x_m with respect to r and s
+      REAL(DOUBLE)                    :: DXBDRS(3,2)       ! Partial derivatives of x_b with respect to r and s
+      REAL(DOUBLE)                    :: V1(3,ELGP)        ! Basis vector orthogonal to the director vector.
+      REAL(DOUBLE)                    :: V2(3,ELGP)        ! Basis vector orthogonal to the director vector and V1.
       REAL(DOUBLE)                    :: TRANSFORM(3,3)    ! Transformation matrix.
 
       LOGICAL      , INTENT(IN)       :: MEMBRANE          ! If true, generate membrane parts of B
@@ -90,8 +90,8 @@
       B(ROW_FROM:ROW_TO,:) = ZERO
                                                            
                                                            ! Eqn (9) of ref [1].
-      DXMDRS(1,:) = X_R + S * X_D                          ! ∂x_m/∂r
-      DXMDRS(2,:) = X_S + R * X_D                          ! ∂x_m/∂s
+      DXMDRS(:,1) = X_R + S * X_D                          ! ∂x_m/∂r
+      DXMDRS(:,2) = X_S + R * X_D                          ! ∂x_m/∂s
       
 
       IF(BENDING) THEN
@@ -101,8 +101,8 @@
                                                            ! From eqns (8a) and (2) of ref [1].
          DXBDRS(:,:) = ZERO
          DO GP=1,ELGP
-            DXBDRS(1,:) = DXBDRS(1,:) + HALF * DIR_THICKNESS(GP) * DIRECTOR(GP,:) * DPSHG(1,GP)
-            DXBDRS(2,:) = DXBDRS(2,:) + HALF * DIR_THICKNESS(GP) * DIRECTOR(GP,:) * DPSHG(2,GP)
+            DXBDRS(:,1) = DXBDRS(:,1) + HALF * DIR_THICKNESS(GP) * DIRECTOR(:,GP) * DPSHG(1,GP)
+            DXBDRS(:,2) = DXBDRS(:,2) + HALF * DIR_THICKNESS(GP) * DIRECTOR(:,GP) * DPSHG(2,GP)
          ENDDO
 
                                                            ! Find a V1 and V2 for each node which form an 
@@ -111,11 +111,11 @@
          DO GP=1,ELGP
                                                            ! X_R is a convenient vector that's never parallel to Vn.
                                                            ! Project X_R onto the plane normal to the director vector.
-            V1(GP,:) = X_R - DIRECTOR(GP,:) * DOT_PRODUCT(X_R, DIRECTOR(GP,:)) / DOT_PRODUCT(DIRECTOR(GP,:), DIRECTOR(GP,:))
+            V1(:,GP) = X_R - DIRECTOR(:,GP) * DOT_PRODUCT(X_R, DIRECTOR(:,GP)) / DOT_PRODUCT(DIRECTOR(:,GP), DIRECTOR(:,GP))
                                                            ! Normalize V1
-            V1(GP,:) = V1(GP,:) / DSQRT(DOT_PRODUCT(V1(GP,:), V1(GP,:)))
+            V1(:,GP) = V1(:,GP) / DSQRT(DOT_PRODUCT(V1(:,GP), V1(:,GP)))
                                                            ! Calculate V2
-            CALL CROSS(DIRECTOR(GP,:), V1(GP,:), V2(GP,:))
+            CALL CROSS(DIRECTOR(:,GP), V1(:,GP), V2(:,GP))
          ENDDO
          
       ENDIF
@@ -141,11 +141,11 @@
                                                            !              1  / ∂x_m     ∂u_m \
                                                            ! B(ROW,:) +=  - (  ---- dot ----  )
                                                            !              2  \ ∂r_i     ∂r_j /
-            CALL ADD_TERM_M(ROW, DXMDRS(I,:), J, ONE)
+            CALL ADD_TERM_M(ROW, DXMDRS(:,I), J, ONE)
                                                            !              1  / ∂x_m     ∂u_m \
                                                            ! B(ROW,:) +=  - (  ---- dot ----  )
                                                            !              2  \ ∂r_j     ∂r_i /
-            CALL ADD_TERM_M(ROW, DXMDRS(J,:), I, ONE)
+            CALL ADD_TERM_M(ROW, DXMDRS(:,J), I, ONE)
         
 
          ENDIF
@@ -157,21 +157,21 @@
                                                            !              t  / ∂x_m     ∂u_b \
                                                            ! B(ROW,:) +=  - (  ---- dot ----  )
                                                            !              2  \ ∂r_i     ∂r_j /
-            CALL ADD_TERM_B(ROW, DXMDRS(I,:), J, T)
+            CALL ADD_TERM_B(ROW, DXMDRS(:,I), J, T)
                                                            !              t  / ∂x_m     ∂u_b \
                                                            ! B(ROW,:) +=  - (  ---- dot ----  )
                                                            !              2  \ ∂r_j     ∂r_i /
-            CALL ADD_TERM_B(ROW, DXMDRS(J,:), I, T)
+            CALL ADD_TERM_B(ROW, DXMDRS(:,J), I, T)
 
 
                                                            !              t  / ∂x_b     ∂u_m \
                                                            ! B(ROW,:) +=  - (  ---- dot ----  )
                                                            !              2  \ ∂r_i     ∂r_j /
-            CALL ADD_TERM_M(ROW, DXBDRS(I,:), J, T)
+            CALL ADD_TERM_M(ROW, DXBDRS(:,I), J, T)
                                                            !              t  / ∂x_b     ∂u_m \
                                                            ! B(ROW,:) +=  - (  ---- dot ----  )
                                                            !              2  \ ∂r_j     ∂r_i /
-            CALL ADD_TERM_M(ROW, DXBDRS(J,:), I, T)
+            CALL ADD_TERM_M(ROW, DXBDRS(:,J), I, T)
 
                                                            ! Bending e^b2_xx, e^b2_yy, e^b2_xy terms of eqn (7a)
                                                            ! described in eqn (7d) in ref [1]
@@ -179,11 +179,11 @@
                                                            !              t^2  / ∂x_b     ∂u_b \
                                                            ! B(ROW,:) +=  --- (  ---- dot ----  )
                                                            !               2   \ ∂r_i     ∂r_j /
-            CALL ADD_TERM_B(ROW, DXBDRS(I,:), J, T*T)
+            CALL ADD_TERM_B(ROW, DXBDRS(:,I), J, T*T)
                                                            !              t^2  / ∂x_b     ∂u_b \
                                                            ! B(ROW,:) +=  --- (  ---- dot ----  )
                                                            !               2   \ ∂r_j     ∂r_i /
-            CALL ADD_TERM_B(ROW, DXBDRS(J,:), I, T*T)
+            CALL ADD_TERM_B(ROW, DXBDRS(:,J), I, T*T)
 
          ENDIF
          
@@ -195,9 +195,9 @@
                                                            ! coordinates to basic x,y,z.
          DO GP=1,ELGP
             K = (GP-1) * 6
-            TRANSFORM(:,1) = V1(GP,:)
-            TRANSFORM(:,2) = V2(GP,:)
-            TRANSFORM(:,3) = DIRECTOR(GP,:)
+            TRANSFORM(:,1) = V1(:,GP)
+            TRANSFORM(:,2) = V2(:,GP)
+            TRANSFORM(:,3) = DIRECTOR(:,GP)
             DO ROW=ROW_FROM,ROW_TO
                IF(ROW /= 3) THEN
                   B(ROW,K+4:K+6) = MATMUL(TRANSFORM, B(ROW,K+4:K+6))
@@ -266,11 +266,11 @@
          K = (GP-1) * 6
 
                                                            ! Put coefficients of alpha in DOF 4.
-         DUMa = DIR_THICKNESS(GP) / TWO * DPSHG(IU,GP) * (-V2(GP,:))
+         DUMa = DIR_THICKNESS(GP) / TWO * DPSHG(IU,GP) * (-V2(:,GP))
          B(ROW, K+4) = B(ROW, K+4) + COEFFICIENT / TWO * DOT_PRODUCT(LEFT, DUMa)
 
                                                            ! Put coefficients of beta in DOF 5.
-         DUMb = DIR_THICKNESS(GP) / TWO * DPSHG(IU,GP) * ( V1(GP,:))
+         DUMb = DIR_THICKNESS(GP) / TWO * DPSHG(IU,GP) * ( V1(:,GP))
          B(ROW, K+5) = B(ROW, K+5) + COEFFICIENT / TWO * DOT_PRODUCT(LEFT, DUMb)
 
       ENDDO

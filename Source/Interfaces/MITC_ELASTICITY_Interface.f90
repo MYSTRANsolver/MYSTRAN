@@ -1,4 +1,4 @@
-! ##################################################################################################################################
+! ###############################################################################################################################
 ! Begin MIT license text.                                                                                    
 ! _______________________________________________________________________________________________________
                                                                                                          
@@ -24,33 +24,23 @@
                                                                                                         
 ! End MIT license text.                                                                                      
 
-      MODULE MITC_STUF
+   MODULE MITC_ELASTICITY_Interface
 
-! This module contains variables that are calculated once for each element and used in various places.
+   INTERFACE
+
+      FUNCTION MITC_ELASTICITY ()
+ 
+      USE PENTIUM_II_KIND, ONLY       :  DOUBLE
+      USE MODEL_STUF, ONLY            :  EM, ET, EPROP
+      USE CONSTANTS_1, ONLY           :  ZERO
+
+      IMPLICIT NONE 
   
-      USE PENTIUM_II_KIND, ONLY       :  LONG, DOUBLE
-  
-      IMPLICIT NONE
+      REAL(DOUBLE)                    :: MITC_ELASTICITY(6,6)
+      
+      END FUNCTION MITC_ELASTICITY
 
-      SAVE
-    
+   END INTERFACE
 
-! **********************************************************************************************************************************
+   END MODULE MITC_ELASTICITY_Interface
 
-                                                           ! Maximum number of nodes for an element
-      INTEGER(LONG), PARAMETER        :: MELGP = 8         
-
-                                                           ! Director vector at each element node
-      REAL(DOUBLE)                    :: DIRECTOR(3,MELGP)
-
-                                                           ! Thickness in the direction of the director vector at element nodes.
-                                                           ! Called a_k in ref [2] where k is node number.
-      REAL(DOUBLE)                    :: DIR_THICKNESS(MELGP)
-
-                                                           ! R and S coordinates of each element node
-      REAL(DOUBLE)                    :: GP_RS(2,MELGP)
-
-
-! **********************************************************************************************************************************
-
-      END MODULE MITC_STUF

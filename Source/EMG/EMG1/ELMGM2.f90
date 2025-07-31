@@ -39,7 +39,7 @@
       USE TIMDAT, ONLY                :  TSEC
       USE SUBR_BEGEND_LEVELS, ONLY    :  ELMGM2_BEGEND
       USE CONSTANTS_1, ONLY           :  ZERO, HALF, ONE, TWO
-      USE PARAMS, ONLY                :  EPSIL, QUADAXIS, SUPWARN
+      USE PARAMS, ONLY                :  EPSIL, QUADAXIS, SUPWARN, QUAD4TYP
       USE MODEL_STUF, ONLY            :  AGRID, BMEANT, EID, ELGP, EMG_IFE, EMG_IWE, EMG_RWE, ERR_SUB_NAM, NUM_EMG_FATAL_ERRS,     &
                                          HBAR, MXWARP, QUAD_DELTA, QUAD_GAMMA, QUAD_THETA, TE, TE_IDENT, TYPE, WARP_WARN, XEB, XEL
       USE DEBUG_PARAMETERS, ONLY      :  DEBUG
@@ -236,18 +236,36 @@
       XEL(1,2) = ZERO
       XEL(1,3) = ZERO
 
-      XEL(2,3) = ZERO                                      ! All z coords in mean plane are zero by definition of mean plane
-      XEL(3,3) = ZERO                                      ! even though using TE to calc them may not yield zero's
-      XEL(4,3) = ZERO
+      IF ((TYPE == 'QUAD8   ') .OR.                                                                                                &
+         ((TYPE == 'QUAD4   ') .AND. ((QUAD4TYP == 'MITC4 ') .OR. (QUAD4TYP == 'MITC4+')))) THEN
 
-      DO I=2,ELGP
-         DO J=1,2                                          ! Only calc x znd y coords. z coords in mean plane are zero by definition
-            XEL(I,J) = ZERO
-            DO K=1,3
-               XEL(I,J) = XEL(I,J) + (XEB(I,K) - XEB(1,K))*TE_12(J,K)
+                                                           ! The z coordinate of grid points in the 
+                                                           ! XEL element coordinate system can be non-zero if it's warped.
+         DO I=2,ELGP
+            DO J=1,3
+               XEL(I,J) = ZERO
+               DO K=1,3
+                  XEL(I,J) = XEL(I,J) + (XEB(I,K) - XEB(1,K))*TE_12(J,K)
+               ENDDO 
             ENDDO 
-         ENDDO 
-      ENDDO
+         ENDDO
+
+      ELSE
+
+         XEL(2,3) = ZERO                                   ! All z coords in mean plane are zero by definition of mean plane
+         XEL(3,3) = ZERO                                   ! even though using TE to calc them may not yield zero's
+         XEL(4,3) = ZERO
+
+         DO I=2,ELGP
+            DO J=1,2                                       ! Only calc x znd y coords. z coords in mean plane are zero by definition
+               XEL(I,J) = ZERO
+               DO K=1,3
+                  XEL(I,J) = XEL(I,J) + (XEB(I,K) - XEB(1,K))*TE_12(J,K)
+               ENDDO 
+            ENDDO 
+         ENDDO
+
+      ENDIF      
 
       QUAD_GEOM_ERR = 0
       CALL QUAD_GEOM_CHECK
@@ -354,18 +372,37 @@
       XEL(1,2) = ZERO
       XEL(1,3) = ZERO
 
-      XEL(2,3) = ZERO                                      ! All z coords in mean plane are zero by definition of mean plane
-      XEL(3,3) = ZERO                                      ! even though using TE to calc them may not yield zero's
-      XEL(4,3) = ZERO
+      IF ((TYPE == 'QUAD8   ') .OR.                                                                                                &
+         ((TYPE == 'QUAD4   ') .AND. ((QUAD4TYP == 'MITC4 ') .OR. (QUAD4TYP == 'MITC4+')))) THEN
 
-      DO I=2,ELGP
-         DO J=1,2                                          ! Only calc x znd y coords. z coords in mean plane are zero by definition
-            XEL(I,J) = ZERO
-            DO K=1,3
-               XEL(I,J) = XEL(I,J) + (XEB(I,K) - XEB(1,K))*TE(J,K)
+                                                           ! The z coordinate of grid points in the 
+                                                           ! XEL element coordinate system can be non-zero if it's warped.
+         DO I=2,ELGP
+            DO J=1,3
+               XEL(I,J) = ZERO
+               DO K=1,3
+                  XEL(I,J) = XEL(I,J) + (XEB(I,K) - XEB(1,K))*TE(J,K)
+               ENDDO 
             ENDDO 
-         ENDDO 
-      ENDDO
+         ENDDO
+
+      ELSE
+
+         XEL(2,3) = ZERO                                   ! All z coords in mean plane are zero by definition of mean plane
+         XEL(3,3) = ZERO                                   ! even though using TE to calc them may not yield zero's
+         XEL(4,3) = ZERO
+
+         DO I=2,ELGP
+            DO J=1,2                                       ! Only calc x znd y coords. z coords in mean plane are zero by definition
+               XEL(I,J) = ZERO
+               DO K=1,3
+                  XEL(I,J) = XEL(I,J) + (XEB(I,K) - XEB(1,K))*TE(J,K)
+               ENDDO 
+            ENDDO 
+         ENDDO
+
+      ENDIF      
+
 
       IF ((DEBUG(6) == 1) .AND. (WRT_BUG(0) == 1)) THEN
          WRITE(BUG,*) '  Grid coords in mean plane - using final coord system, TE:'

@@ -53,6 +53,7 @@
       USE MITC8_B_Interface
       USE MITC8_CARTESIAN_LOCAL_BASIS_Interface
       USE MITC8_ELEMENT_CS_BASIS_Interface
+      USE MITC_ELASTICITY_Interface
       
       IMPLICIT NONE 
   
@@ -92,11 +93,6 @@
 ! COORDINATE SYSTEMS
 ! ==================
 !
-! Basic
-!  Used for the grid point DOFs of the strain-displacement and the element stiffness matrices.
-!  No distinction is made between grid point and element node coordinates but they may be different if ZOFFS is enabled.
-!  Orthogonal
-!
 ! Cartesian local
 !  e^_1, e^_2, e^_3 in Bathe but they are oriented differently there.
 !  e^_3 is the midsurface normal which is the same as the director vector for MITC8 because it doesn't support SNORM.
@@ -106,18 +102,20 @@
 !  The uniformity allows stress to be interpolated and extrapolated to different locations conveniently.
 !  Orthogonal
 !
-! Element
+! Element local (Nastran definition)
 !  x_l, y_l, z_l
 !  Used for element stress, strain, and force outputs
 !  Defined the same way as MSC (element coordinate system) and SimCenter (local coordinate system).
 !  Defined by x_l being the bisection of the R, S isoparametric basis vectors rotated about the normal by -45 degrees.
 !  Orthogonal
 !
-! XEL
+! XEL element (internal use)
+!  Used for the grid point DOFs of the strain-displacement and the element stiffness matrices.
 !  Used for extrapolating stress and strain from Gauss points to corners.
 !  Grid point coordinates stored in XEL are in a coordinate system which is flat, with the normal being the cross product 
 !  of vectors from grid points 1-3 and 2-4. The x axis is an arbitrary direction in this plane. The flat coordinate system
-!  is used because the polynomial curve fit code to extrapolate stress/strain from Gauss points to corners is only 2D.
+!  is used for grid point coordinates for extrapolating stress because the polynomial curve fit code to extrapolate stress/strain
+!  from Gauss points to corners is only 2D.
 !  Orthogonal
 !
 ! Material
@@ -284,42 +282,7 @@
          ! strain = [B] * displacement
          ! K is in the basic coordinate system
 
-
-                                                           ! Convert 2D material elasticity matrices to 3D.
-         E(1,1) = EM(1,1)
-         E(1,2) = EM(1,2)
-         E(1,3) = ZERO
-         E(1,4) = EM(1,3)
-         E(1,5) = ZERO
-         E(1,6) = ZERO
-
-         E(2,2) = EM(2,2)
-         E(2,3) = ZERO
-         E(2,4) = EM(2,3)
-         E(2,5) = ZERO
-         E(2,6) = ZERO
-
-         E(3,3) = ZERO
-         E(3,4) = ZERO
-         E(3,5) = ZERO
-         E(3,6) = ZERO
-
-         E(4,4) = EM(3,3)
-         E(4,5) = ZERO
-         E(4,6) = ZERO
-
-         E(5,5) = ET(2,2) * EPROP(3)
-         E(5,6) = ET(2,1) * EPROP(3)
-
-         E(6,6) = ET(1,1) * EPROP(3)
-
-         DO I=2,6                                           ! Copy UT to LT because it's symmetric.
-            DO J=1,I-1
-               E(I,J) = E(J,I)
-            ENDDO 
-         ENDDO   
-
-
+         E = MITC_ELASTICITY()
 
          KE(1:6*ELGP,1:6*ELGP) = ZERO
 

@@ -1,4 +1,4 @@
-! ##################################################################################################################################
+! #################################################################################################################################
 ! Begin MIT license text.                                                                                    
 ! _______________________________________________________________________________________________________
                                                                                                          
@@ -23,34 +23,50 @@
 ! _______________________________________________________________________________________________________
                                                                                                         
 ! End MIT license text.                                                                                      
+      FUNCTION MITC_ELASTICITY ()
 
-      MODULE MITC_STUF
-
-! This module contains variables that are calculated once for each element and used in various places.
-  
+! Returns the 6x6 elasticity matrix.
+! In the element coordinate system for QUAD4.
+! In the material coordinate system for QUAD8.
+ 
       USE PENTIUM_II_KIND, ONLY       :  LONG, DOUBLE
+      USE MODEL_STUF, ONLY            :  EM, ET, EPROP
+      USE CONSTANTS_1, ONLY           :  ZERO
+
+      IMPLICIT NONE 
   
-      IMPLICIT NONE
+      INTEGER(LONG)                   :: I,J               ! DO loop indices
 
-      SAVE
-    
-
-! **********************************************************************************************************************************
-
-                                                           ! Maximum number of nodes for an element
-      INTEGER(LONG), PARAMETER        :: MELGP = 8         
-
-                                                           ! Director vector at each element node
-      REAL(DOUBLE)                    :: DIRECTOR(3,MELGP)
-
-                                                           ! Thickness in the direction of the director vector at element nodes.
-                                                           ! Called a_k in ref [2] where k is node number.
-      REAL(DOUBLE)                    :: DIR_THICKNESS(MELGP)
-
-                                                           ! R and S coordinates of each element node
-      REAL(DOUBLE)                    :: GP_RS(2,MELGP)
+      REAL(DOUBLE)                    :: MITC_ELASTICITY(6,6)
 
 
 ! **********************************************************************************************************************************
 
-      END MODULE MITC_STUF
+! Victor todo this is not very useful because different matrices are used in different places:
+! MITC4+ stiffness:     membrane, bending+shear
+! MITC4+ thermal load:  membrane
+! MITC8 stiffness:      membrane+shear. Could be bending+shear because QUAD8 requires MID1=MID2.
+
+                                                           ! Convert 2D material elasticity matrices to 3D.
+      MITC_ELASTICITY(:,:) = ZERO
+      MITC_ELASTICITY(1,1) = EM(1,1)
+      MITC_ELASTICITY(1,2) = EM(1,2)
+      MITC_ELASTICITY(1,4) = EM(1,3)
+      MITC_ELASTICITY(2,2) = EM(2,2)
+      MITC_ELASTICITY(2,4) = EM(2,3)
+      MITC_ELASTICITY(4,4) = EM(3,3)
+      MITC_ELASTICITY(5,5) = ET(2,2) * EPROP(3)
+      MITC_ELASTICITY(5,6) = ET(2,1) * EPROP(3)
+      MITC_ELASTICITY(6,6) = ET(1,1) * EPROP(3)
+
+      DO I=2,6                                             ! Copy UT to LT because it's symmetric.
+         DO J=1,I-1
+            MITC_ELASTICITY(I,J) = MITC_ELASTICITY(J,I)
+         ENDDO 
+      ENDDO   
+
+      RETURN
+
+! **********************************************************************************************************************************
+  
+      END FUNCTION MITC_ELASTICITY

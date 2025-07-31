@@ -41,6 +41,7 @@
       use model_stuf, only            :  pcomp_props
       USE MODEL_STUF, ONLY            :  ANY_ELFE_OUTPUT, EDAT, EPNT, ETYPE, FCONV, EID, ELMTYP, ELOUT, METYPE, NUM_EMG_FATAL_ERRS,&
                                          PLY_NUM, TYPE, STRESS, SHELL_STR_ANGLE, NUM_SEi, ELGP, AGRID
+      USE CC_OUTPUT_DESCRIBERS, ONLY  :  FORC_LOC
       USE LINK9_STUFF, ONLY           :  EID_OUT_ARRAY, GID_OUT_ARRAY, MAXREQ, OGEL
       USE OUTPUT4_MATRICES, ONLY      :  OTM_ELFE, TXT_ELFE
   
@@ -146,7 +147,8 @@
                IF (ETYPE(J) == ELMTYP(I)) THEN
                   call is_elem_pcomp_props ( j )
                   if (pcomp_props == 'N') then
-                     IF (ETYPE(J)(1:5) == 'QUAD8') THEN
+                     IF ((FORC_LOC == 'CORNER  ') .OR.                                                                             &
+                         (ETYPE(J)(1:5) == 'QUAD8')) THEN
                         NUM_PTS(I) = NUM_SEi(I)
                      ELSE
                         NUM_PTS(I) = 1
@@ -219,25 +221,36 @@ elems_3: DO J = 1,NELE
                            STRESS_RAW(:,M) = STRESS(:) 
                         ENDDO
                                          
-                        IF (ETYPE(J)(1:5) == 'QUAD8') THEN
+                        STRESS_OUT(:,1) = STRESS_RAW(:,1)  ! Set STRAIN_OUT for NUM_PTS(I) = 1
+
+                        IF ((FORC_LOC == 'CORNER  ') .OR.                                                                          & 
+                            (ETYPE(J)(1:5) == 'QUAD8')) THEN
+
+                           IF (TYPE(1:5) == 'QUAD4') THEN
+
                                                            ! Extrapolate stress to corners
-                           CALL POLYNOM_FIT_STRE_STRN ( STRESS_RAW, 9, NUM_PTS(I), STRESS_OUT, STRESS_OUT_PCT_ERR,                 &
-                             STRESS_OUT_ERR_INDEX, PCT_ERR_MAX )
+                              CALL POLYNOM_FIT_STRE_STRN ( STRESS_RAW, 9, NUM_PTS(I), STRESS_OUT, STRESS_OUT_PCT_ERR,              &
+                                    STRESS_OUT_ERR_INDEX, PCT_ERR_MAX )
+
+                           ELSEIF (ETYPE(J)(1:5) == 'QUAD8') THEN
+
+                                                           ! Extrapolate stress to corners
+                              CALL POLYNOM_FIT_STRE_STRN ( STRESS_RAW, 9, NUM_PTS(I), STRESS_OUT, STRESS_OUT_PCT_ERR,              &
+                                STRESS_OUT_ERR_INDEX, PCT_ERR_MAX )
 
                                                            ! Transfrom stress to element coordinate system
-                           DO M=2,NUM_PTS(I)
-                              CALL PLANE_COORD_TRANS_21( SHELL_STR_ANGLE( M ), TEL, '')
-                              CALL TRANSFORM_SHELL_STR( TEL, STRESS_OUT(:,M), ONE)
-                           ENDDO
-                           
+                              DO M=2,NUM_PTS(I)
+                                 CALL PLANE_COORD_TRANS_21( SHELL_STR_ANGLE( M ), TEL, '')
+                                 CALL TRANSFORM_SHELL_STR( TEL, STRESS_OUT(:,M), ONE)
+                              ENDDO
+                              
                                                            ! Center stress is the average of corner stress in element coordinates.
                                                            ! In MSC, the center force and moment resultants are the average but
                                                            ! this is equivalent.
-                           STRESS_OUT(:,1) = (STRESS_OUT(:,2) + STRESS_OUT(:,3) + STRESS_OUT(:,4) + STRESS_OUT(:,5)) / FOUR
-                        ELSE
-                        
-                           STRESS_OUT(:,1) = STRESS_RAW(:,1)
-                        
+                              STRESS_OUT(:,1) = (STRESS_OUT(:,2) + STRESS_OUT(:,3) + STRESS_OUT(:,4) + STRESS_OUT(:,5)) / FOUR
+
+                           ENDIF
+                           
                         ENDIF
                         
                         DO M=1,NUM_PTS(I)                  ! Calculate forces and moments from stresses

@@ -36,7 +36,7 @@
       USE SUBR_BEGEND_LEVELS, ONLY    :  MAXREQ_OGEL_BEGEND
       USE MODEL_STUF, ONLY            :  ELMTYP, ELOUT, ESORT2, ETYPE, GROUT, MEFFMASS_CALC, MPFACTOR_CALC, NELGP, NUM_PLIES,      &
                                          PCOMP_PROPS, SCNUM, TYPE
-      USE CC_OUTPUT_DESCRIBERS, ONLY  :  STRN_LOC, STRE_LOC
+      USE CC_OUTPUT_DESCRIBERS, ONLY  :  STRN_LOC, STRE_LOC, FORC_LOC
       USE LINK9_STUFF, ONLY           :  MAXREQ
       USE DEBUG_PARAMETERS, ONLY      :  DEBUG
  
@@ -244,6 +244,14 @@
       ELSE IF (K == 1) THEN                                ! K = 1 is elem engr force output requests. (only 1 row of output/elem)
 !                                                            -----
          NUMBER_ROWS(K) = 1
+
+         IF (TYPE(1:5) == 'QUAD4') THEN
+            IF (FORC_LOC == 'CENTER  ') THEN            !    PSHELL requires 2 rows of output/elem for FORC_LOC = 'CENTER'
+               NUMBER_ROWS(K) = 1
+            ELSE                                        !    PSHELL requires more lines of output for other FORC_LOC
+               NUMBER_ROWS(K) = NUM_SEi(LETYPE)
+            ENDIF
+         ENDIF
 
       ELSE IF (K == 2) THEN                                ! K = 2 is elem stress output requests
 !                                                            -----
