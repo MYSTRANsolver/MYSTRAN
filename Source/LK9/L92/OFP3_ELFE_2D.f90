@@ -147,7 +147,7 @@
                IF (ETYPE(J) == ELMTYP(I)) THEN
                   call is_elem_pcomp_props ( j )
                   if (pcomp_props == 'N') then
-                     IF ((FORC_LOC == 'CORNER  ') .OR.                                                                                & 
+                     IF ((FORC_LOC == 'CORNER  ') .OR.                                                                             &
                          (ETYPE(J)(1:5) == 'QUAD8')) THEN
                         NUM_PTS(I) = NUM_SEi(I)
                      ELSE
