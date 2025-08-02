@@ -39,7 +39,7 @@
       USE SCONTR, ONLY                :  BLNK_SUB_NAM, FATAL_ERR, MAX_ORDER_GAUSS, MAX_STRESS_POINTS, NTSUB, NSUB
       USE NONLINEAR_PARAMS, ONLY      :  LOAD_ISTEP
       USE MODEL_STUF, ONLY            :  NUM_EMG_FATAL_ERRS, PCOMP_PROPS, ELGP, ES, KE, EM, EB, ET, BE1, BE2, BE3, PHI_SQ,         &
-                                         FCONV, EPROP, PTE, ALPVEC, TREF, DT, PPE, PRESS,                                          &
+                                         FCONV, EPROP, PTE, ALPVEC, TREF, DT, PPE, PRESS, MASS_PER_UNIT_AREA, ME,                  &
                                          NUM_PLIES, PCOMP_LAM, PLY_NUM, TPLY, STRESS, KED
       USE CONSTANTS_1, ONLY           :  ZERO, ONE, TWO, FOUR
 
@@ -112,7 +112,8 @@
       REAL(DOUBLE)                    :: BMI(6,6*ELGP)     ! Strain-displ matrix for membrane for one Gauss point
       REAL(DOUBLE)                    :: BBI(6,6*ELGP)     ! Strain-displ matrix for bending for one Gauss point
       REAL(DOUBLE)                    :: BSI(6,6*ELGP)     ! Strain-displ matrix for shear for one Gauss point
-
+      REAL(DOUBLE)                    :: M_1DOF(ELGP,ELGP)
+      REAL(DOUBLE)                    :: DENSITY
       REAL(DOUBLE)                    :: FORCEx(IORD_STRESS_Q4*IORD_STRESS_Q4) ! Engineering force in the elem x direction at Gauss points
       REAL(DOUBLE)                    :: FORCEy(IORD_STRESS_Q4*IORD_STRESS_Q4) ! Engineering force in the elem x direction at Gauss points
       REAL(DOUBLE)                    :: FORCExy(IORD_STRESS_Q4*IORD_STRESS_Q4)! Engineering force in the elem xy direction at Gauss points
@@ -131,6 +132,7 @@
       REAL(DOUBLE)                    :: DUM14(3,3)
       REAL(DOUBLE)                    :: DUM33(3,3)
       REAL(DOUBLE)                    :: JAC2x2(2,2)
+      REAL(DOUBLE)                    :: ROW_SUM
 
 ! **********************************************************************************************************************************
 
@@ -203,7 +205,62 @@
 ! Generate the mass matrix for this element.
  
       IF (OPT(1) == 'Y') THEN
-        !Not implememented yet but we can't make it a fatal error because this gets called even when it doesn't need it.
+
+         ! Consistent mass matrix
+         ! ME = ∫ N' ρ N det(J) dv
+
+         ME(:,:) = ZERO
+         M_1DOF(:,:) = ZERO
+   
+         DENSITY = MASS_PER_UNIT_AREA / EPROP(1)
+
+         CALL ORDER_GAUSS ( IORD_IJ, SS_IJ, HH_IJ )
+         CALL ORDER_GAUSS ( IORD_K, SS_K, HH_K )
+
+                                                           ! Make mass matrix with 1 DOF per node
+         DO I=1,IORD_IJ
+            DO J=1,IORD_IJ
+               DO K=1,IORD_K
+                  R = SS_IJ(I)
+                  S = SS_IJ(J)
+                  T = SS_K(K)
+
+                  CALL MITC_SHAPE_FUNCTIONS(R, S, PSH, DPSHG)
+
+                  DETJ = MITC_DETJ ( R, S, T )
+                  INTFAC = DETJ*HH_IJ(I)*HH_IJ(J)*HH_K(K)  ! det(J) * Gauss point weight
+
+                  DO L=1,ELGP
+                     DO M=1,ELGP
+                        M_1DOF(L,M) = M_1DOF(L,M) + PSH(L) * PSH(M) * DENSITY * INTFAC
+                     ENDDO
+                  ENDDO
+                                    
+               ENDDO
+            ENDDO 
+         ENDDO   
+
+         ! Row sum to convert to lumped mass Matrix
+         DO I=1,ELGP
+            ROW_SUM = ZERO
+            DO J=1,ELGP
+               ROW_SUM = ROW_SUM + M_1DOF(I,J)
+               M_1DOF(I,J) = ZERO
+            ENDDO
+            M_1DOF(I,I) = ROW_SUM
+         ENDDO
+
+                                                           ! Copy to all 3 translational DOFs of each node.
+         DO I=1,ELGP
+            DO J=1,ELGP
+               KI = (I-1) * 6
+               KJ = (J-1) * 6
+               DO L=1,3
+                  ME(KI + L, KJ + L) = M_1DOF(I,J)
+               ENDDO
+            ENDDO
+         ENDDO   
+
 
       ENDIF
 
@@ -331,7 +388,7 @@
                                                            ! To allow grid point thicknesses, this should be the thickness
                                                            ! interpolated at the Gauss point.
 !victor todo EPROP(1) might be supposed to be the magnitude of [(DIR_THICKESS * DIRECTOR) interpolated at the Gauss point]
-! similar to how MITC_COVARIANT_BASIS does it. Maybe even use the covariant basis 3rd vector?
+! similar to how MITC_COVARIANT_BASIS does it. Maybe even use the covariant basis 3rd vector times 2?
                BE2(1,1:6*ELGP,STR_PT_NUM) = (BI2(1,:) - BI1(1,:)) / EPROP(1)      ! xx
                BE2(2,1:6*ELGP,STR_PT_NUM) = (BI2(2,:) - BI1(2,:)) / EPROP(1)      ! yy
                BE2(3,1:6*ELGP,STR_PT_NUM) = (BI2(4,:) - BI1(4,:)) / EPROP(1)      ! xy
