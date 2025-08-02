@@ -43,7 +43,7 @@ NASTRAN. It is an independent program written in modern Fortran 95.
 - OP2 Support
 - Modal analysis
 - Linear Static Analysis
-- Linear Elastic Buckling Analysis (All But Shell Elements)
+- Linear Elastic Buckling Analysis
 - Support for True Classical Laminate Plate Theory
 
 # Get EXE or Make Binary
