@@ -214,6 +214,8 @@ In order to update mystran there are a few things to make sure you do.
 
    - Instantiate another version that matches the previously selected version number and place it atop the file. Ensure date is written YYYY/MM/DD.
    - Go through all of the merged pull requests made to the code since the last update version and add them to either the "fixes" or "additions" section. Make sure you always link to the pull requests and that the pull requests either mention by name or link to the issue tickets they address.
+
+3. Communicate mystran updates to documentation maintainer and await updates. This can be done with aid of the release_notes.md that is made on the fork.
 </details>
 
 
