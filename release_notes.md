@@ -8,22 +8,32 @@ Added:
  - [Implemented computation and f06 output for corner stresses on solid elements](https://github.com/MYSTRANsolver/MYSTRAN/pull/113)
  - [Added/fixed existing implementation of MCID for CQUAD4](https://github.com/MYSTRANsolver/MYSTRAN/pull/117)
  - [Added better superLU version, better build script, and counters that don't slow mystran down](https://github.com/MYSTRANsolver/MYSTRAN/pull/131)
- - 
+ -  [Implemented initial composite buckling for QUAD4 laminates](https://github.com/MYSTRANsolver/MYSTRAN/pull/139)
+ -  [Improvments to shell element issues and fix for #125 (including initial work for shell buckling)](https://github.com/MYSTRANsolver/MYSTRAN/pull/127)
+ -  [Added CQUAD8 element which uses MITC8](https://github.com/MYSTRANsolver/MYSTRAN/pull/144)
+ -  [Added stress strain and force output for MITC8](https://github.com/MYSTRANsolver/MYSTRAN/pull/147)
+ -  [Added MITC4+ element basic element matrices](https://github.com/MYSTRANsolver/MYSTRAN/pull/149)
+ -  [Added many features for the MITC4+ element](https://github.com/MYSTRANsolver/MYSTRAN/pull/153)
+ -  [Added -1/t^2 factor for MID4 output for PSHELLS/PCOMPS](https://github.com/MYSTRANsolver/MYSTRAN/pull/154)
+ -  [Added mass matrix for MITC4+ element](https://github.com/MYSTRANsolver/MYSTRAN/pull/155)
 
 Fixed:
- -  [Additional Output Flags](https://github.com/MYSTRANsolver/MYSTRAN/issues/72)
- -  [fixed minor linking issue with Bandit for compilation simplicity](https://github.com/MYSTRANsolver/MYSTRAN/pull/91)
- -  [Fixed issues #95, #96 and #98 which were all related to coordinate system transformations for materials and elements](https://github.com/MYSTRANsolver/MYSTRAN/pull/100)
- -  [Fixed incorrect thermal strains on orthotropic materials](https://github.com/MYSTRANsolver/MYSTRAN/pull/101)
- -  [Fixed TRIA3K composites solving when they should have errored](https://github.com/MYSTRANsolver/MYSTRAN/pull/106)
- -  [Changed default shell element formulation from MIN4T to MIN4](https://github.com/MYSTRANsolver/MYSTRAN/pull/107)
- -  [Fixed way that long format CBUSH cards are read](https://github.com/MYSTRANsolver/MYSTRAN/pull/110)
- -  [Improved accuracy of MIN4T elements by changing default stress integration order to bi-linear rather than bi-quadratic](https://github.com/MYSTRANsolver/MYSTRAN/pull/116)
- -  [Fixed issue #118 which addresses errors in I1 section and Channel section (more work still needs to be done)](https://github.com/MYSTRANsolver/MYSTRAN/pull/119)
- -  [Fixed errors in solid element differential stiffness matrix](https://github.com/MYSTRANsolver/MYSTRAN/pull/123)
- -  [Fixed memory errors which caused issue #122](https://github.com/MYSTRANsolver/MYSTRAN/pull/124)
- -  [Improvments to shell element issues and fix for #125 (including initial work for shell buckling)[https://github.com/MYSTRANsolver/MYSTRAN/pull/127]
- -  
+ - [Additional Output Flags](https://github.com/MYSTRANsolver/MYSTRAN/issues/72)
+ - [fixed minor linking issue with Bandit for compilation simplicity](https://github.com/MYSTRANsolver/MYSTRAN/pull/91)
+ - [Fixed issues #95, #96 and #98 which were all related to coordinate system transformations for materials and elements](https://github.com/MYSTRANsolver/MYSTRAN/pull/100)
+ - [Fixed incorrect thermal strains on orthotropic materials](https://github.com/MYSTRANsolver/MYSTRAN/pull/101)
+ - [Fixed TRIA3K composites solving when they should have errored](https://github.com/MYSTRANsolver/MYSTRAN/pull/106)
+ - [Changed default shell element formulation from MIN4T to MIN4](https://github.com/MYSTRANsolver/MYSTRAN/pull/107)
+ - [Fixed way that long format CBUSH cards are read](https://github.com/MYSTRANsolver/MYSTRAN/pull/110)
+ - [Improved accuracy of MIN4T elements by changing default stress integration order to bi-linear rather than bi-quadratic](https://github.com/MYSTRANsolver/MYSTRAN/pull/116)
+ - [Fixed issue #118 which addresses errors in I1 section and Channel section (more work still needs to be done)](https://github.com/MYSTRANsolver/MYSTRAN/pull/119)
+ - [Fixed errors in solid element differential stiffness matrix](https://github.com/MYSTRANsolver/MYSTRAN/pull/123)
+ - [Fixed memory errors which caused issue #122](https://github.com/MYSTRANsolver/MYSTRAN/pull/124)
+ - [Made AUTOSPC NSET apply to 3 instead of 1, fixes problems for shells with small thicknesses and fixes issue #129](https://github.com/MYSTRANsolver/MYSTRAN/pull/132)
+ - [Fixed coordinate system rotation bug which fixes issue #128](https://github.com/MYSTRANsolver/MYSTRAN/pull/133)
+ - [Implemented temporary fix to K6ROT](https://github.com/MYSTRANsolver/MYSTRAN/pull/134)
+ - [Modifies shear factor for solids and membrane composites; fixes issue #136](https://github.com/MYSTRANsolver/MYSTRAN/pull/134)
+ - [Made BAILOUT perform more like NASTRAN](https://github.com/MYSTRANsolver/MYSTRAN/pull/140)
 
 Highlighted Changes
 -------------------
