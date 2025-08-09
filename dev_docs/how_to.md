@@ -1,12 +1,18 @@
 How to
 ======
-1.  Add a PARAM    - TODO
-2.  Add an element - TODO
-3.  Modify the Case Control
-4.  Open/Close an ASCII File
 
-Modifying the Case Control Deck
-===============================
+<details>
+<summary>1. Add a PARAM    - TODO</summary>
+</details>
+
+<details>
+<summary>2. Add an element - TODO</summary>
+</details>
+
+<details>
+<summary>3. Modifying the Case Control Deck</summary>
+# 3. Modifying the Case Control Deck
+
 In this example, we'll discuss adding:
 
    - DISP(CSV) = ALL    ! for CSV output
@@ -21,7 +27,7 @@ This is broken into 42 steps:
 Let's Modify Source!
 --------------------
 
-### 1.  Open "Source/Link1/L1A-CC/CC-DISP.f90"
+#### 1.  Open "Source/Link1/L1A-CC/CC-DISP.f90"
 
 You should see:
 
@@ -74,7 +80,7 @@ However, this is more consistent with Nastran's bit flag system, which uses:
 
 and adds them together to get the different combinations.
 
-### 2.  Opening to "Source/LK1/LK1A-CC/CHK_CC_CMD_DESCRIBERS.f90"
+#### 2.  Opening to "Source/LK1/LK1A-CC/CHK_CC_CMD_DESCRIBERS.f90"
 
 You should see:
 
@@ -113,7 +119,7 @@ I recommend a good text editor like Textpad/Notepad++ to copy/paste columns.
 We also shifted the order to be PRINT, PLOT, PUNCH, CSV to be more intuitive
 with the previous flag order.
 
-### 3.  Use DISP_FLAG in "Source/LK9/L92/OFP1.f90"
+#### 3.  Use DISP_FLAG in "Source/LK9/L92/OFP1.f90"
 
 You should see:
 
@@ -147,10 +153,14 @@ ENDIF
 
 There is that weird if loop at the end, so we'll leave "CALL CHK_OGEL_ZEROS(NUM)" as a special thing...
 
-### 4.  Write the CSV
+#### 4.  Write the CSV
 
-TODO...
+... TO DO
+</details>
 
+<details>
+<summary>4. Open/Close an ASCII file</summary>
+   
 Open/Close an ASCII file
 ========================
 
@@ -179,3 +189,33 @@ edit:
  - "Source/Interfaces/MYSTRAN_FILES_Interface.f90"
 
  - "Source/LK9/LINK9/LINK9.f90"
+</details>
+
+<details>
+<summary>5. Update and Release Mystran</summary>
+   
+Update and Release Mystran
+==========================
+
+In order to update mystran there are a few things to make sure you do.
+
+1. Update MYSTRAN/Source/Modules/MYSTRAN_Version.f90
+   - Ensure that the following code block is updated
+```fortran
+      CHARACTER(  8*BYTE), PARAMETER :: MYSTRAN_VER_NUM  = '17.0.0'
+      CHARACTER(  3*BYTE), PARAMETER :: MYSTRAN_VER_MONTH= 'Aug'
+      CHARACTER(  2*BYTE), PARAMETER :: MYSTRAN_VER_DAY  = '09'
+      CHARACTER(  4*BYTE), PARAMETER :: MYSTRAN_VER_YEAR = '2025'
+```
+   - The MYSTRAN_VER_NUM should be updated in compliance with adherence to [Semantic Versioning Principles](https://semver.org/). Major changes mandate a change to the first number, minor changes to the second number, and backward compatible bug fixes change the third digit. For example, altering a default element formulation, adding a solution sequence, or altering an elements behavior in such a way that maks it impossible to generate identical previous results would be a major change. Altering a default parameter or adding an optional parameter, adding a new feature to an existing property, or debugging a feature that is optional or niche in the subjective opinion of the development team would be a minor change. Bug fixes are like fixing memory issues or fixing abject errors in the code, or fixing cosmetic things in the code like documentation or peripheral documentation that isn't in the source directory.
+   - The other variables, MYSTRAN_VER_MONTH, MYSTRAN_VER_DAY, and MYSTRAN_VER_YEAR should all be updated according to the current data and time in the authors current timzone. Tailoring or correcting for timezones is uneccesary.
+
+2.Update MYSTRAN/release_notes.md
+
+   - Instantiate another version that matches the previously selected version number and place it atop the file. Ensure date is written YYYY/MM/DD.
+   - Go through all of the merged pull requests made to the code since the last update version and add them to either the "fixes" or "additions" section. Make sure you always link to the pull requests and that the pull requests either mention by name or link to the issue tickets they address.
+
+3. Communicate mystran updates to documentation maintainer and await updates. This can be done with aid of the release_notes.md that is made on the fork.
+</details>
+
+
