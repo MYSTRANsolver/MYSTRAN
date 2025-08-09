@@ -199,7 +199,7 @@ Update and Release Mystran
 
 In order to update mystran there are a few things to make sure you do.
 
-- Update /Source/Modules/MYSTRAN_Version.f90
+1. Update MYSTRAN/Source/Modules/MYSTRAN_Version.f90
    - Ensure that the following code block is updated
 ```fortran
       CHARACTER(  8*BYTE), PARAMETER :: MYSTRAN_VER_NUM  = '17.0.0'
@@ -209,6 +209,11 @@ In order to update mystran there are a few things to make sure you do.
 ```
    - The MYSTRAN_VER_NUM should be updated in compliance with adherence to [Semantic Versioning Principles](https://semver.org/). Major changes mandate a change to the first number, minor changes to the second number, and backward compatible bug fixes change the third digit. For example, altering a default element formulation, adding a solution sequence, or altering an elements behavior in such a way that maks it impossible to generate identical previous results would be a major change. Altering a default parameter or adding an optional parameter, adding a new feature to an existing property, or debugging a feature that is optional or niche in the subjective opinion of the development team would be a minor change. Bug fixes are like fixing memory issues or fixing abject errors in the code, or fixing cosmetic things in the code like documentation or peripheral documentation that isn't in the source directory.
    - The other variables, MYSTRAN_VER_MONTH, MYSTRAN_VER_DAY, and MYSTRAN_VER_YEAR should all be updated according to the current data and time in the authors current timzone. Tailoring or correcting for timezones is uneccesary.
+
+2.Update MYSTRAN/release_notes.md
+
+   - Instantiate another version that matches the previously selected version number and place it atop the file. Ensure date is written YYYY/MM/DD.
+   - Go through all of the merged pull requests made to the code since the last update version and add them to either the "fixes" or "additions" section. Make sure you always link to the pull requests and that the pull requests either mention by name or link to the issue tickets they address.
 </details>
 
 
