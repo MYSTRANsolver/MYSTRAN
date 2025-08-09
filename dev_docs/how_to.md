@@ -182,3 +182,6 @@ edit:
 
 Update and Release Mystran
 ==========================
+In order to update mystran there are a few things to make sure you do.
+
+- Update /Source/Modules/MYSTRAN_Version.f90
