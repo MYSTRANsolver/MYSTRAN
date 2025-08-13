@@ -192,6 +192,11 @@
          ENDIF
          IF (JCARD(4)(1:) /= ' ') THEN                     ! Read mat'l ID for bending/membrane coupling
             CALL I4FLD ( JCARD(4), JF(4),  PSHEL(NPSHEL,5) )
+            IF( PSHEL(NPSHEL,5) /= ZERO ) THEN             ! MID4 is not working yet so don't allow it.
+               FATAL_ERR = FATAL_ERR + 1
+               WRITE(ERR,1194) JF(4),JCARD(1),PSHEL(NPSHEL,5)
+               WRITE(F06,1194) JF(4),JCARD(1),PSHEL(NPSHEL,5)
+            ENDIF
          ENDIF
          CALL BD_IMBEDDED_BLANK ( JCARD,2,3,4,0,0,0,0,0 )  ! Make sure that there are no imbedded blanks in fields 2-4    
          CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,0,5,6,7,8,9 )! Issue warning if fields 5, 6, 7, 8, 9 not blank
@@ -217,6 +222,8 @@
                     ,/,14X,' TOO MANY ',A,' ENTRIES; LIMIT = ',I12)
 
  1193 FORMAT(' *ERROR  1193: MATERIAL ID IN FIELD ',I3,' OF ',A,' MUST BE > 0 OR BLANK BUT IS = ',I8)
+
+ 1194 FORMAT(' *ERROR  1194: MATERIAL ID IN FIELD ',I3,' (MID4) OF PSHELL ',A,' MUST BE 0 OR BLANK BUT IS = ',I8)
 
 
 ! **********************************************************************************************************************************
