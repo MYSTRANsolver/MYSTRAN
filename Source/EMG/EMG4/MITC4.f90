@@ -1,30 +1,30 @@
 ! #################################################################################################################################
-! Begin MIT license text.                                                                                    
+! Begin MIT license text.
 ! _______________________________________________________________________________________________________
-                                                                                                         
-! Copyright 2022 Dr William R Case, Jr (mystransolver@gmail.com)                                              
-                                                                                                         
-! Permission is hereby granted, free of charge, to any person obtaining a copy of this software and      
+
+! Copyright 2022 Dr William R Case, Jr (mystransolver@gmail.com)
+
+! Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 ! associated documentation files (the "Software"), to deal in the Software without restriction, including
 ! without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-! copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to   
-! the following conditions:                                                                              
-                                                                                                         
-! The above copyright notice and this permission notice shall be included in all copies or substantial   
-! portions of the Software and documentation.                                                                              
-                                                                                                         
-! THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS                                
-! OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,                            
-! FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE                            
-! AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER                                 
-! LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,                          
-! OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN                              
-! THE SOFTWARE.                                                                                          
+! copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to
+! the following conditions:
+
+! The above copyright notice and this permission notice shall be included in all copies or substantial
+! portions of the Software and documentation.
+
+! THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+! OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+! FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+! AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+! LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+! OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+! THE SOFTWARE.
 ! _______________________________________________________________________________________________________
-                                                                                                        
-! End MIT license text.                                                                                      
+
+! End MIT license text.
       SUBROUTINE MITC4 ( OPT, INT_ELEM_ID )
- 
+
 ! Calculates, or calls subr's to calculate, quadrilateral element matrices:
 
 !  1) ME        = element mass matrix                  , if OPT(1) = 'Y'
@@ -33,7 +33,7 @@
 !  4) KE        = element linea stiffness matrix       , if OPT(4) = 'Y'
 !  5) PPE       = element pressure load matrix         , if OPT(5) = 'Y'
 !  6) KED       = element differen stiff matrix calc   , if OPT(6) = 'Y'
-  
+
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
       USE IOUNT1, ONLY                :  ERR, F06
       USE SCONTR, ONLY                :  BLNK_SUB_NAM, FATAL_ERR, MAX_ORDER_GAUSS, MAX_STRESS_POINTS, NTSUB, NSUB
@@ -61,8 +61,8 @@
       USE MITC_SHAPE_FUNCTIONS_Interface
       USE MITC_COVARIANT_BASIS_Interface
 
-      IMPLICIT NONE 
-  
+      IMPLICIT NONE
+
       CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: SUBR_NAME = 'MITC4'
       CHARACTER(1*BYTE), INTENT(IN)   :: OPT(6)            ! 'Y'/'N' flags for whether to calc certain elem matrices
 
@@ -101,10 +101,10 @@
       REAL(DOUBLE)                    :: T66(6,6)          ! 6x6 transformation matrix for elasticity
       REAL(DOUBLE)                    :: CTE(6)            ! Coefficient of thermal expansion vector
       REAL(DOUBLE)                    :: THERMAL_STRAIN(6) ! Thermal strain vector
-      REAL(DOUBLE)                    :: TBAR              ! Average elem temperature 
+      REAL(DOUBLE)                    :: TBAR              ! Average elem temperature
       REAL(DOUBLE)                    :: UNIT_PTE(6*ELGP)  ! Thermal load vector for unit temperature change.
       REAL(DOUBLE)                    :: UNIT_PPE(6*ELGP)  ! Pressure load vector for unit pressure.
-      REAL(DOUBLE)                    :: PSH(ELGP)       
+      REAL(DOUBLE)                    :: PSH(ELGP)
       REAL(DOUBLE)                    :: DPSHG(2,ELGP)     ! Derivatives of shape functions with respect to R and S.
       REAL(DOUBLE)                    :: G(3,3)
       REAL(DOUBLE)                    :: NORMAL(3)
@@ -180,17 +180,17 @@
 !  Not orthogonal
 !
 ! V1, V2, Vn
-! Used to express node rotations when building the strain-displacement matrix before being transformed to the element 
+! Used to express node rotations when building the strain-displacement matrix before being transformed to the element
 ! coordinate system.
 ! Vn is the director vector. V1 and V2 are in arbitrary orthogonal directions.
 ! Orthogonal
 
 ! **********************************************************************************************************************************
-  
+
 ! Initialize
       PHI_SQ  = ONE                                        ! Not used for this element
       CALL MITC_INITIALIZE ()
-      
+
       IF (PCOMP_PROPS == 'Y') THEN
         WRITE(ERR,*) ' *ERROR: Code not written for composite material with MITC4'
         WRITE(F06,*) ' *ERROR: Code not written for composite material with MITC4'
@@ -199,11 +199,11 @@
         CALL OUTA_HERE ( 'Y' )
       ENDIF
 
-        
-      
+
+
 ! **********************************************************************************************************************************
 ! Generate the mass matrix for this element.
- 
+
       IF (OPT(1) == 'Y') THEN
 
          ! Consistent mass matrix
@@ -211,7 +211,7 @@
 
          ME(:,:) = ZERO
          M_1DOF(:,:) = ZERO
-   
+
          DENSITY = MASS_PER_UNIT_AREA / EPROP(1)
 
          CALL ORDER_GAUSS ( IORD_IJ, SS_IJ, HH_IJ )
@@ -235,10 +235,10 @@
                         M_1DOF(L,M) = M_1DOF(L,M) + PSH(L) * PSH(M) * DENSITY * INTFAC
                      ENDDO
                   ENDDO
-                                    
+
                ENDDO
-            ENDDO 
-         ENDDO   
+            ENDDO
+         ENDDO
 
          ! Row sum to convert to lumped mass Matrix
          DO I=1,ELGP
@@ -259,20 +259,20 @@
                   ME(KI + L, KJ + L) = M_1DOF(I,J)
                ENDDO
             ENDDO
-         ENDDO   
+         ENDDO
 
 
       ENDIF
 
- 
+
 
 ! **********************************************************************************************************************************
-! Calculate element thermal loads. 
-  
+! Calculate element thermal loads.
+
       IF (OPT(2) == 'Y') THEN
 
          E2 = MITC_ELASTICITY()
-         
+
          UNIT_PTE(:) = ZERO
 
          CALL ORDER_GAUSS ( IORD_IJ, SS_IJ, HH_IJ )
@@ -293,9 +293,9 @@
                                                            ! element coordinates, projection is simply ignoring the z component.
                   CLB = MITC4_CARTESIAN_LOCAL_BASIS( R, S, T )
                   MATL_AXES_ROTATE = -ATAN2(CLB(2,1), CLB(1,1))
-                                                           ! Rotate the material elasticity matrix from element coordinates 
-                                                           ! to projected cartesian local coordinates. When the elasticity 
-                                                           ! matrix is used, it will be assumed to be in the non-projected 
+                                                           ! Rotate the material elasticity matrix from element coordinates
+                                                           ! to projected cartesian local coordinates. When the elasticity
+                                                           ! matrix is used, it will be assumed to be in the non-projected
                                                            ! cartesian local coordinate system but pretend they're the same
                                                            ! so that material properties follow the curved surface of warped
                                                            ! elements.
@@ -321,10 +321,10 @@
 
                                                            ! PTE += DUM3 * unit_ε_thermal * det(J) * GaussWeight
                   UNIT_PTE = UNIT_PTE + MATMUL ( DUM3, CTE ) * INTFAC
-                                    
+
                ENDDO
-            ENDDO 
-         ENDDO   
+            ENDDO
+         ENDDO
 
                                                   ! Scale the thermal load vector by the temperature differences in each
                                                   ! subcase with thermal load.
@@ -335,10 +335,10 @@
 
             PTE(1:6*ELGP,J) = UNIT_PTE(1:6*ELGP) * (TBAR - TREF(1))
          ENDDO
-     
-      
+
+
       ENDIF
-  
+
 ! **********************************************************************************************************************************
 
 
@@ -396,7 +396,7 @@
                                                            ! Transverse shear strain. Note reversed order of rows.
                BE3(1,1:6*ELGP,STR_PT_NUM) = (BI2(6,:) + BI1(6,:)) / TWO           ! zx
                BE3(2,1:6*ELGP,STR_PT_NUM) = (BI2(5,:) + BI1(5,:)) / TWO           ! yz
-         
+
          ENDDO
 
 
@@ -404,11 +404,11 @@
 
 ! **********************************************************************************************************************************
 ! Calculate element stiffness matrix KE.
- 
+
       IF(OPT(4) == 'Y') THEN
 
 ! Based on
-! MITC4 paper "A continuum mechanics based four-node shell element for general nonlinear analysis" 
+! MITC4 paper "A continuum mechanics based four-node shell element for general nonlinear analysis"
 !   by Dvorkin and Bathe
 
 
@@ -449,8 +449,8 @@
             DO J=1,I-1
                EM2(I,J) = EM2(J,I)
                EB2(I,J) = EB2(J,I)
-            ENDDO 
-         ENDDO   
+            ENDDO
+         ENDDO
 
 
          KE(1:6*ELGP,1:6*ELGP) = ZERO
@@ -472,7 +472,7 @@
                   MATL_AXES_ROTATE = -ATAN2(CLB(2,1), CLB(1,1))
                                                            ! Rotate the material elasticity matrix so it's expressed in projected
                                                            ! cartesian local coordinates. When the elasticity matrix is used
-                                                           ! it will be assumed to be in the non-projected cartesial local 
+                                                           ! it will be assumed to be in the non-projected cartesial local
                                                            ! coordinate system but pretend they're the same so that material
                                                            ! properties follow the curved surface of warped elements.
                   CALL PLANE_COORD_TRANS_21 ( MATL_AXES_ROTATE, TRANSFORM, SUBR_NAME )
@@ -527,7 +527,7 @@
                      CALL MATMULT_FFF_T ( EM3, BMI, 6, 6, 6*ELGP, DUM1 )
                      CALL MATMULT_FFF_T ( BBI, DUM1, 6, 6*ELGP, 6*ELGP, DUM2 )
                      KE(1:6*ELGP,1:6*ELGP) = KE(1:6*ELGP,1:6*ELGP) + DUM2(:,:)*INTFAC
-                  
+
                   ELSE
                                                            ! All the phenomena fully separated.
                                                            ! Not used. Delete this.
@@ -581,25 +581,25 @@
                      CALL MATMULT_FFF_T ( BSI, DUM1, 6, 6*ELGP, 6*ELGP, DUM2 )
                      KE(1:6*ELGP,1:6*ELGP) = KE(1:6*ELGP,1:6*ELGP) + DUM2(:,:)*INTFAC
 
-                  
+
                   ENDIF
 
 
-                                    
+
                ENDDO
-            ENDDO 
-         ENDDO   
+            ENDDO
+         ENDDO
 
 
-    
- 
-  
+
+
+
       ENDIF
-  
+
 
 ! **********************************************************************************************************************************
-! Determine element pressure loads   
-  
+! Determine element pressure loads
+
       IF (OPT(5) == 'Y') THEN
 
          UNIT_PPE(:) = ZERO
@@ -626,9 +626,9 @@
                   K = (GP-1) * 6
                   UNIT_PPE(K+1:K+3) = UNIT_PPE(K+1:K+3) + NORMAL * PSH(GP) * INTFAC
                ENDDO
-                              
-            ENDDO 
-         ENDDO   
+
+            ENDDO
+         ENDDO
 
                                                            ! Scale the unit pressure load vector by the pressure in each subcase.
          DO J=1,NSUB
@@ -636,12 +636,12 @@
          ENDDO
 
 
-          
+
       ENDIF
-  
+
 ! **********************************************************************************************************************************
 ! Calculate linear differential stiffness matrix
-  
+
       IF ((OPT(6) == 'Y') .AND. (LOAD_ISTEP > 1)) THEN
 
                                                            ! Find membrane engineering forces at each Gauss point
@@ -651,7 +651,7 @@
          FORCExy(:) = 0
 
          CALL GET_ELEM_NUM_PLIES ( INT_ELEM_ID )           ! Get NUM_PLIES
- 
+
          DO JPLY=1,NUM_PLIES
                                                            ! Get UEL, EM, TPLY for this ply.
             IF (PCOMP_PROPS == 'N') THEN
@@ -662,7 +662,7 @@
 
             ELSE
 
-                                                           
+
                IF (PCOMP_LAM == 'NON') THEN                ! Delete this IF block to allow the LAM field set to nonsymmetric.
                   FATAL_ERR          = FATAL_ERR + 1
                   NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
@@ -691,7 +691,7 @@
                   FORCExy(GAUSS_PT) = FORCExy(GAUSS_PT) + TPLY*STRESS(3)
                ENDDO
             ENDDO
-          
+
          ENDDO
 
 
@@ -700,6 +700,8 @@
                                                            ! components are omitted in both coordinate systems.
                                                            ! It would be better to obtain force directly in cartesian local
                                                            ! coordinates instead.
+         CALL ORDER_GAUSS ( IORD_STRESS_Q4, SSS, HHH )
+
          DO GAUSS_PT = 1,4
                                                            ! 3x3 force tensor
             DUM14(:,:) = ZERO
@@ -714,7 +716,7 @@
                CASE (3); R=SSS(1); S=SSS(2)             ! Gauss point 3
                CASE (4); R=SSS(1); S=SSS(1)             ! Gauss point 4
             END SELECT
-            
+
             CLB = MITC4_CARTESIAN_LOCAL_BASIS( R, S, ZERO )
 
             CALL MATMULT_FFF (DUM14, CLB, 3, 3, 3, DUM33 )
@@ -731,7 +733,7 @@
 !   Section 14.3 Stress Stiffness Matrix Of A Plate Element
 
 !         +1  +1
-! [  ]   ⌠   ⌠  [   ]T [   ]-T [ Nx  Nxy ] [   ]-1 [   ] 
+! [  ]   ⌠   ⌠  [   ]T [   ]-T [ Nx  Nxy ] [   ]-1 [   ]
 ! [k ] = |   |  [ G ]  [ J ]   [ Nxy Ny  ] [ J ]   [ G ]  |J|  dξ dη
 ! [ σ]   ⌡   ⌡  [  I]  [   ]               [   ]   [  I]
 !        -1  -1
@@ -744,13 +746,13 @@
 ! DPSHX = J^-1 G_I is the 2 x ELGP matrix of shape function derivatives with respect to element coordinates x and y.
 
 !        +1  +1
-! [k ]   ⌠   ⌠        T [ Nx  Nxy ]   
+! [k ]   ⌠   ⌠        T [ Nx  Nxy ]
 ! [ σ] = ⌡   ⌡   DPSHX  [ Nxy Ny  ]  DPSHX  |J|  dξ dη
-!        -1  -1  
+!        -1  -1
 
          KS(:,:) = ZERO
 
-         CALL ORDER_GAUSS ( IORD_STRESS_Q4, SSS, HHH )
+
 
          GAUSS_PT = 0
          DO I=1,IORD_STRESS_Q4
@@ -788,13 +790,13 @@
                CALL MATMULT_FFF ( DUM12, DPSHX, ELGP, 2, ELGP, DUM13 )
 
                INTFAC = DETJ*HHH(I)*HHH(J)
-                                  
+
                                                            ! Accumulate integrand into the result
                DO K=1,ELGP
                   DO L=1,ELGP
                      KS(K,L) = KS(K,L) + DUM13(K,L) * INTFAC
-                  ENDDO   
-               ENDDO 
+                  ENDDO
+               ENDDO
 
             ENDDO
          ENDDO
@@ -809,13 +811,13 @@
                KED(KI + 1, KJ + 1) = KS(I,J)
                KED(KI + 2, KJ + 2) = KS(I,J)
                KED(KI + 3, KJ + 3) = KS(I,J)
-            ENDDO   
-         ENDDO 
+            ENDDO
+         ENDDO
 
 
       ENDIF
- 
- 
+
+
 
 
       RETURN
@@ -824,5 +826,5 @@
 
 
 ! **********************************************************************************************************************************
-  
+
       END SUBROUTINE MITC4
