@@ -1,31 +1,31 @@
 ! ##################################################################################################################################
-! Begin MIT license text.                                                                                    
+! Begin MIT license text.
 ! _______________________________________________________________________________________________________
-                                                                                                         
-! Copyright 2022 Dr William R Case, Jr (mystransolver@gmail.com)                                              
-                                                                                                         
-! Permission is hereby granted, free of charge, to any person obtaining a copy of this software and      
+
+! Copyright 2022 Dr William R Case, Jr (mystransolver@gmail.com)
+
+! Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 ! associated documentation files (the "Software"), to deal in the Software without restriction, including
 ! without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-! copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to   
-! the following conditions:                                                                              
-                                                                                                         
-! The above copyright notice and this permission notice shall be included in all copies or substantial   
-! portions of the Software and documentation.                                                                              
-                                                                                                         
-! THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS                                
-! OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,                            
-! FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE                            
-! AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER                                 
-! LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,                          
-! OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN                              
-! THE SOFTWARE.                                                                                          
+! copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to
+! the following conditions:
+
+! The above copyright notice and this permission notice shall be included in all copies or substantial
+! portions of the Software and documentation.
+
+! THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+! OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+! FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+! AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+! LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+! OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+! THE SOFTWARE.
 ! _______________________________________________________________________________________________________
-                                                                                                        
-! End MIT license text.                                                                                      
-  
+
+! End MIT license text.
+
       SUBROUTINE BD_CQUAD8 ( CARD, LARGE_FLD_INP, NUM_GRD )
-  
+
 ! Processes CQUAD8 Bulk Data Cards
 !  1) Sets ETYPE for this element type
 !  2) Calls subr ELEPRO to read element ID, property ID and connection data into array EDAT
@@ -36,7 +36,7 @@
                                          MEDAT_CQUAD8, NCQUAD8, NEDAT, NELE, NMATANGLE, NPLATEOFF, NPLATETHICK
       USE CONSTANTS_1, ONLY           :  ZERO
       USE MODEL_STUF, ONLY            :  EDAT, ETYPE, MATANGLE, PLATEOFF, PLATETHICK
- 
+
       USE MKJCARD_Interface
       USE ELEPRO_Interface
       USE TOKCHK_Interface
@@ -50,7 +50,7 @@
       USE CARD_FLDS_NOT_BLANK_Interface
 
       IMPLICIT NONE
- 
+
       CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: SUBR_NAME = 'BD_CQUAD8'
       CHARACTER(LEN=*), INTENT(INOUT) :: CARD              ! A Bulk Data card
       CHARACTER(LEN=*), INTENT(IN)    :: LARGE_FLD_INP     ! If 'Y', CARD is large field format
@@ -68,13 +68,13 @@
       INTEGER(LONG)                   :: INT41,INT42        ! An integer used in getting MATANGLE
       INTEGER(LONG)                   :: ICONT     = 0     ! Indicator of whether a cont card exists. Output from subr NEXTC
       INTEGER(LONG)                   :: IERR      = 0     ! Error indicator returned from subr NEXTC called herein
- 
+
       REAL(DOUBLE)                    :: R8INP     = ZERO  ! A value read from input file that should be a real value
 
 
 ! **********************************************************************************************************************************
 ! CQUAD8 element Bulk Data Card routine
- 
+
 !   FIELD   ITEM           ARRAY ELEMENT
 !   -----   ------------   -------------
 !    1      Element type   ETYPE(nele)
@@ -94,24 +94,24 @@
 !    8      Matl angle     NMATANGLE (MATANGLE key) goes in EDAT(nedat+11)
 !    9      Offset         NPLATEOFF (PLATEOFF key) goes in EDAT(nedat+12)
 !                          EDAT(nedat+13)
- 
+
 ! Make JCARD from CARD
 
       CALL MKJCARD ( SUBR_NAME, CARD, JCARD )
 
       NAME = JCARD(1)
       ID = JCARD(2)
-       
+
 ! Set JCARD_EDAT to JCARD
 
       DO I=1,10
          JCARD_EDAT(I) = JCARD(I)
-      ENDDO 
+      ENDDO
 
 ! Read and check data
                                                            ! Load 8 items into EDAT
       CALL ELEPRO ( 'Y', JCARD_EDAT, 8, MEDAT_CQUAD8, 'Y', 'Y', 'Y', 'Y', 'Y', 'Y', 'Y', 'Y' )
- 
+
       NUM_GRD = 8
       NCQUAD8 = NCQUAD8 + 1
       ETYPE(NELE) = 'QUAD8   '
@@ -138,7 +138,7 @@
         CALL ELEPRO ( 'N', JCARD_EDAT, 2, 2, 'Y', 'Y', 'N', 'N', 'N', 'N', 'N', 'N' )
 
 ! Read material property orientation angle. It takes 2 values put into EDAT to cover all of the possibilities of field 8:
-!  (a) If field 8 is a real value it is the angle of the material axis relative to the element x axis. 
+!  (a) If field 8 is a real value it is the angle of the material axis relative to the element x axis.
 !         (1) the 2 values to put into EDAT are: the value in field 8 (this will be the row in MATANGLE to get the angle), and a 0
 !  (b) If field 8 is an integer it means that the angle is identified by a coord system.
 !         (2) if field 8 is a positive number the 2 values to put into EDAT are: the neg of field 8 integer and a 2
@@ -204,8 +204,8 @@
           NPLATEOFF = NPLATEOFF + 1
           IF (NPLATEOFF > LPLATEOFF) THEN
             FATAL_ERR = FATAL_ERR + 1
-            WRITE(ERR,1144) SUBR_NAME,' TOO MANY PLATE OFFSETS. LIMIT IS NPLATEOFF =  ',LPLATEOFF
-            WRITE(F06,1144) SUBR_NAME,' TOO MANY PLATE OFFSETS. LIMIT IS NPLATEOFF =  ',LPLATEOFF
+            WRITE(ERR,1144) SUBR_NAME,' TOO MANY PLATE OFFSETS. LIMIT IS LPLATEOFF =  ',LPLATEOFF
+            WRITE(F06,1144) SUBR_NAME,' TOO MANY PLATE OFFSETS. LIMIT IS LPLATEOFF =  ',LPLATEOFF
             CALL OUTA_HERE ( 'Y' )
           ENDIF
           NEDAT = NEDAT + 1
@@ -222,7 +222,7 @@
           ENDIF
         ELSE
 
-          NEDAT = NEDAT + 1 
+          NEDAT = NEDAT + 1
           EDAT(NEDAT) = 0
 
         ENDIF
@@ -239,7 +239,7 @@
         NEDAT = NEDAT + 1                                  ! 14: PSHELL/PCOMP flag (to be set in subr ELEM_PROP_MATL_IIDS)
         EDAT(NEDAT) = 0
 
-  
+
 ! Optional fields 4-7 (to define membrane thicknesses as grid values):
          IF ((JCARD(4)(1:) /= ' ') .OR. (JCARD(5)(1:) /= ' ') .OR. (JCARD(6)(1:) /= ' ') .OR. (JCARD(7)(1:) /= ' ')) THEN
             FATAL_ERR = FATAL_ERR + 1
@@ -255,8 +255,8 @@
                NPLATETHICK = NPLATETHICK + 1
                IF (NPLATETHICK > LPLATETHICK) THEN
                   FATAL_ERR = FATAL_ERR + 1
-                  WRITE(ERR,1144) SUBR_NAME,' TOO MANY PLATE THICKNESSES. LIMIT IS NPLATETHICK = ',LPLATETHICK
-                  WRITE(F06,1144) SUBR_NAME,' TOO MANY PLATE THICKNESSES. LIMIT IS NPLATETHICK = ',LPLATETHICK
+                  WRITE(ERR,1144) SUBR_NAME,' TOO MANY PLATE THICKNESSES. LIMIT IS LPLATETHICK = ',LPLATETHICK
+                  WRITE(F06,1144) SUBR_NAME,' TOO MANY PLATE THICKNESSES. LIMIT IS LPLATETHICK = ',LPLATETHICK
                   CALL OUTA_HERE ( 'Y' )
                ENDIF
                CALL R8FLD ( JCARD(J), JF(J), R8INP )
@@ -273,10 +273,10 @@
             CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,4,5,6,7,0,0 )! Issue warning if fields 4-7 not blank
 
          ENDIF
-              
+
         CALL CRDERR ( CARD )                               ! CRDERR prints errors found when reading fields
-      
-      
+
+
       ELSE
 
          FATAL_ERR = FATAL_ERR + 1
@@ -294,15 +294,15 @@
  1136 FORMAT(' *ERROR  1136: REQUIRED CONTINUATION FOR ',A,' ID = ',A,' MISSING')
 
  1141 FORMAT(' *ERROR  1141: PROGRAMMING ERROR IN SUBROUTINE ',A                                                                   &
-                    ,/,14X,' TOO MANY PLATE ELEMENT MATERIAL PROPERTY ANGLES. LIMIT IS NMATANGLE =  ',I8) 
+                    ,/,14X,' TOO MANY PLATE ELEMENT MATERIAL PROPERTY ANGLES. LIMIT IS NMATANGLE =  ',I8)
 
  1144 FORMAT(' *ERROR  1144: PROGRAMMING ERROR IN SUBROUTINE ',A                                                                   &
-                    ,/,14X,A,I8) 
+                    ,/,14X,A,I8)
 
  1196 FORMAT(' *ERROR  1196: VALUE FOR MATERIAL ANGLE ON ',A,A,' MUST BE AN INTEGER OR REAL NUMBER BUT VALUE READ WAS ',A)
 
  1197 FORMAT(' *ERROR  1197: FOR ',A,A,' THE COORD SYS ID IN FIELD ',I2,' MUST BE >= 0. HOWEVER, THE VALUE INPUT WAS ',A)
 
 ! **********************************************************************************************************************************
- 
+
       END SUBROUTINE BD_CQUAD8
