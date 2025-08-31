@@ -129,9 +129,13 @@
             FATAL_ERR = FATAL_ERR + 1
             CALL OUTA_HERE ( 'Y' )
          ENDIF
-                                                           ! For the MIN4 QUAD4 and QUAD8. XEP parametric coords 
+                                                           ! For the MIN4/MITC4+ QUAD4 and QUAD8. XEP parametric coords 
                                                            ! are the Gauss point coords
-         IF ((QUAD4TYP == 'MIN4  ') .OR. (TYPE(1:6) == 'QUAD4K') .OR. (TYPE(1:5) == 'QUAD8')) THEN
+         IF ((QUAD4TYP == 'MIN4  ') .OR.                                                                                           &
+             (QUAD4TYP == 'MITC4 ') .OR.                                                                                           &
+             (QUAD4TYP == 'MITC4+') .OR.                                                                                           &
+             (TYPE(1:6) == 'QUAD4K') .OR.                                                                                          &
+             (TYPE(1:5) == 'QUAD8')) THEN
             CALL ORDER_GAUSS ( IORD, SSS, HHH )
             XEP(1,1) =  SSS(1)      ;   XEP(1,2) =  SSS(1)      ;   XEP(1,3) = ZERO
             XEP(2,1) =  SSS(1)      ;   XEP(2,2) =  SSS(2)      ;   XEP(2,3) = ZERO
