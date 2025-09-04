@@ -30,7 +30,7 @@
 ! non-allocateble model variables. Some of the dimensions of the arrays described here are defined in module SCONTR
   
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
-      USE CONSTANTS_1, ONLY           :  ONEPM4, ZERO, TEN
+      USE CONSTANTS_1, ONLY           :  ONEPM4, ZERO, TEN, ONE
       USE SCONTR, ONLY                :  BLNK_SUB_NAM, CC_ENTRY_LEN, JCARD_LEN, MELDTS, MEMATR, MEMATC, MEPROP, METYPE,            &
                                          MPSOLID, MEFE, MEFEI, MEFER, MEWE, MEWEI, MEWER, MAX_STRESS_POINTS
   
@@ -1802,7 +1802,7 @@
       REAL(DOUBLE)                    :: EIG_FRQ2            = ZERO   
                                                              ! Higher frequency in the search range
 
-      REAL(DOUBLE)                    :: EIG_SIGMA           = -TEN   
+      REAL(DOUBLE)                    :: EIG_SIGMA           = -ONE
                                                              ! For Lanczos, the shift frequency
 
       REAL(DOUBLE)                    :: MAXMIJ              = ZERO  
