@@ -62,14 +62,14 @@ This includes a Quick Setup Guide, User Manual, and Theory Manual.
 
 # Five Repositories
 
-The MYSTRAN project consits of five repositoires.
+The MYSTRAN project consists of five repositories.
 
 1 - This repository contains the source code and build instructions.
 
-2 - The [MYSTRAN_Documentation](https://github.com/MYSTRANsolver/MYSTRAN_Documentation) repository contains various document related to the MYSTRAN program.
+2 - The [MYSTRAN_Documentation](https://github.com/MYSTRANsolver/MYSTRAN_Documentation) repository contains various documents related to the MYSTRAN program.
 
 3 - The [MYSTRAN_Resources](https://github.com/MYSTRANsolver/MYSTRAN_Resources) repository consists of files for MYSTRAN developers.
-It also contains information and files related to pre- and post-processors relavant to MYSTRAN.
+It also contains information and files related to pre- and post-processors relevant to MYSTRAN.
 
 4 - The [MYSTRAN_Releases](https://github.com/MYSTRANsolver/MYSTRAN_Releases) repository contains older releases.
 
@@ -89,7 +89,7 @@ It also contains information and files related to pre- and post-processors relav
 - Join the MYSTRAN Discord Channel and/or Forum (links below)
 - Report bugs and inconsistencies
 - Report issues with Documentation
-- A large validaiton effort is underway. This will require the assistance of the community. Any help would be greatly appreciated.
+- A large validation  effort is underway. This will require the assistance of the community. Any help would be greatly appreciated.
 
 # Community
 
