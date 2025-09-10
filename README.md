@@ -50,7 +50,6 @@ NASTRAN. It is an independent program written in modern Fortran 95.
 # Get EXE or Make Binary
 
 Windows EXE (executable) for can be found in the "Releases" section of this page (right hand pane).
-Alternatively, there is a repository that contains older releases: [MYSTRAN Releases](https://github.com/MYSTRANsolver/MYSTRAN_Releases)
 
 Static Linux binaries have been built, but releases are in work.
 For now, it is better to build it yourself -- it's really
