@@ -40,16 +40,17 @@ NASTRAN. It is an independent program written in modern Fortran 95.
 # Features
 
 - NASTRAN compatibility
-- OP2 Support
-- Modal analysis
 - Linear Static Analysis
+- Modal analysis
 - Linear Elastic Buckling Analysis
-- Support for True Classical Laminate Plate Theory
+- Full Suite of 1D, 2D, and 3D elements
+- Support for Classical Laminated Plate Theory
+- OP2 Support
 
 # Get EXE or Make Binary
 
-Windows EXE (executable) for can be found in the 
-[MYSTRAN Releases](https://github.com/MYSTRANsolver/MYSTRAN_Releases) repository.
+Windows EXE (executable) for can be found in the "Releases" section of this page (right hand pane).
+Alternatively, there is a repository that contains older releases: [MYSTRAN Releases](https://github.com/MYSTRANsolver/MYSTRAN_Releases)
 
 Static Linux binaries have been built, but releases are in work.
 For now, it is better to build it yourself -- it's really
@@ -75,12 +76,11 @@ It also contains informationa and files realated to pre- and post-processors rel
 
 # Developmental Goals
 
-- Implement the MITC shell elements and shell element buckling capability
-- Creating easier ways to acquire MYSTRAN would be nice. This would include, but
-  is not limited to, entry into the Arch Linux User Repository (AUR), the
-  Debian Advanced Package Manager (apt), the snapcraft store (snap), the
-  chocolatey package manager for Windows, an AppImage, or flatpak.
-- As a longer term goal, geometric nonlinear support is desirable.
+- Continue the implementation of the MITC shell elements and shell element buckling capability
+- Validation effort (hundreds/thousands of test cases)
+- Discover and resolve bugs
+- Improve performance
+
 
 # Ways You Can Help
 
