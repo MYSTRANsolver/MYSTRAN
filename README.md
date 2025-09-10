@@ -11,7 +11,7 @@ MYSTRAN is an acronym for “My Structural Analysis” (https://www.mystran.com)
 [Features](#Features) |
 [Get EXE or Make Binary](#Get-EXE-or-Make-Binary) |
 [Documentation](#Documentation) |
-[Four Repositories](#Four-Repositories) |
+[Five Repositories](#Five-Repositories) |
 [Developmental Goals](#Developmental-Goals) |
 [Ways You Can Help](#ways-you-can-help) |
 [Community](#community)
@@ -39,7 +39,7 @@ NASTRAN. It is an independent program written in modern Fortran 95.
 
 # Features
 
-- NASTRAN compatibility
+- Nastran compatibility
 - Linear Static Analysis
 - Modal analysis
 - Linear Elastic Buckling Analysis
@@ -58,20 +58,23 @@ straightforward.
 
 # Documentation
 
-The end user documentation is located in the "User_Documents" folder of this repository.
+The end user documentation is located the [MYSTRAN_Documentation](https://github.com/MYSTRANsolver/MYSTRAN_Documentation) repository.
+This includes a Quick Setup Guide, User Manual, and Theory Manual.
 
-# Four Repositories
+# Five Repositories
 
-The MYSTRAN project consits of four repositoires.
+The MYSTRAN project consits of five repositoires.
 
-1 - This repository contains the source code, build instructions, and end user documentation.
+1 - This repository contains the source code and build instructions.
 
-2 - The [MYSTRAN_Resources](https://github.com/MYSTRANsolver/MYSTRAN_Resources) repository consists of files for MYSTRAN developers.
+2 - The [MYSTRAN_Documentation](https://github.com/MYSTRANsolver/MYSTRAN_Documentation) contains various document related to the MYSTRAN program.
+
+3 - The [MYSTRAN_Resources](https://github.com/MYSTRANsolver/MYSTRAN_Resources) repository consists of files for MYSTRAN developers.
 It also contains informationa and files realated to pre- and post-processors relavant to MYSTRAN.
 
-3 - The [MYSTRAN_Releases](https://github.com/MYSTRANsolver/MYSTRAN_Releases) repository contains the most current release as well as prior releases.
+4 - The [MYSTRAN_Releases](https://github.com/MYSTRANsolver/MYSTRAN_Releases) repository contains older releases.
 
-4 - The [MYSTRAN_Benchmark](https://github.com/MYSTRANsolver/MYSTRAN_Benchmark) repository contains the test cases and utilities used to verify that a new build produces results consistent with prior builds and models that have been verified.
+5 - The [MYSTRAN_Benchmark](https://github.com/MYSTRANsolver/MYSTRAN_Benchmark) repository contains the test cases and utilities used to verify that a new build produces results consistent with prior builds and models that have been verified.
 
 
 # Developmental Goals
