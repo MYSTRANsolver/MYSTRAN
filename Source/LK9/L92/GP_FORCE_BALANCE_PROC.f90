@@ -486,7 +486,6 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
                         DO L=1,6
                            PTET(L) = PTET(L) + PTE1(L)
                         ENDDO
-                        INODE_GPFORCE = INODE_GPFORCE + 1
                      ENDIF
                   ENDDO
                ENDDO
