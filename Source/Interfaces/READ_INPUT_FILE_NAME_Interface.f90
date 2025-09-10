@@ -32,7 +32,7 @@
 
 
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
-      USE IOUNT1, ONLY                :  FILE_NAM_MAXLEN, WRT_ERR, WRT_LOG, DEFDIR, DEF_INFILE_EXT, INFILE,               &
+      USE IOUNT1, ONLY                :  FILE_NAM_MAXLEN, WRT_ERR, WRT_LOG, DEFDIR, INFILE,                                        &
                                          LEN_INPUT_FNAME, SC1
       USE SCONTR, ONLY                :  PROG_NAME
 

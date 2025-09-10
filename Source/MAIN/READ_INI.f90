@@ -34,7 +34,7 @@
 
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
 
-      USE IOUNT1, ONLY                :  FILE_NAM_MAXLEN, DEFDIR, DEF_INFILE_EXT, INIFIL, SC1, MOU4, WRT_ERR, WRT_LOG
+      USE IOUNT1, ONLY                :  FILE_NAM_MAXLEN, DEFDIR, INIFIL, SC1, MOU4, WRT_ERR, WRT_LOG
 
       USE IOUNT1, ONLY                :  ANS,     BUG,     ERR,     F04,     F06,     IN0,     IN1,     INI,     L1A,     NEU,     &
                                          SEQ,     SPC,                                                                             &
@@ -200,12 +200,6 @@
                      ENDIF                                 !                                 ------
                   ENDDO  
                   DEFDIR(1:) = CARD(IBEGIN:)
-
-               ELSE IF (CARD(1:8) == 'DEF EXT ') THEN
-                  CALL C8FLD0 ( JCARD_08(2), JF(2), CHAR8)
-                  DEF_INFILE_EXT = CHAR8(1:3)
-                  CALL CARD_FLDS_NOT_BLANK0 ( JCARD_08, 0,3,4,5,6,7,8,9, WRT_HDR, WRT_CARD )
-                  CALL CRDERR0 ( CARD, FLD_ERR_MSG )
 
                ELSE IF (CARD(1:8) == 'LINKNOST') THEN
                   CALL I4FLD0 ( JCARD_08(2), JF(2), LINKNO_START, WRT_HDR, WRT_CARD, FLD_ERR_MSG )
