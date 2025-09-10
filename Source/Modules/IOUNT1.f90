@@ -50,7 +50,6 @@
 
       CHARACTER(  1*BYTE)             :: BUGOUT  = 'N'         ! Y/N indicator if anything has been written to BUG file
       CHARACTER(FILE_NAM_MAXLEN*BYTE) :: DEFDIR                ! User inputs dir of where to find input (and to write output) here
-      CHARACTER(  3*BYTE)             :: DEF_INFILE_EXT = 'DAT'! Default extension for input file INFILE
       CHARACTER( 3*BYTE), PARAMETER   :: OU4_EXT(MOU4) = (/'OU1','OU2','OU3','OU4','OU5','OU6','OU7','OU8','OU9'/)
       CHARACTER( 3*BYTE), PARAMETER   :: OT4_EXT(MOT4) = (/'OT1','OT2','OT3','OT4','OT5','OT6','OT7','OT8','OT9'/)
 
