@@ -87,9 +87,10 @@ It also contains information and files related to pre- and post-processors relav
 
 # Ways You Can Help
 
-- Join the MYSTRAN forum and/or Discord Channel (links below)
-- Contribute your MYSTRAN runs to the list of demonstration problems
+- Join the MYSTRAN Discord Channel and/or Forum (links below)
 - Report bugs and inconsistencies
+- Report issues with Documentation
+- A large validaiton effort is underway. This will require the assistance of the community. Any help would be greatly appreciated.
 
 # Community
 
