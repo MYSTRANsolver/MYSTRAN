@@ -144,7 +144,9 @@
          ENDIF
       ENDIF
 
-      CALL R8FLD ( JCARD(8), JF(8), EIG_SIGMA )            ! Read field 8: Lanczos shift freq
+      IF (JCARD(8)(1:) /= ' ') THEN                        ! Read field 8: Lanczos shift freq
+         CALL R8FLD ( JCARD(8), JF(8), EIG_SIGMA )
+      ENDIF
 
       IF (JCARD(9)(1:) /= ' ') THEN                        ! Read field 9: renormalization method if field is not blank
       CALL CHAR_FLD ( JCARD(9), JF(9), EIG_NORM )
