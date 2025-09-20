@@ -38,7 +38,7 @@
 ! If the input file is filename.bdf, then that complete name must be supplied
 
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
-      USE IOUNT1, ONLY                :  FILE_NAM_MAXLEN, WRT_ERR, WRT_LOG, DEFDIR, DEF_INFILE_EXT, INFILE,               &
+      USE IOUNT1, ONLY                :  FILE_NAM_MAXLEN, WRT_ERR, WRT_LOG, DEFDIR, INFILE,                                        &
                                          LEN_INPUT_FNAME, SC1
       USE SCONTR, ONLY                :  PROG_NAME
 
@@ -132,6 +132,7 @@ inner_1: DO I=NC_TOT,1,-1
                ENDIF
             ENDIF
          ENDDO inner_1
+         
          IF (CEXT == 'N') THEN                             ! If there was no file name extension, add default extension 'DAT'
             IF ((NC_TOT+4) > FILE_NAM_MAXLEN) THEN
                WRITE(SC1,1002) FILE_NAM_MAXLEN
@@ -139,10 +140,10 @@ inner_1: DO I=NC_TOT,1,-1
                CALL OUTA_HERE ( 'Y' )
             ELSE
                IF (POINT == 'Y') THEN
-                  INFILE(NC_TOT+1:) = DEF_INFILE_EXT       ! Add extension
+                  INFILE(NC_TOT+1:) = 'DAT'       ! Add extension
                   NC_TOT = NC_TOT + 3
                ELSE IF (POINT == 'N') THEN
-                  INFILE(NC_TOT+1:) = '.' // DEF_INFILE_EXT
+                  INFILE(NC_TOT+1:) = '.' // 'DAT'
                   NC_TOT = NC_TOT + 4
                ENDIF 
             ENDIF
@@ -151,15 +152,32 @@ inner_1: DO I=NC_TOT,1,-1
          DUMFIL(1:) = ' '
 inner_2: DO
             INQUIRE (FILE=INFILE,EXIST=LEXIST)             ! Check whether INFILE exists
-            IF (.NOT.LEXIST) THEN                          ! INFILE seems to not exist, but maybe ext is "dat", not "DAT" so check
+            IF (.NOT.LEXIST) THEN                          ! INFILE seems to not exist, but maybe ext. is different so check
                IF (CEXT == 'N') THEN
+
                   DUMFIL(1:NC_TOT-3) = INFILE(1:NC_TOT-3)
+
                   DUMFIL(NC_TOT-2:NC_TOT) = 'dat'
                   INQUIRE (FILE=DUMFIL,EXIST=LEXIST)
                   IF (LEXIST) THEN
                      INFILE(1:) = DUMFIL(1:)
                      EXIT outer
                   ENDIF
+
+                  DUMFIL(NC_TOT-2:NC_TOT) = 'BDF'
+                  INQUIRE (FILE=DUMFIL,EXIST=LEXIST)
+                  IF (LEXIST) THEN
+                     INFILE(1:) = DUMFIL(1:)
+                     EXIT outer
+                  ENDIF
+
+                  DUMFIL(NC_TOT-2:NC_TOT) = 'bdf'
+                  INQUIRE (FILE=DUMFIL,EXIST=LEXIST)
+                  IF (LEXIST) THEN
+                     INFILE(1:) = DUMFIL(1:)
+                     EXIT outer
+                  ENDIF
+
                ENDIF 
                WRITE(SC1,1004)
                CALL WRITE_FILNAM ( INFILE, SC1, 1 )
