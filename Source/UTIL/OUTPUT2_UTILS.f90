@@ -58,22 +58,26 @@
 
 !===================================================================================================================================
       SUBROUTINE  END_OP2_TABLES()
-      USE IOUNT1, ONLY                :  ERR, OP2
+      USE IOUNT1, ONLY                :  ERR, OP2, OP2FIL
       IMPLICIT NONE
+      LOGICAL                         :: FILE_OPND
  9115 FORMAT(" *DEBUG:       END_OP2_TABLES", A)
       WRITE(ERR,9115) " "
-      WRITE(OP2) 0
+      INQUIRE ( FILE=OP2FIL, OPENED=FILE_OPND )
+      IF (FILE_OPND) THEN
+        WRITE(OP2) 0
+      ENDIF
       END SUBROUTINE END_OP2_TABLES
 
 !===================================================================================================================================
       SUBROUTINE WRITE_OP2_GEOM()
       USE PENTIUM_II_KIND, ONLY       :  LONG, BYTE
       USE IOUNT1, ONLY                :  ERR, OP2
-      
+
       ! GEOM1 - GRID/COORDs
       USE SCONTR, ONLY                :  NGRID
       USE MODEL_STUF, ONLY            :  GRID_ID, GRID
-      
+
       ! GEOM2 - elements
       !USE MODEL_STUF, ONLY : ELAS1, ELAS2, ELAS3, ELAS4, ROD, TETRA4, TETRA10
       USE SCONTR, ONLY : NCTETRA4, NCTETRA10, NCPENTA6, NCPENTA15, NCHEXA8, NCHEXA20
@@ -118,7 +122,7 @@
  1    FORMAT("****DEBUG:   WRITE_OP2 GEOM ngrid",i4)
       IF (IS_GEOM1) THEN
         WRITE(ERR,1) NGRID
-      
+
         TABLE_NAME = "GEOM1"
         CALL WRITE_OP2_GEOM_HEADER(TABLE_NAME, ITABLE)
 
@@ -140,7 +144,7 @@
           ! is GRID_ID(I) the same as GRID(I,1)???
           !
           !(nid, cp, x1, x2, x3, cd, ps, seid)
-          !                        nid        cp         x                   y                   z                  
+          !                        nid        cp         x                   y                   z
         !  WRITE(ERR,2) GRID_ID(I), GRID(I,1), GRID(I,2), REAL(RGRID(I,1),4), REAL(RGRID(I,2),4), REAL(RGRID(I,3),4), &
           !            cd         ps         ndof
         !               GRID(I,3), GRID(I,4), GRID(I,6)
@@ -160,7 +164,7 @@
       USE SCONTR, ONLY            :  NPROD
       USE MODEL_STUF, ONLY        :  PROD
       USE IOUNT1, ONLY            :  ERR
- 
+
       INTEGER(LONG), INTENT(IN)    :: PID
       INTEGER(LONG), INTENT(INOUT) :: IPROD
       INTEGER(LONG)                :: I
@@ -177,14 +181,14 @@
  2    FORMAT("GET_PROD_INDEX MID:  *********FOUND PID=",i4)
  3    FORMAT("GET_PROD_INDEX END:  PID=",i4,"; IPROD=",i4,"; PROD(I,1)=",i4)
       END SUBROUTINE GET_PROD_INDEX
-     
+
 !===================================================================================================================================
       SUBROUTINE WRITE_OP2_GEOM_EPT()
       ! writes the element property table (EPT)
       USE PENTIUM_II_KIND, ONLY       :  LONG, BYTE
       USE IOUNT1, ONLY                :  ERR, OP2
-      USE SCONTR, ONLY : NPELAS, NPROD, NPBUSH, NPCOMP, NPSHEAR, NPSOLID ! NPSHELL, 
-      USE MODEL_STUF, ONLY : PELAS, PROD, PBAR, PBEAM, PSHEAR, PCOMP, PSOLID ! PSHELL, 
+      USE SCONTR, ONLY : NPELAS, NPROD, NPBUSH, NPCOMP, NPSHEAR, NPSOLID ! NPSHELL,
+      USE MODEL_STUF, ONLY : PELAS, PROD, PBAR, PBEAM, PSHEAR, PCOMP, PSOLID ! PSHELL,
       USE MODEL_STUF, ONLY : RPELAS, RPROD, RPROD, RPBAR, RPBEAM, RPSHEAR, RPCOMP ! RPSHELL, RPSOLID
 
       IMPLICIT NONE
@@ -223,7 +227,7 @@
 
       IF (IS_EPT) THEN
         CALL WRITE_OP2_GEOM_HEADER(TABLE_NAME, ITABLE)
-        
+
         IF (NPROD > 0) THEN
           NUM_WIDE = 6
           ! (pid, mid, a, j, c, nsm)
