@@ -1,34 +1,34 @@
 ! ##################################################################################################################################
-! Begin MIT license text.                                                                                    
+! Begin MIT license text.
 ! _______________________________________________________________________________________________________
-                                                                                                         
-! Copyright 2022 Dr William R Case, Jr (mystransolver@gmail.com)                                              
-                                                                                                         
-! Permission is hereby granted, free of charge, to any person obtaining a copy of this software and      
+
+! Copyright 2022 Dr William R Case, Jr (mystransolver@gmail.com)
+
+! Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 ! associated documentation files (the "Software"), to deal in the Software without restriction, including
 ! without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-! copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to   
-! the following conditions:                                                                              
-                                                                                                         
-! The above copyright notice and this permission notice shall be included in all copies or substantial   
-! portions of the Software and documentation.                                                                              
-                                                                                                         
-! THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS                                
-! OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,                            
-! FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE                            
-! AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER                                 
-! LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,                          
-! OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN                              
-! THE SOFTWARE.                                                                                          
+! copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to
+! the following conditions:
+
+! The above copyright notice and this permission notice shall be included in all copies or substantial
+! portions of the Software and documentation.
+
+! THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+! OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+! FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+! AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+! LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+! OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+! THE SOFTWARE.
 ! _______________________________________________________________________________________________________
-                                                                                                        
-! End MIT license text.                                                                                      
-  
+
+! End MIT license text.
+
       SUBROUTINE WRITE_ELEM_STRAINS ( JSUB, NUM, IHDR, NUM_PTS, ITABLE )
-  
+
 ! Writes blocks of element strains for one subcase and one element type for elements that do not have PCOMP properties, including
 ! all 2-D, 3-D  plus several 1-D elements (i.e. that have strain calculations).
- 
+
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
       USE IOUNT1, ONLY                :  WRT_ERR, WRT_LOG, ANS, ERR, F04, F06, OP2
       USE SCONTR, ONLY                :  BLNK_SUB_NAM, FATAL_ERR, BARTOR, INT_SC_NUM, MAX_NUM_STR, NDOFR, NUM_CB_DOFS,             &
@@ -42,11 +42,11 @@
       USE LINK9_STUFF, ONLY           :  EID_OUT_ARRAY, GID_OUT_ARRAY, OGEL, POLY_FIT_ERR, POLY_FIT_ERR_INDEX
       USE MODEL_STUF, ONLY            :  ELEM_ONAME, ELMTYP, LABEL, SCNUM, STITLE, TITLE, TYPE
       USE CC_OUTPUT_DESCRIBERS, ONLY  :  STRN_LOC, STRN_OPT, STRN_OUT
-  
+
       USE WRITE_ELEM_STRAINS_USE_IFs
 
       IMPLICIT NONE
- 
+
       CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: SUBR_NAME = 'WRITE_ELEM_STRAINS'
       CHARACTER(LEN=*), INTENT(IN)    :: IHDR              ! Indicator of whether to write an output header
 
@@ -58,7 +58,7 @@
 
                                                            ! Indicators of whether to write note on indices of POLY_FIT_ERR
       CHARACTER( 1*BYTE)              :: WRT_ERR_INDEX_NOTE(MAX_NUM_STR)
-  
+
       INTEGER(LONG), INTENT(IN)       :: JSUB              ! Solution vector number
       INTEGER(LONG), INTENT(IN)       :: NUM               ! The number of rows of OGEL to write out
       INTEGER(LONG), INTENT(IN)       :: NUM_PTS           ! Num diff strain points for one element (3rd dim in arrays SEi, STEi)
@@ -70,11 +70,11 @@
       INTEGER(LONG)                   :: K                 ! Counter
       INTEGER(LONG)                   :: NCOLS             ! Num of cols to write out
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = WRITE_ELEM_STRAINS_BEGEND
-  
+
       REAL(DOUBLE)                    :: ABS_ANS(11)       ! Max ABS for all element output
       REAL(DOUBLE)                    :: MAX_ANS(11)       ! Max for all element output
       REAL(DOUBLE)                    :: MIN_ANS(11)       ! Min for all element output
-      
+
       ! op2 info
       CHARACTER( 8*BYTE)              :: TABLE_NAME             ! the name of the op2 table
       INTEGER(LONG)                   :: NNODES                 ! number of nodes for the element
@@ -190,7 +190,7 @@
 
          ELSE IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
             ISUBCASE_INDEX = 1  ! modes
-            IF ((JSUB <= NDOFR) .OR. (JSUB >= NDOFR+NVEC)) THEN 
+            IF ((JSUB <= NDOFR) .OR. (JSUB >= NDOFR+NVEC)) THEN
                IF (JSUB <= NDOFR) THEN
                   BDY_DOF_NUM = JSUB
                ELSE
@@ -402,7 +402,7 @@
 
              NUM_WIDE = 2 ! eid, spring_strain
              NVALUES = NUM_WIDE * NUM
-             
+
              DEVICE_CODE = 1   ! PLOT
 
              !CALL GET_STRESS_CODE(STRESS_CODE, IS_VON_MISES, IS_STRAIN, IS_FIBER_DISTANCE)
@@ -524,7 +524,7 @@
            CALL GET_STRESS_CODE( STRESS_CODE, 1,            1,         1)
             IF ((STRN_LOC == 'CENTER  ') .AND. (TYPE(1:5) /= 'QUAD8')) THEN
                ! CQUAD4-33
-               !(eid_device, 
+               !(eid_device,
                ! fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
                ! fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,) = out; n=17
                NUM_WIDE = 17
@@ -543,7 +543,7 @@
                WRITE(ERR,3) NUM,NUM_PTS,STRN_LOC,ITABLE
                ELEMENT_TYPE = 144
                NUM_WIDE = 87 ! 2 + 17 * (4+1)  ! 4 nodes + 1 centroid
-               
+
                ! TODO: probably wrong...divide NUM by NUM_PTS?
                NELEMENTS = NUM / NUM_PTS
                NVALUES = NUM_WIDE * NELEMENTS
@@ -581,7 +581,7 @@
                 K = K + 1
                 WRITE(ERR,4) I,K
             WRITE(F06,*)
-            WRITE(F06,1403) FILL(1: 0), EID_OUT_ARRAY(I,1),(OGEL(K,J),J=1,10)                                                      
+            WRITE(F06,1403) FILL(1: 0), EID_OUT_ARRAY(I,1),(OGEL(K,J),J=1,10)
 
                 IF (WRITE_ANS) THEN
                     WRITE(ANS,*)
@@ -641,7 +641,7 @@
              ! Get abs POLY_FIT_ERR
              ABS_ANS(11) = MAX( DABS(MAX_ANS(11)), DABS(MIN_ANS(11)) )
 
-               IF ((STRN_LOC == 'CORNER  ') .OR. (TYPE(1:5) == 'QUAD8')) THEN 
+               IF ((STRN_LOC == 'CORNER  ') .OR. (TYPE(1:5) == 'QUAD8')) THEN
                 WRITE(F06,1408) FILL(1: 0), FILL(1: 0), MAX_ANS(2),MAX_ANS(3),MAX_ANS(4),MAX_ANS(6),MAX_ANS(7),MAX_ANS(8), &
                                             MAX_ANS(9), MAX_ANS(10),MAX_ANS(11),                                           &
                                             FILL(1: 0), MIN_ANS(2),MIN_ANS(3),MIN_ANS(4),MIN_ANS(6),MIN_ANS(7),MIN_ANS(8), &
@@ -658,7 +658,7 @@
                ENDIF
 
              IF (WRITE_ANS) THEN
-               IF ((STRN_LOC == 'CORNER  ') .OR. (TYPE(1:5) == 'QUAD8')) THEN 
+               IF ((STRN_LOC == 'CORNER  ') .OR. (TYPE(1:5) == 'QUAD8')) THEN
                  WRITE(ANS,1418)MAX_ANS(2),MAX_ANS(3),MAX_ANS(4),MAX_ANS(6),MAX_ANS(7),MAX_ANS(8),MAX_ANS(9), &
                                 MAX_ANS(10),MAX_ANS(11),                                                      &
                                 MIN_ANS(2),MIN_ANS(3),MIN_ANS(4),MIN_ANS(6),MIN_ANS(7),MIN_ANS(8),MIN_ANS(9), &
@@ -713,7 +713,7 @@
              !CALL GET_STRESS_CODE(STRESS_CODE, IS_VON_MISES, IS_STRAIN, IS_FIBER_DISTANCE)
              CALL GET_STRESS_CODE( STRESS_CODE, 0,            1,         0)
              NVALUES = NUM * NUM_WIDE
-             
+
              CALL WRITE_OES3_STATIC(ITABLE, ISUBCASE, DEVICE_CODE, ELEMENT_TYPE, NUM_WIDE, STRESS_CODE, &
                                     TITLEI, STITLEI, LABELI, FIELD5_INT_MODE, FIELD6_EIGENVALUE)
 
@@ -760,12 +760,12 @@
   201 FORMAT(1X,A)
 
   301 FORMAT(1X,A,'E L E M E N T   S T R A I N S   I N   L O C A L   E L E M E N T   C O O R D I N A T E   S Y S T E M')
-  
+
   302 FORMAT(1X,A,'C B   E L E M E N T   S T R A I N S   O T M   I N   L O C A L   E L E M E N T   C O O R D I N A T E',           &
   '   S Y S T E M')
-  
+
   401 FORMAT(A,'F O R   E L E M E N T   T Y P E   ',A11)
- 
+
 
 
 ! BAR >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -782,7 +782,7 @@
 ! ELAS >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
  1201 FORMAT(1X,A,'Element     Strain     Element     Strain     Element     Strain     Element     Strain     Element     Strain' &
           ,/,1X,A,'   ID                     ID                     ID                     ID                     ID')
-  
+
  1103 FORMAT(5(A,I8,1ES14.6))
 
  1104 FORMAT(A,I8,1ES14.6)
@@ -791,21 +791,21 @@
  1301 FORMAT(1X,A,'  Elem  Location            Epsilon-xx    Epsilon-yy    Epsilon-zz     Gamma-xy      Gamma-yz      Gamma-zx  ', &
              '   von Mises'                                                                                                        &
           ,/,1X,A,'   ID')
-  
+
  1302 FORMAT(1X,A,'  Elem  Location            Epsilon-xx    Epsilon-yy    Epsilon-zz     Gamma-xy      Gamma-yz      Gamma-zx  ', &
              '      Octahedral Strain'                                                                                             &
           ,/,1X,A,'   ID',109X,'Direct        Shear')
-  
+
  1303 FORMAT(1X,I8,2X,'CENTER  ',8X,8(1ES14.6))
 
 
  ! 1301 FORMAT(A,'Element   Epsilon-xx    Epsilon-yy    Epsilon-zz     Gamma-xy      Gamma-yz      Gamma-zx     von Mises'           &
           ! ,/,A,'   ID')
-  
+
  ! 1302 FORMAT(A,'Element   Epsilon-xx    Epsilon-yy    Epsilon-zz     Gamma-xy      Gamma-yz      Gamma-zx        ',                &
              ! 'Octahedral Strain'                                                                                                   &
           ! ,/,A,'   ID',91X,'Direct        Shear')
-  
+
  ! 1303 FORMAT(19X,I8,8(1ES14.6))
 
 
@@ -897,19 +897,19 @@
  1601 FORMAT(1X,A,'Element               S t r a i n s                            Element               S t r a i n s'             &
           ,/,1X,A,'   ID      Normal-X      Normal-Y      Shear-XY                   ID      Normal-X      Normal-Y'               &
                  ,'      Shear-XY')
-  
+
 
 ! TRIA3 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
  1701 FORMAT(1X,A,'Element    Location      Fibre        Strains In Element Coord System       Principal Strains (Zero Shear)',    &
                 '                 Transverse   Transverse'                                                                         &
           ,/,1X,A,'   ID                   Distance     Normal-X     Normal-Y      Shear-XY     Angle     Major        Minor'      &
           ,'      von Mises    Shear-XZ     Shear-YZ',A)
-  
+
  1702 FORMAT(1X,A,'Element    Location      Fibre        Strains In Element Coord System       Principal Strains (Zero Shear)',    &
   '      Max        Transverse   Transverse'                                                                                       &
           ,/,1X,A,'   ID                   Distance     Normal-X     Normal-Y      Shear-XY     Angle     Major        Minor',     &
           '      Shear-XY    Shear-XZ     Shear-YZ',A)
-  
+
  1703 FORMAT(1X,I8,4X,'Anywhere',2X,4(1ES13.5),0PF9.3,5(1ES13.5))
 
  1704 FORMAT(13X,'in elem',3X,4(1ES13.5),0PF9.3,5(1ES13.5))
@@ -933,7 +933,7 @@
 ! BUSH >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
  1801 FORMAT(20X,A,'Element    Strain-1      Strain-2      Strain-3      Strain-4      Strain-5      Strain-6'                     &
           ,/,20X,A,'   ID')
-  
+
  1802 FORMAT(19X,I8,6(1ES14.6))
 
  1812 FORMAT(16X,I8,6(1ES14.6))
@@ -941,7 +941,7 @@
 ! USERIN >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
  1901 FORMAT(20X,A,'Element    Strain-1      Strain-2      Strain-3      Strain-4      Strain-5      Strain-6'                     &
           ,/,20X,A,'   ID')
-  
+
  1902 FORMAT(19X,I8,6(1ES14.6))
 
  1912 FORMAT(19X,I8,6(1ES14.6))
@@ -1023,8 +1023,8 @@
           !        RE1 = REAL(OGEL(I,1), 4)
           !        RE2 = REAL(OGEL(I,2), 4)
           !        RE3 = REAL(OGEL(I,3), 4)
-          !        
-          !        write the max_shear, avg_shear, 
+          !
+          !        write the max_shear, avg_shear,
           !        WRITE(OP2) RE1, RE2, RE3
           !    ENDDO
           !
@@ -1137,7 +1137,8 @@
       IF(.TRUE.) THEN
         DO I=1,NUM
            K = K + 1
-         WRITE(F06,*)                                         ; WRITE(ANS,*)
+         WRITE(F06,*)
+         IF (WRITE_ANS) WRITE(ANS,*)
          ! the J=1,10 loop is the upper layer & 2 transverse shear
          WRITE(F06,1703) EID_OUT_ARRAY(I,1),(OGEL(K,J),J=1,10)
          IF (WRITE_ANS) WRITE(ANS,1713) EID_OUT_ARRAY(I,1), (OGEL(K,J),J=1,10)
@@ -1155,7 +1156,7 @@
       WRITE(F06,1705) MAX_ANS(2),MAX_ANS(3),MAX_ANS(4),MAX_ANS(6),MAX_ANS(7),MAX_ANS(8),MAX_ANS(9),MAX_ANS(10),                 &
                       MIN_ANS(2),MIN_ANS(3),MIN_ANS(4),MIN_ANS(6),MIN_ANS(7),MIN_ANS(8),MIN_ANS(9),MIN_ANS(10),                 &
                       ABS_ANS(2),ABS_ANS(3),ABS_ANS(4),ABS_ANS(6),ABS_ANS(7),ABS_ANS(8),ABS_ANS(9),ABS_ANS(10)
-                      
+
       ENDIF
 
       IF(WRITE_ANS) THEN

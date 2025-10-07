@@ -1,39 +1,40 @@
 ! ##################################################################################################################################
-! Begin MIT license text.                                                                                    
+! Begin MIT license text.
 ! _______________________________________________________________________________________________________
-                                                                                                         
-! Copyright 2022 Dr William R Case, Jr (mystransolver@gmail.com)                                              
-                                                                                                         
-! Permission is hereby granted, free of charge, to any person obtaining a copy of this software and      
+
+! Copyright 2022 Dr William R Case, Jr (mystransolver@gmail.com)
+
+! Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 ! associated documentation files (the "Software"), to deal in the Software without restriction, including
 ! without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-! copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to   
-! the following conditions:                                                                              
-                                                                                                         
-! The above copyright notice and this permission notice shall be included in all copies or substantial   
-! portions of the Software and documentation.                                                                              
-                                                                                                         
-! THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS                                
-! OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,                            
-! FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE                            
-! AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER                                 
-! LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,                          
-! OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN                              
-! THE SOFTWARE.                                                                                          
+! copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to
+! the following conditions:
+
+! The above copyright notice and this permission notice shall be included in all copies or substantial
+! portions of the Software and documentation.
+
+! THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+! OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+! FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+! AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+! LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+! OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+! THE SOFTWARE.
 ! _______________________________________________________________________________________________________
-                                                                                                        
-! End MIT license text.                                                                                      
+
+! End MIT license text.
 
       SUBROUTINE WRITE_DOF_TABLES
 
 ! Writess DOF table data to file LINK1C
 
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
-      USE IOUNT1, ONLY                :  WRT_LOG, F04, L1C, LINK1C, L1C_MSG
+      USE IOUNT1, ONLY                :  WRT_LOG, F04, L1C, LINK1C, L1C_MSG, ERR, F06
       USE SCONTR, ONLY                :  DATA_NAM_LEN, MTDOF, NDOFG, NGRID, BLNK_SUB_NAM
       USE TIMDAT, ONLY                :  TSEC
       USE SUBR_BEGEND_LEVELS, ONLY    :  WRITE_DOF_TABLES_BEGEND
       USE DOF_TABLES, ONLY            :  TDOFI, TDOF, TSET
+      USE NONLINEAR_PARAMS, ONLY      :  LOAD_ISTEP
 
       USE WRITE_DOF_TABLES_USE_IFs
 
@@ -44,6 +45,7 @@
 
       INTEGER(LONG)                   :: I,J               ! DO loop indices or counters
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = WRITE_DOF_TABLES_BEGEND
+      INTEGER(LONG)                   :: OUNT(2)           ! File units to write messages to. Input to subr UNFORMATTED_OPEN
 
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
@@ -55,6 +57,13 @@
 ! **********************************************************************************************************************************
 ! Write TSET, TDOF, TDOFI tables to file L1C
 
+      ! Ensure L1C is open. if this is a two-step run, we need to reopen L1C.
+      IF (LOAD_ISTEP > 1) THEN
+         OUNT(1) = ERR
+         OUNT(2) = F06
+         CALL FILE_OPEN ( L1C, LINK1C, OUNT, 'REPLACE', L1C_MSG, 'WRITE_STIME', 'UNFORMATTED', 'WRITE', 'REWIND', 'Y', 'N', 'Y' )
+      ENDIF
+
       DATA_SET_NAME = 'TSET'
       WRITE(L1C) DATA_SET_NAME
       WRITE(L1C) NGRID
@@ -62,7 +71,7 @@
          DO J = 1,6
            WRITE(L1C) TSET(I,J)
          ENDDO
-      ENDDO 
+      ENDDO
       DATA_SET_NAME = 'TDOFI'
       WRITE(L1C) DATA_SET_NAME
       WRITE(L1C) NDOFG
@@ -71,7 +80,7 @@
          DO J = 1,MTDOF
             WRITE(L1C) TDOFI(I,J)
          ENDDO
-      ENDDO 
+      ENDDO
       DATA_SET_NAME = 'TDOF'
       WRITE(L1C) DATA_SET_NAME
       WRITE(L1C) NDOFG
@@ -80,7 +89,7 @@
          DO J = 1,MTDOF
             WRITE(L1C) TDOF(I,J)
          ENDDO
-      ENDDO 
+      ENDDO
 
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN

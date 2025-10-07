@@ -1,33 +1,33 @@
 ! ##################################################################################################################################
-! Begin MIT license text.                                                                                    
+! Begin MIT license text.
 ! _______________________________________________________________________________________________________
-                                                                                                         
-! Copyright 2022 Dr William R Case, Jr (mystransolver@gmail.com)                                              
-                                                                                                         
-! Permission is hereby granted, free of charge, to any person obtaining a copy of this software and      
+
+! Copyright 2022 Dr William R Case, Jr (mystransolver@gmail.com)
+
+! Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 ! associated documentation files (the "Software"), to deal in the Software without restriction, including
 ! without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-! copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to   
-! the following conditions:                                                                              
-                                                                                                         
-! The above copyright notice and this permission notice shall be included in all copies or substantial   
-! portions of the Software and documentation.                                                                              
-                                                                                                         
-! THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS                                
-! OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,                            
-! FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE                            
-! AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER                                 
-! LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,                          
-! OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN                              
-! THE SOFTWARE.                                                                                          
+! copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to
+! the following conditions:
+
+! The above copyright notice and this permission notice shall be included in all copies or substantial
+! portions of the Software and documentation.
+
+! THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+! OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+! FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+! AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+! LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+! OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+! THE SOFTWARE.
 ! _______________________________________________________________________________________________________
-                                                                                                        
-! End MIT license text.                                                                                      
- 
+
+! End MIT license text.
+
       SUBROUTINE WRITE_BAR (NUM, FILL_F06, FILL_ANS, ISUBCASE, ITABLE,  &
                             TITLE, SUBTITLE, LABEL,                     &
                             FIELD5_INT_MODE, FIELD6_EIGENVALUE )
- 
+
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
       USE IOUNT1, ONLY                :  WRT_ERR, WRT_LOG, ANS, ERR, F04, F06, OP2
       USE SCONTR, ONLY                :  BARTOR, BLNK_SUB_NAM, MOGEL
@@ -37,11 +37,11 @@
       USE DEBUG_PARAMETERS, ONLY      :  DEBUG
       USE LINK9_STUFF, ONLY           :  EID_OUT_ARRAY, MAXREQ, MSPRNT, OGEL
       USE PARAMS, ONLY                :  PRTANS
- 
+
       USE WRITE_BAR_USE_IFs
 
       IMPLICIT NONE
- 
+
       CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: SUBR_NAME = 'WRITE_BAR'
 
       CHARACTER(LEN=*), INTENT(IN)    :: FILL_F06          ! Padding for output format
@@ -54,7 +54,7 @@
       REAL(DOUBLE),  INTENT(IN)       :: FIELD6_EIGENVALUE
 
       CHARACTER(133*BYTE)             :: BLINE1A           ! Result of concatenating char. variables BOUT1, BMS1, BMSF1, BTOR to
-!                                                            make the 1st line of stress output for a CBAR with torsional stress 
+!                                                            make the 1st line of stress output for a CBAR with torsional stress
       CHARACTER(133*BYTE)             :: BLINE1B           ! Result of concatenating char. variables BOUT1, BMS1, BMSF1, BMS2, BMSF2
 !                                                            to make the 1st line of stress output for a CBAR w/o torsional stress
       CHARACTER(133*BYTE)             :: BLINE2A           ! Result of concatenating char. variables BOUT2, BMS2, BMSF2
@@ -76,13 +76,13 @@
       CHARACTER(14*BYTE)              :: MIN_ANS_CHAR(16)  ! Character variable that contains the 6 grid min  outputs
       CHARACTER(  1*BYTE)             :: MSFLAG            ! If margin is negative, MSFLAG is an *
       CHARACTER(14*BYTE)              :: OGEL_CHAR(MOGEL)  ! Char representation of 1 row of OGEL outputs
- 
+
       INTEGER(LONG), INTENT(IN)       :: ISUBCASE          ! The subcase ID
       INTEGER(LONG), INTENT(IN)       :: NUM               ! The number of rows of OGEL to write out
       INTEGER(LONG)                   :: I,J               ! DO loop indices
       INTEGER(LONG)                   :: K                 ! Counter
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = WRITE_BAR_BEGEND
- 
+
       REAL(DOUBLE)                    :: ABS_ANS(16)       ! Max ABS for all grids output for each of the 6 disp components
       REAL(DOUBLE)                    :: MAX_ANS(16)       ! Max for all grids output for each of the 6 disp components
       REAL(DOUBLE)                    :: MIN_ANS(16)       ! Min for all grids output for each of the 6 disp components
@@ -106,9 +106,9 @@
       ! Data is first written to character variables and then that character variable is output the F06 and ANS.
       ! op2_headers = ['s1a', 's2a', 's3a', 's4a', 'axial', 'smaxa', 'smina', 'MS_tension',
       !                's1b', 's2b', 's3b', 's4b',          'smaxb', 'sminb', 'MS_compression']
- 
+
       NVALUES = NUM_WIDE * NUM
-      
+
       !CALL GET_STRESS_CODE(STRESS_CODE, IS_VON_MISES, IS_STRAIN, IS_FIBER_DISTANCE)
       CALL GET_STRESS_CODE( STRESS_CODE, 1,            0,         0)
       CALL WRITE_OES3_STATIC(ITABLE, ISUBCASE, DEVICE_CODE, ELEMENT_TYPE, NUM_WIDE, STRESS_CODE, &
@@ -132,14 +132,14 @@
 
          BOUT1(1:)   = ' '
          BMS1(1:)    = ' '
-         BMSF1       = ' '   
- 
+         BMSF1       = ' '
+
          BOUT2(1:)   = ' '
          BMS2(1:)    = ' '
          BMSF2       = ' '
 
-         BTOR(1:)    = ' '   
- 
+         BTOR(1:)    = ' '
+
          ! Write first line of output for one element to a temporary internal file
          K = K + 1
          CALL WRT_REAL_TO_CHAR_VAR ( OGEL, MAXREQ, MOGEL, K, OGEL_CHAR )
@@ -191,7 +191,7 @@
 
          ! Write the two lines of stress output for one element to F06
          WRITE(F06,*)
-         WRITE(ANS,*)
+         IF (PRTANS == 'Y') WRITE(ANS,*)
          IF (BARTOR == 'Y') THEN
             BLINE1A = BOUT1//BMS1//BMSF1//BTOR
             BLINE2A = BOUT2//BMS2//BMSF2//BMS3//BMSF3
@@ -283,11 +283,11 @@
              1X,'ABS (for output set):  ',7(1ES14.6),ES14.2)
 
 ! **********************************************************************************************************************************
- 
+
 ! ##################################################################################################################################
- 
+
       CONTAINS
- 
+
 ! ##################################################################################################################################
 
       SUBROUTINE GET_MAX_MIN_ABS ( BEG_COL, END_COL )
@@ -307,7 +307,7 @@
 
       DO JJ=1,2*(END_COL-BEG_COL+1)
          MAX_ANS(JJ) = -MACH_LARGE_NUM
-      ENDDO 
+      ENDDO
 
       LL = 0
       DO II=1,NUM
