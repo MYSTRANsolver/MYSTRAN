@@ -40,8 +40,9 @@
       USE SUBR_BEGEND_LEVELS, ONLY    :  ELMOFF_BEGEND
       USE CONSTANTS_1, ONLY           :  ZERO, ONE, TWO
       USE PARAMS, ONLY                :  K6ROT, EPSIL
-      USE MODEL_STUF, ONLY            :  CAN_ELEM_TYPE_OFFSET, ELDOF, ELGP, EID, KE, ME, NUM_EMG_FATAL_ERRS, RMATL, RPSHEL,        &
-                                         OFFDIS, OFFSET, PPE, PTE, SE1, SE2, SE3, XEL, ERR_SUB_NAM, EMG_IFE, EMG_RFE, TYPE
+      USE MODEL_STUF, ONLY            :  CAN_ELEM_TYPE_OFFSET, ELDOF, ELGP, EID, KE, ME, NUM_EMG_FATAL_ERRS, RMATL,                &
+                                         OFFDIS, OFFSET, PPE, PTE, SE1, SE2, SE3, XEL, ERR_SUB_NAM, EMG_IFE, EMG_RFE, TYPE,        &
+                                         SHELL_A
       USE ELMOFF_USE_IFs
 
       IMPLICIT NONE
@@ -91,7 +92,7 @@
       REAL(DOUBLE)                    :: JACI(2,2)            ! An output from subr JAC2D4, called herein. 2 x 2 Jacobian inverse.
       REAL(DOUBLE)                    :: DETJ                 ! An output from subr JAC2D4, called herein. Determinant of JAC
       REAL(DOUBLE)                    :: EPS1                 ! A small number to compare to real zero
-
+      REAL(DOUBLE)                    :: G12               ! Membrane shear modulus for K6ROT
       
       INTRINSIC                       :: DABS
 
@@ -212,10 +213,6 @@
          CALL MATMULT_FFF   ( KE1, E     , 6*ELGP, 6*ELGP, 6*ELGP, DUM_KE )
          CALL MATMULT_FFF_T ( E  , DUM_KE, 6*ELGP, 6*ELGP, 6*ELGP, KE1    )
 
-        
-! Get the Jacobian in order to compute the Ksita virtual stiffness
-
-
 
 ! Compute the Ksita virtual stiffness
          
@@ -253,7 +250,10 @@
                
                ENDIF
 
-               Ksita = 10.0**(-6.0)*RMATL(NMATL, 2)*RPSHEL(NPSHEL, 1)*ABS(AREA)*K6ROT
+               ! In-plane shear modulus of membrane material
+               ! Drilling spring stiffness = K6ROT * 10^-6 * G12 * thickness * area
+               !                           = K6ROT * 10^-6 * A(3,3) * area
+               Ksita = 10.0**(-6.0) * SHELL_A(3,3) * ABS(AREA) * K6ROT
 
                DO J=1,ELGP
                   KE1(6*J,6*J) = KE1(6*J,6*J) + Ksita
