@@ -42,7 +42,7 @@
       USE PARAMS, ONLY                :  K6ROT, EPSIL
       USE MODEL_STUF, ONLY            :  CAN_ELEM_TYPE_OFFSET, ELDOF, ELGP, EID, KE, ME, NUM_EMG_FATAL_ERRS, RMATL,                &
                                          OFFDIS, OFFSET, PPE, PTE, SE1, SE2, SE3, XEL, ERR_SUB_NAM, EMG_IFE, EMG_RFE, TYPE,        &
-                                         SHELL_A
+                                         SHELL_A, INTL_MID
       USE ELMOFF_USE_IFs
 
       IMPLICIT NONE
@@ -216,7 +216,9 @@
 
                                                            ! Only for QUAD4 and TRIA3, not QUAD8.
          IF (TYPE(1:5) == "QUAD4" .OR. TYPE(1:5) == "TRIA3") THEN
-            IF (NPSHEL > 0) THEN
+            
+                                                           ! No K6ROT for shells that only use MID1.
+            IF (INTL_MID(2) > 0) THEN
 
                AREA = ZERO
 
