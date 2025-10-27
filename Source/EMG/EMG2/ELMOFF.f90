@@ -91,8 +91,6 @@
       REAL(DOUBLE)                    :: JAC(2,2)             ! An output from subr JAC2D4, called herein. 2 x 2 Jacobian matrix.
       REAL(DOUBLE)                    :: JACI(2,2)            ! An output from subr JAC2D4, called herein. 2 x 2 Jacobian inverse.
       REAL(DOUBLE)                    :: DETJ                 ! An output from subr JAC2D4, called herein. Determinant of JAC
-      REAL(DOUBLE)                    :: EPS1                 ! A small number to compare to real zero
-      REAL(DOUBLE)                    :: G12               ! Membrane shear modulus for K6ROT
       
       INTRINSIC                       :: DABS
 
@@ -213,23 +211,23 @@
          CALL MATMULT_FFF   ( KE1, E     , 6*ELGP, 6*ELGP, 6*ELGP, DUM_KE )
          CALL MATMULT_FFF_T ( E  , DUM_KE, 6*ELGP, 6*ELGP, 6*ELGP, KE1    )
 
+! **********************************************************************************************************************************
+! Add K6ROT stiffness
 
-! Compute the Ksita virtual stiffness
-         
-         ! restrict to QUAD4 and TRIA3 shell elements
-         IF (TYPE(1:5) == "QUAD4" .OR. TYPE(1:5) == "TRIA3" .OR. TYPE(1:5) == "QUAD8") THEN
+                                                           ! Only for QUAD4 and TRIA3, not QUAD8.
+         IF (TYPE(1:5) == "QUAD4" .OR. TYPE(1:5) == "TRIA3") THEN
             IF (NPSHEL > 0) THEN
 
                AREA = ZERO
 
-               IF ((TYPE(1:5) == "QUAD4") .OR. (TYPE(1:5) == "QUAD8")) THEN
+               IF ((TYPE(1:5) == "QUAD4")) THEN
                
-                  XSD(1) = XEL(1,1) - XEL(2,1)                         ! x coord diffs (in local elem coords)
+                  XSD(1) = XEL(1,1) - XEL(2,1)             ! x coord diffs (in local elem coords)
                   XSD(2) = XEL(2,1) - XEL(3,1)
                   XSD(3) = XEL(3,1) - XEL(4,1)
                   XSD(4) = XEL(4,1) - XEL(1,1)
             
-                  YSD(1) = XEL(1,2) - XEL(2,2)                         ! y coord diffs (in local elem coords)
+                  YSD(1) = XEL(1,2) - XEL(2,2)             ! y coord diffs (in local elem coords)
                   YSD(2) = XEL(2,2) - XEL(3,2)
                   YSD(3) = XEL(3,2) - XEL(4,2)
                   YSD(4) = XEL(4,2) - XEL(1,2)
@@ -246,11 +244,12 @@
                
                   X2E  = XEL(2,1)
                   Y3E  = XEL(3,2)
-                  AREA = X2E*Y3E/TWO
+                                                           ! Actual area is half this but using this value
+                                                           ! gives the same stiffness as MSC.
+                  AREA = X2E*Y3E
                
                ENDIF
 
-               ! In-plane shear modulus of membrane material
                ! Drilling spring stiffness = K6ROT * 10^-6 * G12 * thickness * area
                !                           = K6ROT * 10^-6 * A(3,3) * area
                Ksita = 10.0**(-6.0) * SHELL_A(3,3) * ABS(AREA) * K6ROT
@@ -261,6 +260,8 @@
 
             ENDIF
          ENDIF
+
+! **********************************************************************************************************************************
          
 
 ! Set KE = KE1 for 6*ELGP by 6*ELGP terms
@@ -570,8 +571,6 @@
                     ,/,14X,' ELEMENT TYPE ',A,' DOES NOT SUPPORT OFFSETS. ERROR OCCURRED FOR ELEMENT NUMBER ',I8)
 
 1925 FORMAT(' *ERROR  1925: ELEMENT ',I8,', TYPE ',A,', HAS ZERO OR NEGATIVE ',A,' = ',1ES9.1)
-
-!1926 FORMAT("K6ROT DEBUG: EID=", I8, ", TYPE=", A, ", AREA=", ES0.2, ", EPS1=", ES0.2, /)
 
 1927 FORMAT(' *ERROR  1927: PROGRAMMING ERROR IN SUBROUTINE ',A                                                                   &
                     ,/,14X,' CHAR PARAMETER QUAD4TYP MUST BE EITHER "MIN4T " OR "MIN4  " BUT IS "',A,'"')

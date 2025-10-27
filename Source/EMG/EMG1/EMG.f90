@@ -408,7 +408,7 @@
 ! **********************************************************************************************************************************
 ! For plate elements, process offsets (since they are specified in local element coordinates)
 
-      IF ((TYPE(1:5) == 'TRIA3') .OR. (TYPE(1:5) == 'QUAD4') .OR. (TYPE(1:5) == 'QUAD8')) THEN
+      IF ((TYPE(1:5) == 'TRIA3') .OR. (TYPE(1:5) == 'QUAD4')) THEN
          CALL ELMOFF ( OPT, WRITE_WARN )
       ENDIF
 
