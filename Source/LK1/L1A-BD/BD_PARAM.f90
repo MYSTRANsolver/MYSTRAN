@@ -1113,17 +1113,19 @@
          CALL CHAR_FLD ( JCARD(3), JF(3), CHRPARM )
          IF (IERRFL(3) == 'N') THEN
             CALL LEFT_ADJ_BDFLD ( CHRPARM )
-            IF      (CHRPARM == 'ARPACK  ') THEN
-               LANCMETH = 'ARPACK'
+            IF      (CHRPARM == 'BANDED  ') THEN
+               LANCMETH = 'BANDED'
+            ELSE IF (CHRPARM == 'SPARSE  ') THEN
+               LANCMETH = 'SPARSE'
             ELSE
                WARN_ERR = WARN_ERR + 1
                WRITE(ERR,101) CARD
-               WRITE(ERR,1189) PARNAM,'ARPACK',CHRPARM,SOLLIB
+               WRITE(ERR,1189) PARNAM,'BANDED or SPARSE',CHRPARM,LANCMETH
                IF (SUPWARN == 'N') THEN
                   IF (ECHO == 'NONE  ') THEN
                      WRITE(F06,101) CARD
                   ENDIF
-                  WRITE(F06,1189) PARNAM,'ARPACK',CHRPARM,SOLLIB
+                  WRITE(F06,1189) PARNAM,'BANDED or SPARSE',CHRPARM,LANCMETH
                ENDIF
             ENDIF
          ENDIF
