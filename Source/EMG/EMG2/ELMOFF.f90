@@ -38,10 +38,12 @@
       USE TIMDAT, ONLY                :  TSEC
       USE DEBUG_PARAMETERS, ONLY      :  DEBUG
       USE SUBR_BEGEND_LEVELS, ONLY    :  ELMOFF_BEGEND
-      USE CONSTANTS_1, ONLY           :  ZERO, ONE
-      USE PARAMS, ONLY                :  K6ROT, EPSIL
-      USE MODEL_STUF, ONLY            :  CAN_ELEM_TYPE_OFFSET, ELDOF, ELGP, EID, KE, ME, NUM_EMG_FATAL_ERRS, RMATL, RPSHEL,        &
-                                         OFFDIS, OFFSET, PPE, PTE, SE1, SE2, SE3, XEL, ERR_SUB_NAM, EMG_IFE, EMG_RFE, TYPE
+      USE CONSTANTS_1, ONLY           :  ZERO, ONE, TWO
+      USE PARAMS, ONLY                :  K6ROT, EPSIL, QUAD4TYP
+      USE MODEL_STUF, ONLY            :  CAN_ELEM_TYPE_OFFSET, ELDOF, ELGP, EID, KE, ME, NUM_EMG_FATAL_ERRS, RMATL,                &
+                                         OFFDIS, OFFSET, PPE, PTE, SE1, SE2, SE3, XEL, ERR_SUB_NAM, EMG_IFE, EMG_RFE, TYPE,        &
+                                         SHELL_A, INTL_MID
+      USE MITC_STUF, ONLY             :  DIRECTOR
       USE ELMOFF_USE_IFs
 
       IMPLICIT NONE
@@ -79,9 +81,9 @@
       REAL(DOUBLE)                    :: E(6*ELGP,6*ELGP)
       REAL(DOUBLE)                    :: Ei(ELGP,6,6)
       REAL(DOUBLE)                    :: KE1(6*ELGP,6*ELGP)
-      REAL(DOUBLE)                    :: Ksita                ! virtual rotational stiffness derived from K6ROT
-      
-      ! below block is stolen from QDEL1
+      REAL(DOUBLE)                    :: Ksita             ! virtual rotational stiffness derived from K6ROT
+      REAL(DOUBLE)                    :: X2E               ! x coord of elem node 2
+      REAL(DOUBLE)                    :: Y3E               ! y coord of elem node 3
       REAL(DOUBLE)                    :: AREA                 ! Elem area
       REAL(DOUBLE)                    :: HHH(MAX_ORDER_GAUSS) ! An output from subr ORDER, called herein.  Gauss weights.
       REAL(DOUBLE)                    :: SSS(MAX_ORDER_GAUSS) ! An output from subr ORDER, called herein. Gauss abscissa's.
@@ -90,8 +92,10 @@
       REAL(DOUBLE)                    :: JAC(2,2)             ! An output from subr JAC2D4, called herein. 2 x 2 Jacobian matrix.
       REAL(DOUBLE)                    :: JACI(2,2)            ! An output from subr JAC2D4, called herein. 2 x 2 Jacobian inverse.
       REAL(DOUBLE)                    :: DETJ                 ! An output from subr JAC2D4, called herein. Determinant of JAC
-      REAL(DOUBLE)                    :: EPS1                 ! A small number to compare to real zero
-      ! end copied decls
+      REAL(DOUBLE)                    :: K6_DIR(3,ELGP)       ! Normalized direction of the singular DOF (spring x axis).
+      REAL(DOUBLE)                    :: TY_DIR(3)            ! Vector that defines the y axis of the spring.
+      REAL(DOUBLE)                    :: T(3,3)               ! Transformation matrix for spring.
+      REAL(DOUBLE)                    :: KROT(3,3)            ! Stiff matrix for spring.
       
       INTRINSIC                       :: DABS
 
@@ -212,73 +216,111 @@
          CALL MATMULT_FFF   ( KE1, E     , 6*ELGP, 6*ELGP, 6*ELGP, DUM_KE )
          CALL MATMULT_FFF_T ( E  , DUM_KE, 6*ELGP, 6*ELGP, 6*ELGP, KE1    )
 
-        
-! Get the Jacobian in order to compute the Ksita virtual stiffness
+! **********************************************************************************************************************************
+! Add K6ROT stiffness
 
+                                                           ! Only for QUAD4 and TRIA3, 
+                                                           ! not QUAD8, QUAD4K, or TRIA3K.
+         IF (TYPE == 'QUAD4   ' .OR. TYPE == 'TRIA3   ') THEN
+            
+                                                           ! No K6ROT for shells that only use MID1.
+            IF (INTL_MID(2) > 0) THEN
 
-
-! Set KE = KE1 for 6*ELGP by 6*ELGP terms
-
-! Compute the Ksita virtual stiffness
-         
-         Ksita = 0.0
-         ! restrict to QUAD4 and TRIA3 shell elements
-         IF (TYPE(1:5) == "QUAD4" .OR. TYPE(1:5) == "TRIA3") THEN
-            IF (NPSHEL > 0 .AND. K6ROT > 0) THEN
-               ! Here begins the code copied from QDEL
-  
-               XSD(1) = XEL(1,1) - XEL(2,1)                         ! x coord diffs (in local elem coords)
-               XSD(2) = XEL(2,1) - XEL(3,1)
-               XSD(3) = XEL(3,1) - XEL(4,1)
-               XSD(4) = XEL(4,1) - XEL(1,1)
-         
-               YSD(1) = XEL(1,2) - XEL(2,2)                         ! y coord diffs (in local elem coords)
-               YSD(2) = XEL(2,2) - XEL(3,2)
-               YSD(3) = XEL(3,2) - XEL(4,2)
-               YSD(4) = XEL(4,2) - XEL(1,2)
-         
-               IF ((DEBUG(6) > 0) .AND. (WRT_BUG(0) > 0)) THEN
-                  WRITE(BUG,*) ' Element side differences in x, y coords:'
-                  WRITE(BUG,*) ' ---------------------------------------'
-                  WRITE(BUG,98761) XSD(1), YSD(1)
-                  WRITE(BUG,98762) XSD(2), YSD(2)
-                  WRITE(BUG,98763) XSD(3), YSD(3)
-                  WRITE(BUG,98764) XSD(4), YSD(4)
-                  WRITE(BUG,*)
-               ENDIF 
-      
                AREA = ZERO
-               CALL ORDER_GAUSS ( 2, SSS, HHH )
-               DO I=1,2
-                  DO J=1,2
-                     CALL JAC2D ( SSS(I), SSS(J), XSD, YSD, 'N', JAC, JACI, DETJ )
-                     AREA = AREA + HHH(I)*HHH(J)*DETJ
+
+               IF ((TYPE(1:5) == "QUAD4")) THEN
+               
+                  XSD(1) = XEL(1,1) - XEL(2,1)             ! x coord diffs (in local elem coords)
+                  XSD(2) = XEL(2,1) - XEL(3,1)
+                  XSD(3) = XEL(3,1) - XEL(4,1)
+                  XSD(4) = XEL(4,1) - XEL(1,1)
+            
+                  YSD(1) = XEL(1,2) - XEL(2,2)             ! y coord diffs (in local elem coords)
+                  YSD(2) = XEL(2,2) - XEL(3,2)
+                  YSD(3) = XEL(3,2) - XEL(4,2)
+                  YSD(4) = XEL(4,2) - XEL(1,2)
+         
+                  CALL ORDER_GAUSS ( 2, SSS, HHH )
+                  DO I=1,2
+                     DO J=1,2
+                        CALL JAC2D ( SSS(I), SSS(J), XSD, YSD, 'N', JAC, JACI, DETJ )
+                        AREA = AREA + HHH(I)*HHH(J)*DETJ
+                     ENDDO   
                   ENDDO   
-               ENDDO   
-               EPS1 = EPSIL(1)
-               IF (AREA < EPS1) THEN
-                  NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
-                  FATAL_ERR = FATAL_ERR + 1
-                  IF (WRT_ERR > 0) THEN
-                     WRITE(ERR,1925) EID, TYPE, 'AREA', AREA
-                     WRITE(F06,1925) EID, TYPE, 'AREA', AREA
-                  ELSE
-                     IF (NUM_EMG_FATAL_ERRS <= MEFE) THEN
-                        ERR_SUB_NAM(NUM_EMG_FATAL_ERRS) = SUBR_NAME
-                        EMG_IFE(NUM_EMG_FATAL_ERRS,1) = 1925
-                        EMG_RFE(NUM_EMG_FATAL_ERRS,1) = AREA
-                     ENDIF
-                  ENDIF
-                  RETURN
+                  
+               ELSEIF (TYPE(1:5) == "TRIA3") THEN
+               
+                  X2E  = XEL(2,1)
+                  Y3E  = XEL(3,2)
+                                                           ! Actual area is half this but using this value
+                                                           ! gives the same stiffness as MSC.
+                  AREA = X2E*Y3E
+               
                ENDIF
-               Ksita = 10.0**(-6.0)*RMATL(NMATL, 2)*RPSHEL(NPSHEL, 1)*ABS(DETJ)*K6ROT
+
+               ! Drilling spring stiffness = K6ROT * 10^-6 * G12 * thickness * area
+               !                           = K6ROT * 10^-6 * A(3,3) * area
+               Ksita = 10.0**(-6.0) * SHELL_A(3,3) * ABS(AREA) * K6ROT
+
+               ! Find the direction of the singularity DOF (SNORM) in the element coordinate system.
+               IF ((TYPE == 'QUAD4   ') .AND. ((QUAD4TYP == 'MITC4 ') .OR. (QUAD4TYP == 'MITC4+'))) THEN
+                                                           ! This is currently the director vector 
+                                                           ! but it won't be if SNORM is implemented 
+                                                           ! without changing the geometry of the element.
+                  K6_DIR(:,1:ELGP) = DIRECTOR(:,1:ELGP)
+               ELSEIF (((TYPE == 'QUAD4   ') .AND. ((QUAD4TYP == 'MIN4  ') .OR. (QUAD4TYP == 'MIN4T ')))                           &
+                 .OR.   (TYPE == 'TRIA3   ')) THEN
+                                                           ! Spring axis is simply the element z axis.
+                  K6_DIR(1,:) = ZERO
+                  K6_DIR(2,:) = ZERO
+                  K6_DIR(3,:) = ONE
+               ENDIF
+
+               DO J=1,ELGP
+
+                  ! Spring stiffness matrix where stiffness is in the spring x direction
+                  !
+                  !        [ Ksita   0     0  ]
+                  ! KROT = [   0     0     0  ]
+                  !        [   0     0     0  ]
+                  KROT(:,:) = ZERO
+                  KROT(1,1) = Ksita
+
+                  ! Transformation matrix from spring coordinates to element coordinates
+                  ! Spring x is the singularity axis
+                  T(:,1) = K6_DIR(:,J)
+                  ! Spring y is orthogonal to both spring x and element x
+                  CALL CROSS(T(:,1), (/ ONE, ZERO, ZERO /), T(:,2))
+                  ! Normalize spring y
+                  T(:,2) = T(:,2) / DSQRT(DOT_PRODUCT(T(:,2), T(:,2)))
+                  ! Spring z is mutually orthogonal
+                  CALL CROSS(T(:,1), T(:,2), T(:,3))
+
+                  ! Transform the spring stiffness matrix to element coordinates.
+                  ! T * K * T'
+                  KROT = MATMUL(MATMUL(T, KROT), TRANSPOSE(T))
+
+                  ! Add the 3x3 spring stiffness matrix to the element stiffness matrix
+                  K = (J-1) * 6
+                  KE1(K+4:K+6,K+4:K+6) = KE1(K+4:K+6,K+4:K+6) + KROT(:,:)
+
+                  ! todo remove.
+                  ! Spring axis is element coordinate z axis. Only correct for flat elements without SNORM.
+                  ! KE1(6*J,6*J) = KE1(6*J,6*J) + Ksita
+
+               ENDDO
+
             ENDIF
          ENDIF
+
+! **********************************************************************************************************************************
          
-         
+
+! Set KE = KE1 for 6*ELGP by 6*ELGP terms
+        
          DO J=1,6*ELGP
             DO K=1,6*ELGP
-               KE(J,K) = KE1(J,K)+Ksita
+               KE(J,K) = KE1(J,K)
             ENDDO
          ENDDO
 
@@ -563,6 +605,8 @@
 
       ENDDO   
  
+
+ 
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
          CALL OURTIM
@@ -579,8 +623,6 @@
                     ,/,14X,' ELEMENT TYPE ',A,' DOES NOT SUPPORT OFFSETS. ERROR OCCURRED FOR ELEMENT NUMBER ',I8)
 
 1925 FORMAT(' *ERROR  1925: ELEMENT ',I8,', TYPE ',A,', HAS ZERO OR NEGATIVE ',A,' = ',1ES9.1)
-
-!1926 FORMAT("K6ROT DEBUG: EID=", I8, ", TYPE=", A, ", AREA=", ES0.2, ", EPS1=", ES0.2, /)
 
 1927 FORMAT(' *ERROR  1927: PROGRAMMING ERROR IN SUBROUTINE ',A                                                                   &
                     ,/,14X,' CHAR PARAMETER QUAD4TYP MUST BE EITHER "MIN4T " OR "MIN4  " BUT IS "',A,'"')
