@@ -196,7 +196,7 @@
       CHARACTER(  1*BYTE)      :: KOORAT         =    'Y'    ! 'Y', 'N' to tell whether to calc ratio of max/min KOO diagonal terms
 
 ! ----------------------------------------------------------------------------------------------------------------------------------
-      CHARACTER(  6*BYTE)      :: LANCMETH       = 'ARPACK'  ! Lanczos method - ARPACK
+      CHARACTER(  6*BYTE)      :: LANCMETH       = 'BANDED'  ! Lanczos method - BANDED or SPARSE
 
 ! ----------------------------------------------------------------------------------------------------------------------------------
       CHARACTER(  1*BYTE)      :: MATSPARS       =    'Y'    ! 'Y' for use of sparse SFF, SFS, SSS or 'N' for full matrix add/mult

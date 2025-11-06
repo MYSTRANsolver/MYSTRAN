@@ -8,6 +8,8 @@
       USE TIMDAT, ONLY                :  TSEC
       USE MODEL_STUF, ONLY            :  EIG_MSGLVL
       USE SUBR_BEGEND_LEVELS, ONLY    :  ARPACK_BEGEND
+      USE SuperLU_STUF, ONLY          :  SLU_FACTORS, SLU_INFO
+      USE PARAMS, ONLY                :  LANCMETH
       USE ARPACK_UTIL
       USE LAPACK_BLAS_AUX
       USE LAPACK_LANCZOS_EIG
@@ -669,27 +671,42 @@ c        | regular mode. Copy MB = [K - sigma*M] to rfac|
 c        | and Call LAPACK routine dpbtrf to factor rfac|
 c        %----------------------------------------------%
 c
-         if      (eig_lap_mat_type(1:3) == 'DGB') then
 
-            call ourtim
-!           write(sc1,4092) linkno,modnam1,hour,minute,sec,sfrac
-            call dgbtrf(n, n, kl, ku, rfac, lda, iwork, ierr)
+         IF(LANCMETH == 'SPARSE') THEN
 
-         else if (eig_lap_mat_type(1:3) == 'DPB') then
+            !todo not sure about MATIN_SET = 'L '
+            SLU_INFO = 0
+            call SYM_MAT_DECOMP_SUPRLU ( SUBR_NAME , 'KMSM',  'L ',
+     &                                   n, NTERM_KMSMn, I_KMSMn,
+     &                                   J_KMSMn,  KMSMn,  SLU_INFO )
+         
+         ELSE
 
-            call ourtim
-!           write(sc1,4092) linkno,modnam2,hour,minute,sec,sfrac
-            call dpbtrf ( 'U', n, ku, rfac, ku+1, ierr )
-            do i=1,n
-               iwork(i) = i                                                  ! Pivot indices (no pivoting in DPBTRF)
-            enddo
+            if      (eig_lap_mat_type(1:3) == 'DGB') then
 
-         endif
+               call ourtim
+!              write(sc1,4092) linkno,modnam1,hour,minute,sec,sfrac
+               call dgbtrf(n, n, kl, ku, rfac, lda, iwork, ierr)
 
-         if (ierr .ne. 0) then 
-            info_lapack = ierr
-            go to 9000 
-         end if
+            else if (eig_lap_mat_type(1:3) == 'DPB') then
+
+               call ourtim
+!              write(sc1,4092) linkno,modnam2,hour,minute,sec,sfrac
+               call dpbtrf ( 'U', n, ku, rfac, ku+1, ierr )
+               do i=1,n
+                  iwork(i) = i                                                  ! Pivot indices (no pivoting in DPBTRF)
+               enddo
+
+            endif
+
+            if (ierr .ne. 0) then 
+               info_lapack = ierr
+               go to 9000 
+            end if
+         
+         ENDIF
+         
+
 c
       else if ( type .eq. 4 ) then
 c
@@ -702,27 +719,40 @@ c        %-------------------------------------%
 c        | Construct and factor (A - sigma*M). |
 c        %-------------------------------------%
 c
-         if      (eig_lap_mat_type(1:3) == 'DGB') then
 
-            call ourtim
-!           write(sc1,4092) linkno,modnam1,hour,minute,sec,sfrac
-            call dgbtrf(n, n, kl, ku, rfac, lda, iwork, ierr)
-c
-         else if (eig_lap_mat_type(1:3) == 'DPB') then
+         IF(LANCMETH == 'SPARSE') THEN
 
-            call ourtim
-!           write(sc1,4092) linkno,modnam2,hour,minute,sec,sfrac
-            call dpbtrf ( 'U', n, ku, rfac, ku+1, ierr )
-            do i=1,n
-               iwork(i) = i   ! Pivot indices (no pivoting in DPBTRF)
-            enddo
+            !todo not sure about MATIN_SET = 'L '
+            SLU_INFO = 0
+            call SYM_MAT_DECOMP_SUPRLU ( SUBR_NAME , 'KMSM',  'L ',
+     &                                   n, NTERM_KMSMn, I_KMSMn,
+     &                                   J_KMSMn,  KMSMn,  SLU_INFO )
+         
+         ELSE
 
-         endif
+            if      (eig_lap_mat_type(1:3) == 'DGB') then
 
-         if ( ierr .ne. 0 )  then
-             info_lapack = ierr
-             go to 9000
-         end if
+               call ourtim
+!              write(sc1,4092) linkno,modnam1,hour,minute,sec,sfrac
+               call dgbtrf(n, n, kl, ku, rfac, lda, iwork, ierr)
+
+            else if (eig_lap_mat_type(1:3) == 'DPB') then
+
+               call ourtim
+!              write(sc1,4092) linkno,modnam2,hour,minute,sec,sfrac
+               call dpbtrf ( 'U', n, ku, rfac, ku+1, ierr )
+               do i=1,n
+                  iwork(i) = i   ! Pivot indices (no pivoting in DPBTRF)
+               enddo
+
+            endif
+
+            if ( ierr .ne. 0 )  then
+                info_lapack = ierr
+                go to 9000
+            end if
+
+         ENDIF
 c 
       end if 
 
@@ -829,23 +859,36 @@ c
             IF (EIG_MSGLVL > 0) CALL ARP_DEB(1,N,IDO,IPNTR)
             call dcopy(n, workd(ipntr(2)), 1, workd(ipntr(1)), 1)
 
-            if      (eig_lap_mat_type(1:3) == 'DGB') then
+            IF(LANCMETH == 'SPARSE') THEN
+            
+               SLU_INFO = 0
+               call FBS_SUPRLU ( SUBR_NAME, 'KMSMn', n,
+     &                        NTERM_KMSMn, I_KMSMn, J_KMSMn, KMSMn,
+     &                        0, workd(ipntr(2)), SLU_INFO )
+            
+            ELSE
 
-               call dgbtrs ('Notranspose', n, kl, ku, 1, rfac, lda, 
-     &                       iwork, workd(ipntr(2)), n, ierr,
-     &                       dtbsv_msg)
+               if      (eig_lap_mat_type(1:3) == 'DGB') then
 
-            else if (eig_lap_mat_type(1:3) == 'DPB') then
+                  call dgbtrs ('Notranspose', n, kl, ku, 1, rfac, lda, 
+     &                          iwork, workd(ipntr(2)), n, ierr,
+     &                          dtbsv_msg)
 
-               call dpbtrs ( 'U', n, ku, 1, rfac, ku+1, workd(ipntr(2)),
-     &                        n, ierr, 'N' )
-            endif
-            IF (EIG_MSGLVL > 0) CALL ARP_DEB(2,N,IDO,IPNTR)
+               else if (eig_lap_mat_type(1:3) == 'DPB') then
 
-            if (ierr .ne. 0) then
-               info_lapack = ierr
-               go to 9000
-            end if
+                  call dpbtrs ( 'U', n, ku, 1, rfac, ku+1, 
+     &                          workd(ipntr(2)), n, ierr, 'N' )
+
+               endif
+               IF (EIG_MSGLVL > 0) CALL ARP_DEB(2,N,IDO,IPNTR)
+
+               if (ierr .ne. 0) then
+                  info_lapack = ierr
+                  go to 9000
+               end if
+
+            ENDIf
+            
 c
          else if ( type .eq. 4 ) then
 c
@@ -877,23 +920,35 @@ c
             enddo
             IF (EIG_MSGLVL > 0) CALL ARP_DEB(1,N,IDO,IPNTR)
 
-            if      (eig_lap_mat_type(1:3) == 'DGB') then
+            IF(LANCMETH == 'SPARSE') THEN
+            
+               SLU_INFO = 0
+               call FBS_SUPRLU ( SUBR_NAME, 'KMSMn', n,
+     &                        NTERM_KMSMn, I_KMSMn, J_KMSMn, KMSMn,
+     &                        0, workd(ipntr(2)), SLU_INFO )
 
-               call dgbtrs ('Notranspose', n, kl, ku, 1, rfac, lda, 
-     &                      iwork, workd(ipntr(2)), n, ierr,
-     &                       dtbsv_msg)
+            ELSE
 
-            else if (eig_lap_mat_type(1:3) == 'DPB') then
+               if      (eig_lap_mat_type(1:3) == 'DGB') then
 
-               call dpbtrs ( 'U', n, ku, 1, rfac, ku+1,
-     &                        workd(ipntr(2)), n, ierr, 'N' )
-            endif
-            IF (EIG_MSGLVL > 0) CALL ARP_DEB(2,N,IDO,IPNTR)
+                  call dgbtrs ('Notranspose', n, kl, ku, 1, rfac, lda, 
+     &                         iwork, workd(ipntr(2)), n, ierr,
+     &                          dtbsv_msg)
 
-            if (ierr .ne. 0) then
-               info_lapack = ierr
-               go to 9000
-            end if
+               else if (eig_lap_mat_type(1:3) == 'DPB') then
+
+                  call dpbtrs ( 'U', n, ku, 1, rfac, ku+1,
+     &                           workd(ipntr(2)), n, ierr, 'N' )
+               endif
+               IF (EIG_MSGLVL > 0) CALL ARP_DEB(2,N,IDO,IPNTR)
+
+               if (ierr .ne. 0) then
+                  info_lapack = ierr
+                  go to 9000
+               end if
+
+            ENDIF
+
 
          endif
 c
@@ -929,23 +984,35 @@ c
             IF (EIG_MSGLVL > 0) CALL ARP_DEB(1,N,IDO,IPNTR)
             call dcopy(n, workd(ipntr(2)), 1, workd(ipntr(1)), 1) 
 
-            if      (eig_lap_mat_type(1:3) == 'DGB') then
+            IF(LANCMETH == 'SPARSE') THEN
+            
+               SLU_INFO = 0
+               call FBS_SUPRLU ( SUBR_NAME, 'KMSMn', n,
+     &                        NTERM_KMSMn, I_KMSMn, J_KMSMn, KMSMn,
+     &                        0, workd(ipntr(2)), SLU_INFO )
 
-               call dgbtrs ('Notranspose', n, kl, ku, 1, rfac, lda, 
-     &                       iwork, workd(ipntr(2)), n, ierr,
-     &                       dtbsv_msg)
+            ELSE
 
-            else if (eig_lap_mat_type(1:3) == 'DPB') then
+               if      (eig_lap_mat_type(1:3) == 'DGB') then
 
-               call dpbtrs ( 'U', n, ku, 1, rfac, ku+1, workd(ipntr(2)),
-     &                        n, ierr, 'N' )
-            endif
-            IF (EIG_MSGLVL > 0) CALL ARP_DEB(2,N,IDO,IPNTR)
+                  call dgbtrs ('Notranspose', n, kl, ku, 1, rfac, lda, 
+     &                          iwork, workd(ipntr(2)), n, ierr,
+     &                          dtbsv_msg)
 
-            if (ierr .ne. 0) then
-               info_lapack = ierr
-               go to 9000
-            end if
+               else if (eig_lap_mat_type(1:3) == 'DPB') then
+
+                  call dpbtrs ( 'U', n, ku, 1, rfac, ku+1, 
+     &                          workd(ipntr(2)), n, ierr, 'N' )
+
+               endif
+               IF (EIG_MSGLVL > 0) CALL ARP_DEB(2,N,IDO,IPNTR)
+
+               if (ierr .ne. 0) then
+                  info_lapack = ierr
+                  go to 9000
+               end if
+
+            ENDIF
 c
          else if ( type .eq. 4 ) then
 c
@@ -956,25 +1023,39 @@ c           | (MB*x) has been computed and stored    |
 c           | in workd(ipntr(3)).                    |           
 c           %----------------------------------------%
 c
-            if      (eig_lap_mat_type(1:3) == 'DGB') then
 
-               call dcopy(n, workd(ipntr(3)), 1, workd(ipntr(2)), 1)
-               call dgbtrs ('Notranspose', n, kl, ku, 1, rfac, lda, 
-     &                       iwork, workd(ipntr(2)), n, ierr,
-     &                       dtbsv_msg)
+            call dcopy(n, workd(ipntr(3)), 1, workd(ipntr(2)), 1)
 
-            else if (eig_lap_mat_type(1:3) == 'DPB') then
+            IF(LANCMETH == 'SPARSE') THEN
+            
+               SLU_INFO = 0
+               call FBS_SUPRLU ( SUBR_NAME, 'KMSMn', n,
+     &                        NTERM_KMSMn, I_KMSMn, J_KMSMn, KMSMn,
+     &                        0, workd(ipntr(2)), SLU_INFO )
 
-               call dcopy(n, workd(ipntr(3)), 1, workd(ipntr(2)), 1)
-               call dpbtrs ( 'U', n, ku, 1, rfac, ku+1, workd(ipntr(2)),
-     &                        n, ierr, 'N' )
-            endif
-            IF (EIG_MSGLVL > 0) CALL ARP_DEB(2,N,IDO,IPNTR)
+            ELSE
 
-            if (ierr .ne. 0) then 
-               info_lapack = ierr
-               go to 9000
-            end if
+               if      (eig_lap_mat_type(1:3) == 'DGB') then
+
+                  call dgbtrs ('Notranspose', n, kl, ku, 1, rfac, lda, 
+     &                          iwork, workd(ipntr(2)), n, ierr,
+     &                          dtbsv_msg)
+
+               else if (eig_lap_mat_type(1:3) == 'DPB') then
+
+                  call dpbtrs ( 'U', n, ku, 1, rfac, ku+1, 
+     &                          workd(ipntr(2)), n, ierr, 'N' )
+
+               endif
+               IF (EIG_MSGLVL > 0) CALL ARP_DEB(2,N,IDO,IPNTR)
+
+               if (ierr .ne. 0) then 
+                  info_lapack = ierr
+                  go to 9000
+               end if
+
+            ENDIF
+
 c 
          end if
 c

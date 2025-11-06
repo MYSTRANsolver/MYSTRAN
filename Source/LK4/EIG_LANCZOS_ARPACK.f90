@@ -26,8 +26,7 @@
 
       SUBROUTINE EIG_LANCZOS_ARPACK
   
-! Solves for eigenvalues and eigenvectors when the Lanczos method is requested (on Bulk Data EIGRL entry) and Bulk Data PARAM
-! LANCMETH is ARPACK.
+! Solves for eigenvalues and eigenvectors when the Lanczos method is requested (on Bulk Data EIGRL entry)
  
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
       USE IOUNT1, ONLY                :  WRT_ERR, WRT_LOG, ERR, F04, F06
@@ -38,7 +37,7 @@
       USE CONSTANTS_1, ONLY           :  ZERO, ONE, TWO, PI
       USE DEBUG_PARAMETERS, ONLY      :  DEBUG
       USE PARAMS, ONLY                :  ARP_TOL, BAILOUT, DARPACK, EIGESTL, EPSIL, MXITERL, SOLLIB, SPARSTOR, SUPINFO,            &
-                                         SUPWARN
+                                         SUPWARN, LANCMETH
       USE DOF_TABLES, ONLY            :  TDOFI
       USE SUBR_BEGEND_LEVELS, ONLY    :  EIG_LANCZOS_ARPACK_BEGEND
       USE EIGEN_MATRICES_1, ONLY      :  EIGEN_VAL, EIGEN_VEC, MODE_NUM
@@ -182,7 +181,9 @@
 
 ! EIG_LAP_MAT_TYPE was checked in BD_EIGRL for correctness, but make sure, here, that it is correct
 
-      IF      (EIG_LAP_MAT_TYPE(1:3) == 'DPB') THEN
+      IF(LANCMETH == 'SPARSE') THEN
+         LDRFAC = 1 ! make it small because it's not used but parameter has to be allocated.
+      ELSEIF      (EIG_LAP_MAT_TYPE(1:3) == 'DPB') THEN
          LDRFAC = KMSM_SDIA + 1
       ELSE IF (EIG_LAP_MAT_TYPE(1:3) == 'DGB') THEN
          LDRFAC = 3*KMSM_SDIA + 1
@@ -192,6 +193,7 @@
          WRITE(F06,4003) SUBR_NAME, EIG_LAP_MAT_TYPE
          CALL OUTA_HERE ( 'Y' )
       ENDIF
+
 
 ! Allocate array RFAC = (KLL - EIG_SIGMA*MLL, or KLL + EIG_SIGMA*KLLD) for ARACK
 
@@ -204,25 +206,30 @@
       WRITE(SC1,4092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
       CALL ALLOCATE_LAPACK_MAT ( 'RFAC', LDRFAC, NDOFL, SUBR_NAME )
 
+
+      IF(LANCMETH == 'BANDED') THEN
+
 ! Put KMSM in form required by LAPACK band matrix. Call result array RFAC
 
-      CALL OURTIM
-      MODNAM = 'PUT RFAC MATRIX IN ARPACK BAND FORM'
-      WRITE(SC1,4092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
-      IF      (EIG_LAP_MAT_TYPE(1:3) == 'DPB') THEN
-         CALL BANDGEN_LAPACK_DPB ( 'KMSM', NDOFL, KMSM_SDIA, NTERM_KMSM, I_KMSM, J_KMSM, KMSM, RFAC, SUBR_NAME )
-      ELSE IF (EIG_LAP_MAT_TYPE(1:3) == 'DGB') THEN
-         CALL BANDGEN_LAPACK_DGB ( 'KMSM', NDOFL, KMSM_SDIA, NTERM_KMSM, I_KMSM, J_KMSM, KMSM, RFAC, SUBR_NAME )
-      ENDIF
+         CALL OURTIM
+         MODNAM = 'PUT RFAC MATRIX IN ARPACK BAND FORM'
+         WRITE(SC1,4092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+         IF      (EIG_LAP_MAT_TYPE(1:3) == 'DPB') THEN
+            CALL BANDGEN_LAPACK_DPB ( 'KMSM', NDOFL, KMSM_SDIA, NTERM_KMSM, I_KMSM, J_KMSM, KMSM, RFAC, SUBR_NAME )
+         ELSE IF (EIG_LAP_MAT_TYPE(1:3) == 'DGB') THEN
+            CALL BANDGEN_LAPACK_DGB ( 'KMSM', NDOFL, KMSM_SDIA, NTERM_KMSM, I_KMSM, J_KMSM, KMSM, RFAC, SUBR_NAME )
+         ENDIF
 
 ! Write RFAC, if requested
 
-      IF (DEBUG(40) == 1) THEN
-         IF      (EIG_LAP_MAT_TYPE(1:3) == 'DPB') THEN
-            CALL WRITE_MATRIX_BY_ROWS ( 'MATRIX [KLL - sigma*KLLD] IN LAPACK BAND FORM', RFAC, LDRFAC, NDOFL, F06 )
-         ELSE
-            CALL WRITE_MATRIX_BY_ROWS ( 'MATRIX [KLL - sigma*MLL ] IN LAPACK BAND FORM', RFAC, LDRFAC, NDOFL, F06 )
+         IF (DEBUG(40) == 1) THEN
+            IF      (EIG_LAP_MAT_TYPE(1:3) == 'DPB') THEN
+               CALL WRITE_MATRIX_BY_ROWS ( 'MATRIX [KLL - sigma*KLLD] IN LAPACK BAND FORM', RFAC, LDRFAC, NDOFL, F06 )
+            ELSE
+               CALL WRITE_MATRIX_BY_ROWS ( 'MATRIX [KLL - sigma*MLL ] IN LAPACK BAND FORM', RFAC, LDRFAC, NDOFL, F06 )
+            ENDIF
          ENDIF
+
       ENDIF
 
 ! If this is not a CB or BUCKLING soln, dellocate arrays for KLL.      ! Keep arrays MLL, KLLD. Need them later to calc gen mass
