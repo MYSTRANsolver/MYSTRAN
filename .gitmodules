@@ -4,3 +4,10 @@
 	ignore = all
 	update = checkout
 	branch = master
+
+[submodule "superlu_mt"]
+	path = superlu_mt
+	url = https://github.com/xiaoyeli/superlu_mt
+	ignore = all
+	update = checkout
+	branch = master
