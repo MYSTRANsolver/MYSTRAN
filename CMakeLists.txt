@@ -25,6 +25,26 @@ include_directories("${CMAKE_SOURCE_DIR}/INCLUDE")
 # uncomment this to debug
 # set(CMAKE_VERBOSE_MAKEFILE true)
 
+# a new build type for profiling
+set(CMAKE_PROFILING_FLAGS "-O2 -g -fno-omit-frame-pointer -fno-inline-functions")
+
+set(CMAKE_C_FLAGS_PROFILING "${CMAKE_PROFILING_FLAGS}")
+set(CMAKE_CXX_FLAGS_PROFILING "${CMAKE_PROFILING_FLAGS}")
+set(CMAKE_Fortran_FLAGS_PROFILING "${CMAKE_PROFILING_FLAGS}")
+
+set(CMAKE_EXE_LINKER_FLAGS_PROFILING "")
+set(CMAKE_SHARED_LINKER_FLAGS_PROFILING "")
+
+# register the Profile build type, just in case
+set(CMAKE_CONFIGURATION_TYPES
+  Debug
+  Release
+  RelWithDebInfo
+  MinSizeRel
+  Profiling
+  CACHE STRING "" FORCE
+)
+
 # suppress cmake warnings for superlu
 if(NOT DEFINED CMAKE_SUPPRESS_DEVELOPER_WARNINGS)
   set(CMAKE_SUPPRESS_DEVELOPER_WARNINGS 1 CACHE INTERNAL "No dev warnings")
