@@ -1,29 +1,29 @@
 ! ##################################################################################################################################
-! Begin MIT license text.                                                                                    
+! Begin MIT license text.
 ! _______________________________________________________________________________________________________
-                                                                                                         
-! Copyright 2022 Dr William R Case, Jr (mystransolver@gmail.com)                                              
-                                                                                                         
-! Permission is hereby granted, free of charge, to any person obtaining a copy of this software and      
+
+! Copyright 2022 Dr William R Case, Jr (mystransolver@gmail.com)
+
+! Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 ! associated documentation files (the "Software"), to deal in the Software without restriction, including
 ! without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-! copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to   
-! the following conditions:                                                                              
-                                                                                                         
-! The above copyright notice and this permission notice shall be included in all copies or substantial   
-! portions of the Software and documentation.                                                                              
-                                                                                                         
-! THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS                                
-! OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,                            
-! FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE                            
-! AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER                                 
-! LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,                          
-! OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN                              
-! THE SOFTWARE.                                                                                          
+! copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to
+! the following conditions:
+
+! The above copyright notice and this permission notice shall be included in all copies or substantial
+! portions of the Software and documentation.
+
+! THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+! OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+! FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+! AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+! LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+! OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+! THE SOFTWARE.
 ! _______________________________________________________________________________________________________
-                                                                                                        
-! End MIT license text.                                                                                      
- 
+
+! End MIT license text.
+
       SUBROUTINE MATMULT_SFF ( MAT_A_NAME, NROWS_A, NCOLS_A, NTERM_A, SYM_A, I_A, J_A, A, MAT_B_NAME, NROWS_B, NCOLS_B, B,         &
                                WRITE_SC1, MAT_C_NAME, CONS, C )
 
@@ -56,11 +56,11 @@
       USE PARAMS, ONLY                :  EPSIL
       USE DEBUG_PARAMETERS, ONLY      :  DEBUG
       USE SPARSE_ALG_ARRAYS, ONLY     :  AROW, J_AROW
- 
+
       USE MATMULT_SFF_USE_IFs
 
       IMPLICIT NONE
- 
+
       CHARACTER, PARAMETER            :: CR13 = CHAR(13)   ! This causes a carriage return simulating the "+" action in a FORMAT
       CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: SUBR_NAME = 'MATMULT_SFF'
       CHARACTER(LEN=*), INTENT(IN)    :: MAT_A_NAME        ! Name of matrix A
@@ -90,7 +90,7 @@
 !                                                            a col of B exist when a row of A is multiplied by a col of B
       INTEGER(LONG)                   :: NTERM_AROW        ! Number of nonzero terms in AROW (one row of A)
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = MATMULT_SFF_BEGEND
-       
+
       REAL(DOUBLE) , INTENT(IN )      :: A(NTERM_A)        ! Nonzero values in matrix A
       REAL(DOUBLE) , INTENT(IN )      :: B(NROWS_B,NCOLS_B)! Real values in matrix B
       REAL(DOUBLE) , INTENT(OUT)      :: C(NROWS_A,NCOLS_B)! Real values in matrix c
@@ -105,7 +105,7 @@
          WRITE(F04,9001) SUBR_NAME,TSEC
  9001    FORMAT(1X,A,' BEGN ',F10.3)
       ENDIF
-      tsec_beg = tsec                                                                                                             
+      tsec_beg = tsec
 
 ! **********************************************************************************************************************************
 ! Initialize outputs
@@ -119,7 +119,7 @@
 ! Calc outputs
 
       IF (WRITE_SC1 /= 'Y') THEN
-         WRITE(SC1, * )                                    ! Advance 1 line for screen messages
+         !WRITE(SC1, * )                                    ! Advance 1 line for screen messages
       ENDIF
 
       EPS1 = EPSIL(1)
@@ -167,14 +167,14 @@
       A_ROW_BEG = 1
 i_do: DO I=1,NROWS_A                                       ! Matrix multiply loop. Range over the rows in A
 
-         A_NTERM_ROW_I = I_A(I+1) - I_A(I)                 ! Number of terms in matrix A in row I 
+         A_NTERM_ROW_I = I_A(I+1) - I_A(I)                 ! Number of terms in matrix A in row I
          A_ROW_END = A_ROW_BEG + A_NTERM_ROW_I - 1         ! A_ROW_BEG to A_ROW_END is range of indices of terms in A for row I of A
          IF (DEBUG(82) == 1) CALL MATMULT_SFF_DEB ( '2', '   ' )
 
          DO K=1,AROW_MAX_TERMS                             ! Null J_AROW and AROW each time we begin a new row of A
             J_AROW(K) = 0
               AROW(K) = ZERO
-         ENDDO 
+         ENDDO
 
          NTERM_AROW = 0                                    ! Formulate J_AROW, AROW - a CRS representation of one row of A
          IF (SYM_A == 'Y') THEN                            ! 1st, look for terms that would be in this row, but are not, due to SYM
