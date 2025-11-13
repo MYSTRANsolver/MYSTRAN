@@ -80,13 +80,31 @@ if(GIT_FOUND AND EXISTS "${PROJECT_SOURCE_DIR}/.git")
   endif()
 endif()
 
-# check for SuperLU
-set(SUPERLU_DIR "${PROJECT_SOURCE_DIR}/superlu")
+set(SUPERLU_MT_DIR "${PROJECT_SOURCE_DIR}/superlu_mt")
+set(SUPERLU_PATCHES_DIR "${PROJECT_SOURCE_DIR}/superlu_mt_patches")
+message(STATUS "Applying patches to SuperLU_MT...")
+file(GLOB_RECURSE PATCH_FILES RELATIVE "${SUPERLU_PATCHES_DIR}" "${SUPERLU_PATCHES_DIR}/*")
 
-if(NOT EXISTS "${SUPERLU_DIR}/CMakeLists.txt")
+foreach(file IN LISTS PATCH_FILES)
+  set(src "${SUPERLU_PATCHES_DIR}/${file}")
+  set(dst "${SUPERLU_MT_DIR}/${file}")
+
+  # ensure the destination directory exists
+  get_filename_component(dst_dir "${dst}" DIRECTORY)
+  file(MAKE_DIRECTORY "${dst_dir}")
+
+  # print the file being copied
+  message(STATUS "  Patching: ${file}")
+
+  # copy the file
+  file(COPY "${src}" DESTINATION "${dst_dir}")
+endforeach()
+message(STATUS "SuperLU_MT patched.")
+
+if(NOT EXISTS "${SUPERLU_MT_DIR}/CMakeLists.txt")
   message(
     FATAL_ERROR
-    "The submodules were not downloaded. You have to do it manually!"
+    "The SuperLU_MT submodule was not downloaded. You have to do it manually!"
   )
 endif()
 
@@ -97,8 +115,10 @@ set(enable_tests OFF)
 # set(enable_internal_blaslib "yes")
 
 # include & build it
-include_directories("${SUPERLU_DIR}/SRC")
-add_subdirectory(${SUPERLU_DIR})
+# include_directories("${SUPERLU_DIR}/SRC")
+# add_subdirectory(${SUPERLU_DIR})
+include_directories("${SUPERLU_MT_DIR}/SRC")
+add_subdirectory(${SUPERLU_MT_DIR})
 
 # f2c stuff
 set(F2C_DIR "${PROJECT_SOURCE_DIR}/f2c")
@@ -180,6 +200,9 @@ endif()
 # collect all fortran source files
 file(GLOB_RECURSE ALL_FORTRAN_FILES "${CMAKE_SOURCE_DIR}/*.f*")
 
+# collect the C files in UTIL
+file(GLOB_RECURSE ALL_C_FILES "${CMAKE_SOURCE_DIR}/UTIL/*.c")
+
 # same BLAS-finding subroutine as SuperLU
 if(NOT enable_internal_blaslib)
   if(TPL_BLAS_LIBRARIES)
@@ -243,12 +266,18 @@ endif()
 add_executable(
   mystran
   ${ALL_FORTRAN_FILES}
+  ${ALL_C_FILES}
   ${missing_blas_src}
-  "${SUPERLU_DIR}/FORTRAN/c_fortran_dgssv.c"
 )
 
-# target_link_libraries(mystran MODULES ${modules_names})
-target_link_libraries(mystran superlu f2c)
+# determine which superlu variant to link against
+set (PLAT "_PTHREAD" CACHE STRING "threading flavor _PTHREAD/_OPENMP")
+if (PLAT STREQUAL "_PTHREAD")
+  target_link_libraries(mystran superlu_mt_PTHREAD f2c)
+elseif (PLAT STREQUAL "_OPENMP")
+  target_link_libraries(mystran superlu_mt_OPENMP f2c)
+endif ()
+
 
 # if (MISSING_FNS_TOTAL GREATER 0)
 # target_link_libraries(mystran my_blas)
