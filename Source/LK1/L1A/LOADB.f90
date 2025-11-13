@@ -1,31 +1,31 @@
 ! ##################################################################################################################################
-! Begin MIT license text.                                                                                    
+! Begin MIT license text.
 ! _______________________________________________________________________________________________________
-                                                                                                         
-! Copyright 2022 Dr William R Case, Jr (mystransolver@gmail.com)                                              
-                                                                                                         
-! Permission is hereby granted, free of charge, to any person obtaining a copy of this software and      
+
+! Copyright 2022 Dr William R Case, Jr (mystransolver@gmail.com)
+
+! Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 ! associated documentation files (the "Software"), to deal in the Software without restriction, including
 ! without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-! copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to   
-! the following conditions:                                                                              
-                                                                                                         
-! The above copyright notice and this permission notice shall be included in all copies or substantial   
-! portions of the Software and documentation.                                                                              
-                                                                                                         
-! THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS                                
-! OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,                            
-! FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE                            
-! AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER                                 
-! LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,                          
-! OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN                              
-! THE SOFTWARE.                                                                                          
+! copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to
+! the following conditions:
+
+! The above copyright notice and this permission notice shall be included in all copies or substantial
+! portions of the Software and documentation.
+
+! THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+! OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+! FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+! AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+! LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+! OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+! THE SOFTWARE.
 ! _______________________________________________________________________________________________________
-                                                                                                        
-! End MIT license text.                                                                                      
- 
+
+! End MIT license text.
+
       SUBROUTINE LOADB
- 
+
       ! LOADB reads in the Bulk Data deck.
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
       USE IOUNT1, ONLY                :  WRT_ERR, WRT_LOG, ERR, F04, F06, IN1
@@ -41,16 +41,16 @@
       USE DEBUG_PARAMETERS, ONLY      :  DEBUG
       USE PARAMS, ONLY                :  GRIDSEQ, IORQ1M, IORQ1S, IORQ1B, IORQ2B, IORQ2T, QUADAXIS, SUPINFO, SUPWARN
       USE OUTPUT4_MATRICES, ONLY      :  NUM_PARTN_REQUESTS
-      USE SUBR_BEGEND_LEVELS, ONLY    :  LOADB_BEGEND 
+      USE SUBR_BEGEND_LEVELS, ONLY    :  LOADB_BEGEND
       USE MODEL_STUF, ONLY            :  FORMOM_SIDS, GRAV_SIDS, IOR3D_MAX, LOAD_SIDS,                                             &
                                          MPCSET, MPC_SIDS, MPCSIDS, MPCADD_SIDS, PBAR, RPCOMP, PRESS_SIDS, RFORCE_SIDS,            &
                                          RPBAR, SLOAD_SIDS, SPC_SIDS, SPC1_SIDS, SPCADD_SIDS, SPCSET, CC_EIGR_SID, SCNUM, SUBLOD
- 
+
 
       USE LOADB_USE_IFs
 
       IMPLICIT NONE
- 
+
       CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: SUBR_NAME   = 'LOADB'
       CHARACTER(LEN=BD_ENTRY_LEN)     :: CARD1              ! BD card (a small field card or the 1st half of a large field card)
       CHARACTER(LEN=BD_ENTRY_LEN)     :: CARD2              ! 2nd half of a large field card
@@ -76,11 +76,11 @@
       CHARACTER( 1*BYTE)              :: SID_ON_SPCADD_FND  ! 'Y' if B.D. SPC/SPC1 card w/ set ID on SPCADD card found
       CHARACTER( 1*BYTE)              :: SID_ON_LOAD_FND    ! 'Y' if B.D. FORCE/MOMENT/GRAV/PLOAD card w/ set ID on SPCADD card fnd
       CHARACTER( 7*BYTE), PARAMETER   :: END_CARD    = 'ENDDATA'
- 
+
       INTEGER(LONG)                   :: COMMENT_COL        ! Col on CARD where a comment begins (if one exists)
       INTEGER(LONG)                   :: I,J,K,L            ! DO loop indices
       INTEGER(LONG)                   :: IERR               ! Error indicator from subr FFIELD
-      INTEGER(LONG)                   :: IOCHK              ! IOSTAT error number when reading Bulk Data cards from unit IN1 
+      INTEGER(LONG)                   :: IOCHK              ! IOSTAT error number when reading Bulk Data cards from unit IN1
       INTEGER(LONG)                   :: IOR3D              ! Integration order from a PSOLID entry
       INTEGER(LONG)                   :: IPBARL             ! Count of number of PBARL entries as they are read
       INTEGER(LONG)                   :: ELEM_NUM_GRDS      ! Number of grids for an elem
@@ -89,7 +89,7 @@
       INTEGER(LONG)                   :: NS                 ! Actual num SPOINT'ss on CUSERIN
       INTEGER(LONG)                   :: NUM_QUADS          ! Number of quadrilateral elements
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = LOADB_BEGEND
- 
+
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
          CALL OURTIM
@@ -114,15 +114,15 @@
       ENDIF
 
       ! Initialize CC_LOAD_FND
-      
+
       !  CC_LOAD_FND = Character array containing 'Y' or 'N' indicating whether the load
       !           or temperature load requested in Case Control was found in B.D.deck.
-      !           Each row has the following indicators for 1 subcase 
+      !           Each row has the following indicators for 1 subcase
       !            (1) Col 1: indicators for Case Control LOAD
       !            (2) Col 2: indicators for Case Control TEMP
       !            (a) CC_LOAD_FND(I,1) = '0' if there were no LOAD requests in Case Control
       !                            = 'N' if there were LOAD requests in Case Control
-      !            (b) CC_LOAD_FND(I,2) = '0' if there were no TEMP requests in Case Control  
+      !            (b) CC_LOAD_FND(I,2) = '0' if there were no TEMP requests in Case Control
       !                            = 'N' if there were TEMP requests in Case Control
       !           Subroutines BD_FORMOM, BD_GRAV, BD_LOAD, BD_PLOAD2, BD_TEMP, BD_TEMPD, BD_TEMPRP
       !           reset CC_LOAD_FND to 'Y' if a load (or temp) with set ID matching one in a
@@ -137,9 +137,9 @@
             CC_LOAD_FND(I,2) = '0'
          ELSE
             CC_LOAD_FND(I,2) = 'N'
-         ENDIF 
+         ENDIF
       ENDDO
-  
+
 ! **********************************************************************************************************************************
       CARD(1:) = ' '
 
@@ -150,7 +150,7 @@
       MELGP         = 2   ! This max num grids/elem DOF's covers all 2 node/6 comp per node elems
       MELDOF        = 12  ! (other elems will be checked and MELGP, MELDOF reset if necessary)
 
-      ! Process Bulk Data cards in a large loop that runs until either an 
+      ! Process Bulk Data cards in a large loop that runs until either an
       ! ENDDATA card is found or when an error or EOF/EOR occurs
 bdf:  DO
 
@@ -159,7 +159,7 @@ bdf:  DO
          ! Must have this since CARD goes to BD_xxxx, not CARD1.
          ! This will get reset if CARD1 is a large field format
          CARD(1:) = CARD1(1:)
- 
+
          ! Quit if EOF/EOR occurs.
          IF (IOCHK < 0) THEN
             WRITE(ERR,1011) END_CARD
@@ -178,7 +178,7 @@ bdf:  DO
          ENDIF
 
          ! Write out BULK DATA card.
-         IF (ECHO /= 'NONE  ') THEN
+         IF (ECHO(1:4) /= 'NONE') THEN
             WRITE(F06,101) CARD1
          ENDIF
 
@@ -207,7 +207,7 @@ bdf:  DO
                   FATAL_ERR = FATAL_ERR + 1
                   CALL OUTA_HERE ( 'Y' )
                ENDIF
- 
+
                IF (IOCHK > 0) THEN
                   WRITE(ERR,1010) DECK_NAME
                   WRITE(F06,1010) DECK_NAME
@@ -215,8 +215,8 @@ bdf:  DO
                   FATAL_ERR = FATAL_ERR + 1
                   CYCLE
                ENDIF
- 
-               IF (ECHO /= 'NONE  ') THEN
+
+               IF (ECHO(1:4) /= 'NONE') THEN
                   WRITE(F06,101) CARD2
                ENDIF
 
@@ -245,25 +245,25 @@ bdf:  DO
 !xx            ENDIF
 !xx            WRITE(F06,1003)
                CYCLE
-            ENDIF 
+            ENDIF
 
          ENDIF
- 
+
          ! Process Bulk Data card
          !write(err,*) 'cardname', card
          IF((     CARD(1:5) == 'ASET '   ) .OR. (CARD(1:5) == 'ASET*'   ) .OR.                                                     &
-                 (CARD(1:5) == 'OMIT '   ) .OR. (CARD(1:5) == 'OMIT*'   )) THEN 
+                 (CARD(1:5) == 'OMIT '   ) .OR. (CARD(1:5) == 'OMIT*'   )) THEN
             CALL BD_ASET    ( CARD )
- 
-         ELSE IF((CARD(1:5) == 'ASET1'   ) .OR. (CARD(1:5) == 'OMIT1'   )) THEN 
+
+         ELSE IF((CARD(1:5) == 'ASET1'   ) .OR. (CARD(1:5) == 'OMIT1'   )) THEN
             CALL BD_ASET1   ( CARD, LARGE_FLD_INP )
- 
+
          ELSE IF (CARD(1:5) == 'BAROR'   )  THEN
             CALL BD_BAROR   ( CARD )
- 
+
          ELSE IF (CARD(1:6) == 'BEAMOR'  )  THEN
             CALL BD_BEAMOR  ( CARD )
- 
+
          ELSE IF((CARD(1:4) == 'CBAR'    ) .OR. (CARD(1:5) == 'CBEAM'   ))  THEN
             CALL BD_CBAR    ( CARD, LARGE_FLD_INP )
 
@@ -306,14 +306,14 @@ bdf:  DO
 
          ELSE IF (CARD(1:6) == 'CONROD'  )  THEN
             CALL BD_CONROD  ( CARD )
-  
+
          ELSE IF (CARD(1:5) == 'CONM2'   )  THEN
             CALL BD_CONM2   ( CARD, LARGE_FLD_INP )
-  
+
          ELSE IF ((CARD(1:6) == 'CORD1C'  ) .OR. (CARD(1:6) == 'CORD1R'  ) .OR. (CARD(1:6) == 'CORD1S'  ) .OR.                     &
                   (CARD(1:6) == 'CORD2C'  ) .OR. (CARD(1:6) == 'CORD2R'  ) .OR. (CARD(1:6) == 'CORD2S'  )) THEN
             CALL BD_CORD    ( CARD, LARGE_FLD_INP )
-  
+
          ELSE IF (CARD(1:6) == 'CPENTA'  ) THEN
             CALL BD_CPENTA  ( CARD, LARGE_FLD_INP, ELEM_NUM_GRDS )
             ELEM_NUM_DOFS = 6*ELEM_NUM_GRDS
@@ -344,10 +344,10 @@ bdf:  DO
             IF (MELDOF < ELEM_NUM_DOFS) THEN
                MELDOF = ELEM_NUM_DOFS
             ENDIF
-   
+
          ELSE IF (CARD(1:4) == 'CROD'    )  THEN
             CALL BD_CROD    ( CARD )
-  
+
          ELSE IF (CARD(1:6) == 'CSHEAR'  )  THEN
             NUM_QUADS = NUM_QUADS + 1
             CALL BD_CSHEAR  ( CARD, ELEM_NUM_GRDS )
@@ -358,7 +358,7 @@ bdf:  DO
             IF (MELDOF < ELEM_NUM_DOFS) THEN
                MELDOF = ELEM_NUM_DOFS
             ENDIF
-  
+
          ELSE IF (CARD(1:6) == 'CTETRA'  ) THEN
             CALL BD_CTETRA  ( CARD, LARGE_FLD_INP, ELEM_NUM_GRDS )
             ELEM_NUM_DOFS = 6*ELEM_NUM_GRDS
@@ -369,7 +369,7 @@ bdf:  DO
                MELDOF = ELEM_NUM_DOFS
             ENDIF
 
-         ELSE IF (CARD(1:6) == 'CTRIA3'  ) THEN 
+         ELSE IF (CARD(1:6) == 'CTRIA3'  ) THEN
             CALL BD_CTRIA   ( CARD, LARGE_FLD_INP, ELEM_NUM_GRDS )
             ELEM_NUM_DOFS = 6*ELEM_NUM_GRDS
             IF (MELGP < ELEM_NUM_GRDS) THEN
@@ -378,7 +378,7 @@ bdf:  DO
             IF (MELDOF < ELEM_NUM_DOFS) THEN
                MELDOF = ELEM_NUM_DOFS
             ENDIF
-   
+
          ELSE IF (CARD(1:6) == 'CUSER1'  )  THEN
             CALL BD_CUSER1  ( CARD, LARGE_FLD_INP, ELEM_NUM_GRDS )
             ELEM_NUM_DOFS = 6*ELEM_NUM_GRDS
@@ -388,7 +388,7 @@ bdf:  DO
             IF (MELDOF < ELEM_NUM_DOFS) THEN
                MELDOF = ELEM_NUM_DOFS
             ENDIF
-  
+
          ELSE IF (CARD(1:7) == 'CUSERIN' )  THEN
             CALL BD_CUSERIN ( CARD, LARGE_FLD_INP, NG, NS )
             ELEM_NUM_GRDS =   NG + NS
@@ -399,10 +399,10 @@ bdf:  DO
             IF (MELDOF < ELEM_NUM_DOFS) THEN
                MELDOF = ELEM_NUM_DOFS
             ENDIF
-  
+
          ELSE IF (CARD(1:5) == 'DEBUG'   )  THEN
             CALL BD_DEBUG   ( CARD )
-  
+
          ELSE IF((CARD(1:5) == 'EIGR '   ) .OR. (CARD(1:5) == 'EIGR*'   ))  THEN
             CALL BD_EIGR    ( CARD, LARGE_FLD_INP, EIGFND )
 
@@ -411,19 +411,19 @@ bdf:  DO
 
          ELSE IF((CARD(1:5) == 'FORCE'   ) .OR. (CARD(1:6) == 'MOMENT'  )) THEN
             CALL BD_FORMOM  ( CARD, CC_LOAD_FND )
- 
+
          ELSE IF (CARD(1:4) == 'GRAV'    )  THEN
             CALL BD_GRAV    ( CARD, LARGE_FLD_INP, CC_LOAD_FND )
- 
+
          ELSE IF (CARD(1:6) == 'GRDSET'  )  THEN
             CALL BD_GRDSET  ( CARD )
- 
+
          ELSE IF (CARD(1:4) == 'GRID'    )  THEN
             CALL BD_GRID    ( CARD )
- 
+
          ELSE IF (CARD(1:4) == 'LOAD'    )  THEN
             CALL BD_LOAD    ( CARD, LARGE_FLD_INP, CC_LOAD_FND )
- 
+
          ELSE IF (CARD(1:4) == 'MAT1'    )  THEN
             CALL BD_MAT1    ( CARD, LARGE_FLD_INP )
 
@@ -432,7 +432,7 @@ bdf:  DO
 
          ELSE IF (CARD(1:4) == 'MAT8'    )  THEN
             CALL BD_MAT8    ( CARD, LARGE_FLD_INP )
-  
+
          ELSE IF (CARD(1:4) == 'MAT9'    )  THEN
             CALL BD_MAT9    ( CARD, LARGE_FLD_INP )
 
@@ -450,16 +450,16 @@ bdf:  DO
                WRITE(ERR,101) CARD
                WRITE(ERR,9993) PROG_NAME
                IF (SUPWARN == 'N') THEN
-                  IF (ECHO == 'NONE  ') THEN
+                  IF (ECHO(1:4) /= 'NONE') THEN
                      WRITE(F06,101) CARD
                   ENDIF
                   WRITE(F06,9993) PROG_NAME
                ENDIF
             ENDIF
- 
+
          ELSE IF (CARD(1:5) == 'PARAM'   )  THEN
             CALL BD_PARAM   ( CARD )
- 
+
          ELSE IF((CARD(1:7) == 'PARVEC ' ) .OR. (CARD(1:7) == 'PARVEC*'  )) THEN
             CALL BD_PARVEC   ( CARD )
 
@@ -468,54 +468,54 @@ bdf:  DO
 
          ELSE IF((CARD(1:5) == 'PBAR '   ) .OR. (CARD(1:5) == 'PBAR*'   ))  THEN
             CALL BD_PBAR    ( CARD, LARGE_FLD_INP )
- 
+
          ELSE IF (CARD(1:5) == 'PBARL'   )  THEN
             CALL BD_PBARL    ( CARD, LARGE_FLD_INP, SEC_TYPE )
             IPBARL = IPBARL + 1
             PBARL_SEC_TYPES(IPBARL) = SEC_TYPE
- 
+
          ELSE IF (CARD(1:5) == 'PBEAM'   )  THEN
             CALL BD_PBEAM   ( CARD, LARGE_FLD_INP )
- 
+
          ELSE IF (CARD(1:5) == 'PBUSH'   )  THEN
             CALL BD_PBUSH   ( CARD, LARGE_FLD_INP )
 
          ELSE IF (CARD(1:5) == 'PCOMP'   )  THEN
             CALL BD_PCOMP   ( CARD, LARGE_FLD_INP )
- 
+
          ELSE IF (CARD(1:6) == 'PCOMP1'  )  THEN
             CALL BD_PCOMP1  ( CARD, LARGE_FLD_INP )
- 
+
          ELSE IF (CARD(1:5) == 'PELAS'   )  THEN
             CALL BD_PELAS   ( CARD )
- 
+
          ELSE IF (CARD(1:6) == 'PLOAD4'  )  THEN
             CALL BD_PLOAD4  ( CARD, CC_LOAD_FND )
- 
+
          ELSE IF (CARD(1:6) == 'PLOAD2'  )  THEN
             CALL BD_PLOAD2  ( CARD, CC_LOAD_FND )
- 
+
          ELSE IF (CARD(1:6) == 'PLOTEL'  )  THEN
             CALL BD_PLOTEL  ( CARD )
- 
+
          ELSE IF (CARD(1:5) == 'PMASS'   )  THEN
             CALL BD_PMASS   ( CARD )
- 
+
          ELSE IF (CARD(1:4) == 'PROD'    )  THEN
             CALL BD_PROD    ( CARD )
-  
+
          ELSE IF (CARD(1:6) == 'PSHEAR'  )  THEN
             CALL BD_PSHEAR  ( CARD )
-  
+
          ELSE IF (CARD(1:6) == 'PSHELL'  )  THEN
             CALL BD_PSHEL   ( CARD, LARGE_FLD_INP )
-  
+
          ELSE IF (CARD(1:6) == 'PSOLID'  )  THEN
             CALL BD_PSOLID  ( CARD, IOR3D )
             IF (IOR3D > IOR3D_MAX) THEN
                IOR3D_MAX = IOR3D
             ENDIF
-  
+
          ELSE IF (CARD(1:6) == 'PUSER1'  )  THEN
             CALL BD_PUSER1  ( CARD, LARGE_FLD_INP )
 
@@ -546,7 +546,7 @@ bdf:  DO
                WRITE(ERR,101) CARD
                WRITE(ERR,1021) GRIDSEQ
                IF (SUPWARN == 'N') THEN
-                  IF (ECHO == 'NONE  ') THEN
+                  IF (ECHO(1:4) /= 'NONE') THEN
                      WRITE(F06,101) CARD
                   ENDIF
                   WRITE(F06,1021) GRIDSEQ
@@ -595,9 +595,9 @@ bdf:  DO
          ELSE IF ((CARD(1:1) == '$') .OR. (CARD(1:BD_ENTRY_LEN) == ' ')) THEN
             CYCLE
 
-         ELSE IF (CARD(1:7) == 'ENDDATA' )  THEN 
+         ELSE IF (CARD(1:7) == 'ENDDATA' )  THEN
             EXIT
-         ELSE IF ((CARD(1:1) == ' ') .OR. (CARD(1:1) == '+') .OR. (CARD(1:1) == '*'))  THEN 
+         ELSE IF ((CARD(1:1) == ' ') .OR. (CARD(1:1) == '+') .OR. (CARD(1:1) == '*'))  THEN
             !WRITE(ERR,*) 'FAILED WHEN FINDING A CONTINUATION'
             !WRITE(F06,*) 'FAILED WHEN FINDING A CONTINUATION'
             ! only defined when it's a large field continuation
@@ -611,7 +611,7 @@ bdf:  DO
             WRITE(ERR,9993) PROG_NAME
             flush(err)
             IF (SUPWARN == 'N') THEN
-               IF (ECHO == 'NONE  ') THEN
+               IF (ECHO(1:4) /= 'NONE') THEN
                   WRITE(F06,101) CARD
                ENDIF
                WRITE(F06,9993) PROG_NAME
@@ -631,7 +631,7 @@ bdf:  DO
          IF((NCSHEAR   > 0)) THEN
             MESSAG1= ' *WARNING: BUCKLING and DIFFERN SOL are only coded for the BAR, HEXA, PENTA, TETRA, TRIA, and QUAD elements'
             MESSAG2= '           Either remove all other elements or include a Bulk Data entry: DEBUG   201, with value /= 0'
-            IF (DEBUG(201) == 0) THEN 
+            IF (DEBUG(201) == 0) THEN
                WRITE(F06,*) MESSAG1
                WRITE(F06,*) MESSAG2
                WRITE(ERR,*) MESSAG1
@@ -703,7 +703,7 @@ bdf:  DO
                      WRITE(F06,1027) RPBAR(I, 6),RPBAR(I, 7),RPBAR(I, 8),RPBAR(I, 9),RPBAR(I,10),RPBAR(I,11),RPBAR(I,12),RPBAR(I,13)
                      WRITE(F06,1027) RPBAR(I,14),RPBAR(I,15),RPBAR(I,16)
                      WRITE(F06,*)
-                  ENDIF 
+                  ENDIF
                ENDDO
             ENDIF
          ENDIF
@@ -719,7 +719,7 @@ bdf:  DO
       ! Determine max num of indep grids on MPC's and rigid elems
       ! (for dimensioning array MPC_IND_GRIDS)
       LIND_GRDS_MPCS = NMPC*MMPC + 2*NRBAR + 6*NRBE1 + NRBE2 + 2*NRSPLINE
- 
+
       ! Determine the max number of BEi, SEi strain/stress recovery matrices
       ! will be needed for this execution
       CALL CALC_MAX_STRESS_POINTS
@@ -736,7 +736,7 @@ bdf:  DO
          ENDIF
       ENDIF
 
-      ! Give error if more than 1 BAROR, BEAMOR or GRDSET card was in 
+      ! Give error if more than 1 BAROR, BEAMOR or GRDSET card was in
       ! Bulk Data (these counted by BD_BAROR0, BD_BEAMOR0, BD_GRDSET0)
       IF (NBAROR > 1) THEN
          FATAL_ERR = FATAL_ERR + 1
@@ -751,7 +751,7 @@ bdf:  DO
       ENDIF
 
       IF (NGRDSET > 1) THEN
-         FATAL_ERR = FATAL_ERR + 1    
+         FATAL_ERR = FATAL_ERR + 1
          WRITE(ERR,1023)
          WRITE(F06,1023)
       ENDIF
@@ -782,10 +782,10 @@ bdf:  DO
             FATAL_ERR = FATAL_ERR + 1
          ENDIF
       ENDIF
-  
+
       ! Check SPC entries
       ! -----------------
-      
+
       ! (a) If SPC was requested in CASE CONTROL, we should have found a Bulk Data SPC, SPC1 or MPCADD with SID matching C.C SPC SID
       IF (CC_SPC_FND == 'N') THEN
          CONSTR_TYPE = 'SPC'
@@ -804,7 +804,7 @@ bdf:  DO
                   IF (SPCADD_SIDS(I,K) == SPC_SIDS(L)) THEN
                      SID_ON_SPCADD_FND = 'Y'
                   ENDIF
-               ENDDO   
+               ENDDO
                DO L=1,NSPC1
                   IF (SPCADD_SIDS(I,K) == SPC1_SIDS(L)) THEN
                      SID_ON_SPCADD_FND = 'Y'
@@ -815,9 +815,9 @@ bdf:  DO
                   WRITE(F06,1018) SPCADD_SIDS(I,K),SPCADD_SIDS(I,1)
                   FATAL_ERR = FATAL_ERR + 1
                ENDIF
-            ENDDO   
+            ENDDO
          ENDIF
-      ENDDO   
+      ENDDO
 
 ! Check MPC entries
 ! -----------------
@@ -842,17 +842,17 @@ bdf:  DO
                   IF (MPCADD_SIDS(I,K) == MPC_SIDS(L)) THEN
                      SID_ON_MPCADD_FND = 'Y'
                   ENDIF
-               ENDDO   
+               ENDDO
                IF (SID_ON_MPCADD_FND == 'N') THEN
                   WRITE(ERR,1015) MPCADD_SIDS(I,K),MPCADD_SIDS(I,1)
                   WRITE(F06,1015) MPCADD_SIDS(I,K),MPCADD_SIDS(I,1)
                   FATAL_ERR = FATAL_ERR + 1
                ENDIF
-            ENDDO   
+            ENDDO
          ENDIF
-      ENDDO   
+      ENDDO
 
-! (c) If there are MPC's, create array MPCSIDS (which has 1 entry if there is any B.D. MPC and > 1 entry if there are MPCADD's. 
+! (c) If there are MPC's, create array MPCSIDS (which has 1 entry if there is any B.D. MPC and > 1 entry if there are MPCADD's.
 !     The first one in the array is the MPC set ID called for in Case Control. Subsequent ones are the set ID's from any
 !     MPCADD cards that have the set ID called for in Case Control. So, if there are 2 MPCADD's that have the same ID as
 !     called for in Case Control and there are (for example) 12 individual MPC set ID's identified on these
@@ -871,7 +871,7 @@ j_do1:         DO J=2,LMPCADDC
                      NUM_MPCSIDS = NUM_MPCSIDS + 1
                      CYCLE j_do1
                   ELSE
-                     EXIT j_do1 
+                     EXIT j_do1
                   ENDIF
                ENDDO j_do1
             ENDIF
@@ -891,7 +891,7 @@ j_do2:            DO J=2,LMPCADDC
                         MPCSIDS(K) = MPCADD_SIDS(I,J)
                         CYCLE j_do2
                      ELSE
-                        EXIT j_do2 
+                        EXIT j_do2
                      ENDIF
                   ENDDO j_do2
                ENDIF
@@ -900,7 +900,7 @@ j_do2:            DO J=2,LMPCADDC
 
             ! (d) Check for duplicate MPC set ID's on MPCADD. There was a
             !     check on each MPCADD entry read in subr BD_MPCADD but no
-            !     check was made across duplicate MPCADD entries (i.e. 
+            !     check was made across duplicate MPCADD entries (i.e.
             !     there may be more than 1 MPCADD entry with the same set ID
             !     and we need to make sure that an MPC set ID on the 2nd, etc.,
             !     is not the same as one on the 1st, etc)
@@ -930,7 +930,7 @@ j_do2:            DO J=2,LMPCADDC
            WRITE(F06,1008) SUBLOD(I,2)
            FATAL_ERR = FATAL_ERR + 1
         ENDIF
-      ENDDO   
+      ENDDO
 
       ! Check to make sure that all forces, moments and GRAV cards requested
       ! on LOAD Bulk Data cards are in the deck
@@ -944,27 +944,27 @@ j_do2:            DO J=2,LMPCADDC
                      IF (LOAD_SIDS(I,K) == FORMOM_SIDS(L)) THEN
                         SID_ON_LOAD_FND = 'Y'
                      ENDIF
-                  ENDDO   
+                  ENDDO
                   DO L=1,NGRAV
                      IF (LOAD_SIDS(I,K) == GRAV_SIDS(L)) THEN
                         SID_ON_LOAD_FND = 'Y'
                      ENDIF
-                  ENDDO   
+                  ENDDO
                   DO L=1,NPLOAD
                      IF (LOAD_SIDS(I,K) == PRESS_SIDS(L)) THEN
                         SID_ON_LOAD_FND = 'Y'
                      ENDIF
-                  ENDDO   
+                  ENDDO
                   DO L=1,NRFORCE
                      IF (LOAD_SIDS(I,K) == RFORCE_SIDS(L)) THEN
                         SID_ON_LOAD_FND = 'Y'
                      ENDIF
-                  ENDDO   
+                  ENDDO
                   DO L=1,NSLOAD
                      IF (LOAD_SIDS(I,K) == SLOAD_SIDS(L)) THEN
                         SID_ON_LOAD_FND = 'Y'
                      ENDIF
-                  ENDDO   
+                  ENDDO
                   IF (SID_ON_LOAD_FND == 'N') THEN
                      WRITE(ERR,1009) LOAD_SIDS(I,K),LOAD_SIDS(I,1),SCNUM(J)
                      WRITE(F06,1009) LOAD_SIDS(I,K),LOAD_SIDS(I,1),SCNUM(J)
@@ -976,7 +976,7 @@ j_do2:            DO J=2,LMPCADDC
       ENDDO
 
       ! Write message regarding max number of elem grids/DOF's
-      MDT = MAX(MTDAT_TEMPP1, MTDAT_TEMPRB, MELGP+3, 5)    
+      MDT = MAX(MTDAT_TEMPP1, MTDAT_TEMPRB, MELGP+3, 5)
       WRITE(F06,*)
       WRITE(ERR,1197) MELGP, MELDOF
       IF (SUPINFO == 'N') THEN
@@ -1006,7 +1006,7 @@ j_do2:            DO J=2,LMPCADDC
  1008 FORMAT(' *ERROR  1008: NO TEMPERATURE ENTRY WAS FOUND IN BULK DATA DECK MATCHING SID = ',I8,' REQUESTED IN CASE CONTROL')
 
  1009 FORMAT(' *ERROR  1009: MISSING FORCE, MOMENT, GRAV OR PLOAD ENTRY WITH SID =',I8,' ON LOAD ENTRY WITH SID = ',I8,            &
-                           ' FOR SUBCASE ',I8)     
+                           ' FOR SUBCASE ',I8)
 
  1010 FORMAT(' *ERROR  1010: ERROR READING FOLLOWING ',A,' ENTRY. ENTRY IGNORED')
 
@@ -1014,9 +1014,9 @@ j_do2:            DO J=2,LMPCADDC
 
  1012 FORMAT(' *ERROR  1012: IMBEDDED BLANKS FOUND IN FIELD ',I2,' NOT ALLOWED')
 
- 1015 FORMAT(' *ERROR  1015: MISSING MPC OR MPC1 ENTRY WITH SID =',I8,' REQUESTED ON MPCADD ENTRY SID = ',I8)     
+ 1015 FORMAT(' *ERROR  1015: MISSING MPC OR MPC1 ENTRY WITH SID =',I8,' REQUESTED ON MPCADD ENTRY SID = ',I8)
 
- 1018 FORMAT(' *ERROR  1018: MISSING SPC OR SPC1 ENTRY WITH SID =',I8,' REQUESTED ON SPCADD ENTRY SID = ',I8)     
+ 1018 FORMAT(' *ERROR  1018: MISSING SPC OR SPC1 ENTRY WITH SID =',I8,' REQUESTED ON SPCADD ENTRY SID = ',I8)
 
  1019 FORMAT(' *ERROR  1019: THE GRID TO BE USED AS REFERENCE IN THE GRID POINT EQUIL CHECK, ',I8,', CANNOT BE AN SPOINT')
 
@@ -1070,7 +1070,7 @@ j_do2:            DO J=2,LMPCADDC
                                  ' fatal error'                                                                                    &
                     ,/,14X,'    f) If CONMi''s are connected to SPOINT''s the offset and moment of inertia terms are ignored'      &
                     ,/,14X,'    g) Terms in matrix RBGLOBAL (rigid body displ matrix) for SPOINT''s are zero which will probably'  &
-                    ,/,14x,'       result in incorrect stiffness matrix equilibrium checks for models with SPOINT''s') 
+                    ,/,14x,'       result in incorrect stiffness matrix equilibrium checks for models with SPOINT''s')
 
 
 
@@ -1079,9 +1079,9 @@ j_do2:            DO J=2,LMPCADDC
 ! **********************************************************************************************************************************
 
 ! ##################################################################################################################################
- 
+
       CONTAINS
- 
+
 ! ##################################################################################################################################
 
       SUBROUTINE CALC_MAX_STRESS_POINTS
@@ -1133,7 +1133,7 @@ j_do2:            DO J=2,LMPCADDC
       integer                    :: I, J
       CHARACTER(26), parameter   :: UPP = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
       CHARACTER(26), parameter   :: LOW = 'abcdefghijklmnopqrstuvwxyz'
-      
+
       DO I = 1,256
           ! remove $
           IF (LINE(I:I) == '$') THEN
@@ -1149,7 +1149,7 @@ j_do2:            DO J=2,LMPCADDC
 
       !---------------------------------------------------------
       SUBROUTINE READ_BDF_LINE(IN1, IOCHK, LINE)
-      
+
       ! it seems like there should be a better way to write an upper function...
       ! https://en.wikibooks.org/wiki/Fortran/strings
       USE IOUNT1, ONLY                :  ERR, INFILE, F06 !, F04
@@ -1173,7 +1173,7 @@ j_do2:            DO J=2,LMPCADDC
       FATAL_ERR = 0
 
       READ(IN1,101,IOSTAT=IOCHK) LINE
-      
+
       TRIM_LINE = TRIM(LINE)
       DO WHILE(TRIM_LINE(1:1) == '$')
          IF (IOCHK /= 0) THEN
@@ -1184,7 +1184,7 @@ j_do2:            DO J=2,LMPCADDC
          READ(IN1,101,IOSTAT=IOCHK) LINE
          TRIM_LINE = TRIM(LINE)
       ENDDO
-      
+
       DO I = 1,256
           ! remove $
           IF (LINE(I:I) == '$') THEN
