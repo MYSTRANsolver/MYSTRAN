@@ -125,6 +125,7 @@ set(F2C_DIR "${PROJECT_SOURCE_DIR}/f2c")
 set(F2C_INCLUDE_DIR "${F2C_DIR}/include")
 set(F2C_FN "${F2C_DIR}/libf2c.zip")
 set(F2C_URL "https://www.netlib.org/f2c/libf2c.zip")
+set(PLAT "_OPENMP" CACHE STRING "threading flavor _PTHREAD/_OPENMP" FORCE)
 
 # download f2c
 if(NOT EXISTS ${F2C_DIR})
@@ -271,8 +272,8 @@ add_executable(
 )
 
 # determine which superlu variant to link against
-set (PLAT "_PTHREAD" CACHE STRING "threading flavor _PTHREAD/_OPENMP")
 if (PLAT STREQUAL "_PTHREAD")
+  message(WARNING "We recommend using OpenMP, not pthread!")
   target_link_libraries(mystran superlu_mt_PTHREAD f2c)
 elseif (PLAT STREQUAL "_OPENMP")
   target_link_libraries(mystran superlu_mt_OPENMP f2c)
