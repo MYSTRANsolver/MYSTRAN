@@ -80,52 +80,73 @@ if(GIT_FOUND AND EXISTS "${PROJECT_SOURCE_DIR}/.git")
   endif()
 endif()
 
+
+set(SUPERLU_DIR "${PROJECT_SOURCE_DIR}/superlu")
 set(SUPERLU_MT_DIR "${PROJECT_SOURCE_DIR}/superlu_mt")
 set(SUPERLU_PATCHES_DIR "${PROJECT_SOURCE_DIR}/superlu_mt_patches")
-message(STATUS "Applying patches to SuperLU_MT...")
-file(GLOB_RECURSE PATCH_FILES RELATIVE "${SUPERLU_PATCHES_DIR}" "${SUPERLU_PATCHES_DIR}/*")
 
-foreach(file IN LISTS PATCH_FILES)
-  set(src "${SUPERLU_PATCHES_DIR}/${file}")
-  set(dst "${SUPERLU_MT_DIR}/${file}")
-
-  # ensure the destination directory exists
-  get_filename_component(dst_dir "${dst}" DIRECTORY)
-  file(MAKE_DIRECTORY "${dst_dir}")
-
-  # print the file being copied
-  message(STATUS "  Patching: ${file}")
-
-  # copy the file
-  file(COPY "${src}" DESTINATION "${dst_dir}")
-endforeach()
-message(STATUS "SuperLU_MT patched.")
-
-if(NOT EXISTS "${SUPERLU_MT_DIR}/CMakeLists.txt")
-  message(
-    FATAL_ERROR
-    "The SuperLU_MT submodule was not downloaded. You have to do it manually!"
-  )
-endif()
-
-# set some SuperLU settings
 set(enable_examples OFF)
 set(enable_tests OFF)
+
+if (USE_SUPERLU_MT)
+  message(STATUS "Will link against faster SuperLU_MT.")
+  set(PLAT "_OPENMP" CACHE STRING "threading flavor _PTHREAD/_OPENMP" FORCE)
+  message(STATUS "Applying patches to SuperLU_MT...")
+  file(GLOB_RECURSE PATCH_FILES RELATIVE "${SUPERLU_PATCHES_DIR}" "${SUPERLU_PATCHES_DIR}/*")
+
+  foreach(file IN LISTS PATCH_FILES)
+    set(src "${SUPERLU_PATCHES_DIR}/${file}")
+    set(dst "${SUPERLU_MT_DIR}/${file}")
+
+    # ensure the destination directory exists
+    get_filename_component(dst_dir "${dst}" DIRECTORY)
+    file(MAKE_DIRECTORY "${dst_dir}")
+
+    # print the file being copied
+    message(STATUS "  Patching: ${file}")
+
+    # copy the file
+    file(COPY "${src}" DESTINATION "${dst_dir}")
+  endforeach()
+  message(STATUS "SuperLU_MT patched.")
+
+  if(NOT EXISTS "${SUPERLU_MT_DIR}/CMakeLists.txt")
+    message(
+      FATAL_ERROR
+      "The SuperLU_MT submodule was not downloaded. You have to do it manually!"
+    )
+  endif()
+
+  include_directories("${SUPERLU_MT_DIR}/SRC")
+  add_subdirectory(${SUPERLU_MT_DIR})
+  set(SLU_DRIVER "${SUPERLU_MT_DIR}/SRC/c_fortran_pdgssv.c")
+else()
+  message(STATUS "Will link against regular SuperLU.")
+  if(NOT EXISTS "${SUPERLU_DIR}/CMakeLists.txt")
+    message(
+      FATAL_ERROR
+      "The SuperLU submodule was not downloaded. You have to do it manually!"
+    )
+  endif()
+  include_directories("${SUPERLU_DIR}/SRC")
+  add_subdirectory(${SUPERLU_DIR})
+  set(SLU_DRIVER "${SUPERLU_DIR}/FORTRAN/c_fortran_dgssv.c")
+endif()
+
+
+# set some SuperLU settings
 
 # set(enable_internal_blaslib "yes")
 
 # include & build it
 # include_directories("${SUPERLU_DIR}/SRC")
 # add_subdirectory(${SUPERLU_DIR})
-include_directories("${SUPERLU_MT_DIR}/SRC")
-add_subdirectory(${SUPERLU_MT_DIR})
 
 # f2c stuff
 set(F2C_DIR "${PROJECT_SOURCE_DIR}/f2c")
 set(F2C_INCLUDE_DIR "${F2C_DIR}/include")
 set(F2C_FN "${F2C_DIR}/libf2c.zip")
 set(F2C_URL "https://www.netlib.org/f2c/libf2c.zip")
-set(PLAT "_OPENMP" CACHE STRING "threading flavor _PTHREAD/_OPENMP" FORCE)
 
 # download f2c
 if(NOT EXISTS ${F2C_DIR})
@@ -199,10 +220,14 @@ if(WIN32)
 endif()
 
 # collect all fortran source files
-file(GLOB_RECURSE ALL_FORTRAN_FILES "${CMAKE_SOURCE_DIR}/*.f*")
-
-# collect the C files in UTIL
-file(GLOB_RECURSE ALL_C_FILES "${CMAKE_SOURCE_DIR}/UTIL/*.c")
+file(GLOB_RECURSE ALL_FORTRAN_FILES
+  "${CMAKE_SOURCE_DIR}/*.f"
+  "${CMAKE_SOURCE_DIR}/*.f90"
+  "${CMAKE_SOURCE_DIR}/*.F90"
+  "${CMAKE_SOURCE_DIR}/*.F"
+  "${CMAKE_SOURCE_DIR}/*.F95"
+  "${CMAKE_SOURCE_DIR}/*.f95"
+)
 
 # same BLAS-finding subroutine as SuperLU
 if(NOT enable_internal_blaslib)
@@ -267,18 +292,22 @@ endif()
 add_executable(
   mystran
   ${ALL_FORTRAN_FILES}
-  ${ALL_C_FILES}
+  ${SLU_DRIVER}
   ${missing_blas_src}
 )
 
 # determine which superlu variant to link against
-if (PLAT STREQUAL "_PTHREAD")
-  message(WARNING "We recommend using OpenMP, not pthread!")
-  target_link_libraries(mystran superlu_mt_PTHREAD f2c)
-elseif (PLAT STREQUAL "_OPENMP")
-  target_link_libraries(mystran superlu_mt_OPENMP f2c)
-endif ()
-
+if (USE_SUPERLU_MT)
+  if (PLAT STREQUAL "_PTHREAD")
+    message(WARNING "We recommend using OpenMP, not pthread!")
+    target_link_libraries(mystran superlu_mt_PTHREAD f2c)
+  elseif (PLAT STREQUAL "_OPENMP")
+    target_link_libraries(mystran superlu_mt_OPENMP f2c)
+  endif()
+  target_compile_definitions(mystran PRIVATE USE_SUPERLU_MT)
+else()
+  target_link_libraries(mystran superlu f2c)
+endif()
 
 # if (MISSING_FNS_TOTAL GREATER 0)
 # target_link_libraries(mystran my_blas)

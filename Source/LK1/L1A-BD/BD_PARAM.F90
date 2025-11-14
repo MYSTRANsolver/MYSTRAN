@@ -2946,6 +2946,9 @@ do_i:    DO I=1,JCARD_LEN
 
          !WRITE(*,*) 'K6ROT = ', K6ROT
 
+! This guard is necessary since the SLU_SET_* subroutines are only present when
+! linking against SuperLU_MT. That's why this file is .F90 and not .f90. Sorry!
+#ifdef USE_SUPERLU_MT
       ! SuperLU_MT memory growth factors
       ELSE IF (JCARD(2)(1:7) == 'SPIENV6') THEN
          PARNAM = 'SPIENV6 '
@@ -2993,7 +2996,7 @@ do_i:    DO I=1,JCARD_LEN
          CALL BD_IMBEDDED_BLANK   ( JCARD,0,3,0,0,0,0,0,0 )! Make sure that there are no imbedded blanks in field 3
          CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,4,5,6,7,8,9 )! Issue warning if fields 4-9 not blank
          CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
-
+#endif
 
 ! PARAM parameter name not recognized
 
