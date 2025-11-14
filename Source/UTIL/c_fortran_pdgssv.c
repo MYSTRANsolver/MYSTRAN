@@ -208,6 +208,33 @@ void c_fortran_pdgssv_(int *iopt, int *n, int_t *nnz, int *nrhs, int *nprocs,
   }
 }
 
+int c_side_slu_nthr = 1;
+
+
+#if (MACH == OPENMP)
+#include <omp.h>
+int sys_nproc() { return omp_get_max_threads(); }
+#else
+#warning "we're supposed to use SuperLU_MT with OpenMP!"
+int sys_nproc() { return 1; }
+#endif
+
+
+/* this can also be called from Fortran, to set the number of threads via
+ * the SLU_NTHR PARAM.
+ */
+void slu_set_nthr_(int *nthr) {
+  if (*nthr > 0) {
+    c_side_slu_nthr = *nthr;
+  } else {
+    c_side_slu_nthr = sys_nproc();
+  }
+  printf("SuperLU will use %d threads.\n", c_side_slu_nthr);
+}
+
+
+
+/* follows the signature we're used to from the single-threaded driver. */
 void c_fortran_dgssv_(int *iopt, int *n, int_t *nnz, int *nrhs,
                       double *values, int_t *rowind, int_t *colptr,
                       double *b, int *ldb,
@@ -215,7 +242,6 @@ void c_fortran_dgssv_(int *iopt, int *n, int_t *nnz, int *nrhs,
                                           pointing to the factored matrices */
                       int_t *info)
 {
-  int nprocs = 12;
   c_fortran_pdgssv_(
-      iopt, n, nnz, nrhs, &nprocs, values, rowind, colptr, b, ldb, f_factors, info);
+      iopt, n, nnz, nrhs, &c_side_slu_nthr, values, rowind, colptr, b, ldb, f_factors, info);
 }
