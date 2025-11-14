@@ -229,7 +229,7 @@ void slu_set_nthr_(int *nthr) {
   } else {
     c_side_slu_nthr = sys_nproc();
   }
-  printf("SuperLU will use %d threads.\n", c_side_slu_nthr);
+  printf("    SuperLU_MT will use %d threads.\n", c_side_slu_nthr);
 }
 
 
