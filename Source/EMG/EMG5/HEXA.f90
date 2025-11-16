@@ -41,7 +41,7 @@
       USE IOUNT1, ONLY                :  WRT_ERR, WRT_LOG, ERR, F04, F06
       USE SCONTR, ONLY                :  BLNK_SUB_NAM, FATAL_ERR, MAX_ORDER_GAUSS, MELDOF, MPLOAD4_3D_DATA, NPLOAD4_3D, NSUB, NTSUB
       USE TIMDAT, ONLY                :  TSEC
-      USE CONSTANTS_1, ONLY           :  QUARTER, HALF, ZERO, ONE, EIGHT
+      USE CONSTANTS_1, ONLY           :  QUARTER, HALF, ZERO, ONE
       USE DEBUG_PARAMETERS, ONLY      :  DEBUG
       USE SUBR_BEGEND_LEVELS, ONLY    :  HEXA_BEGEND
       USE PARAMS, ONLY                :  EPSIL
@@ -49,8 +49,9 @@
       USE MODEL_STUF, ONLY            :  AGRID, ALPVEC, BE1, BE2, DT, EID, ELGP, NUM_EMG_FATAL_ERRS, ES, KE, KED, ME,              &
                                          NUM_EMG_FATAL_ERRS, PLOAD4_3D_DATA, PPE, PRESS, PTE, RHO, SE1, SE2, STE1, STRESS, TREF,   &
                                          TYPE, XEL
-
       USE HEXA_USE_IFs
+      USE LUMP_MASS_Interface
+
 
       IMPLICIT NONE
 
@@ -126,7 +127,6 @@
       REAL(DOUBLE)                    :: JAC(3,3)               ! An output from subr JAC3D, called herein. 3 x 3 Jacobian matrix.
       REAL(DOUBLE)                    :: JACI(3,3)              ! An output from subr JAC3D, called herein. 3 x 3 Jacobian inverse.
       REAL(DOUBLE)                    :: KWW(3,3)               ! Portion of differential stiffness matrix
-      REAL(DOUBLE)                    :: M0                     ! An intermediate variable used in calc elem mass, ME
       REAL(DOUBLE)                    :: PSH(ELGP)              ! Output from subr SHP3DH. Shape fcn at Gauss pts SSI, SSJ
       REAL(DOUBLE)                    :: PSIGN                  !
       REAL(DOUBLE)                    :: SIGxx                  ! Normal stress in the elem x  direction
@@ -145,7 +145,8 @@
       REAL(DOUBLE)                    :: TGAUSS(1,NTSUB)        ! Temp at a Gauss point for a theral subcase
       REAL(DOUBLE)                    :: VOLUME                 ! 3D element volume
       REAL(DOUBLE)                    :: SSI,SSJ,SSK            ! Isoparametric coordinates of a point.
-
+      REAL(DOUBLE)                    :: M_1DOF(ELGP,ELGP)      ! Consistent mass matrix with 1 DOF per node.
+      
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
          CALL OURTIM
@@ -224,39 +225,32 @@
 
       IF (OPT(1) == 'Y') THEN
 
-         M0 = (RHO(1))*VOLUME/EIGHT
+         ! Consistent mass matrix
+         ! ME = ∫ N' ρ N det(J) dv
 
-         ME( 1 ,1) = M0
-         ME( 2 ,2) = M0
-         ME( 3 ,3) = M0
+         M_1DOF(:,:) = ZERO
+         GAUSS_PT = 0
+         CALL ORDER_GAUSS ( IORD, SSS, HHH )
+         DO K=1,IORD
+            DO J=1,IORD
+               DO I=1,IORD
+                  GAUSS_PT = GAUSS_PT + 1
 
-         ME( 7 ,7) = M0
-         ME( 8 ,8) = M0
-         ME( 9 ,9) = M0
+                  CALL SHP3DH ( I, J, K, ELGP, SUBR_NAME, IORD_MSG, IORD, SSS(I), SSS(J), SSS(K), 'N', PSH, DPSHG )
+                  INTFAC = DETJ(GAUSS_PT)*HHH(I)*HHH(J)*HHH(K)
 
-         ME(13,13) = M0
-         ME(14,14) = M0
-         ME(15,15) = M0
+                  DO L=1,ELGP
+                     DO M=1,ELGP
+                        M_1DOF(L,M) = M_1DOF(L,M) + PSH(L) * PSH(M) * RHO(1) * INTFAC
+                     ENDDO
+                  ENDDO
 
-         ME(19,19) = M0
-         ME(20,20) = M0
-         ME(21,21) = M0
+               ENDDO
+            ENDDO
+         ENDDO
 
-         ME(25,25) = M0
-         ME(26,26) = M0
-         ME(27,27) = M0
 
-         ME(31,31) = M0
-         ME(32,32) = M0
-         ME(33,33) = M0
-
-         ME(37,37) = M0
-         ME(38,38) = M0
-         ME(39,39) = M0
-
-         ME(43,43) = M0
-         ME(44,44) = M0
-         ME(45,45) = M0
+         CALL LUMP_MASS( M_1DOF )
 
       ENDIF
 

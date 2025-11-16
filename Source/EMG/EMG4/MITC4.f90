@@ -39,7 +39,7 @@
       USE SCONTR, ONLY                :  BLNK_SUB_NAM, FATAL_ERR, MAX_ORDER_GAUSS, MAX_STRESS_POINTS, NTSUB, NSUB
       USE NONLINEAR_PARAMS, ONLY      :  LOAD_ISTEP
       USE MODEL_STUF, ONLY            :  NUM_EMG_FATAL_ERRS, PCOMP_PROPS, ELGP, ES, KE, EM, EB, ET, BE1, BE2, BE3, PHI_SQ,         &
-                                         FCONV, EPROP, PTE, ALPVEC, TREF, DT, PPE, PRESS, MASS_PER_UNIT_AREA, ME,                  &
+                                         FCONV, EPROP, PTE, ALPVEC, TREF, DT, PPE, PRESS, MASS_PER_UNIT_AREA,                      &
                                          NUM_PLIES, PCOMP_LAM, PLY_NUM, TPLY, STRESS, KED
       USE CONSTANTS_1, ONLY           :  ZERO, ONE, TWO, FOUR
 
@@ -60,6 +60,7 @@
       USE CROSS_Interface
       USE MITC_SHAPE_FUNCTIONS_Interface
       USE MITC_COVARIANT_BASIS_Interface
+      USE LUMP_MASS_Interface
 
       IMPLICIT NONE
 
@@ -112,7 +113,7 @@
       REAL(DOUBLE)                    :: BMI(6,6*ELGP)     ! Strain-displ matrix for membrane for one Gauss point
       REAL(DOUBLE)                    :: BBI(6,6*ELGP)     ! Strain-displ matrix for bending for one Gauss point
       REAL(DOUBLE)                    :: BSI(6,6*ELGP)     ! Strain-displ matrix for shear for one Gauss point
-      REAL(DOUBLE)                    :: M_1DOF(ELGP,ELGP)
+      REAL(DOUBLE)                    :: M_1DOF(ELGP,ELGP) ! Consistent mass matrix with 1 DOF per node.
       REAL(DOUBLE)                    :: DENSITY
       REAL(DOUBLE)                    :: FORCEx(IORD_STRESS_Q4*IORD_STRESS_Q4) ! Engineering force in the elem x direction at Gauss points
       REAL(DOUBLE)                    :: FORCEy(IORD_STRESS_Q4*IORD_STRESS_Q4) ! Engineering force in the elem x direction at Gauss points
@@ -132,7 +133,6 @@
       REAL(DOUBLE)                    :: DUM14(3,3)
       REAL(DOUBLE)                    :: DUM33(3,3)
       REAL(DOUBLE)                    :: JAC2x2(2,2)
-      REAL(DOUBLE)                    :: ROW_SUM
 
 ! **********************************************************************************************************************************
 
@@ -209,7 +209,6 @@
          ! Consistent mass matrix
          ! ME = ∫ N' ρ N det(J) dv
 
-         ME(:,:) = ZERO
          M_1DOF(:,:) = ZERO
 
          DENSITY = MASS_PER_UNIT_AREA / EPROP(1)
@@ -240,26 +239,7 @@
             ENDDO
          ENDDO
 
-         ! Row sum to convert to lumped mass Matrix
-         DO I=1,ELGP
-            ROW_SUM = ZERO
-            DO J=1,ELGP
-               ROW_SUM = ROW_SUM + M_1DOF(I,J)
-               M_1DOF(I,J) = ZERO
-            ENDDO
-            M_1DOF(I,I) = ROW_SUM
-         ENDDO
-
-                                                           ! Copy to all 3 translational DOFs of each node.
-         DO I=1,ELGP
-            DO J=1,ELGP
-               KI = (I-1) * 6
-               KJ = (J-1) * 6
-               DO L=1,3
-                  ME(KI + L, KJ + L) = M_1DOF(I,J)
-               ENDDO
-            ENDDO
-         ENDDO
+         CALL LUMP_MASS( M_1DOF )
 
 
       ENDIF
