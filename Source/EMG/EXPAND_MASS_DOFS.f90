@@ -1,4 +1,4 @@
-! ###############################################################################################################################
+! #################################################################################################################################
 ! Begin MIT license text.                                                                                    
 ! _______________________________________________________________________________________________________
                                                                                                          
@@ -21,25 +21,42 @@
 ! OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN                              
 ! THE SOFTWARE.                                                                                          
 ! _______________________________________________________________________________________________________
-                                                                                                      
+                                                                                                        
 ! End MIT license text.                                                                                      
+      SUBROUTINE EXPAND_MASS_DOFS ( M_1DOF )
 
-   MODULE LUMP_MASS_Interface
+! Copies per-node mass values to all 3 of each node's translational DOFs in the element mass matrix ME.
 
-   INTERFACE
-
-      SUBROUTINE LUMP_MASS ( M_1DOF )
-
-      USE PENTIUM_II_KIND, ONLY       :  DOUBLE
-      USE MODEL_STUF, ONLY            :  ELGP
+      USE PENTIUM_II_KIND, ONLY       :  DOUBLE, LONG
+      USE MODEL_STUF, ONLY            :  ELGP, ME
+      USE CONSTANTS_1, ONLY           :  ZERO
 
       IMPLICIT NONE 
 
+      INTEGER(LONG)                   :: I,J,L
+      INTEGER(LONG)                   :: KI, KJ            ! For converting grid point number to element DOF number
+
       REAL(DOUBLE), INTENT(INOUT)     :: M_1DOF(ELGP,ELGP)
 
-      END SUBROUTINE LUMP_MASS
 
-   END INTERFACE
+! **********************************************************************************************************************************
 
-   END MODULE LUMP_MASS_Interface
+      ME(:,:) = ZERO
 
+                                                           ! Copy to all 3 translational DOFs of each node.
+      DO I=1,ELGP
+         DO J=1,ELGP
+            KI = (I-1) * 6
+            KJ = (J-1) * 6
+            DO L=1,3
+               ME(KI + L, KJ + L) = M_1DOF(I,J)
+            ENDDO
+         ENDDO
+      ENDDO
+
+      RETURN
+
+
+! **********************************************************************************************************************************
+  
+      END SUBROUTINE EXPAND_MASS_DOFS

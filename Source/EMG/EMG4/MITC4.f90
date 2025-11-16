@@ -60,7 +60,7 @@
       USE CROSS_Interface
       USE MITC_SHAPE_FUNCTIONS_Interface
       USE MITC_COVARIANT_BASIS_Interface
-      USE LUMP_MASS_Interface
+      USE EXPAND_MASS_DOFS_Interface
 
       IMPLICIT NONE
 
@@ -239,7 +239,7 @@
             ENDDO
          ENDDO
 
-         CALL LUMP_MASS( M_1DOF )
+         CALL EXPAND_MASS_DOFS( M_1DOF )
 
 
       ENDIF

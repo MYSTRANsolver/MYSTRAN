@@ -49,7 +49,7 @@
                                          SE1, SE2, STE1, STRESS, TREF, TYPE
  
       USE PENTA_USE_IFs
-      USE LUMP_MASS_Interface
+      USE EXPAND_MASS_DOFS_Interface
       
       IMPLICIT NONE 
   
@@ -226,7 +226,7 @@
          ENDDO
 
 
-         CALL LUMP_MASS( M_1DOF )
+         CALL EXPAND_MASS_DOFS( M_1DOF )
 
       ENDIF
 

@@ -50,7 +50,7 @@
                                          NUM_EMG_FATAL_ERRS, PLOAD4_3D_DATA, PPE, PRESS, PTE, RHO, SE1, SE2, STE1, STRESS, TREF,   &
                                          TYPE, XEL
       USE HEXA_USE_IFs
-      USE LUMP_MASS_Interface
+      USE EXPAND_MASS_DOFS_Interface
 
 
       IMPLICIT NONE
@@ -250,7 +250,7 @@
          ENDDO
 
 
-         CALL LUMP_MASS( M_1DOF )
+         CALL EXPAND_MASS_DOFS( M_1DOF )
 
       ENDIF
 
