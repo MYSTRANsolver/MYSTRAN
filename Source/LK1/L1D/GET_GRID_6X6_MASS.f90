@@ -31,11 +31,12 @@
  
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
       USE IOUNT1, ONLY                :  WRT_ERR, WRT_LOG, ERR, F04, F06
-      USE SCONTR, ONLY                :  BLNK_SUB_NAM, FATAL_ERR, NTERM_MGG
+      USE SCONTR, ONLY                :  BLNK_SUB_NAM, FATAL_ERR, NGRID, NTERM_MGG
       USE TIMDAT, ONLY                :  TSEC
       USE SUBR_BEGEND_LEVELS, ONLY    :  GET_GRID_6X6_MASS_BEGEND
       USE CONSTANTS_1, ONLY           :  ZERO
-      USE SPARSE_MATRICES, ONLY       :  I_MGG, J_MGG, MGG
+      USE DOF_TABLES, ONLY            :  TDOF
+      USE SPARSE_MATRICES, ONLY       :  I2_MGG, J_MGG, MGG
  
       USE GET_GRID_6X6_MASS_USE_IFs
 
@@ -47,11 +48,10 @@
       INTEGER(LONG), INTENT(IN)       :: AGRID             ! Actual grid number of grid for which we want the 6 x 6 mass matrix
       INTEGER(LONG), INTENT(IN)       :: IGRID             ! Internal grid number of grid for which we want the 6 x 6 mass matrix
       INTEGER(LONG)                   :: I,J,K             ! DO loop indices or counters   
+      INTEGER(LONG)                   :: I1,J1             ! Indices
+      INTEGER(LONG)                   :: IGRID_DOF_NUM     ! G-set DOF number for IGRID
       INTEGER(LONG)                   :: NUM_COMPS         ! No. displ components (1 for SPOINT, 6 for actual grid)
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = GET_GRID_6X6_MASS_BEGEND
-      INTEGER(LONG)                   :: ROW
-      INTEGER(LONG)                   :: ROW_DOF
-      INTEGER(LONG)                   :: COL_DOF
 
       REAL(DOUBLE), INTENT(OUT)       :: GRID_MGG(6,6)     ! 6 x 6 mass matrix for internal grid IGRID
 
@@ -75,28 +75,50 @@
          CALL OUTA_HERE ( 'Y' )
       ENDIF
 
-      GRID_MGG(:,:) = ZERO
+! Initialize outputs
 
-      DO ROW_DOF=1,6
-         ROW = 6*(IGRID - 1) + ROW_DOF
-         DO K=I_MGG(ROW),NTERM_MGG                         ! Search from the first non-zero in this row onwards.
+      FOUND = 'N'
 
-            COL_DOF = MODULO( J_MGG(K)-1,6)+1
-            IF( COL_DOF == ROW_DOF ) THEN                  ! Found the diagonal of a 6x6 submatrix.
-               GRID_MGG(ROW_DOF,COL_DOF) = GRID_MGG(ROW_DOF,COL_DOF) + MGG(K)
-            ENDIF
-                                       
-            IF(K>=I_MGG(ROW+1)) THEN                       ! Stop searching after the end of the row.
-               EXIT
-            ENDIF
-
+      DO I=1,6
+         DO J=1,6
+            GRID_MGG(I,J) = ZERO
          ENDDO
-      
       ENDDO
 
-      FOUND = 'Y'                                          ! Always found because diagonals are always non-zero.
+      IGRID_DOF_NUM = 6*(IGRID - 1) + 1
+k_do: DO K=1,NTERM_MGG
 
-                                                           ! Copy upper triangle to lower triangle.
+         IF ((I2_MGG(K) >= IGRID_DOF_NUM) .AND. (I2_MGG(K) <= IGRID_DOF_NUM + 5)) THEN
+
+            I1 = MODULO(I2_MGG(K),6)
+            IF (I1 > 0) THEN
+               I = I1
+            ELSE
+               I = 6
+            ENDIF
+
+            J1 = MODULO( J_MGG(K),6)
+            IF (J1 > 0) THEN
+               J = J1
+            ELSE
+               J = 6
+            ENDIF
+
+            GRID_MGG(I,J) = MGG(K)
+            FOUND = 'Y'
+
+         ELSE
+
+            IF (FOUND == 'Y') THEN
+               EXIT k_do
+            ELSE
+               CYCLE k_do
+            ENDIF
+
+         ENDIF
+
+      ENDDO k_do 
+
       DO I=1,6
          DO J=1,I-1
             GRID_MGG(I,J) = GRID_MGG(J,I)
@@ -114,6 +136,11 @@
       RETURN
 
 ! **********************************************************************************************************************************
+ 1500 FORMAT(' *ERROR  1500: PROGRAMMING ERROR IN SUBROUTINE ',A                                                                   &
+                    ,/,14X,' CANNOT FIND INTERNAL GRID ID, IN ARRAY TDOF, FOR ACTUAL GRID ',I8)
+
+ 1501 FORMAT(' *ERROR  1501: PROGRAMMING ERROR IN SUBROUTINE ',A                                                                   &
+                    ,/,14X,' INTERNAL GRID ID, FOUND IN ARRAY TDOF, FOR ACTUAL GRID ',I8,' MUST BE > 0 BUT IS ',I8)
 
  1502 FORMAT(' *ERROR  1515: PROGRAMMING ERROR IN SUBROUTINE ',A                                                                   &
                     ,/,14X,' SUBR NOT PROGRAMMED FOR ANYTHING BUT 6 COMP GRIDS BUT WAS CALLED FOR GRID ',I8,' WHICH HAS ',I3,      &

@@ -30,6 +30,7 @@
       USE PENTIUM_II_KIND, ONLY       :  DOUBLE, LONG
       USE MODEL_STUF, ONLY            :  ELGP, ME
       USE CONSTANTS_1, ONLY           :  ZERO
+      USE SCONTR, ONLY                :  SOL_NAME
 
       IMPLICIT NONE 
 
@@ -37,9 +38,26 @@
       INTEGER(LONG)                   :: KI, KJ            ! For converting grid point number to element DOF number
 
       REAL(DOUBLE), INTENT(INOUT)     :: M_1DOF(ELGP,ELGP)
-
+      REAL(DOUBLE)                    :: ROW_SUM
 
 ! **********************************************************************************************************************************
+
+      ! SOL 101, 104, 105, 31(?) must use lumped mass matrix because GRAV and RFORCE assume 6x6 block diagonal structure for MGG.
+      ! SOL 103 should use consistent mass matrix because quadratic elements won't solve with this row sum mass lumping. They
+      !         will solve with equal-mass-per-node lumping but with slightly worse results.
+      IF ( SOL_NAME(1:5) /= 'MODES') THEN
+   
+         ! Row sum to convert consistent to lumped mass matrix
+         DO I=1,ELGP
+            ROW_SUM = ZERO
+            DO J=1,ELGP
+               ROW_SUM = ROW_SUM + M_1DOF(I,J)
+               M_1DOF(I,J) = ZERO
+            ENDDO
+            M_1DOF(I,I) = ROW_SUM
+         ENDDO
+
+      ENDIF
 
       ME(:,:) = ZERO
 
