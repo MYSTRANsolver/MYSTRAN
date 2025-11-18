@@ -510,7 +510,7 @@
       INTEGER(LONG)            :: SPIENV7        =   100     ! Memory growth factor for SuperLU_MT -- corresponds to -sp_ienv(7)
       INTEGER(LONG)            :: SPIENV8        =    50     ! Memory growth factor for SuperLU_MT -- corresponds to -sp_ienv(8)
 
-      INTEGER(LONG)            :: SLU_NTHR        =    1     ! Number of threads for SuperLU_MT.
+      INTEGER(LONG)            :: SLU_NTHR        =    0     ! Number of threads for SuperLU_MT.
                                                              ! Using 0 will use as many threads as the system has.
 
       END MODULE PARAMS
