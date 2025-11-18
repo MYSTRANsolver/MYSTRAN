@@ -40,7 +40,7 @@
       USE IOUNT1, ONLY                :  WRT_ERR, WRT_LOG, ERR, F04, F06
       USE SCONTR, ONLY                :  BLNK_SUB_NAM, FATAL_ERR, MAX_ORDER_TETRA, NTSUB
       USE TIMDAT, ONLY                :  TSEC
-      USE CONSTANTS_1, ONLY           :  HALF, QUARTER, ZERO, FOUR
+      USE CONSTANTS_1, ONLY           :  HALF, QUARTER, ZERO
       USE DEBUG_PARAMETERS, ONLY      :  DEBUG
       USE SUBR_BEGEND_LEVELS, ONLY    :  TETRA_BEGEND
       USE NONLINEAR_PARAMS, ONLY      :  LOAD_ISTEP
@@ -49,6 +49,7 @@
                                          SE1, SE2, STE1, STRESS, TREF, TYPE
  
       USE TETRA_USE_IFs
+      USE EXPAND_MASS_DOFS_Interface
 
       IMPLICIT NONE 
   
@@ -100,7 +101,6 @@
       REAL(DOUBLE)                    :: JAC(3,3)                ! An output from subr JAC3D, called herein. 3 x 3 Jacobian matrix.
       REAL(DOUBLE)                    :: JACI(3,3)               ! An output from subr JAC3D, called herein. 3 x 3 Jacobian inverse.
       REAL(DOUBLE)                    :: KWW(3,3)                ! Portion of differential stiffness matrix
-      REAL(DOUBLE)                    :: M0                      ! An intermediate variable used in calc elem mass, ME
       REAL(DOUBLE)                    :: PSH(ELGP)               ! Output from subr SHP3DT. Shape fcn at Gauss pts SSI, SSJ
       REAL(DOUBLE)                    :: SIGxx                   ! Normal stress in the elem x  direction
       REAL(DOUBLE)                    :: SIGyy                   ! Normal stress in the elem y  direction
@@ -117,7 +117,8 @@
       REAL(DOUBLE)                    :: TREF1                   ! TREF(1)
       REAL(DOUBLE)                    :: VOLUME                  ! 3D element volume
       REAL(DOUBLE)                    :: SSI,SSJ,SSK             ! Isoparametric coordinates of a point.
-      
+      REAL(DOUBLE)                    :: M_1DOF(ELGP,ELGP)      ! Consistent mass matrix with 1 DOF per node.
+            
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
          CALL OURTIM
@@ -190,14 +191,26 @@
  
       IF (OPT(1) == 'Y') THEN
 
-         M0 = (RHO(1))*VOLUME/ELGP
+         ! Consistent mass matrix
+         ! ME = ∫ N' ρ N det(J) dv
 
-         DO I=1,ELGP
-            DO J=1,3
-               K = 6*(I-1) + J
-               ME(K,K) = M0
+         M_1DOF(:,:) = ZERO
+         GAUSS_PT = 0
+         DO I=1,IORD
+            GAUSS_PT = GAUSS_PT + 1
+
+            CALL SHP3DT ( I, ELGP, SUBR_NAME, IORD_MSG, IORD, SSS_I(I), SSS_J(I), SSS_K(I), 'N', PSH, DPSHG )
+            INTFAC = DETJ(I)*HHH_IJK(I)
+
+            DO L=1,ELGP
+               DO M=1,ELGP
+                  M_1DOF(L,M) = M_1DOF(L,M) + PSH(L) * PSH(M) * RHO(1) * INTFAC
+               ENDDO
             ENDDO
          ENDDO
+
+
+         CALL EXPAND_MASS_DOFS( M_1DOF )
 
       ENDIF
 

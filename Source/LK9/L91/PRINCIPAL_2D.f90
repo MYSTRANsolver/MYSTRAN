@@ -36,7 +36,7 @@
       USE IOUNT1, ONLY                :  WRT_ERR, WRT_LOG, ERR, F04, F06
       USE SCONTR, ONLY                :  BLNK_SUB_NAM
       USE TIMDAT, ONLY                :  TSEC
-      USE CONSTANTS_1, ONLY           :  ZERO, QUARTER, HALF, TWO, ONEPM6, FORTY5, CONV_RAD_DEG 
+      USE CONSTANTS_1, ONLY           :  ZERO, QUARTER, HALF, TWO, ONEPM6, CONV_RAD_DEG 
       USE SUBR_BEGEND_LEVELS, ONLY    :  PRINCIPAL_2D_BEGEND
  
       USE PRINCIPAL_2D_USE_IFs
@@ -57,13 +57,10 @@
       REAL(DOUBLE), INTENT(OUT)       :: SXYMAX             ! Max shear stress or strain
       REAL(DOUBLE), INTENT(OUT)       :: VONMISES           ! von Mises stress or strain
       REAL(DOUBLE)                    :: DENR               ! Denominator in arctan calculation of ANGLE
-      REAL(DOUBLE), PARAMETER         :: EPS2    = ONEPM6   ! Small number to compare with ADENR, ANUMR when calculating ANGLE
       REAL(DOUBLE)                    :: SAVG               ! Average of SX and SY
       REAL(DOUBLE)                    :: NUMR               ! Numerator in arctan calculation of ANGLE
-      REAL(DOUBLE)                    :: ADENR              ! DABS(DENR)
-      REAL(DOUBLE)                    :: ANUMR              ! DABS(NUMR)
  
-      INTRINSIC                       :: DABS, DATAN2, DSQRT
+      INTRINSIC                       :: DATAN2, DSQRT
  
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
@@ -83,18 +80,10 @@
 
       DENR     = SX - SY
       NUMR     = TWO*SXY
-      ADENR    = DABS(DENR)
-      ANUMR    = DABS(NUMR)
  
 ! Calculate angle for principal axes.
  
-      IF ((ADENR <= EPS2) .AND. (ANUMR <= EPS2)) THEN
-         ANGLE = ZERO
-      ELSE IF ((ADENR <= EPS2) .AND. (ANUMR > EPS2)) THEN
-         ANGLE = FORTY5
-      ELSE
-         ANGLE = (HALF*DATAN2(NUMR,DENR))*CONV_RAD_DEG
-      ENDIF
+      ANGLE = (HALF*DATAN2(NUMR,DENR))*CONV_RAD_DEG
  
 ! Calculate the principal stresses and max shear
  
