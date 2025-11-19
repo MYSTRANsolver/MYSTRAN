@@ -1,6 +1,9 @@
 # previously here:
 *.pdfx
 
+# profiler output
+gmon.out
+
 # CMake output directories:
 Binaries/*
 

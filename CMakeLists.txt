@@ -9,6 +9,10 @@ include(CheckFunctionExists)
 project(Mystran)
 enable_language(Fortran)
 
+if(WIN32)
+  enable_language(RC)
+endif()
+
 # basic compiler and output options
 set(CMAKE_SOURCE_DIR "${PROJECT_SOURCE_DIR}/Source")
 set(BLAS_SOURCE_DIR "${PROJECT_SOURCE_DIR}/BLAS")
@@ -24,6 +28,26 @@ include_directories("${CMAKE_SOURCE_DIR}/INCLUDE")
 
 # uncomment this to debug
 # set(CMAKE_VERBOSE_MAKEFILE true)
+
+# a new build type for profiling
+set(CMAKE_PROFILING_FLAGS "-O2 -g -fno-omit-frame-pointer -fno-inline-functions")
+
+set(CMAKE_C_FLAGS_PROFILING "${CMAKE_PROFILING_FLAGS}")
+set(CMAKE_CXX_FLAGS_PROFILING "${CMAKE_PROFILING_FLAGS}")
+set(CMAKE_Fortran_FLAGS_PROFILING "${CMAKE_PROFILING_FLAGS}")
+
+set(CMAKE_EXE_LINKER_FLAGS_PROFILING "")
+set(CMAKE_SHARED_LINKER_FLAGS_PROFILING "")
+
+# register the Profile build type, just in case
+set(CMAKE_CONFIGURATION_TYPES
+  Debug
+  Release
+  RelWithDebInfo
+  MinSizeRel
+  Profiling
+  CACHE STRING "" FORCE
+)
 
 # suppress cmake warnings for superlu
 if(NOT DEFINED CMAKE_SUPPRESS_DEVELOPER_WARNINGS)
@@ -60,25 +84,83 @@ if(GIT_FOUND AND EXISTS "${PROJECT_SOURCE_DIR}/.git")
   endif()
 endif()
 
-# check for SuperLU
 set(SUPERLU_DIR "${PROJECT_SOURCE_DIR}/superlu")
+set(SUPERLU_MT_DIR "${PROJECT_SOURCE_DIR}/superlu_mt")
+set(SUPERLU_PATCHES_DIR "${PROJECT_SOURCE_DIR}/superlu_mt_patches")
 
-if(NOT EXISTS "${SUPERLU_DIR}/CMakeLists.txt")
-  message(
-    FATAL_ERROR
-    "The submodules were not downloaded. You have to do it manually!"
-  )
+set(enable_examples OFF FORCE)
+set(enable_tests OFF FORCE)
+set(enable_doc OFF FORCE)
+
+if(USE_SUPERLU_MT)
+  message(STATUS "Will link against faster SuperLU_MT.")
+  set(PLAT "_OPENMP" CACHE STRING "threading flavor _PTHREAD/_OPENMP" FORCE)
+  message(STATUS "Applying patches to SuperLU_MT...")
+  file(GLOB_RECURSE PATCH_FILES RELATIVE "${SUPERLU_PATCHES_DIR}" "${SUPERLU_PATCHES_DIR}/*")
+
+  foreach(file IN LISTS PATCH_FILES)
+    set(src "${SUPERLU_PATCHES_DIR}/${file}")
+    set(dst "${SUPERLU_MT_DIR}/${file}")
+
+    # ensure the destination directory exists
+    get_filename_component(dst_dir "${dst}" DIRECTORY)
+    file(MAKE_DIRECTORY "${dst_dir}")
+
+    # print the file being copied
+    message(STATUS "  Patching: ${file}")
+
+    # copy the file
+    file(COPY "${src}" DESTINATION "${dst_dir}")
+  endforeach()
+
+  message(STATUS "SuperLU_MT patched.")
+
+  if(NOT EXISTS "${SUPERLU_MT_DIR}/CMakeLists.txt")
+    message(
+      FATAL_ERROR
+      "The SuperLU_MT submodule was not downloaded. You have to do it manually!"
+    )
+  endif()
+
+  if(WIN32)
+    # force static linking to OpenMP library
+    # temporarily set CMAKE_FIND_LIBRARY_SUFFIXES to prefer .a over .dll.a
+    set(CMAKE_FIND_LIBRARY_SUFFIXES_BACKUP ${CMAKE_FIND_LIBRARY_SUFFIXES})
+    set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
+
+    set(OpenMP_C_FLAGS "-fopenmp" CACHE STRING "" FORCE)
+    set(OpenMP_C_LIB_NAMES "gomp" CACHE STRING "" FORCE)
+
+    # find the static gomp library explicitly
+    find_library(GOMP_STATIC_LIB NAMES libgomp.a gomp PATHS /mingw64/lib NO_DEFAULT_PATH)
+
+    if(GOMP_STATIC_LIB)
+      set(OpenMP_gomp_LIBRARY "${GOMP_STATIC_LIB}" CACHE FILEPATH "" FORCE)
+    endif()
+
+    find_package(OpenMP REQUIRED)
+
+    # restore original library suffixes
+    set(CMAKE_FIND_LIBRARY_SUFFIXES ${CMAKE_FIND_LIBRARY_SUFFIXES_BACKUP})
+  endif()
+
+  include_directories("${SUPERLU_MT_DIR}/SRC")
+  add_subdirectory(${SUPERLU_MT_DIR})
+  set(SLU_DRIVER "${SUPERLU_MT_DIR}/SRC/c_fortran_pdgssv.c")
+else()
+  message(STATUS "Will link against regular SuperLU.")
+
+  if(NOT EXISTS "${SUPERLU_DIR}/CMakeLists.txt")
+    message(
+      FATAL_ERROR
+      "The SuperLU submodule was not downloaded. You have to do it manually!"
+    )
+  endif()
+
+  include_directories("${SUPERLU_DIR}/SRC")
+  add_subdirectory(${SUPERLU_DIR})
+  set(SLU_DRIVER "${SUPERLU_DIR}/FORTRAN/c_fortran_dgssv.c")
 endif()
-
-# set some SuperLU settings
-set(enable_examples OFF)
-set(enable_tests OFF)
-
-# set(enable_internal_blaslib "yes")
-
-# include & build it
-include_directories("${SUPERLU_DIR}/SRC")
-add_subdirectory(${SUPERLU_DIR})
 
 # f2c stuff
 set(F2C_DIR "${PROJECT_SOURCE_DIR}/f2c")
@@ -154,11 +236,18 @@ endif()
 
 # set some extra vars for MSYS builds to make the binary portable
 if(WIN32)
-  set(CMAKE_EXE_LINKER_FLAGS "-static")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static -static-libgcc -static-libstdc++")
 endif()
 
 # collect all fortran source files
-file(GLOB_RECURSE ALL_FORTRAN_FILES "${CMAKE_SOURCE_DIR}/*.f*")
+file(GLOB_RECURSE ALL_FORTRAN_FILES
+  "${CMAKE_SOURCE_DIR}/*.f"
+  "${CMAKE_SOURCE_DIR}/*.f90"
+  "${CMAKE_SOURCE_DIR}/*.F90"
+  "${CMAKE_SOURCE_DIR}/*.F"
+  "${CMAKE_SOURCE_DIR}/*.F95"
+  "${CMAKE_SOURCE_DIR}/*.f95"
+)
 
 # same BLAS-finding subroutine as SuperLU
 if(NOT enable_internal_blaslib)
@@ -223,19 +312,31 @@ endif()
 add_executable(
   mystran
   ${ALL_FORTRAN_FILES}
+  ${SLU_DRIVER}
   ${missing_blas_src}
-  "${SUPERLU_DIR}/FORTRAN/c_fortran_dgssv.c"
 )
 
-# target_link_libraries(mystran MODULES ${modules_names})
-target_link_libraries(mystran superlu f2c)
+# determine which superlu variant to link against
+if(USE_SUPERLU_MT)
+  if(PLAT STREQUAL "_PTHREAD")
+    message(WARNING "We recommend using OpenMP, not pthread!")
+    target_link_libraries(mystran superlu_mt_PTHREAD f2c)
+  elseif(PLAT STREQUAL "_OPENMP")
+    target_link_libraries(mystran superlu_mt_OPENMP f2c)
+  endif()
 
-# if (MISSING_FNS_TOTAL GREATER 0)
-# target_link_libraries(mystran my_blas)
-# endif()
+  target_compile_definitions(mystran PRIVATE USE_SUPERLU_MT)
+else()
+  target_link_libraries(mystran superlu f2c)
+endif()
+
 set_target_properties(
   mystran PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}
 )
+
+if(WIN32)
+  target_sources(mystran PRIVATE mystran.rc)
+endif()
 
 if(CMAKE_COMPILER_IS_GNUCC)
   set(CMAKE_Fortran_FLAGS "-Wall -Wextra \
