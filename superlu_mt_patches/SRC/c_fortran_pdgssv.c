@@ -208,7 +208,7 @@ void c_fortran_pdgssv_(int *iopt, int *n, int_t *nnz, int *nrhs, int *nprocs,
   }
 }
 
-int c_side_slu_nthr = 1;
+int c_side_slu_nthr = 0;
 
 
 #if (MACH == OPENMP)
@@ -242,6 +242,10 @@ void c_fortran_dgssv_(int *iopt, int *n, int_t *nnz, int *nrhs,
                                           pointing to the factored matrices */
                       int_t *info)
 {
+  if (c_side_slu_nthr < 1) {
+    c_side_slu_nthr = 0;
+    slu_set_nthr_(&c_side_slu_nthr);
+  }
   c_fortran_pdgssv_(
       iopt, n, nnz, nrhs, &c_side_slu_nthr, values, rowind, colptr, b, ldb, f_factors, info);
 }
