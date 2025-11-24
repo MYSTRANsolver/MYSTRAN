@@ -1,28 +1,28 @@
 ! ##################################################################################################################################
-! Begin MIT license text.                                                                                    
+! Begin MIT license text.
 ! _______________________________________________________________________________________________________
-                                                                                                         
-! Copyright 2022 Dr William R Case, Jr (mystransolver@gmail.com)                                              
-                                                                                                         
-! Permission is hereby granted, free of charge, to any person obtaining a copy of this software and      
+
+! Copyright 2022 Dr William R Case, Jr (mystransolver@gmail.com)
+
+! Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 ! associated documentation files (the "Software"), to deal in the Software without restriction, including
 ! without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-! copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to   
-! the following conditions:                                                                              
-                                                                                                         
-! The above copyright notice and this permission notice shall be included in all copies or substantial   
-! portions of the Software and documentation.                                                                              
-                                                                                                         
-! THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS                                
-! OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,                            
-! FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE                            
-! AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER                                 
-! LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,                          
-! OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN                              
-! THE SOFTWARE.                                                                                          
+! copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to
+! the following conditions:
+
+! The above copyright notice and this permission notice shall be included in all copies or substantial
+! portions of the Software and documentation.
+
+! THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+! OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+! FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+! AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+! LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+! OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+! THE SOFTWARE.
 ! _______________________________________________________________________________________________________
-                                                                                                        
-! End MIT license text.                                                                                      
+
+! End MIT license text.
 
       SUBROUTINE LINK4
 
@@ -36,14 +36,14 @@
 !             (a) LAPACK: requires KLL, MLL (or KLL, KLLD for buckling) to be in band storage - sparse storage can NOT be used
 
 !          Tis Lanczos algorithms is not practical for very large eigenvalue problems since LAPACK/ARPACK will require
-!          large amounts of memory to store the banded KLL, MLL matrices. 
+!          large amounts of memory to store the banded KLL, MLL matrices.
 
 !   (2) GIV (Givens) method:
 !          calculates all eigenvalues and some eigenvactors of KLL, MLL (or KLL, KLLD for buckling). This method is only practical
 !          for relatively small problems. It requires MLL (or KLLD for buckling) to be a positive definite matrix. The algorithm
 !          performs a Cholesky decomp of matrix MLL (or KLLD for buckling) which can be time consuming for large problems
 
-!   (3) MGIV (modified Givens) method: 
+!   (3) MGIV (modified Givens) method:
 !          calculates all eigenvalues and some eigenvactors of KLL, MLL (or KLL, KLLD for buckling). This method is only practical
 !          for relatively small problems. It requires KLL to be a positive definite matrix. The algorithm performs a Cholesky
 !          decomp of matrix KLL which can be time consuming for large problems
@@ -61,7 +61,7 @@
                                          NVEC, NUM_EIGENS, NUM_KLLD_DIAG_ZEROS, NUM_MLL_DIAG_ZEROS, SOL_NAME, WARN_ERR
       USE TIMDAT, ONLY                :  YEAR, MONTH, DAY, HOUR, MINUTE, SEC, SFRAC, STIME, TSEC
       USE CONSTANTS_1, ONLY           :  ZERO, ONE
-      USE PARAMS, ONLY                :  EPSIL, LANCMETH, SPARSTOR, SUPINFO
+      USE PARAMS, ONLY                :  EPSIL, SOLLIB, SPARSTOR, SUPINFO
       USE MODEL_STUF, ONLY            :  EIG_COMP, EIG_CRIT, EIG_FRQ1, EIG_FRQ2, EIG_GRID, EIG_METH, EIG_MSGLVL, EIG_LAP_MAT_TYPE, &
                                          EIG_MODE, EIG_N1, EIG_N2, EIG_NCVFACL, EIG_NORM, EIG_SID, EIG_SIGMA, EIG_VECS, MAXMIJ,    &
                                          MIJ_COL, MIJ_ROW, NUM_FAIL_CRIT
@@ -75,7 +75,7 @@
 
       USE LINK4_USE_IFs
 
-      IMPLICIT NONE 
+      IMPLICIT NONE
 
       CHARACTER, PARAMETER            :: CR13 = CHAR(13)   ! This causes a carriage return simulating the "+" action in a FORMAT
       CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: SUBR_NAME = 'LINK4'
@@ -174,7 +174,7 @@
 
       IF (IERROR > 0) THEN
          CALL OUTA_HERE ( 'Y' )
-      ENDIF 
+      ENDIF
 
       ! NUM_MLL_DIAG_ZEROS will be used for a message written
       ! when the eigen summary is printed in subr EIG_SUMMARY
@@ -293,15 +293,15 @@
 
       ELSE
 
-         WRITE(ERR,4005) SUBR_NAME, EIG_METH 
-         WRITE(F06,4005) SUBR_NAME, EIG_METH 
+         WRITE(ERR,4005) SUBR_NAME, EIG_METH
+         WRITE(F06,4005) SUBR_NAME, EIG_METH
          FATAL_ERR = FATAL_ERR + 1
          CALL OUTA_HERE ( 'Y' )                            ! Coding error, so quit
 
       ENDIF
 
       IF (SOL_NAME(1:12) /= 'GEN CB MODEL') THEN
-   !xx   WRITE(SC1, * )                                    ! Advance 1 line for screen messages         
+   !xx   WRITE(SC1, * )                                    ! Advance 1 line for screen messages
          IF (SOL_NAME(1:8) == 'BUCKLING') THEN
             WRITE(SC1,12345,ADVANCE='NO') '       Deallocate KLLD', CR13   ;   CALL DEALLOCATE_SPARSE_MAT ( 'KLLD' )
          ELSE
@@ -309,7 +309,7 @@
          ENDIF
       ENDIF
 
-      ! Calc generalized masses and renorm eigenvectors to mass (users renorm is done in LINK5) 
+      ! Calc generalized masses and renorm eigenvectors to mass (users renorm is done in LINK5)
       NUM_FAIL_CRIT = 0
       MAXMIJ        = 0
       MIJ_ROW       = 0
@@ -317,7 +317,7 @@
 
       CALL ALLOCATE_EIGEN1_MAT ( 'GEN_MASS', NUM_EIGENS, 1, SUBR_NAME )
 
-      IF (NVEC > 0) THEN 
+      IF (NVEC > 0) THEN
          CALL OURTIM                                       ! Calc gen mass
          MODNAM = 'CALCULATE GENERALIZED MASS'
          WRITE(SC1,4092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
@@ -338,7 +338,7 @@
 
       ENDIF
 
-!xx   WRITE(SC1, * )                                       ! Advance 1 line for screen messages         
+!xx   WRITE(SC1, * )                                       ! Advance 1 line for screen messages
       IF (SOL_NAME(1:8) == 'BUCKLING') THEN
          WRITE(SC1,12345,ADVANCE='NO') '       Deallocate KLLDn', CR13   ;   CALL DEALLOCATE_SPARSE_MAT ( 'KLLDn' )
       ELSE
@@ -368,18 +368,18 @@
          DO I=1,NDOFL
            WRITE(L3A) EIGEN_VEC(I,J)
          ENDDO
-      ENDDO 
-      CALL FILE_CLOSE ( L3A, LINK3A, 'KEEP', 'Y' )  
+      ENDDO
+      CALL FILE_CLOSE ( L3A, LINK3A, 'KEEP', 'Y' )
 
       ! Optional eigenvector debug output
       IF (DEBUG(43) == 1) THEN
          DO J=1,NVEC
             DO I=1,NDOFL
                EIGEN_VEC_COL(I) = EIGEN_VEC(I,J)
-            ENDDO 
+            ENDDO
             WRITE(F06,'(//,1X,''EIGENVECTOR'',I8/)') J
             CALL WRITE_VECTOR ('    A-SET EIGENVECTOR   ','DISPL',NDOFL, EIGEN_VEC_COL )
-         ENDDO 
+         ENDDO
       ENDIF
 
       ! Call OUTPUT4 processor to process output requests for OUTPUT4 matrices generated in this link
@@ -395,10 +395,10 @@
       CALL DEALLOCATE_LAPACK_MAT ( 'RFAC' )
 
       ! leave EIGEN_VAL until LINK9 since it may be needed there
-!xx   CALL DEALLOCATE_EIGEN1_MAT ( 'EIGEN_VAL' )  
+!xx   CALL DEALLOCATE_EIGEN1_MAT ( 'EIGEN_VAL' )
       CALL DEALLOCATE_EIGEN1_MAT ( 'GEN_MASS' )
-      CALL DEALLOCATE_EIGEN1_MAT ( 'EIGEN_VEC' )  
-      CALL DEALLOCATE_EIGEN1_MAT ( 'MODE_NUM' )  
+      CALL DEALLOCATE_EIGEN1_MAT ( 'EIGEN_VEC' )
+      CALL DEALLOCATE_EIGEN1_MAT ( 'MODE_NUM' )
 
       CALL DEALLOCATE_LAPACK_MAT ( 'ABAND' )
       CALL DEALLOCATE_LAPACK_MAT ( 'BBAND' )
@@ -465,7 +465,7 @@
 12345 FORMAT(A,10X,A)
 
 99001 FORMAT(1X,6(1ES14.6))
- 
+
 ! **********************************************************************************************************************************
 
       END SUBROUTINE LINK4

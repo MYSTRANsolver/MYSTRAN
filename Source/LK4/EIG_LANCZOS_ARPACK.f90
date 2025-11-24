@@ -1,33 +1,33 @@
 ! ##################################################################################################################################
-! Begin MIT license text.                                                                                    
+! Begin MIT license text.
 ! _______________________________________________________________________________________________________
-                                                                                                         
-! Copyright 2022 Dr William R Case, Jr (mystransolver@gmail.com)                                              
-                                                                                                         
-! Permission is hereby granted, free of charge, to any person obtaining a copy of this software and      
+
+! Copyright 2022 Dr William R Case, Jr (mystransolver@gmail.com)
+
+! Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 ! associated documentation files (the "Software"), to deal in the Software without restriction, including
 ! without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-! copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to   
-! the following conditions:                                                                              
-                                                                                                         
-! The above copyright notice and this permission notice shall be included in all copies or substantial   
-! portions of the Software and documentation.                                                                              
-                                                                                                         
-! THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS                                
-! OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,                            
-! FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE                            
-! AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER                                 
-! LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,                          
-! OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN                              
-! THE SOFTWARE.                                                                                          
+! copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to
+! the following conditions:
+
+! The above copyright notice and this permission notice shall be included in all copies or substantial
+! portions of the Software and documentation.
+
+! THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+! OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+! FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+! AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+! LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+! OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+! THE SOFTWARE.
 ! _______________________________________________________________________________________________________
-                                                                                                        
-! End MIT license text.                                                                                      
+
+! End MIT license text.
 
       SUBROUTINE EIG_LANCZOS_ARPACK
-  
+
 ! Solves for eigenvalues and eigenvectors when the Lanczos method is requested (on Bulk Data EIGRL entry)
- 
+
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
       USE IOUNT1, ONLY                :  WRT_ERR, WRT_LOG, ERR, F04, F06
       USE SCONTR, ONLY                :  BLNK_SUB_NAM, FATAL_ERR, KMSM_SDIA, LINKNO, NDOFL, NTERM_KLL, NTERM_KLLD, NTERM_KMSM,     &
@@ -37,7 +37,7 @@
       USE CONSTANTS_1, ONLY           :  ZERO, ONE, TWO, PI
       USE DEBUG_PARAMETERS, ONLY      :  DEBUG
       USE PARAMS, ONLY                :  ARP_TOL, BAILOUT, DARPACK, EIGESTL, EPSIL, MXITERL, SOLLIB, SPARSTOR, SUPINFO,            &
-                                         SUPWARN, LANCMETH
+                                         SUPWARN
       USE DOF_TABLES, ONLY            :  TDOFI
       USE SUBR_BEGEND_LEVELS, ONLY    :  EIG_LANCZOS_ARPACK_BEGEND
       USE EIGEN_MATRICES_1, ONLY      :  EIGEN_VAL, EIGEN_VEC, MODE_NUM
@@ -46,13 +46,13 @@
       USE ARPACK_MATRICES_1, ONLY     :  IWORK, RESID, RFAC, SELECT, VBAS, WORKD, WORKL
       USE SPARSE_MATRICES, ONLY       :  I_KLL, J_KLL, KLL, I_KLLD, J_KLLD, KLLD, I_MLL, J_MLL, MLL, SYM_KLL, SYM_KLLD, SYM_MLL,   &
                                          I_KMSM, J_KMSM, KMSM, I_KMSMn, J_KMSMn, KMSMn, I_KMSMs, J_KMSMs, KMSMs
-                                         
+
       USE ARPACK_LANCZOS_EIG
- 
+
       USE EIG_LANCZOS_ARPACK_USE_IFs
 
       IMPLICIT NONE
-  
+
       LOGICAL                         :: RVEC              ! = .TRUE. or .FALSE. Specifies whether eigenvectors are to be calculated
 
       CHARACTER, PARAMETER            :: CR13 = CHAR(13)   ! This causes a carriage return simulating the "+" action in a FORMAT
@@ -72,7 +72,7 @@
 !                                                            = 'SA' -> want the NEV eigenvalues of smallest REAL part.
 !                                                            = 'BE' -> Compute  NEV eigenvalues, half from each end of the spectrum
 !                                                                      If NEV is odd, compute 1 more from high end than from low end
-!                                                            When IPARAM(7) = 3, 4, or 5,  WHICH should be set to 'LM' only. 
+!                                                            When IPARAM(7) = 3, 4, or 5,  WHICH should be set to 'LM' only.
 
       CHARACTER(44*BYTE)              :: MODNAM            ! Name to write to screen to describe module being run.
       CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: CALLED_SUBR = ' ' ! Name of a called subr (for output error purposes)
@@ -147,7 +147,7 @@
 
 ! Calc KMSM = KLL - EIG_SIGMA*MLL (or + EIG_SIGMA*KLLD for BUCKLING) where EIG_SIGMA = shift freq
 
-      IF (SOL_NAME(1:8) == 'BUCKLING') THEN    
+      IF (SOL_NAME(1:8) == 'BUCKLING') THEN
          CALL MATADD_SSS_NTERM ( NDOFL, 'KLL' , NTERM_KLL , I_KLL , J_KLL , SYM_KLL ,  'eig_sigma*KLLD',                           &
                                                 NTERM_KLLD, I_KLLD, J_KLLD, SYM_KLLD, 'KMSM', NTERM_KMSM )
          CALL ALLOCATE_SPARSE_MAT ( 'KMSM', NDOFL, NTERM_KMSM, SUBR_NAME )
@@ -164,7 +164,7 @@
       ENDIF
 
 
-! Det bandwidth of KMSM so BANDGEN can put it in LAPACK band form. KMSM_SDIA is the number of super-diags in the band form of KMSM 
+! Det bandwidth of KMSM so BANDGEN can put it in LAPACK band form. KMSM_SDIA is the number of super-diags in the band form of KMSM
 
       CALL OURTIM
       IF (SOL_NAME(1:8) == 'BUCKLING') THEN
@@ -173,7 +173,7 @@
          MODNAM = 'CALCULATE BANDWIDTH OF [KLL - sigma*MLL]'
       ENDIF
       WRITE(SC1,4092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
-      CALL BANDSIZ ( NDOFL, NTERM_KMSM, I_KMSM, J_KMSM, KMSM_SDIA ) 
+      CALL BANDSIZ ( NDOFL, NTERM_KMSM, I_KMSM, J_KMSM, KMSM_SDIA )
       WRITE(ERR,4905) KMSM_SDIA
       IF (SUPINFO == 'N') THEN
          WRITE(F06,4905) KMSM_SDIA
@@ -181,7 +181,7 @@
 
 ! EIG_LAP_MAT_TYPE was checked in BD_EIGRL for correctness, but make sure, here, that it is correct
 
-      IF(LANCMETH == 'SPARSE') THEN
+      IF(SOLLIB(1:6) == 'SPARSE') THEN
          LDRFAC = 1 ! make it small because it's not used but parameter has to be allocated.
       ELSEIF      (EIG_LAP_MAT_TYPE(1:3) == 'DPB') THEN
          LDRFAC = KMSM_SDIA + 1
@@ -198,7 +198,7 @@
 ! Allocate array RFAC = (KLL - EIG_SIGMA*MLL, or KLL + EIG_SIGMA*KLLD) for ARACK
 
       CALL OURTIM
-      IF (SOL_NAME(1:8) == 'BUCKLING') THEN    
+      IF (SOL_NAME(1:8) == 'BUCKLING') THEN
          MODNAM = 'ALLOCATE ARPACK BAND MAT: RFAC = KLL + sigma*KLLD'
       ELSE
          MODNAM = 'ALLOCATE ARPACK BAND MAT: RFAC = KLL - sigma*MLL'
@@ -207,7 +207,7 @@
       CALL ALLOCATE_LAPACK_MAT ( 'RFAC', LDRFAC, NDOFL, SUBR_NAME )
 
 
-      IF(LANCMETH == 'BANDED') THEN
+      IF(SOLLIB(1:6) == 'BANDED') THEN
 
 ! Put KMSM in form required by LAPACK band matrix. Call result array RFAC
 
@@ -238,7 +238,7 @@
          CALL OURTIM
          MODNAM = 'DEALLOCATE SPARSE KLL ARRAYS'
          WRITE(SC1,4092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
-   !xx   WRITE(SC1, * )                                    ! Advance 1 line for screen messages         
+   !xx   WRITE(SC1, * )                                    ! Advance 1 line for screen messages
          WRITE(SC1,12345,ADVANCE='NO') '       Deallocate KLL', CR13
          CALL DEALLOCATE_SPARSE_MAT ( 'KLL' )
       ENDIF
@@ -288,7 +288,7 @@
 
 ! Now we can deallocate KMSM (since KMSMn will be used in subr DSBAND)
 
-!xx   WRITE(SC1, * )                                       ! Advance 1 line for screen messages         
+!xx   WRITE(SC1, * )                                       ! Advance 1 line for screen messages
       WRITE(SC1,12345,ADVANCE='NO') '       Deallocate KMSM', CR13
       CALL DEALLOCATE_SPARSE_MAT ( 'KMSM' )
 
@@ -363,7 +363,7 @@
 
       DO I=1,NCV                                           ! With HOWMNY = 'A' we are calc'ing eigenvecs for all eigenvalues found
          SELECT(I) = .FALSE.                               ! so all members of SELECT are .FALSE.
-      ENDDO 
+      ENDDO
 
       CALL OURTIM
       MODNAM = 'SOLVE FOR EIGENVALS/VECTORS - LANCZOS METH'
@@ -380,7 +380,7 @@
       NUM_EIGENS = IPARAM(5)
 
 !xx   WRITE(SC1, * ) '     DEALLOCATE SOME ARRAYS'
-!xx   WRITE(SC1, * )                                       ! Advance 1 line for screen messages         
+!xx   WRITE(SC1, * )                                       ! Advance 1 line for screen messages
       WRITE(SC1,12345,ADVANCE='NO') '       Deallocate KMSMn ', CR13   ;   CALL DEALLOCATE_SPARSE_MAT ( 'KMSMn' )
       WRITE(SC1,12345,ADVANCE='NO') '       Deallocate IWORK ', CR13   ;   CALL DEALLOCATE_LAPACK_MAT ( 'IWORK' )
       WRITE(SC1,12345,ADVANCE='NO') '       Deallocate RFAC  ', CR13   ;   CALL DEALLOCATE_LAPACK_MAT ( 'RFAC' )
@@ -411,7 +411,7 @@
          CALL OUTA_HERE ( 'Y' )
       ENDIF
 
-      CALLED_SUBR = 'DPBTRF'      
+      CALLED_SUBR = 'DPBTRF'
       IF      (INFO_LAPACK < 0) THEN                       ! LAPACK subr XERBLA should have reported error on an illegal argument
 !                                                            in calling a LAPACK subr, so we should not have gotten here
          WRITE(ERR,993) SUBR_NAME, CALLED_SUBR
@@ -432,8 +432,8 @@
          ENDIF
          FATAL_ERR = FATAL_ERR + 1
          IF ((GRIDV > 0) .AND. (COMPV > 0)) THEN
-            WRITE(ERR,9892) GRIDV, COMPV 
-            WRITE(F06,9892) GRIDV, COMPV 
+            WRITE(ERR,9892) GRIDV, COMPV
+            WRITE(F06,9892) GRIDV, COMPV
          ENDIF
          IF (BAILOUT >= 0) THEN                            ! If BAILOUT >= 0 then quit (leading minor <= 0)
             FATAL_ERR = FATAL_ERR + 1
@@ -504,7 +504,7 @@
 ! **********************************************************************************************************************************
 
       CONTAINS
- 
+
 ! ##################################################################################################################################
 
       SUBROUTINE EST_NUM_EIGENS_BANDED ( FREQ, NUM_NEG_TERMS )
@@ -515,15 +515,15 @@
 
       IMPLICIT NONE
 
-      INTEGER(LONG)                   :: INFO              ! 
+      INTEGER(LONG)                   :: INFO              !
       INTEGER(LONG)                   :: NUM_NEG_TERMS     ! Number of negative terms on the diagonal of RFAC
 
-      REAL(DOUBLE)                    :: DIAG(NDOFL)       ! 
-      REAL(DOUBLE)                    :: FREQ              ! 
-      REAL(DOUBLE)                    :: OFF_DIAG(NDOFL-1) ! 
-      REAL(DOUBLE)                    :: QMAT(1,NDOFL)     ! 
-      REAL(DOUBLE)                    :: SIGMA             ! 
-      REAL(DOUBLE)                    :: WORK(NDOFL)       ! 
+      REAL(DOUBLE)                    :: DIAG(NDOFL)       !
+      REAL(DOUBLE)                    :: FREQ              !
+      REAL(DOUBLE)                    :: OFF_DIAG(NDOFL-1) !
+      REAL(DOUBLE)                    :: QMAT(1,NDOFL)     !
+      REAL(DOUBLE)                    :: SIGMA             !
+      REAL(DOUBLE)                    :: WORK(NDOFL)       !
 
 ! **********************************************************************************************************************************
       NUM_NEG_TERMS = 0
@@ -537,9 +537,9 @@
       CALL MATADD_SSS      ( NDOFL, 'KLL',  NTERM_KLL,  I_KLL,  J_KLL,  KLL,  ONE, '-SIGMA*MLL', NTERM_MLL, I_MLL, J_MLL, MLL, &
                             -SIGMA, 'KMSM', NTERM_KMSM, I_KMSM, J_KMSM, KMSM )
 
-! Det bandwidth of KMSM so BANDGEN can put it in LAPACK band form. KMSM_SDIA is the number of super-diags in the band form of KMSM 
+! Det bandwidth of KMSM so BANDGEN can put it in LAPACK band form. KMSM_SDIA is the number of super-diags in the band form of KMSM
 
-      CALL BANDSIZ ( NDOFL, NTERM_KMSM, I_KMSM, J_KMSM, KMSM_SDIA ) 
+      CALL BANDSIZ ( NDOFL, NTERM_KMSM, I_KMSM, J_KMSM, KMSM_SDIA )
 
       IF      (EIG_LAP_MAT_TYPE(1:3) == 'DPB') THEN
          LDRFAC = KMSM_SDIA + 1

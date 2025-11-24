@@ -9,7 +9,7 @@
       USE MODEL_STUF, ONLY            :  EIG_MSGLVL
       USE SUBR_BEGEND_LEVELS, ONLY    :  ARPACK_BEGEND
       USE SuperLU_STUF, ONLY          :  SLU_FACTORS, SLU_INFO
-      USE PARAMS, ONLY                :  LANCMETH
+      USE PARAMS, ONLY                :  SOLLIB
       USE ARPACK_UTIL
       USE LAPACK_BLAS_AUX
       USE LAPACK_LANCZOS_EIG
@@ -672,7 +672,7 @@ c        | and Call LAPACK routine dpbtrf to factor rfac|
 c        %----------------------------------------------%
 c
 
-         IF(LANCMETH == 'SPARSE') THEN
+         IF(SOLLIB(1:6) == 'SPARSE') THEN
 
             !todo not sure about MATIN_SET = 'L '
             SLU_INFO = 0
@@ -720,7 +720,7 @@ c        | Construct and factor (A - sigma*M). |
 c        %-------------------------------------%
 c
 
-         IF(LANCMETH == 'SPARSE') THEN
+         IF(SOLLIB(1:6) == 'SPARSE') THEN
 
             !todo not sure about MATIN_SET = 'L '
             SLU_INFO = 0
@@ -859,7 +859,7 @@ c
             IF (EIG_MSGLVL > 0) CALL ARP_DEB(1,N,IDO,IPNTR)
             call dcopy(n, workd(ipntr(2)), 1, workd(ipntr(1)), 1)
 
-            IF(LANCMETH == 'SPARSE') THEN
+            IF(SOLLIB(1:6) == 'SPARSE') THEN
 
                SLU_INFO = 0
                call FBS_SUPRLU ( SUBR_NAME, 'KMSMn', n,
@@ -920,7 +920,7 @@ c
             enddo
             IF (EIG_MSGLVL > 0) CALL ARP_DEB(1,N,IDO,IPNTR)
 
-            IF(LANCMETH == 'SPARSE') THEN
+            IF(SOLLIB(1:6) == 'SPARSE') THEN
 
                SLU_INFO = 0
                call FBS_SUPRLU ( SUBR_NAME, 'KMSMn', n,
@@ -984,7 +984,7 @@ c
             IF (EIG_MSGLVL > 0) CALL ARP_DEB(1,N,IDO,IPNTR)
             call dcopy(n, workd(ipntr(2)), 1, workd(ipntr(1)), 1)
 
-            IF(LANCMETH == 'SPARSE') THEN
+            IF(SOLLIB(1:6) == 'SPARSE') THEN
 
                SLU_INFO = 0
                call FBS_SUPRLU ( SUBR_NAME, 'KMSMn', n,
@@ -1026,7 +1026,7 @@ c
 
             call dcopy(n, workd(ipntr(3)), 1, workd(ipntr(2)), 1)
 
-            IF(LANCMETH == 'SPARSE') THEN
+            IF(SOLLIB(1:6) == 'SPARSE') THEN
 
                SLU_INFO = 0
                call FBS_SUPRLU ( SUBR_NAME, 'KMSMn', n,

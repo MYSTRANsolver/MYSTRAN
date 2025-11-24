@@ -50,7 +50,7 @@
                                          EPSIL           , EMP0_PAUSE      , ESP0_PAUSE      , F06_COL_START   ,                   &
                                          GRDPNT          , GRDPNT_IN       , GRIDSEQ         , HEXAXIS         ,                   &
                                          IORQ1M          , IORQ1S          , IORQ1B          , IORQ2B          , IORQ2T          , &
-                                         ITMAX           , KLLRAT          , KOORAT          , LANCMETH        , MATSPARS        , &
+                                         ITMAX           , KLLRAT          , KOORAT          ,                   MATSPARS        , &
                                          MEMAFAC         , MIN4TRED        , MXALLOCA        , MAXRATIO        ,                   &
                                          MEFMCORD        , MEFMLOC         , MEFMGRID        ,                                     &
                                          MPFOUT          , MXITERI         , MXITERL         , OTMSKIP         , POST            , &
@@ -1106,34 +1106,6 @@
       ELSE IF (JCARD(2)(1:8) == 'KOORAT  ') THEN
          PARNAM = 'KOORAT  '
          CALL YES_NO_CHECK(CARD, JCARD, CHRPARM, PARNAM, KOORAT)
-
-! LANCMETH sets the method to be used for Lanczos eigen extraction
-
-      ELSE IF (JCARD(2)(1:8) == 'LANCMETH') THEN
-         PARNAM = 'LANCMETH'
-         CALL CHAR_FLD ( JCARD(3), JF(3), CHRPARM )
-         IF (IERRFL(3) == 'N') THEN
-            CALL LEFT_ADJ_BDFLD ( CHRPARM )
-            IF      (CHRPARM == 'BANDED  ') THEN
-               LANCMETH = 'BANDED'
-            ELSE IF (CHRPARM == 'SPARSE  ') THEN
-               LANCMETH = 'SPARSE'
-            ELSE
-               WARN_ERR = WARN_ERR + 1
-               WRITE(ERR,101) CARD
-               WRITE(ERR,1189) PARNAM,'BANDED or SPARSE',CHRPARM,LANCMETH
-               IF (SUPWARN == 'N') THEN
-                  IF (ECHO == 'NONE  ') THEN
-                     WRITE(F06,101) CARD
-                  ENDIF
-                  WRITE(F06,1189) PARNAM,'BANDED or SPARSE',CHRPARM,LANCMETH
-               ENDIF
-            ENDIF
-         ENDIF
-
-         CALL BD_IMBEDDED_BLANK   ( JCARD,0,3,0,0,0,0,0,0 )! Make sure that there are no imbedded blanks in field 3
-         CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,4,5,6,7,8,9 )! Issue warning if fields 4-9 not blank
-         CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
 
 ! MATSPARS Sets whether to use sparse matrix add and multiply routines for situations where the matrices are in any sparse format.
 ! If 'Y', use sparse routines. If 'N', use full matrix routines in place of all sparse routines
