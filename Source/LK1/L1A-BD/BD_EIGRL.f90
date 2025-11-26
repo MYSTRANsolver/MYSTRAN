@@ -1,36 +1,36 @@
 ! ##################################################################################################################################
-! Begin MIT license text.                                                                                    
+! Begin MIT license text.
 ! _______________________________________________________________________________________________________
-                                                                                                         
-! Copyright 2022 Dr William R Case, Jr (mystransolver@gmail.com)                                              
-                                                                                                         
-! Permission is hereby granted, free of charge, to any person obtaining a copy of this software and      
+
+! Copyright 2022 Dr William R Case, Jr (mystransolver@gmail.com)
+
+! Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 ! associated documentation files (the "Software"), to deal in the Software without restriction, including
 ! without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-! copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to   
-! the following conditions:                                                                              
-                                                                                                         
-! The above copyright notice and this permission notice shall be included in all copies or substantial   
-! portions of the Software and documentation.                                                                              
-                                                                                                         
-! THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS                                
-! OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,                            
-! FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE                            
-! AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER                                 
-! LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,                          
-! OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN                              
-! THE SOFTWARE.                                                                                          
+! copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to
+! the following conditions:
+
+! The above copyright notice and this permission notice shall be included in all copies or substantial
+! portions of the Software and documentation.
+
+! THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+! OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+! FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+! AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+! LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+! OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+! THE SOFTWARE.
 ! _______________________________________________________________________________________________________
-                                                                                                        
-! End MIT license text.                                                                                      
-  
+
+! End MIT license text.
+
       SUBROUTINE BD_EIGRL ( CARD, LARGE_FLD_INP, EIGFND )
-  
+
 ! Processes EIGRL Bulk Data Cards. Reads and checks data and write data to file LINK1M.
 
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
       USE IOUNT1, ONLY                :  WRT_ERR, WRT_LOG, ERR, F04, F06, L1M
-      USE SCONTR, ONLY                :  BLNK_SUB_NAM, FATAL_ERR, IERRFL, JCARD_LEN, JF, LSUB
+      USE SCONTR, ONLY                :  BLNK_SUB_NAM, FATAL_ERR, IERRFL, JCARD_LEN, JF, LSUB, SOL_NAME
       USE TIMDAT, ONLY                :  TSEC
       USE CONSTANTS_1, ONLY           :  ZERO, ONEPM4
       USE SUBR_BEGEND_LEVELS, ONLY    :  BD_EIG_BEGEND
@@ -65,9 +65,9 @@
 
 ! **********************************************************************************************************************************
 ! EIGRL Bulk Data Card routine
-  
+
 !  Card 1:
- 
+
 !  Field   Item                   Description                          Type
 !  -----   ------------           -----------                          ----
 !   2      EIG_SID               EIGRL set ID                         Integer
@@ -76,9 +76,9 @@
 !   5      EIG_N2                Desired number of roots              Integer, >= 0
 !   6      EIG_MSGLVL            Message level for subr Lanczos       Integer, >= 0
 !   7      EIG_NCVFACL           (see MODEL_STUF for explanation)     Integer, >= 1
-!   8      EIG_SIGMA             Lanczos shift eigen                  Real           
+!   8      EIG_SIGMA             Lanczos shift eigen                  Real
 !   9      EIG_NORM              Renormalization method (MASS or MAX) Char
-  
+
 ! Continuation entry:
 
 !   1      EIG_MODE              Lanczos "mode" (dsband)              Integer, 2 or 3
@@ -86,7 +86,7 @@
 !   3      EIG_LANCZOS_NEV_DELT  Number to add to est num roots       Integer >= 0
 
 ! Make JCARD from CARD
- 
+
       CALL MKJCARD ( SUBR_NAME, CARD, JCARD )
 
       JERR = 0
@@ -165,68 +165,26 @@
       CALL EIGRL_DATA_CHECK
 
       CALL BD_IMBEDDED_BLANK ( JCARD,2,3,4,5,6,7,8,9 )     ! Make sure that there are no imbedded blanks in fields 2-9
-      CALL CRDERR ( CARD )                                 ! CRDERR prints errors found when reading fields 
+      CALL CRDERR ( CARD )                                 ! CRDERR prints errors found when reading fields
 
       IF((IERRFL(2) == 'Y') .OR. (IERRFL(3) == 'Y') .OR. & ! Increment JERR if there were errors reading any of the data fields
          (IERRFL(4) == 'Y') .OR. (IERRFL(5) == 'Y') .OR. &
          (IERRFL(6) == 'Y') .OR. (IERRFL(7) == 'Y') .OR. &
          (IERRFL(8) == 'Y') .OR. (IERRFL(9) == 'Y')) THEN
-         JERR = JERR + 1 
+         JERR = JERR + 1
       ENDIF
 
-! Second Card only required if user wants other than default EIG_MODE, EIG_LAP_MAT_TYPE, or EIG_LANCZOS_FUDGE_FAC:
-  
-      IF (LARGE_FLD_INP == 'N') THEN
-         CALL NEXTC  ( CARD, ICONT, IERR )
+      ! second card deprecated. set defaults:
+      !   - ARPACK mode 2 for buckling, 3 for everything else
+      !   - DGB matrix type (in case we use the banded solver)
+      !   - EIG_LANCZOS_NEV_DELT, previously undocumented, kept default (2)
+      IF (SOL_NAME == 'BUCKLING') THEN
+         EIG_MODE = 2
       ELSE
-         CALL NEXTC2 ( CARD, ICONT, IERR, CHILD )
-         CARD = CHILD
+         EIG_MODE = 3
       ENDIF
-      CALL MKJCARD ( SUBR_NAME, CARD, JCARD )
-
-      IF (ICONT == 1) THEN
-
-         IF (JCARD(2)(1:) /= ' ') THEN                     ! Read field 2: "mode" (see IPARAM(7) in ARPACK subr dsband)
-            CALL I4FLD ( JCARD(2), JF(2), I4INP )
-            IF (IERRFL(2) == 'N') THEN
-               EIG_MODE = I4INP
-               IF (JCARD(2)(1:) /= ' ') THEN
-                  IF ((EIG_MODE /= 2) .AND. (EIG_MODE /= 3)) THEN
-                     FATAL_ERR = FATAL_ERR + 1
-                     WRITE(ERR,1108) JF(2), EIG_MODE
-                     WRITE(F06,1108) JF(2), EIG_MODE
-                  ENDIF
-               ENDIF
-            ENDIF
-         ENDIF
-
-         IF (JCARD(3)(1:) /= ' ') THEN                     ! Read field 3: LAPACK matrix type (DGB or DPB)
-            CALL LEFT_ADJ_BDFLD ( JCARD(3) )
-            IF (JCARD(3)(1:) /= ' ') THEN
-               IF      (JCARD(3)(1:3) == 'DGB') THEN
-                  EIG_LAP_MAT_TYPE = 'DGB     '
-               ELSE IF (JCARD(3)(1:3) == 'DPB') THEN
-                  EIG_LAP_MAT_TYPE = 'DPB     '
-               ELSE
-                  FATAL_ERR = FATAL_ERR + 1
-                  WRITE(ERR,1109) JCARD(3)
-                  WRITE(F06,1109) JCARD(3)
-               ENDIF
-            ENDIF
-         ENDIF
-
-         IF (JCARD(4)(1:) /= ' ') THEN                     ! Read field 4: 
-            CALL I4FLD ( JCARD(4), JF(4), I4INP )
-            IF (IERRFL(4) == 'N') THEN
-               EIG_LANCZOS_NEV_DELT = I4INP
-            ENDIF
-         ENDIF
-
-         CALL BD_IMBEDDED_BLANK ( JCARD,2,3,0,0,0,0,0,0 )  ! Make sure that there are no imbedded blanks in fields 2,3
-         CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,4,5,6,7,8,9 )! Issue warning if fields 4-9 not blank
-         CALL CRDERR ( CARD )                              ! CRDERR prints errors found when reading fields
-
-      ENDIF
+      EIG_LAP_MAT_TYPE = 'DGB     '
+      EIG_LANCZOS_NEV_DELT = 2 ! this was undocumented!
 
 ! >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
       EIG_CRIT = ONEPM4                                    ! Use this until code is changed to read a value from the EIGRL entry
@@ -283,11 +241,11 @@
  1137 FORMAT(' *ERROR  1137: FIELD ',I2,' ON THE EIGRL ENTRY MUST BE >= 1 BUT WAS = ',I8)
 
 ! *********************************************************************************************************************************
- 
+
 ! ##################################################################################################################################
- 
+
       CONTAINS
- 
+
 ! ##################################################################################################################################
 
       SUBROUTINE EIGRL_DATA_CHECK

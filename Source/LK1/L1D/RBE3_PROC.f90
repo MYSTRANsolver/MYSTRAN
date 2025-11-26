@@ -1,38 +1,38 @@
 ! ##################################################################################################################################
-! Begin MIT license text.                                                                                    
+! Begin MIT license text.
 ! _______________________________________________________________________________________________________
-                                                                                                         
-! Copyright 2022 Dr William R Case, Jr (mystransolver@gmail.com)                                              
-                                                                                                         
-! Permission is hereby granted, free of charge, to any person obtaining a copy of this software and      
+
+! Copyright 2022 Dr William R Case, Jr (mystransolver@gmail.com)
+
+! Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 ! associated documentation files (the "Software"), to deal in the Software without restriction, including
 ! without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-! copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to   
-! the following conditions:                                                                              
-                                                                                                         
-! The above copyright notice and this permission notice shall be included in all copies or substantial   
-! portions of the Software and documentation.                                                                              
-                                                                                                         
-! THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS                                
-! OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,                            
-! FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE                            
-! AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER                                 
-! LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,                          
-! OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN                              
-! THE SOFTWARE.                                                                                          
+! copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to
+! the following conditions:
+
+! The above copyright notice and this permission notice shall be included in all copies or substantial
+! portions of the Software and documentation.
+
+! THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+! OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+! FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+! AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+! LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+! OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+! THE SOFTWARE.
 ! _______________________________________________________________________________________________________
-                                                                                                        
-! End MIT license text.                                                                                      
+
+! End MIT license text.
 
       SUBROUTINE RBE3_PROC ( RTYPE, REC_NO, IERR )
 
 ! Processes a single RBE3 "rigid" element, per call, to get terms for the RMG constraint matrix. When the Bulk data was read, the
 ! RBE3 input data was written to file LINK1F. In this subr, file LINK1F is read and RBE3 terms for array RMG are calculated and
 ! written to file LINK1J.  Later, in subr SPARSE_RMG, LINK1J will be read to create the sparse array RMG (of all rigid element and
-! MPC coefficients) which will be used in LINK2 to reduce the G-set mass, stiffness and load matrices to the N-set. 
+! MPC coefficients) which will be used in LINK2 to reduce the G-set mass, stiffness and load matrices to the N-set.
 
 ! The derivation of the equations for the RBE3 are shown in Appendix E to the MYSTRAN User's Reference Manual
- 
+
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
       USE IOUNT1, ONLY                :  WRT_ERR, WRT_LOG, ERR, F04, F06, L1F, LINK1F, L1F_MSG, L1J
       USE SCONTR, ONLY                :  BLNK_SUB_NAM, FATAL_ERR, MRBE3, NCORD, NGRID, NTERM_RMG
@@ -42,11 +42,11 @@
       USE PARAMS, ONLY                :  EPSIL
       USE SUBR_BEGEND_LEVELS, ONLY    :  RIGID_ELEM_PROC_BEGEND
       USE DOF_TABLES, ONLY            :  TDOF, TDOF_ROW_START
- 
+
       USE RBE3_PROC_USE_IFs
 
       IMPLICIT NONE
- 
+
       CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: SUBR_NAME = 'RBE3_PROC'
       CHARACTER( 8*BYTE), INTENT(IN)  :: RTYPE             ! The type of rigid element being processed (RBE2)
       CHARACTER( 1*BYTE)              :: CDOF_D(6)         ! An output from subr RDOF (= 1 if a displ comp is in COMPS_D)
@@ -74,7 +74,7 @@
       INTEGER(LONG)                   :: ITERM_RMG         ! Countof number of records written to L1J (should be NTERM_RMG at end)
       INTEGER(LONG)                   :: M_SET_COL_NUM     ! Col no., in TDOF array, of the M-set DOF list
       INTEGER(LONG)                   :: NUM_COMPS         ! Number of displ components for a grid
-      INTEGER(LONG)                   :: OUNT(2)           ! File units to write messages to. Input to subr UNFORMATTED_OPEN  
+      INTEGER(LONG)                   :: OUNT(2)           ! File units to write messages to. Input to subr UNFORMATTED_OPEN
       INTEGER(LONG)                   :: REID              ! RBE2 elem ID read from file LINK1F
       INTEGER(LONG)                   :: RMG_COL_NUM_D(6)  ! Col no's. in RMG for 6 components of dep DOF at ref pt (if they exist)
       INTEGER(LONG)                   :: RMG_ROW_NUM       ! Row no. of a term in array RMG
@@ -130,14 +130,14 @@
 
 !     5th record, and on, : GRID(3), COMP(3), WTi(3): 3rd independent grid, the independent components and the weight for this grid
 
-! The above record structure is repeated for each RBE3 logical card in the data deck (in the order in which they were read from the 
+! The above record structure is repeated for each RBE3 logical card in the data deck (in the order in which they were read from the
 ! B.D. deck).
 
 ! Make units for writing errors the error file and output file
- 
+
       OUNT(1) = ERR
       OUNT(2) = F06
- 
+
       EPS1 = EPSIL(1)
 
       JERR = 0
@@ -184,7 +184,6 @@
                WT6(J) = WT6(J) + WTi(I)
             END IF
          END DO
-         WRITE(f06,*)
       ENDDO
 
 ! Return if error
@@ -192,7 +191,7 @@
       IF (JERR /= 0) THEN
          FATAL_ERR = FATAL_ERR + 1
          RETURN
-      ENDIF      
+      ENDIF
 
 ! Get T0D (transforms global vector at AGRID_D to basic)
 
@@ -204,15 +203,15 @@
                ICORD_D = I
                EXIT
             ENDIF
-         ENDDO   
+         ENDDO
          CALL GEN_T0L ( GRID_ID_ROW_NUM_D, ICORD_D, THETAD, PHID, T0D )
       ELSE
          DO I=1,3
             DO J=1,3
                T0D(I,J) = ZERO
-            ENDDO   
+            ENDDO
             T0D(I,I) = ONE
-         ENDDO   
+         ENDDO
       ENDIF
 
 ! Get coords of the reference grid (AGRID_D) in basic coord system
@@ -245,7 +244,7 @@
          DY_BAR = DY_BAR + WTi6(J,2)*DYI(J)
          DZ_BAR = DZ_BAR + WTi6(J,3)*DZI(J)
 
-         
+
       ENDDO
 
 
@@ -307,7 +306,7 @@ cdof_dep:IF (CDOF_D(I) == '1') THEN                        ! The I-th component 
             IF ((RMG_ROW_NUM > 0) .AND. (RMG_COL_NUM_D(I) > 0)) THEN
                                                           ! Write coeff for the T1, T2 or T3 component at the ref pt
                IF ((I == 1) .OR. (I == 2) .OR. (I == 3)) THEN
-                  IF (DABS(WT) > EPS1) THEN 
+                  IF (DABS(WT) > EPS1) THEN
                      WRITE(L1J) RMG_ROW_NUM, RMG_COL_NUM_D(I), WT6(I)
                      ITERM_RMG = ITERM_RMG + 1
                   ELSE
@@ -320,43 +319,43 @@ cdof_dep:IF (CDOF_D(I) == '1') THEN                        ! The I-th component 
                IF      (I == 1) THEN                       ! Write coeffs for the R2, R3 comps at the ref pt for the 1st eqn
 
                   IF (CDOF_D(5) /= '0') THEN
-                     WRITE(L1J) RMG_ROW_NUM, RMG_COL_NUM_D(5), +DZ_BAR 
+                     WRITE(L1J) RMG_ROW_NUM, RMG_COL_NUM_D(5), +DZ_BAR
                      ITERM_RMG = ITERM_RMG + 1
                   ENDIF
 
                   IF (CDOF_D(6) /= '0') THEN
-                     WRITE(L1J) RMG_ROW_NUM, RMG_COL_NUM_D(6), -DY_BAR 
+                     WRITE(L1J) RMG_ROW_NUM, RMG_COL_NUM_D(6), -DY_BAR
                      ITERM_RMG = ITERM_RMG + 1
                   ENDIF
 
                ELSE IF (I == 2) THEN                       ! Write coeffs for the R1, R3 comps at the ref pt for the 2nd eqn
 
                   IF (CDOF_D(4) /= '0') THEN
-                     WRITE(L1J) RMG_ROW_NUM, RMG_COL_NUM_D(4), -DZ_BAR 
+                     WRITE(L1J) RMG_ROW_NUM, RMG_COL_NUM_D(4), -DZ_BAR
                      ITERM_RMG = ITERM_RMG + 1
                   ENDIF
 
                   IF (CDOF_D(6) /= '0') THEN
-                     WRITE(L1J) RMG_ROW_NUM, RMG_COL_NUM_D(6), +DX_BAR 
+                     WRITE(L1J) RMG_ROW_NUM, RMG_COL_NUM_D(6), +DX_BAR
                      ITERM_RMG = ITERM_RMG + 1
                   ENDIF
 
                ELSE IF (I == 3) THEN                       ! Write coeffs for the R1, R2 comps at the ref pt for the 3rd eqn
 
                   IF (CDOF_D(4) /= '0') THEN
-                     WRITE(L1J) RMG_ROW_NUM, RMG_COL_NUM_D(4), +DY_BAR 
+                     WRITE(L1J) RMG_ROW_NUM, RMG_COL_NUM_D(4), +DY_BAR
                      ITERM_RMG = ITERM_RMG + 1
                   ENDIF
 
                   IF (CDOF_D(5) /= '0') THEN
-                     WRITE(L1J) RMG_ROW_NUM, RMG_COL_NUM_D(5), -DX_BAR 
+                     WRITE(L1J) RMG_ROW_NUM, RMG_COL_NUM_D(5), -DX_BAR
                      ITERM_RMG = ITERM_RMG + 1
                   ENDIF
 
                ENDIF
                                                            ! Write coeffs for the R1, R2 and R3 comps at the ref pt for eqns 4,5,6
-               IF (I == 4) THEN 
-                  IF (DABS(EBAR_YZ) > EPS1) THEN 
+               IF (I == 4) THEN
+                  IF (DABS(EBAR_YZ) > EPS1) THEN
                      WRITE(L1J) RMG_ROW_NUM, RMG_COL_NUM_D(I), EBAR_YZ
                      ITERM_RMG = ITERM_RMG + 1
                   ELSE
@@ -371,8 +370,8 @@ cdof_dep:IF (CDOF_D(I) == '1') THEN                        ! The I-th component 
                   ITERM_RMG = ITERM_RMG + 1
                ENDIF
 
-               IF (I == 5) THEN 
-                  IF (DABS(EBAR_ZX) > EPS1) THEN 
+               IF (I == 5) THEN
+                  IF (DABS(EBAR_ZX) > EPS1) THEN
                      WRITE(L1J) RMG_ROW_NUM, RMG_COL_NUM_D(I), EBAR_ZX
                      ITERM_RMG = ITERM_RMG + 1
                   ELSE
@@ -387,8 +386,8 @@ cdof_dep:IF (CDOF_D(I) == '1') THEN                        ! The I-th component 
                   ITERM_RMG = ITERM_RMG + 1
                ENDIF
 
-               IF (I == 6) THEN 
-                  IF (DABS(EBAR_XY) > EPS1) THEN 
+               IF (I == 6) THEN
+                  IF (DABS(EBAR_XY) > EPS1) THEN
                      WRITE(L1J) RMG_ROW_NUM, RMG_COL_NUM_D(I), EBAR_XY
                      ITERM_RMG = ITERM_RMG + 1
                   ELSE
@@ -398,7 +397,7 @@ cdof_dep:IF (CDOF_D(I) == '1') THEN                        ! The I-th component 
 
                   WRITE(L1J) RMG_ROW_NUM, RMG_COL_NUM_D(4), -SZX
                   ITERM_RMG = ITERM_RMG + 1
-                  
+
                   WRITE(L1J) RMG_ROW_NUM, RMG_COL_NUM_D(5), -SYZ
                   ITERM_RMG = ITERM_RMG + 1
                ENDIF
@@ -444,7 +443,7 @@ cdof_dep:IF (CDOF_D(I) == '1') THEN                        ! The I-th component 
 do_j1:      DO J=1,IRBE3                                   ! Cycle over "indep" terms (some here may actually be dep elsewhere)
                                                            ! Get T0I (transforms global vector at AGRID_I to basic)
                CALL RDOF ( COMPS_I(J), CDOF_I )
-               
+
                CALL GET_GRID_NUM_COMPS ( AGRID_I(J), NUM_COMPS, SUBR_NAME )
                IF (NUM_COMPS /= 6) THEN
                   IERR  = IERR + 1
@@ -463,15 +462,15 @@ do_j1:      DO J=1,IRBE3                                   ! Cycle over "indep" 
                         ICORD_I = K
                         EXIT
                      ENDIF
-                  ENDDO   
+                  ENDDO
                   CALL GEN_T0L ( GRID_ID_ROW_NUM_I, ICORD_I, THETAD, PHID, T0I )
                ELSE
                   DO K=1,3
                      DO L=1,3
                         T0I(K,L) = ZERO
-                     ENDDO   
+                     ENDDO
                      T0I(K,K) = ONE
-                  ENDDO   
+                  ENDDO
                ENDIF
 
                CALL MATMULT_FFF_T ( T0D, T0I, 3, 3, 3, TDI )
@@ -614,9 +613,9 @@ do_j1:      DO J=1,IRBE3                                   ! Cycle over "indep" 
       INTEGER(LONG)                   :: RMG_COL_NUM_START ! Col no. of a term in array RMG
       INTEGER(LONG)                   :: ROW_NUM_START_I   ! DOF number where TDOF data begins for a grid
 
-      REAL(DOUBLE) , INTENT(IN)       :: DXI(MRBE3)        ! Distances from ref pt to pt i in X global directions at ref pt 
-      REAL(DOUBLE) , INTENT(IN)       :: DYI(MRBE3)        ! Distances from ref pt to pt i in Y global directions at ref pt 
-      REAL(DOUBLE) , INTENT(IN)       :: DZI(MRBE3)        ! Distances from ref pt to pt i in Z global directions at ref pt 
+      REAL(DOUBLE) , INTENT(IN)       :: DXI(MRBE3)        ! Distances from ref pt to pt i in X global directions at ref pt
+      REAL(DOUBLE) , INTENT(IN)       :: DYI(MRBE3)        ! Distances from ref pt to pt i in Y global directions at ref pt
+      REAL(DOUBLE) , INTENT(IN)       :: DZI(MRBE3)        ! Distances from ref pt to pt i in Z global directions at ref pt
       REAL(DOUBLE) , INTENT(IN)       :: WTi6(MRBE3,6)     ! Weight value for an indep grid (PER-DOF)
 
 ! **********************************************************************************************************************************
@@ -644,7 +643,7 @@ do_j1:      DO J=1,IRBE3                                   ! Cycle over "indep" 
             ITERM_RMG = ITERM_RMG +1
          ENDIF
 
-      ELSE IF (I == 5) THEN                                ! Rotation about y, i.e. in zx (31) plane      
+      ELSE IF (I == 5) THEN                                ! Rotation about y, i.e. in zx (31) plane
 
          IF (CDOF_I(1) == '1') THEN
             WRITE(L1J) RMG_ROW_NUM, (RMG_COL_NUM_START-1)+1, -WTi6(J,2)*DZI(J)
@@ -668,7 +667,7 @@ do_j1:      DO J=1,IRBE3                                   ! Cycle over "indep" 
             ITERM_RMG = ITERM_RMG +1
          ENDIF
 
-      ENDIF      
+      ENDIF
 
 ! **********************************************************************************************************************************
  1513 FORMAT(' *ERROR  1513: PROGRAMMING ERROR IN SUBROUTINE ',A                                                                   &
