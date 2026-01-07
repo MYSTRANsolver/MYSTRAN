@@ -2,7 +2,7 @@
 ! _______________________________________________________________________________________________________
 
 ! Copyright 2022 Dr William R Case, Jr (mystransolver@gmail.com)
-! Copyright 2026 Bruno Borber (adaptive frequency range implementation)
+! Copyright 2026 Bruno Borber (pre-factored matrix support for adaptive Lanczos)
 
 ! Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 ! associated documentation files (the "Software"), to deal in the Software without restriction, including
@@ -24,27 +24,13 @@
 
 ! End MIT license text.
 
-      MODULE EIG_LANCZOS_ARPACK_ADAPTIVE_USE_IFs
+      MODULE DSBAND_PREFAC_USE_IFs
 
-! USE Interface statements for all subroutines called by SUBROUTINE EIG_LANCZOS_ARPACK_ADAPTIVE
+! USE Interface statements for all subroutines called by SUBROUTINE DSBAND_PREFAC
 
       USE OURTIM_Interface
-      USE OUTA_HERE_Interface
-      USE MATADD_SSS_NTERM_Interface
-      USE ALLOCATE_SPARSE_MAT_Interface
-      USE MATADD_SSS_Interface
-      USE BANDSIZ_Interface
-      USE ALLOCATE_LAPACK_MAT_Interface
-      USE BANDGEN_LAPACK_DPB_Interface
-      USE BANDGEN_LAPACK_DGB_Interface
-      USE DEALLOCATE_SPARSE_MAT_Interface
-      USE SPARSE_MAT_DIAG_ZEROS_Interface
-      USE CRS_SYM_TO_CRS_NONSYM_Interface
-      USE ALLOCATE_EIGEN1_MAT_Interface
-      USE DEALLOCATE_LAPACK_MAT_Interface
-      USE DEALLOCATE_EIGEN1_MAT_Interface
-      USE GET_GRID_AND_COMP_Interface
-      USE DSBAND_PREFAC_Interface
-      USE SYM_MAT_DECOMP_SUPRLU_Interface
+      USE MATMULT_SFF_Interface
+      USE ARPACK_INFO_MSG_Interface
+      USE FBS_SUPRLU_Interface
 
-      END MODULE EIG_LANCZOS_ARPACK_ADAPTIVE_USE_IFs
+      END MODULE DSBAND_PREFAC_USE_IFs

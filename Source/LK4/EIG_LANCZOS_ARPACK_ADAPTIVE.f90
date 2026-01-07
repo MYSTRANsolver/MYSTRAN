@@ -54,10 +54,15 @@
       USE ARPACK_MATRICES_1, ONLY     :  IWORK, RESID, RFAC, SELECT, VBAS, WORKD, WORKL
       USE SPARSE_MATRICES, ONLY       :  I_KLL, J_KLL, KLL, I_MLL, J_MLL, MLL, SYM_KLL, SYM_MLL,                                   &
                                          I_KMSM, J_KMSM, KMSM, I_KMSMn, J_KMSMn, KMSMn
+      USE SuperLU_STUF, ONLY          :  SLU_FACTORS, SLU_INFO
 
       USE ARPACK_LANCZOS_EIG
+      USE LAPACK_LIN_EQN_DPB
+      USE LAPACK_LIN_EQN_DGB
 
       USE EIG_LANCZOS_ARPACK_ADAPTIVE_USE_IFs
+      USE DSBAND_PREFAC_Interface
+      USE SYM_MAT_DECOMP_SUPRLU_Interface
 
       IMPLICIT NONE
 
@@ -110,6 +115,8 @@
       REAL(DOUBLE)                    :: MAX_EIGEN_FOUND   ! Maximum eigenvalue found in current iteration
       REAL(DOUBLE)                    :: DELTA_SHIFT       ! Small shift for zero-lower-bound case
       INTEGER(LONG)                   :: NUM_DISCARDED     ! Number of eigenvalues discarded (outside range)
+      INTEGER(LONG)                   :: IERR              ! Error return from LAPACK factorization
+      REAL(DOUBLE)                    :: DUM_COL(1)        ! Dummy column for SuperLU deallocation
 
       ! Temporary arrays for filtering
       REAL(DOUBLE), ALLOCATABLE       :: TEMP_EIGEN_VAL(:) ! Temporary eigenvalues for filtering
@@ -159,7 +166,7 @@
 ! **********************************************************************************************************************************
 ! Initialize adaptive search parameters
 
-      INITIAL_NEV = 120
+      INITIAL_NEV = 10
       MAX_DOUBLINGS = 10
       NUM_DOUBLINGS = 0
 
@@ -268,6 +275,67 @@
       CALL DEALLOCATE_SPARSE_MAT ( 'KLL' )
 
 ! **********************************************************************************************************************************
+! FACTORIZATION (done ONCE before the adaptive loop)
+! For BANDED: allocate RFAC, copy banded matrix, factor with dgbtrf/dpbtrf
+! For SPARSE: call SYM_MAT_DECOMP_SUPRLU to factor using SuperLU
+
+      KL = KMSM_SDIA
+      KU = KL
+
+      CALL OURTIM
+      MODNAM = 'FACTOR SHIFTED MATRIX [KLL - sigma*MLL]'
+      WRITE(SC1,4092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+
+      ! Allocate RFAC and IWORK (kept across all iterations)
+      CALL ALLOCATE_LAPACK_MAT ( 'RFAC', LDRFAC, NDOFL, SUBR_NAME )
+      CALL ALLOCATE_LAPACK_MAT ( 'IWORK', NDOFL, 1, SUBR_NAME )
+
+      IF (SOLLIB(1:6) == 'SPARSE') THEN
+         ! Factor using SuperLU - factorization stored in SLU_FACTORS
+         SLU_INFO = 0
+         CALL SYM_MAT_DECOMP_SUPRLU ( SUBR_NAME, 'KMSM', 'L ',                                                                     &
+                                      NDOFL, NTERM_KMSMn, I_KMSMn, J_KMSMn, KMSMn, SLU_INFO )
+         IF (SLU_INFO /= 0) THEN
+            WRITE(ERR,9903) SLU_INFO, SUBR_NAME
+            WRITE(F06,9903) SLU_INFO, SUBR_NAME
+            FATAL_ERR = FATAL_ERR + 1
+            CALL OUTA_HERE ( 'Y' )
+         ENDIF
+      ELSE
+         ! BANDED solver: copy KMSM to RFAC in band format, then factor
+         IF (EIG_LAP_MAT_TYPE(1:3) == 'DPB') THEN
+            CALL BANDGEN_LAPACK_DPB ( 'KMSM', NDOFL, KMSM_SDIA, NTERM_KMSM, I_KMSM, J_KMSM, KMSM, RFAC, SUBR_NAME )
+            IERR = 0
+            CALL DPBTRF ( 'U', NDOFL, KU, RFAC, KU+1, IERR )
+            DO I = 1, NDOFL
+               IWORK(I) = I   ! No pivoting in Cholesky
+            ENDDO
+         ELSE IF (EIG_LAP_MAT_TYPE(1:3) == 'DGB') THEN
+            CALL BANDGEN_LAPACK_DGB ( 'KMSM', NDOFL, KMSM_SDIA, NTERM_KMSM, I_KMSM, J_KMSM, KMSM, RFAC, SUBR_NAME )
+            IERR = 0
+            CALL DGBTRF ( NDOFL, NDOFL, KL, KU, RFAC, LDRFAC, IWORK, IERR )
+         ENDIF
+         IF (IERR /= 0) THEN
+            CALL GET_GRID_AND_COMP ( 'A ', IERR, GRIDV, COMPV )
+            WRITE(ERR,989) '[KLL - SIGMA*MLL]', 'DPBTRF/DGBTRF', IERR
+            WRITE(F06,989) '[KLL - SIGMA*MLL]', 'DPBTRF/DGBTRF', IERR
+            FATAL_ERR = FATAL_ERR + 1
+            IF ((GRIDV > 0) .AND. (COMPV > 0)) THEN
+               WRITE(ERR,9892) GRIDV, COMPV
+               WRITE(F06,9892) GRIDV, COMPV
+            ENDIF
+            IF (BAILOUT >= 0) THEN
+               CALL OUTA_HERE ( 'Y' )
+            ENDIF
+         ENDIF
+      ENDIF
+
+      WRITE(F06,1040)
+      IF (SUPINFO == 'N') THEN
+         WRITE(SC1,1040)
+      ENDIF
+
+! **********************************************************************************************************************************
 ! ADAPTIVE NEV LOOP
 ! Start with small NEV and double until we find eigenvalues outside [FRQ1, FRQ2] on both sides
 
@@ -304,30 +372,20 @@
          IPARAM(4) = 1           ! Block size (must be 1)
          IPARAM(7) = 3           ! Mode 3: shift-invert for generalized problem
 
-         ! Set other DSBAND parameters
+         ! Set other DSBAND_PREFAC parameters
          RVEC = .TRUE.
          HOWMNY = 'A'
          BMAT = 'G'
          WHICH = 'LM'
 
-         ! Allocate RFAC and copy banded matrix (DSBAND will factor it in place)
-         CALL ALLOCATE_LAPACK_MAT ( 'RFAC', LDRFAC, NDOFL, SUBR_NAME )
-
-         IF (SOLLIB(1:6) == 'BANDED') THEN
-            IF (EIG_LAP_MAT_TYPE(1:3) == 'DPB') THEN
-               CALL BANDGEN_LAPACK_DPB ( 'KMSM', NDOFL, KMSM_SDIA, NTERM_KMSM, I_KMSM, J_KMSM, KMSM, RFAC, SUBR_NAME )
-            ELSE IF (EIG_LAP_MAT_TYPE(1:3) == 'DGB') THEN
-               CALL BANDGEN_LAPACK_DGB ( 'KMSM', NDOFL, KMSM_SDIA, NTERM_KMSM, I_KMSM, J_KMSM, KMSM, RFAC, SUBR_NAME )
-            ENDIF
-         ENDIF
+         ! NOTE: RFAC and IWORK are already allocated and factored before the loop
 
          ! Allocate eigenvalue/eigenvector arrays
          CALL ALLOCATE_EIGEN1_MAT ( 'EIGEN_VEC', NDOFL, NEV, SUBR_NAME )
          CALL ALLOCATE_EIGEN1_MAT ( 'MODE_NUM', NDOFL, 1, SUBR_NAME )
          CALL ALLOCATE_EIGEN1_MAT ( 'EIGEN_VAL', NDOFL, 1, SUBR_NAME )
 
-         ! Allocate ARPACK work arrays
-         CALL ALLOCATE_LAPACK_MAT ( 'IWORK', NDOFL, 1, SUBR_NAME )
+         ! Allocate ARPACK work arrays (these change size with NCV, so reallocate each iteration)
          CALL ALLOCATE_LAPACK_MAT ( 'RESID', NDOFL, 1, SUBR_NAME )
          CALL ALLOCATE_LAPACK_MAT ( 'SELECT', NCV, 1, SUBR_NAME )
          CALL ALLOCATE_LAPACK_MAT ( 'VBAS', NDOFL, NCV, SUBR_NAME )
@@ -338,7 +396,7 @@
             SELECT(I) = .FALSE.
          ENDDO
 
-         ! Call DSBAND to compute eigenvalues
+         ! Call DSBAND_PREFAC to compute eigenvalues (uses pre-factored RFAC/SLU_FACTORS)
          CALL OURTIM
          MODNAM = 'SOLVE FOR EIGENVALS/VECTORS - LANCZOS METH'
          WRITE(SC1,4092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
@@ -346,9 +404,9 @@
          INFO_ARPACK = 0
          INFO_LAPACK = 0
 
-         CALL DSBAND ( RVEC, HOWMNY, SELECT, EIGEN_VAL, EIGEN_VEC, NDOFL, SIGMA, NDOFL, LDRFAC, RFAC, KL, KU, WHICH, BMAT,         &
-                       NEV, ARP_TOL, RESID, NCV, VBAS, NDOFL, IPARAM, WORKD, WORKL, LWORKL, IWORK, INFO_ARPACK,                    &
-                       INFO_LAPACK, 'Y', DEBUG(47) )
+         CALL DSBAND_PREFAC ( RVEC, HOWMNY, SELECT, EIGEN_VAL, EIGEN_VEC, NDOFL, SIGMA, NDOFL, LDRFAC, RFAC, KL, KU, WHICH, BMAT,  &
+                              NEV, ARP_TOL, RESID, NCV, VBAS, NDOFL, IPARAM, WORKD, WORKL, LWORKL, IWORK, INFO_ARPACK,             &
+                              INFO_LAPACK, 'Y', DEBUG(47) )
 
          NUM_CONVERGED = IPARAM(5)
 
@@ -491,9 +549,8 @@
          ENDIF
 
          IF (.NOT. SEARCH_COMPLETE) THEN
-            ! Need to continue - deallocate and double NEV
-            CALL DEALLOCATE_LAPACK_MAT ( 'RFAC' )
-            CALL DEALLOCATE_LAPACK_MAT ( 'IWORK' )
+            ! Need to continue - deallocate work arrays (but NOT RFAC/IWORK) and double NEV
+            ! RFAC and IWORK contain the factorization, kept across all iterations
             CALL DEALLOCATE_LAPACK_MAT ( 'RESID' )
             CALL DEALLOCATE_LAPACK_MAT ( 'SELECT' )
             CALL DEALLOCATE_LAPACK_MAT ( 'VBAS' )
@@ -599,6 +656,12 @@
 
 ! **********************************************************************************************************************************
 ! Cleanup
+
+! Free SuperLU factorization (for SPARSE solver)
+      IF (SOLLIB(1:6) == 'SPARSE') THEN
+         DUM_COL(1) = ZERO
+         CALL C_FORTRAN_DGSSV ( 3, NDOFL, NTERM_KMSMn, 1, KMSMn, J_KMSMn, I_KMSMn, DUM_COL, NDOFL, SLU_FACTORS, SLU_INFO )
+      ENDIF
 
       WRITE(SC1,12345,ADVANCE='NO') '       Deallocate KMSMn ', CR13
       CALL DEALLOCATE_SPARSE_MAT ( 'KMSMn' )
@@ -717,6 +780,8 @@
 
  1039 FORMAT('        - Need more modes above FRQ2: have ',I4,', need >= ',I4)
 
+ 1040 FORMAT(' *INFORMATION: MATRIX [KLL - sigma*MLL] FACTORIZATION COMPLETE (REUSED FOR ALL ITERATIONS)')
+
   932 FORMAT(' *ERROR   932: PROGRAMMING ERROR IN SUBROUTINE ',A,                                                                  &
                     /,14X,' PARAMETER SPARSTOR MUST BE EITHER "SYM" OR "NONSYM" BUT VALUE IS ',A)
 
@@ -745,6 +810,8 @@
  9104 FORMAT(' *WARNING 9104: NO EIGENVALUES FOUND IN THE FREQUENCY RANGE ',F12.4,' Hz TO ',F12.4,' Hz')
 
  9892 FORMAT('               THIS IS FOR ROW AND COL IN THE MATRIX FOR GRID POINT ',I8,' COMPONENT ',I3)
+
+ 9903 FORMAT(' *ERROR  9903: SUPERLU SPARSE SOLVER HAS FAILED WITH INFO = ', I12,' IN SUBR ', A)
 
  9996 FORMAT('  PROCESSING STOPPED DUE TO ARPACK ERRORS')
 
