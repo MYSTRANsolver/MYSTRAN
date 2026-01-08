@@ -209,9 +209,11 @@
          IF (EIG_N2 > LSUB) THEN
             LSUB          = EIG_N2
          ELSE
-            ! no idea what the # of eigenvectors should be for now, let's keep
-            ! it large for now. this ought to be fixed someday
-            LSUB = 1000
+            ! since we have adaptive lanczos now, we set this to be
+            ! INITIAL_NEV*(2**MAX_DOUBLINGS), both being 10 and unlikely to be
+            ! changed unless someone *really* wants more than 10k modes AND
+            ! doesn't want to specify nmodes manually.
+            LSUB = 10240
          END IF
 
          CALL WRITE_L1M
