@@ -44,7 +44,7 @@
 ! Parameters used ------------------------------------------------------------------------------------------------------------------
 ! >>>>>>>>>>>>>>>
 
-      REAL(DOUBLE)             :: ARP_TOL        =   ONEPM6  ! Input to ARPACK subr dsband to decide convergence in subr dsconv.
+      REAL(DOUBLE)             :: ARP_TOL        =   1.0E-09 ! Input to ARPACK subr dsband to decide convergence in subr dsconv.
 !                                                              NOTE: if a value of -1. is input on a PARAM ARP_TOL entry, then the
 !                                                                    Lanczos algorithm will use machine precision for ARP_TOL
 
@@ -231,7 +231,7 @@
       INTEGER(LONG)            :: MXITERI        =    50     ! Max number of iterations in Inverse Power eigenvalue method
 
 ! ----------------------------------------------------------------------------------------------------------------------------------
-      INTEGER(LONG)            :: MXITERL        =    50     ! Max number of iterations in Lanczos eigenvalue method
+      INTEGER(LONG)            :: MXITERL        =    300     ! Max number of iterations in Lanczos eigenvalue method
 
 ! ----------------------------------------------------------------------------------------------------------------------------------
       INTEGER(LONG)            :: OTMSKIP        =     0     ! Number of lines to skip between segments of OTM text file output
