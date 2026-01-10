@@ -91,6 +91,19 @@
 
       JERR = 0
       USE_THIS_EIG = 'N'
+
+      ! second card deprecated. set defaults:
+      !   - ARPACK mode 2 for buckling, 3 for everything else
+      !   - DGB matrix type (in case we use the banded solver)
+      !   - EIG_LANCZOS_NEV_DELT, previously undocumented, kept default (2)
+      IF (SOL_NAME == 'BUCKLING') THEN
+         EIG_MODE = 2
+      ELSE
+         EIG_MODE = 3
+      ENDIF
+      EIG_LAP_MAT_TYPE = 'DGB     '
+      EIG_LANCZOS_NEV_DELT = 2
+
       CALL I4FLD ( JCARD(2), JF(2), EIG_SID )              ! Read set ID and check if it is one requested in Case Control
       IF (IERRFL(2) == 'N') THEN
          IF (EIG_SID == CC_EIGR_SID) THEN
@@ -173,18 +186,6 @@
          (IERRFL(8) == 'Y') .OR. (IERRFL(9) == 'Y')) THEN
          JERR = JERR + 1
       ENDIF
-
-      ! second card deprecated. set defaults:
-      !   - ARPACK mode 2 for buckling, 3 for everything else
-      !   - DGB matrix type (in case we use the banded solver)
-      !   - EIG_LANCZOS_NEV_DELT, previously undocumented, kept default (2)
-      IF (SOL_NAME == 'BUCKLING') THEN
-         EIG_MODE = 2
-      ELSE
-         EIG_MODE = 3
-      ENDIF
-      EIG_LAP_MAT_TYPE = 'DGB     '
-      EIG_LANCZOS_NEV_DELT = 2 ! this was undocumented!
 
 ! >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
       EIG_CRIT = ONEPM4                                    ! Use this until code is changed to read a value from the EIGRL entry
