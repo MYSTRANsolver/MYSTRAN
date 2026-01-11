@@ -457,6 +457,8 @@
 ! ----------------------------------------------------------------------------------------------------------------------------------
       INTEGER(LONG)            :: STR_CID        =    -1     ! Indicator for the coordinate system to use ID for elem stress, strain
 !                                                              and emgineering force output:
+!                                                              -2 is material coordinate system for solids and local element 
+!                                                                 coord system for other element types
 !                                                              -1 is local element coord system (default)
 !                                                               0 is basic coord system
 !                                                               j (any other integer) is a defined coord system for output
