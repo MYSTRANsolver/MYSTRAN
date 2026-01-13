@@ -1,41 +1,41 @@
 ! ##################################################################################################################################
-! Begin MIT license text.                                                                                    
+! Begin MIT license text.
 ! _______________________________________________________________________________________________________
-                                                                                                         
-! Copyright 2022 Dr William R Case, Jr (mystransolver@gmail.com)                                              
-                                                                                                         
-! Permission is hereby granted, free of charge, to any person obtaining a copy of this software and      
+
+! Copyright 2022 Dr William R Case, Jr (mystransolver@gmail.com)
+
+! Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 ! associated documentation files (the "Software"), to deal in the Software without restriction, including
 ! without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-! copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to   
-! the following conditions:                                                                              
-                                                                                                         
-! The above copyright notice and this permission notice shall be included in all copies or substantial   
-! portions of the Software and documentation.                                                                              
-                                                                                                         
-! THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS                                
-! OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,                            
-! FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE                            
-! AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER                                 
-! LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,                          
-! OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN                              
-! THE SOFTWARE.                                                                                          
+! copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to
+! the following conditions:
+
+! The above copyright notice and this permission notice shall be included in all copies or substantial
+! portions of the Software and documentation.
+
+! THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+! OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+! FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+! AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+! LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+! OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+! THE SOFTWARE.
 ! _______________________________________________________________________________________________________
-                                                                                                        
-! End MIT license text.                                                                                      
+
+! End MIT license text.
 
       MODULE MODEL_STUF
 
 ! This module contains many of the allocatable arrays that get allocated in subr ALLOCATE_MODEL_STUF as well as some other
 ! non-allocateble model variables. Some of the dimensions of the arrays described here are defined in module SCONTR
-  
+
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
       USE CONSTANTS_1, ONLY           :  ONEPM4, ZERO, TEN, ONE
       USE SCONTR, ONLY                :  BLNK_SUB_NAM, CC_ENTRY_LEN, JCARD_LEN, MELDTS, MEMATR, MEMATC, MEPROP, METYPE,            &
                                          MPSOLID, MEFE, MEFEI, MEFER, MEWE, MEWEI, MEWER, MAX_STRESS_POINTS
-  
+
       IMPLICIT NONE
- 
+
       INTEGER, PRIVATE                :: I, J
 
       SAVE
@@ -54,7 +54,7 @@
 ! Each row of CONM2 has:
 
 !             Col. 1: CONM2 ID
-!             Col. 2: GID = grid point where CONM2 is located 
+!             Col. 2: GID = grid point where CONM2 is located
 !             Col. 3: CID = ID of coord. sys. that CONM2 is described in
 
 ! Each row of RCONM2 has:
@@ -74,27 +74,27 @@
 !           After running subr CONM2_PROC_1:
 !             Col.  1: mass
 !             Col.  2: x offset in basic coords at the mass
-!             Col.  3: y offset in basic coords at the mass 
-!             Col.  4: z offset in basic coords at the mass 
-!             Col.  5: MOI-11   in basic coords at the mass 
-!             Col.  6: MOI-21   in basic coords at the mass 
-!             Col.  7: MOI-22   in basic coords at the mass 
-!             Col.  8: MOI-31   in basic coords at the mass 
-!             Col.  9: MOI-32   in basic coords at the mass 
+!             Col.  3: y offset in basic coords at the mass
+!             Col.  4: z offset in basic coords at the mass
+!             Col.  5: MOI-11   in basic coords at the mass
+!             Col.  6: MOI-21   in basic coords at the mass
+!             Col.  7: MOI-22   in basic coords at the mass
+!             Col.  8: MOI-31   in basic coords at the mass
+!             Col.  9: MOI-32   in basic coords at the mass
 !             Col. 10: MOI-33   in basic coords at the mass
- 
+
 !           After running subr CONM2_PROC_2:
 !             Col.  1: mass
 !             Col.  2: x offset in basic coords at grid GID
-!             Col.  3: y offset in basic coords at grid GID 
-!             Col.  4: z offset in basic coords at grid GID 
-!             Col.  5: MOI-11   in basic coords at grid GID 
-!             Col.  6: MOI-21   in basic coords at grid GID 
-!             Col.  7: MOI-22   in basic coords at grid GID 
-!             Col.  8: MOI-31   in basic coords at grid GID 
-!             Col.  9: MOI-32   in basic coords at grid GID 
+!             Col.  3: y offset in basic coords at grid GID
+!             Col.  4: z offset in basic coords at grid GID
+!             Col.  5: MOI-11   in basic coords at grid GID
+!             Col.  6: MOI-21   in basic coords at grid GID
+!             Col.  7: MOI-22   in basic coords at grid GID
+!             Col.  8: MOI-31   in basic coords at grid GID
+!             Col.  9: MOI-32   in basic coords at grid GID
 !             Col. 10: MOI-33   in basic coords at grid GID
- 
+
 ! CONM2 and RCONM2 are sorted in the order that the CONM2's were input in the Bulk Data. They are initially created
 ! in subroutine BD_CONM2. Array RCONM2 is modified in subroutines CONM2_PROC_1 and CONM2_PROC_2 as described above.
 
@@ -121,7 +121,7 @@
 ! ----------------------
 
       INTEGER(LONG), ALLOCATABLE      :: CORD(:,:)           ! NCORD x MCORD integer array of coord system data.
-  
+
       REAL(DOUBLE) , ALLOCATABLE      :: RCORD(:,:)          ! NCORD x MRCORD real array of coord system data.
       REAL(DOUBLE) , ALLOCATABLE      :: TN(:,:,:)           ! 3 x 3 x LCORD real array of coord transformation matrices
 !                                                              (transforms a vector to its ref sys, RID, from its master sys, CID)
@@ -150,15 +150,15 @@
 
 !          After Bulk Data has been read:
 
-!            Col.  1: X coord of Pt A in RID coord system 
-!            Col.  2: Y coord of Pt A in RID coord system  
-!            Col.  3: Z coord of Pt A in RID coord system  
-!            Col.  4: X coord of Pt B in RID coord system  
-!            Col.  5: Y coord of Pt B in RID coord system  
-!            Col.  6: Z coord of Pt B in RID coord system  
-!            Col.  7: X coord of Pt C in RID coord system  
-!            Col.  8: Y coord of Pt C in RID coord system  
-!            Col.  9: Z coord of Pt C in RID coord system  
+!            Col.  1: X coord of Pt A in RID coord system
+!            Col.  2: Y coord of Pt A in RID coord system
+!            Col.  3: Z coord of Pt A in RID coord system
+!            Col.  4: X coord of Pt B in RID coord system
+!            Col.  5: Y coord of Pt B in RID coord system
+!            Col.  6: Z coord of Pt B in RID coord system
+!            Col.  7: X coord of Pt C in RID coord system
+!            Col.  8: Y coord of Pt C in RID coord system
+!            Col.  9: Z coord of Pt C in RID coord system
 !            Col. 10: 0.
 !            Col. 11: 0.
 !            Col. 12: 0.
@@ -166,8 +166,8 @@
 !          After subr CORD_PROC has run:
 
 !            Col.  1: Location of CID origin in basic coord sys X dir
-!            Col.  2: Location of CID origin in basic coord sys Y dir 
-!            Col.  3: Location of CID origin in basic coord sys Z dir 
+!            Col.  2: Location of CID origin in basic coord sys Y dir
+!            Col.  3: Location of CID origin in basic coord sys Z dir
 
 !            Col.  4: TN(1,1,M) for M = row no. in RCORD (internal coord. sys. ID = M)  ]
 !            Col.  5: TN(1,2,M) for M = row no. in RCORD (internal coord. sys. ID = M)  |- 1st row of TN in cols  4- 6 of RCORD
@@ -184,20 +184,20 @@
 !                      | TN(1,1,M)  TN(1,2,M)  TN(1,3,M) |
 !              TN(M) = | TN(2,1,M)  TN(2,2,M)  TN(2,3,M) |
 !                      | TN(3,1,M)  TN(3,2,M)  TN(3,3,M) |
- 
+
 !            is the coord system transformation which will transform a vector
 !            in internal coordinate system ID = M (of coord system principal axes)
 !            to a vector in basic coord system
-  
+
 ! CORD and RCORD are sorted in the order that the CORDij Bulk Data entries were input in the Bulk Data. Subroutine
-! BD_CORD initially creates arrays CORD and RCORD. Subr CORD_PROC changes the entries in RCORD as explained above. 
+! BD_CORD initially creates arrays CORD and RCORD. Subr CORD_PROC changes the entries in RCORD as explained above.
 
 ! **********************************************************************************************************************************
 ! Grid sequence data
 ! ------------------
 
       INTEGER(LONG), ALLOCATABLE      :: SEQ1(:)             ! NSEQ integer array of Grid ID's on SEQGP Bulk Data entries
- 
+
       REAL(DOUBLE),  ALLOCATABLE      :: SEQ2(:)             ! NSEQ real array of sequence no's on SEQGP Bulk Data entries
 !                                                            SEQ2(I) is the sequence number for grid SEQ1(I)
 
@@ -243,7 +243,7 @@
 
 ! The following example explains GRID_ID(I), GRID_SEQ(I) and INV_GRID_SEQ(I). The model has 5 grid points and they are sequenced
 ! in the order 401, 201, 501, 301, 101. Array GRID_ID has the grids in numerical order. GRID_SEQ(I) is the sequence number for
-! GRID_ID(I). INV_GRID_SEQ(I) does the following: the 4 for INV_GRID_SEQ(1) means that the 4th entry in GRID_ID (grid 401) is 
+! GRID_ID(I). INV_GRID_SEQ(I) does the following: the 4 for INV_GRID_SEQ(1) means that the 4th entry in GRID_ID (grid 401) is
 ! sequenced as GRID_SEQ(4) or first (as stated in the example).
 
 !                       I  GRID_ID(I)  GRID_SEQ(I)  INV_GRID_SEQ(I)
@@ -257,10 +257,10 @@
 ! N O T E:  A R R A Y S   G R I D   A N D   G R I D_I D   M U S T   B E   S O R T E D   T H E   S A M E   A F T E R   S U B R
 !           G R I D_P R O C   H A S   R U N
 
-! GRID_ELEM_CONN_ARRAY has NGRID rows, one for each grid i (in numerical order). 
+! GRID_ELEM_CONN_ARRAY has NGRID rows, one for each grid i (in numerical order).
 ! It has a number of cols = 2 + number of elems connected to grid i. A typical array is:
 
-!                     Table of elements connected to each grid 
+!                     Table of elements connected to each grid
 
 !         Grid    Num elems     ID's of elements connected to this grid -->
 
@@ -284,10 +284,10 @@
       INTEGER(LONG), ALLOCATABLE      :: SNORM(:,:)          ! Array SNORM GID and CID.
                                                              ! One row for each SNORM entry in the file.
                                                              ! Only used in LINK0 to read the entries.
-      REAL(DOUBLE), ALLOCATABLE       :: RSNORM(:,:)         ! Array SNORM vectors in the input (CID) coordinate systems. 
+      REAL(DOUBLE), ALLOCATABLE       :: RSNORM(:,:)         ! Array SNORM vectors in the input (CID) coordinate systems.
                                                              ! One row for each SNORM entry in the file, corresponding to SNORM.
                                                              ! Only used in LINK0 to read the entries.
-      REAL(DOUBLE), ALLOCATABLE       :: GRID_SNORM(:,:)     ! NGRID x MGRID_SNORM array normalized surface normal vectors in 
+      REAL(DOUBLE), ALLOCATABLE       :: GRID_SNORM(:,:)     ! NGRID x MGRID_SNORM array normalized surface normal vectors in
                                                              ! the basic coordinate system indexed by internal grid point number
                                                              ! (BGRID), the same as the GRID and RGRID arrays. Where all 3
                                                              ! components are exactly zero, there is no normal for that grid point.
@@ -355,9 +355,9 @@
 ! Element and grid temperature data
 ! ---------------------------------
 
-      CHARACTER( 1*BYTE), ALLOCATABLE :: CETEMP(:,:)         ! NELE  x NTSUB array of indicators of whether a elem has a 
+      CHARACTER( 1*BYTE), ALLOCATABLE :: CETEMP(:,:)         ! NELE  x NTSUB array of indicators of whether a elem has a
 !                                                              temperature defined for a subcase
-      CHARACTER( 1*BYTE), ALLOCATABLE :: CGTEMP(:,:)         ! NGRID x NTSUB array of indicators of whether a grid has a 
+      CHARACTER( 1*BYTE), ALLOCATABLE :: CGTEMP(:,:)         ! NGRID x NTSUB array of indicators of whether a grid has a
 !                                                              temperature defined for a subcase
       CHARACTER( 1*BYTE), PARAMETER   :: CETEMP_ERR = '*'    ! Value used to indicate an elem has no temperature defined for a S/C.
 !                                                              Also, value used in initializing array CETEMP
@@ -368,10 +368,10 @@
 !                                                              begins for an element
 
       REAL(DOUBLE)     , ALLOCATABLE  :: ETEMP(:,:)          ! NELE  x NSUB array of element temperatures
-      REAL(DOUBLE)     , ALLOCATABLE  :: GTEMP(:,:)          ! NGRID x NSUB array of grid point temperatures from TEMP, TEMPD 
+      REAL(DOUBLE)     , ALLOCATABLE  :: GTEMP(:,:)          ! NGRID x NSUB array of grid point temperatures from TEMP, TEMPD
       REAL(DOUBLE)                    :: ETEMP_INIT = ZERO   ! Value used in initializing array ETEMP
       REAL(DOUBLE)                    :: GTEMP_INIT = ZERO   ! Value used in initializing array GTEMP
-      REAL(DOUBLE)     , ALLOCATABLE  :: TDATA(:)            ! NTDAT x 1 array of element temperature data from TEMPRB and TEMPP1 
+      REAL(DOUBLE)     , ALLOCATABLE  :: TDATA(:)            ! NTDAT x 1 array of element temperature data from TEMPRB and TEMPP1
 
 ! **********************************************************************************************************************************
 ! Element pressure data
@@ -398,13 +398,13 @@
 ! -------------
 
       CHARACTER(LEN=CC_ENTRY_LEN)                           &! Character array of Case Control TITLE  info
-                        , ALLOCATABLE :: TITLE(:) 
+                        , ALLOCATABLE :: TITLE(:)
 
       CHARACTER(LEN=CC_ENTRY_LEN)                           &! Character array of Case Control STITLE info
-                        , ALLOCATABLE :: STITLE(:) 
+                        , ALLOCATABLE :: STITLE(:)
 
       CHARACTER(LEN=CC_ENTRY_LEN)                           &! Character array of Case Control LABEL  info
-                        , ALLOCATABLE :: LABEL(:) 
+                        , ALLOCATABLE :: LABEL(:)
 
 
       CHARACTER( 1*BYTE), ALLOCATABLE :: ALL_SETS_ARRAY(:)   ! Array containing all C.C. SET entries (complete entry incl "SET id=")
@@ -462,8 +462,8 @@
 
 ! CCELDT(1-16) is an integer array containing SET ID's (-1 for 'ALL', 0 for 'NONE', positive integer no. for SETID) of the 16
 ! possible outputs requested by the Case Control ELDATA command. All output is in the element local coordinate system (the one
-! in which the elements are developed): 
- 
+! in which the elements are developed):
+
 !     CCELDT( 0) is CC requests for print to BUGFIL of elem geometric data
 !     CCELDT( 1) is CC requests for print to BUGFIL of elem property and material info
 !     CCELDT( 2) is CC requests for print to BUGFIL of elem thermal and pressure matrices    : PTE, PPE
@@ -481,7 +481,7 @@
 !     CCELDT(14) is CC requests for write to F25FIL unformatted file of element              : UEL, PEL (all subcases)
 !     CCELDT(15) is CC requests currently not used
 
-!  The SC_xxxx arrays all use the same convention to indicate "ALL", "NONE" or "SETID": 
+!  The SC_xxxx arrays all use the same convention to indicate "ALL", "NONE" or "SETID":
 
 !     (1) "ALL"   is indicated  by a value of -1
 !     (2) "NONE"  is indicated  by a value of  0
@@ -500,46 +500,46 @@
 
 !     SC_DISP = -1   , bit 0 in OGROUT and in all rows of GROUT are set
 !     SC_DISP =  0   , bit 0 in OGROUT and in all rows of GROUT are left cleared
-!     SC_DISP = setid, bit 0 in OGROUT and in the rows of GROUT for the setid grids are set   
+!     SC_DISP = setid, bit 0 in OGROUT and in the rows of GROUT for the setid grids are set
 
 !     SC_OLOA = -1   , bit 1 in OGROUT and in all rows of GROUT are set
 !     SC_OLOA =  0   , bit 1 in OGROUT and in all rows of GROUT are left cleared
-!     SC_OLOA = setid, bit 1 in OGROUT and in the rows of GROUT for the setid grids are set   
+!     SC_OLOA = setid, bit 1 in OGROUT and in the rows of GROUT for the setid grids are set
 
 !     SC_SPCF = -1   , bit 2 in OGROUT and in all rows of GROUT are set
 !     SC_SPCF =  0   , bit 2 in OGROUT and in all rows of GROUT are left cleared
-!     SC_SPCF = setid, bit 2 in OGROUT and in the rows of GROUT for the setid grids are set   
+!     SC_SPCF = setid, bit 2 in OGROUT and in the rows of GROUT for the setid grids are set
 
 !     SC_GPFO = -1   , bit 3 in OGROUT and in all rows of GROUT are set
 !     SC_GPFO =  0   , bit 3 in OGROUT and in all rows of GROUT are left cleared
-!     SC_GPFO = setid, bit 3 in OGROUT and in the rows of GROUT for the setid grids are set   
+!     SC_GPFO = setid, bit 3 in OGROUT and in the rows of GROUT for the setid grids are set
 
 !     Array GROUT is set in subr SCPRO based on the values read from SC_DISP, SC_OLOA, SC_SPCF, SC_GPFO
 
 !  OELOUT: One row for each S/C. Bits indicate if C.C. requests were made for elem related outputs for that S/C.
 
 !     Bit  0 in a row of OELOUT indicates some Case Control ELFORCE(NODE) output requests were found
-!     Bit  1 in a row of OELOUT indicates some Case Control ELFORCE(ENGR) output requests were found           
-!     Bit  2 in a row of OELOUT indicates some Case Control STRESS output requests were found           
+!     Bit  1 in a row of OELOUT indicates some Case Control ELFORCE(ENGR) output requests were found
+!     Bit  2 in a row of OELOUT indicates some Case Control STRESS output requests were found
 !     Array OELOUT is set in subr SCPRO based on the values read from SC_ELFN, SC_ELFE, SC_STRE, SC_STRN
 
 !  ELOUT : Each row is for 1 elem and each col is for 1 S/C. If, for a subcase:
 
 !     SC_ELFN = -1   , bit 0 in OELOUT and in all rows of ELOUT are set
 !     SC_ELFN =  0   , bit 0 in OELOUT and in all rows of ELOUT are left cleared
-!     SC_ELFN = setid, bit 0 in OELOUT and in the rows of ELOUT for the setid ELids are set   
+!     SC_ELFN = setid, bit 0 in OELOUT and in the rows of ELOUT for the setid ELids are set
 
 !     SC_ELFE = -1   , bit 1 in OELOUT and in all rows of ELOUT are set
 !     SC_ELFE =  0   , bit 1 in OELOUT and in all rows of ELOUT are left cleared
-!     SC_ELFE = setid, bit 1 in OELOUT and in the rows of ELOUT for the setid ELids are set   
+!     SC_ELFE = setid, bit 1 in OELOUT and in the rows of ELOUT for the setid ELids are set
 
 !     SC_STRE = -1   , bit 2 in OELOUT and in all rows of ELOUT are set
 !     SC_STRE =  0   , bit 2 in OELOUT and in all rows of ELOUT are left cleared
-!     SC_STRE = setid, bit 2 in OELOUT and in the rows of ELOUT for the setid grids are set   
+!     SC_STRE = setid, bit 2 in OELOUT and in the rows of ELOUT for the setid grids are set
 
 !     SC_STRN = -1   , bit 3 in OELOUT and in all rows of ELOUT are set
 !     SC_STRN =  0   , bit 3 in OELOUT and in all rows of ELOUT are left cleared
-!     SC_STRN = setid, bit 3 in OELOUT and in the rows of ELOUT for the setid grids are set   
+!     SC_STRN = setid, bit 3 in OELOUT and in the rows of ELOUT for the setid grids are set
 
 !     Array OELOUT is set in subr SCPRO based on the values read from SC_ELFN, SC_ELFE, SC_STRE, SC_STRN
 
@@ -554,10 +554,10 @@
 !        Bit  6 in OELDT indicates some requests for elem displacement and load matrices      : UEL, PEL (all subcases)
 !        Bit  7 in OELDT indicates some requests for elem shape fcns and Jacobian matrices
 !        Bit  8 in OELDT indicates some requests for elem strain-displacement matrices
-!        Bit  9 in OELDT indicates some requests for elem checks on strain-displ matrices for RB motion & constant strain 
-!        Bit 10 in OELDT indicates some requests for unformatted file of element              : PTE, PPE 
-!        Bit 11 in OELDT indicates some requests for unformatted file of element              : ME 
-!        Bit 12 in OELDT indicates some requests for unformatted file of element              : KE 
+!        Bit  9 in OELDT indicates some requests for elem checks on strain-displ matrices for RB motion & constant strain
+!        Bit 10 in OELDT indicates some requests for unformatted file of element              : PTE, PPE
+!        Bit 11 in OELDT indicates some requests for unformatted file of element              : ME
+!        Bit 12 in OELDT indicates some requests for unformatted file of element              : KE
 !        Bit 13 in OELDT indicates some requests for unformatted file of element              : SEi, STEi, BEi
 !        Bit 14 in OELDT indicates some requests for unformatted file of element              : UEL, PEL (all subcases)
 !        Bit 15 in OELDT is currently not used
@@ -610,7 +610,7 @@
       INTEGER(LONG), ALLOCATABLE      :: PSOLID (:,:)         ! See description below
       INTEGER(LONG), ALLOCATABLE      :: PUSER1 (:,:)         ! See description below
       INTEGER(LONG), ALLOCATABLE      :: PUSERIN(:,:)         ! See description below
-  
+
       REAL(DOUBLE) , ALLOCATABLE      :: RMATL  (:,:)         ! See description below
       REAL(DOUBLE) , ALLOCATABLE      :: RPBAR  (:,:)         ! See description below
       REAL(DOUBLE) , ALLOCATABLE      :: RPBEAM (:,:)         ! See description below
@@ -680,7 +680,7 @@
 !             (28) Col 14: Stress coefficient            :   "            , (optional  4th entry, field 9)
 !             (29) Col 29: Shear factor for plane 1, K1                   , (optional  5th entry, field 2)
 !             (30) Col 30: Shear factor for plane 2, K2                   , (optional  5th entry, field 3)
-!             (31) Col 31: Shear relief coeff due to taper for plane 1, S1, (optional  5th entry, field 4) 
+!             (31) Col 31: Shear relief coeff due to taper for plane 1, S1, (optional  5th entry, field 4)
 !             (32) Col 32: Shear relief coeff due to taper for plane 2, S2, (optional  5th entry, field 5)
 !             (33) Col 33: NSM MOI/length about NSM C.G. at end A, NSI(A) , (optional  5th entry, field 6)
 !             (34) Col 34: NSM MOI/length about NSM C.G. at end B, NSI(B) , (optional  5th entry, field 7)
@@ -699,18 +699,18 @@
 !             ( 1) Col  1: PID          Prop ID
 
 !  RPBUSH = Array of real data from PBUSH Bulk Data entries
-!             ( 1) Col   : K1           Stiffness in element direction 
-!             ( 2) Col   : K2           Stiffness in element direction 
-!             ( 3) Col   : K3           Stiffness in element direction 
-!             ( 4) Col   : K4           Stiffness in element direction 
-!             ( 5) Col   : K5           Stiffness in element direction 
-!             ( 6) Col   : K6           Stiffness in element direction 
-!             ( 7) Col   : B1           Viscous damping coeff in element direction 
-!             ( 8) Col   : B2           Viscous damping coeff in element direction 
-!             ( 9) Col   : B3           Viscous damping coeff in element direction 
-!             (10) Col   : B4           Viscous damping coeff in element direction 
-!             (11) Col   : B5           Viscous damping coeff in element direction 
-!             (12) Col   : B6           Viscous damping coeff in element direction 
+!             ( 1) Col   : K1           Stiffness in element direction
+!             ( 2) Col   : K2           Stiffness in element direction
+!             ( 3) Col   : K3           Stiffness in element direction
+!             ( 4) Col   : K4           Stiffness in element direction
+!             ( 5) Col   : K5           Stiffness in element direction
+!             ( 6) Col   : K6           Stiffness in element direction
+!             ( 7) Col   : B1           Viscous damping coeff in element direction
+!             ( 8) Col   : B2           Viscous damping coeff in element direction
+!             ( 9) Col   : B3           Viscous damping coeff in element direction
+!             (10) Col   : B4           Viscous damping coeff in element direction
+!             (11) Col   : B5           Viscous damping coeff in element direction
+!             (12) Col   : B6           Viscous damping coeff in element direction
 !             (13) Col   : GE           Structural damping coefficient
 !             (14) Col   : RCV1         Stress recovery coeff for translation
 !             (15) Col   : RCV2         Stress recovery coeff for rotation
@@ -784,7 +784,7 @@
 !             ( 6) Col  6: Stress recovery dist. Z2
 
 !  PSOLID = Array of integer data from PSOLIDL Bulk Data entries. Each row is for one PSOLID entry read in B.D. and contains:
-!             ( 1) Col  1: Property ID 
+!             ( 1) Col  1: Property ID
 !             ( 2) Col  2: Material ID 1
 
 !  PUSER1 = Array of integer data from PUSER1 Bulk Data entries. Each row is for one PUSER1 entry read in B.D. and contains:
@@ -921,12 +921,12 @@
 !                                 The Offset key is either:
 !                                   1) 0 if there are no offsets for this CBAR, or
 !                                   2) Offset key (row in array BAROFF where the 3 components at each of the 2 grids can be found)
- 
+
 !        3)   BUSH       9 words: (1st 5 read by call to subr ELEPRO, next 4 by subr BD_CBUSH)
 !                                 1) Elem ID
 !                                 2) Prop ID
 !                                 3) Number of grids (2 if both G1 and G2 >0. If CBUSH G2 is blank, then number of grids = 1)
-!                                 4) Grid A 
+!                                 4) Grid A
 !                                 5) Grid B (set to a zero if CBUSH field 4 is blank)
 !                                 6) V-vector key
 !                                 7) CID : Coord system ID in field 9 to define VVEC if VVEC not defined in fields 6-8.
@@ -942,35 +942,35 @@
 !                                 The Offset key is either:
 !                                   1) 0 if there are no offsets for this CBUSH, or
 !                                   2) Offset key (row in array BUSHOFF where the 3 components at each of the 2 grids can be found)
- 
+
 !        4)   ELAS1      6 words: (all read by call to subr ELEPO from subr BD_CELAS1)
 !                                 1) Elem ID
 !                                 2) Prop ID
 !                                 3) Grid A
-!                                 4) Grid B 
+!                                 4) Grid B
 !                                 5) Components at Grid A
 !                                 6) Components at Grid B
- 
+
 !        5)   ELAS2      6 words: (all read by call to subr ELEPO from subr BD_CELAS2)
 !                                 1) Elem ID
 !                                 2) Prop ID which is set to -EID since real props are on the CELAS2 entry
 !                                 3) Grid A
-!                                 4) Grid B 
+!                                 4) Grid B
 !                                 5) Components at Grid A
 !                                 6) Components at Grid B
- 
+
 !        6)   ELAS3      4 words: (all read by call to subr ELEPO from subr BD_CELAS3)
 !                                 1) Elem ID
 !                                 2) Prop ID
 !                                 3) Scalar point A
-!                                 4) Scalar point B 
- 
+!                                 4) Scalar point B
+
 !        7)   ELAS4      4 words: (all read by call to subr ELEPO from subr BD_CELAS4)
 !                                 1) Elem ID
 !                                 2) Prop ID which is set to -EID since real props are on the CELAS2 entry
 !                                 3) Scalar point A
-!                                 4) Scalar point B 
- 
+!                                 4) Scalar point B
+
 !        8)   HEXA8     10 words: (read by 1 or more calls to subr ELEPO from subr BD_HEXA)
 !                                 1) Elem ID
 !                                 2) Prop ID
@@ -1016,12 +1016,12 @@
 !                                 2) Prop ID
 !                                 3) Grid A
 !                                 4) Grid B
- 
+
 !       16)   SHEAR               1) Elem ID
 !                                 2) Prop ID
-!                                 3) Grid A 
-!                                 4) Grid B 
-!                                 5) Grid C 
+!                                 3) Grid A
+!                                 4) Grid B
+!                                 5) Grid C
 !                                 6) Grid D
 
 !       17)   TETRA4     6 words: (read by 1 or more calls to subr ELEPO from subr BD_TETRA)
@@ -1060,7 +1060,7 @@
 !                                 6) Grid D
 !                                 7) Grid V
 !                                 8) - 11) Pin Flags (A, B, C, D)
- 
+
 !       21)   USERIN
 !                                 1) Elem ID
 !                                 2) Prop ID
@@ -1068,13 +1068,13 @@
 !                                 4) NS, number of SPOINT's the element is connected to
 !                                 5) CID0, actual coord system ID that defines the basic coord system for this elem relative to the
 !                                    basic coord sys of the model in which this USERIN element is used
-!                                 6) etc, 
+!                                 6) etc,
 
 ! Sorting of arrays:
 ! ------------------
 !  1) After the Bulk Data has been read, all of the above arrays are in the order in which the elems were read from the B.D. deck.
 !     Thus, at this point, ESORT2 is an array of consecutive integers starting with 1 and ending with NELE (the number of elements).
- 
+
 !  2) After subr ELESORT has run, arrays ESORT1, ESORT2, EOFF, EPNT, ETYPE are sorted together such that the elems in ESORT1 are in
 !     numerically increasing order. EDAT remains as it was constructed when the Bulk Data was read - in the order in which elems
 !     were placed in the Bulk Data Deck.
@@ -1086,7 +1086,7 @@
 ! BAR element specific data
 ! -------------------------
 
-      CHARACTER( 9*BYTE)              :: BAROR_VVEC_TYPE     = ' '    
+      CHARACTER( 9*BYTE)              :: BAROR_VVEC_TYPE     = ' '
                                                              ! Indicator of type of V vec on BAROR B.D. entry (grid or vector)
 
       CHARACTER(LEN=JCARD_LEN)        :: JBAROR(10)          = (/(' ', I=1,10)/)
@@ -1105,7 +1105,7 @@
 ! BEAM element specific data
 ! --------------------------
 
-      CHARACTER( 9*BYTE)              :: BEAMOR_VVEC_TYPE    = '         '    
+      CHARACTER( 9*BYTE)              :: BEAMOR_VVEC_TYPE    = '         '
                                                              ! Indicator of type of V vec on BEAMOR B.D. entry (grid or vector)
 
       CHARACTER(LEN=JCARD_LEN)        :: JBEAMOR(10)         = (/('        ', I=1,10)/)
@@ -1132,7 +1132,7 @@
 ! --------------------------
 
       CHARACTER(1*BYTE)               :: BUSH_VVEC_OR_CID    = 'N'
-                                                             ! Indicator if either one of BUSH_VVEC or BUSH_CID is present    
+                                                             ! Indicator if either one of BUSH_VVEC or BUSH_CID is present
 
       INTEGER(LONG)                   :: BUSH_CID            = -99
                                                              ! BUSH elem coord system ID (defines elem coord system if not blank on
@@ -1291,7 +1291,7 @@
 
       CHARACTER(1*BYTE)               :: CAN_ELEM_TYPE_OFFSET= 'N'
                                                              ! Indicates if element type can be offset
-      
+
 
       CHARACTER(LEN(BLNK_SUB_NAM))    :: ERR_SUB_NAM(MEFE)   = ' '
                                                              ! Subrs where errors occur. Used for debug Space GASS err array outputs
@@ -1312,18 +1312,18 @@
 
       CHARACTER(8*BYTE)               :: TE_IDENT            = 'N'
                                                              ! If 'Y' then TE element transformation matrix is an identity matrix
-   
+
       CHARACTER(8*BYTE)               :: TYPE                = '        '
                                                              ! The type of the specific elem being processed (value from ELMTYP)
-   
+
       INTEGER(LONG)                   :: EID                 = 0
-                                                             ! Current elem ID (actual, not internal)                 
+                                                             ! Current elem ID (actual, not internal)
 
       INTEGER(LONG)                   :: ELAS_COMP(2)        ! Displ comp nos (1 thru 6), at each elem G.P. for a CELAS elem
 
       INTEGER(LONG)                   :: ELDOF               = 0
                                                              ! The specific number of DOF's for the current elem
-  
+
       INTEGER(LONG)                   :: ELGP                = 0
                                                              ! The number of grid points that the the current elem connects to
 
@@ -1342,10 +1342,10 @@
       INTEGER(LONG)                   :: INTL_MID(MEMATC)    = (/(0, I=1,MEMATC)/)
                                                              ! Internal material ID's for the current elem
 
-      INTEGER(LONG)                   :: INTL_PID            = 0                        
+      INTEGER(LONG)                   :: INTL_PID            = 0
                                                              ! Internal property ID for the current elem
 
-      INTEGER(LONG)                   :: IOR3D_MAX           = 0    
+      INTEGER(LONG)                   :: IOR3D_MAX           = 0
                                                              ! Max integration order for 3D solid elements in any one execution
 
 
@@ -1361,7 +1361,7 @@
       INTEGER(LONG)                   :: MTRL_TYPE(MEMATC)   = (/(0, I=1,MEMATC)/)
                                                              ! Material types for this element (1 for MAT1, 8 for MAT8, etc). There
                                                              ! can be diff types for membrane, bending, shear and mem/bend coupling
-                                                             ! Currently the 1st 4 col's are for: 
+                                                             ! Currently the 1st 4 col's are for:
                                                              ! 1) membrane, 2) bending, 3) trans shear, 4) membrane/bending coupling
 
       INTEGER(LONG)                   :: NUM_PLIES           = 1
@@ -1376,11 +1376,11 @@
                                                              ! For shells, column i is for material MIDi. i=1..4.
                                                              ! For solids, only the column 1 is used.
                                                              ! They are engineering strain per unit temperature change
-                                                             ! rather than tensor components so the shear components 
+                                                             ! rather than tensor components so the shear components
                                                              ! must be divided by 2 before transforming and used as-is
                                                              ! for multiplying by elasticity.
 
-      REAL(DOUBLE)                    :: BENSUM              = ZERO   
+      REAL(DOUBLE)                    :: BENSUM              = ZERO
                                                              ! Sum of diag stiffness from KB for rotation DOF's
 
       REAL(DOUBLE)                    :: BMEANT(8,12)        = RESHAPE ( (/(ZERO, I=1,8*12)/), (/8,12/) )
@@ -1415,7 +1415,7 @@
 
       REAL(DOUBLE)                    :: EMAT(MEMATR,MEMATC) = RESHAPE ( (/(ZERO, I=1,MEMATR*MEMATC)/), (/MEMATR,MEMATC/) )
                                                              ! Array of matl props for the elem
-                  
+
       REAL(DOUBLE)                    :: EPROP(MEPROP)       = (/(ZERO, I=1,MEPROP)/)
                                                              ! Array of elem properties (area, area MOI;s, etc) for the elem
 
@@ -1438,7 +1438,7 @@
       REAL(DOUBLE)                    :: MASS_PER_UNIT_AREA  = ZERO
                                                              ! Shell element mass/area (incl NSM and mat'l density times thickness)
 
-      REAL(DOUBLE)                    :: MXWARP              = ZERO   
+      REAL(DOUBLE)                    :: MXWARP              = ZERO
                                                              ! Current quad elem maximum warp before warning message written
 !                                                              A finite value for this is calcd in sub ELMGM2 based on the elem size
 
@@ -1458,7 +1458,7 @@
       REAL(DOUBLE)                    :: QUAD_THETA          = ZERO
                                                              ! Angle between side 1-2 and diag from G.P 1 to G.P.3 of a QUAD element
 
-      REAL(DOUBLE)                    :: RHO(MEMATC)         = (/(ZERO, I=1,MEMATC)/)  
+      REAL(DOUBLE)                    :: RHO(MEMATC)         = (/(ZERO, I=1,MEMATC)/)
                                                              ! Vector of material densities
 
       REAL(DOUBLE)                    :: SHELL_A(3,3)        = RESHAPE ( (/(ZERO, I=1,3*3)/), (/3,3/) )
@@ -1542,12 +1542,12 @@
       REAL(DOUBLE)                    :: THETA_PLY           = ZERO
                                                              ! Angle of ply longitudinal axis relative to THETAM
 
-      REAL(DOUBLE)                    :: TPLY                = ZERO 
+      REAL(DOUBLE)                    :: TPLY                = ZERO
                                                              ! Ply thickness
- 
-      REAL(DOUBLE)                    :: TREF(MEMATC)        = (/(ZERO, I=1,MEMATC)/)  
+
+      REAL(DOUBLE)                    :: TREF(MEMATC)        = (/(ZERO, I=1,MEMATC)/)
                                                              ! Vector of ref temps (membrane, bending, transverse shear)
- 
+
       REAL(DOUBLE)                    :: WARP_WARN           = ZERO
                                                              ! Amount of quad warp before a warning msg is written. It is calculated
 !                                                              in subr ELMGM2 as EPS4 times the average diagonal length
@@ -1574,11 +1574,11 @@
       CHARACTER(1*BYTE), ALLOCATABLE  :: OFFSET(:)           ! 'Y' or 'N' to indicate whether elem has offsets at any of it's G.P.'s
 
       INTEGER(LONG), ALLOCATABLE      :: AGRID(:)            ! Actual grid points for the current elem
-      
+
       INTEGER(LONG), ALLOCATABLE      :: BGRID(:)            ! Row numbers in array GRID_ID where current elems actual grids exist
 
       INTEGER(LONG), ALLOCATABLE      :: DOFPIN(:)           ! Integers 1-6 (or 0) to indicate displ comps pinned at each elem grid
- 
+
       REAL(DOUBLE) , ALLOCATABLE      :: BE1(:,:,:)          ! Array of elem membrane strain per unit displ for the elem
 
       REAL(DOUBLE) , ALLOCATABLE      :: BE2(:,:,:)          ! Array of elem bending strain per unit displ for the elem
@@ -1602,7 +1602,7 @@
       REAL(DOUBLE) , ALLOCATABLE      :: OFFDIS(:,:)         ! Elem offset distances used in offset calcs in subr ELMOFF
 !                                                              Set equal to OFFDIS_G in subr ELMGM1 since offsets are processed
 !                                                              in global coords. So, any reference to OFFDIS after ELMGM1 will
-!                                                              mean offsets in global coords. 
+!                                                              mean offsets in global coords.
 
       REAL(DOUBLE)                    :: OFFDIS_L(2,3)       ! Elem offsets for BUSH in local, CID, coord system
 
@@ -1642,7 +1642,7 @@
       REAL(DOUBLE) , ALLOCATABLE      :: STE2(:,:,:)         ! Elem thermal stress corrections for bending stress
 
       REAL(DOUBLE) , ALLOCATABLE      :: STE3(:,:,:)         ! Elem thermal stress corrections for transv shear stress
- 
+
       REAL(DOUBLE) , ALLOCATABLE      :: UGG(:)              ! Array of displs at grids of one elem in global coords for one S/C
                                                              ! UGG is a partition of the G-set global displs solved for in MYSTRAN
                                                              ! for one elements grids
@@ -1698,7 +1698,7 @@
       REAL(DOUBLE)                    :: USERIN_RBM0(6,6)    = RESHAPE ( (/(ZERO, I=1,6*6)/), (/6,6/) )
                                                              ! 6x6 rigid body mass matrix for a USERIN element rel to GRDPNT loc
 
-! * "nodes" refers to an element ends which may be offset from the grid points to which the element is attached 
+! * "nodes" refers to an element ends which may be offset from the grid points to which the element is attached
 
 ! Notes:
 ! ------
@@ -1716,9 +1716,9 @@
 !  PEL      : PEL = KE*UEL - PTE
 
 !  ULT_STRE : Each col has stress allowables for one of the aspects (memb, bend, transverse shear, memb-bend coupling) for the elem
- 
+
 !  ULT_STRN : Each col has strain allowables for one of the aspects (memb, bend, transverse shear, memb-bend coupling) for the elem
- 
+
 !  STEi     : These are the corrections that must be made to stresses calculated based on total element strains to subtract out the
 !             stress due to the free thermal expansion part of the total strain (i.e. they are E*ALPHA*DT types of terms)
 
@@ -1742,39 +1742,39 @@
       CHARACTER(LEN=JCARD_LEN)        :: EIG_NORM            = 'MASS'
                                                              ! Eigenvector renorm nethod (e.g. MAX, POINT)
 
-      CHARACTER(LEN=JCARD_LEN)        :: EIG_LAP_MAT_TYPE    = 'DPB'    
+      CHARACTER(LEN=JCARD_LEN)        :: EIG_LAP_MAT_TYPE    = 'DPB'
                                                              ! Type of LAPACK matrices to use in LANCZOS.
 !                                                              DGB is the type used in the original ARPACK subr dsband
 !                                                              DPB uses less disk storage but may not work for free-free eigens
 
-      CHARACTER(1*BYTE)               :: EIG_VECS            = 'Y'    
+      CHARACTER(1*BYTE)               :: EIG_VECS            = 'Y'
                                                              ! Indicator of whether to calc eigenvecs
 
-      INTEGER(LONG)                   :: EIG_SID             = 0      
+      INTEGER(LONG)                   :: EIG_SID             = 0
                                                              ! Eigenvalue extraction method set ID
 
-      INTEGER(LONG)                   :: EIG_N1              = 0      
+      INTEGER(LONG)                   :: EIG_N1              = 0
                                                              ! For GIV, MGIV the lowest  mode number for vector calc
 
-      INTEGER(LONG)                   :: EIG_N2              = 0      
+      INTEGER(LONG)                   :: EIG_N2              = 0
                                                              ! The highest mode number for vector calc
 
-      INTEGER(LONG)                   :: EIG_COMP            = 0      
+      INTEGER(LONG)                   :: EIG_COMP            = 0
                                                              ! For GIV, MGIV the displ component value for vector renorm
 
-      INTEGER(LONG)                   :: EIG_GRID            = 0      
+      INTEGER(LONG)                   :: EIG_GRID            = 0
                                                              ! For GIV, MGIV the grid for eigenvector renormalization
 
       INTEGER(LONG)                   :: EIG_LANCZOS_NEV_DELT= 2
                                                              ! Number to add to est num eigens when search is on freq range
 
-      INTEGER(LONG)                   :: EIG_MODE            = 2      
+      INTEGER(LONG)                   :: EIG_MODE            = 2
                                                              ! For Lanczos, the "mode" (see IPARAM(7) in ARPACK subr dsband)
 
-      INTEGER(LONG)                   :: EIG_MSGLVL          = 0      
+      INTEGER(LONG)                   :: EIG_MSGLVL          = 0
                                                              ! For Lanczos, the message level in ARPACK subr dsband)
 
-      INTEGER(LONG)                   :: EIG_NCVFACL         = 2      
+      INTEGER(LONG)                   :: EIG_NCVFACL         = 3
                                                              ! For Lanczos, the factor in ARPACK subr dsband to multiply the number
 !                                                              of requested eigenvalues/vectors by to get NCV. This is used to
 !                                                              dim several arrays in the ARPACK version of the Lanczos eigenval
@@ -1784,28 +1784,28 @@
       INTEGER(LONG)                   :: MIJ_ROW             = 0
                                                              ! Row no. of largest off-diag gen. mass term.
 
-      INTEGER(LONG)                   :: MIJ_COL             = 0 
+      INTEGER(LONG)                   :: MIJ_COL             = 0
                                                              ! Col no. of largest off-diag gen. mass term.
 
-      INTEGER(LONG)                   :: NUM_FAIL_CRIT       = 0 
+      INTEGER(LONG)                   :: NUM_FAIL_CRIT       = 0
                                                              ! Number of terms in the gen mass matrix failing orthog criteria.
 
-      REAL(DOUBLE)                    :: EIG_CRIT            = 0   
+      REAL(DOUBLE)                    :: EIG_CRIT            = 0
                                                              ! For GIV, MGIV the criteria for off-diag gen mass terms
- 
-      REAL(DOUBLE)                    :: EIG_CRIT_DEF        = ONEPM4   
+
+      REAL(DOUBLE)                    :: EIG_CRIT_DEF        = ONEPM4
                                                              ! For GIV, MGIV the criteria for off-diag gen mass terms
- 
-      REAL(DOUBLE)                    :: EIG_FRQ1            = ZERO   
+
+      REAL(DOUBLE)                    :: EIG_FRQ1            = ZERO
                                                              ! Lower  frequency in the search range
 
-      REAL(DOUBLE)                    :: EIG_FRQ2            = ZERO   
+      REAL(DOUBLE)                    :: EIG_FRQ2            = ZERO
                                                              ! Higher frequency in the search range
 
       REAL(DOUBLE)                    :: EIG_SIGMA           = -ONE
                                                              ! For Lanczos, the shift frequency
 
-      REAL(DOUBLE)                    :: MAXMIJ              = ZERO  
+      REAL(DOUBLE)                    :: MAXMIJ              = ZERO
                                                              ! Largest off-diag term in generalized mass matrix.
 ! **********************************************************************************************************************************
 ! Rigid element ID's

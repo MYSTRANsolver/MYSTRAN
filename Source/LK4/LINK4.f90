@@ -289,7 +289,12 @@
          CALL EIG_INV_PWR
 
       ELSE IF (EIG_METH(1:7) == 'LANCZOS') THEN
-         CALL EIG_LANCZOS_ARPACK
+         ! Use adaptive version if frequency range specified and not BUCKLING/GEN CB MODEL
+         IF ((EIG_FRQ2 > EPS1) .AND. (SOL_NAME(1:8) /= 'BUCKLING') .AND. (SOL_NAME(1:12) /= 'GEN CB MODEL')) THEN
+            CALL EIG_LANCZOS_ARPACK_ADAPTIVE
+         ELSE
+            CALL EIG_LANCZOS_ARPACK
+         ENDIF
 
       ELSE
 
