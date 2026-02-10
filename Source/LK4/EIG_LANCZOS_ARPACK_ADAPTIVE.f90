@@ -117,6 +117,7 @@
       INTEGER(LONG)                   :: NUM_DISCARDED     ! Number of eigenvalues discarded (outside range)
       INTEGER(LONG)                   :: IERR              ! Error return from LAPACK factorization
       REAL(DOUBLE)                    :: DUM_COL(1)        ! Dummy column for SuperLU deallocation
+      INTEGER(LONG)                   :: MIN_NCV, MAX_NCV
 
       ! Temporary arrays for filtering
       REAL(DOUBLE), ALLOCATABLE       :: TEMP_EIGEN_VAL(:) ! Temporary eigenvalues for filtering
@@ -356,9 +357,46 @@
          WRITE(SC1,1015) EIG_FRQ1, EIG_FRQ2
          WRITE(SC1,1016) OMEGA_FRQ1_SQ, OMEGA_FRQ2_SQ, SIGMA
 
+         MIN_NCV = NEV + 2
+         MAX_NCV = NDOFL - NUM_MLL_DIAG_ZEROS - 2
+
+         ! sanity check on feasible NCV range
+         IF (MIN_NCV > MAX_NCV) THEN
+            WRITE(ERR,9776) NDOFL, NEV
+            WRITE(F06,9776) NDOFL, NEV
+            FATAL_ERR = FATAL_ERR + 1
+            CALL OUTA_HERE ( 'Y' )
+         END IF
+
+         ! NCV determination step (try user factor first)
+         DO I=EIG_NCVFACL,2,-1
+            NCV = I*NEV
+            IF (NCV >= MIN_NCV .AND. NCV <= MAX_NCV) THEN
+               EXIT
+            END IF
+         END DO
+
+         ! still invalid? (too large OR too small)
+         IF (NCV > MAX_NCV .OR. NCV < MIN_NCV) THEN
+            DO I=5,2,-1
+               NCV = NEV+I
+               IF (NCV >= MIN_NCV .AND. NCV <= MAX_NCV) THEN
+                  EXIT
+               END IF
+            END DO
+         END IF
+
+         ! no valid NCV.
+         IF (NCV > MAX_NCV .OR. NCV < MIN_NCV) THEN
+            WRITE(ERR,9777) NDOFL, NEV
+            WRITE(F06,9777) NDOFL, NEV
+            FATAL_ERR = FATAL_ERR + 1
+            CALL OUTA_HERE ( 'Y' )
+         END IF
+
          ! Calculate NCV and workspace size
-         NCV = MIN(EIG_NCVFACL * NEV, NDOFL)
-         IF (NCV < NEV + 2) NCV = MIN(NEV + 2, NDOFL)
+         !NCV = MIN(EIG_NCVFACL * NEV, NDOFL)
+         !IF (NCV < NEV + 2) NCV = MIN(NEV + 2, NDOFL)
          LWORKL = NCV * (NCV + 8)
 
          KL = KMSM_SDIA
@@ -814,6 +852,13 @@
  9903 FORMAT(' *ERROR  9903: SUPERLU SPARSE SOLVER HAS FAILED WITH INFO = ', I12,' IN SUBR ', A)
 
  9996 FORMAT('  PROCESSING STOPPED DUE TO ARPACK ERRORS')
+
+ 9776 FORMAT(' *ERROR  9776: TOO MANY EIGENVALUES REQUESTED FOR THIS PROBLEM SIZE: NDOFL=',I0,', NEV=',I0,'.')
+
+ 9777 FORMAT(' *ERROR  9777: UNABLE TO DETERMINE KRYLOV SUBSPACE SIZE NCV. NDOFL=',I0,', NEV=',I0,'.',/,15X,&
+             'USER HAS LIKELY REQUESTED TOO MANY EIGENVALUES FOR THIS MODEL.',/,15X,&
+             'NCV MUST BE AT LEAST NEV+2, BUT NO MORE THAN NDOFL-2.')
+
 
 12345 FORMAT(A,10X,A)
 
