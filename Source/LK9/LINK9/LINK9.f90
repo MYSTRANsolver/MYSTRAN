@@ -1,31 +1,31 @@
 ! ##################################################################################################################################
-! Begin MIT license text.                                                                                    
+! Begin MIT license text.
 ! _______________________________________________________________________________________________________
-                                                                                                         
-! Copyright 2022 Dr William R Case, Jr (mystransolver@gmail.com)                                              
-                                                                                                         
-! Permission is hereby granted, free of charge, to any person obtaining a copy of this software and      
+
+! Copyright 2022 Dr William R Case, Jr (mystransolver@gmail.com)
+
+! Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 ! associated documentation files (the "Software"), to deal in the Software without restriction, including
 ! without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-! copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to   
-! the following conditions:                                                                              
-                                                                                                         
-! The above copyright notice and this permission notice shall be included in all copies or substantial   
-! portions of the Software and documentation.                                                                              
-                                                                                                         
-! THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS                                
-! OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,                            
-! FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE                            
-! AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER                                 
-! LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,                          
-! OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN                              
-! THE SOFTWARE.                                                                                          
+! copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to
+! the following conditions:
+
+! The above copyright notice and this permission notice shall be included in all copies or substantial
+! portions of the Software and documentation.
+
+! THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+! OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+! FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+! AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+! LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+! OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+! THE SOFTWARE.
 ! _______________________________________________________________________________________________________
-                                                                                                        
-! End MIT license text.                                                                                      
- 
+
+! End MIT license text.
+
       SUBROUTINE LINK9 ( LK9_PROC_NUM )
- 
+
 ! Main driver for calculating outputs requested in Case Control once the G-set unknowns have been solved for in prior LINK's
 
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
@@ -93,7 +93,7 @@
       USE LINK9_USE_IFs
 
       IMPLICIT NONE
- 
+
       LOGICAL                         :: WRITE_F06, WRITE_OP2, WRITE_PCH, WRITE_ANS, WRITE_NEU   ! flag
       LOGICAL                         :: LEXIST            ! .TRUE. if a file exists
       LOGICAL                         :: LOPEN             ! .TRUE. if a file is opened
@@ -101,21 +101,21 @@
       CHARACTER, PARAMETER            :: CR13 = CHAR(13)   ! This causes a carriage return simulating the "+" action in a FORMAT
       CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: SUBR_NAME = 'LINK9'
       CHARACTER(LEN=3*CC_ENTRY_LEN+5) :: TSL               ! Concatenated TITLE, STITLE, LABEL for FEMAP block 450 in FEMAP NEU file
-      CHARACTER( 1*BYTE)              :: CLOSE_IT          ! Input to subr READ_MATRIX_i. 'Y'/'N' whether to close a file or not 
+      CHARACTER( 1*BYTE)              :: CLOSE_IT          ! Input to subr READ_MATRIX_i. 'Y'/'N' whether to close a file or not
       CHARACTER( 8*BYTE)              :: CLOSE_STAT        ! What to do with file when it is closed
       CHARACTER(14*BYTE)              :: CTIME             ! A char variable to which STIME will be written (for use in NEU file)
       CHARACTER( 6*BYTE)              :: FEMAP_BLK='xxxxxx'! 3 digit number indicating the FEMAP data block
       CHARACTER( 1*BYTE)              :: NULL_ROW          ! 'Y'/'N' depending on whether a col in IF_LTM is null
       CHARACTER( 1*BYTE)              :: ZERO_GEN_STIFF    ! Indicator of whether there are zero gen stiffs (can't calc MEFFMASS)
 
-      CHARACTER(24*BYTE)              :: MESSAG            ! File description. Input to subr UNFORMATTED_OPEN 
+      CHARACTER(24*BYTE)              :: MESSAG            ! File description. Input to subr UNFORMATTED_OPEN
       CHARACTER(54*BYTE)              :: MODNAM            ! Name to write to screen to describe module being run
       CHARACTER( 1*BYTE)              :: NULL_COL          ! An output from subr GET_SPARSE_CRS_COL
       CHARACTER( 1*BYTE)              :: PROC_PG_OUTPUT    ! 'Y' in general. However, for BUCKLING, set to 'N' for eigen subcase
       CHARACTER( 1*BYTE)              :: READ_SPCARRAYS    ! ='Y' if we need to read KSF, etc. See test below.
- 
-      INTEGER(LONG), INTENT(IN)       :: LK9_PROC_NUM      ! 2 if this is the LINK9 call for the linear buckling step of 
-!                                                            SOL_NAME = 'BUCKLING. Otherwise 1 to designate that, for BUCKLING, 
+
+      INTEGER(LONG), INTENT(IN)       :: LK9_PROC_NUM      ! 2 if this is the LINK9 call for the linear buckling step of
+!                                                            SOL_NAME = 'BUCKLING. Otherwise 1 to designate that, for BUCKLING,
 !                                                            this call to LINK9 is for the linear statics (1st) portion of BUCKLING
 
       INTEGER(LONG)                   :: ANY_U_P_OUTPUT    ! > 0 if requests for output of elem loads/displs in a any S/C
@@ -139,11 +139,11 @@
       INTEGER(LONG)                   :: NUM_COLS          ! Number of cols to get when subr GET_SPARSE_CRS_COL is called
       INTEGER(LONG)                   :: NUM_SOLNS         ! No. of solutions to process (e.g. NSUB for STATICS)
       INTEGER(LONG)                   :: NUM_OU4_NOT_PART  ! Number of OU4 mats requested for partitioning that were not done
-      INTEGER(LONG)                   :: OUNT(2)           ! File units to write messages to. Input to subr UNFORMATTED_OPEN  
+      INTEGER(LONG)                   :: OUNT(2)           ! File units to write messages to. Input to subr UNFORMATTED_OPEN
       INTEGER(LONG)                   :: OT4_EROW  = 0     ! Row number in OT4 elem related files. Accumulated in OFP1,2 for OTM's
       INTEGER(LONG)                   :: OT4_GROW  = 0     ! Row number in OT4 grid related files. Accumulated in OFP1,2 for OTM's
-      INTEGER(LONG)                   :: PART_G_NM(NDOFG)  ! Partitioning vector (G set into N and M sets) 
-      INTEGER(LONG)                   :: PART_SUB(NSUB)    ! Partitioning vector (1's for all subcases) 
+      INTEGER(LONG)                   :: PART_G_NM(NDOFG)  ! Partitioning vector (G set into N and M sets)
+      INTEGER(LONG)                   :: PART_SUB(NSUB)    ! Partitioning vector (1's for all subcases)
       INTEGER(LONG)                   :: P_LINKNO          ! Prior LINK no's that should have run before this LINK can execute
       INTEGER(LONG)                   :: PM_ROW_MAX_TERMS  ! Output from subr PARTITION_SIZE (max terms in any row of matrix)
       INTEGER(LONG)                   :: REC_NO            ! Record number when reading a file
@@ -159,15 +159,15 @@
       INTEGER(LONG)                   :: SC_STRN_OUTPUT    ! = 1 if requests for output of elem strains  in a particular S/C
       INTEGER(LONG)                   :: XTIME             ! Time stamp read from an unformatted file
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = LINK9_BEGEND + 1
- 
+
       REAL(DOUBLE)                    :: EPS1              ! Small number to compare against zero
       REAL(DOUBLE)                    :: UGV               ! A G-set vector read from file L5A
       REAL(DOUBLE)                    :: PHIXGV            ! A G-set vector read from file L5B
-      INTEGER(LONG)                   :: ITABLE            ! 
+      INTEGER(LONG)                   :: ITABLE            !
       LOGICAL                         :: NEW_RESULT        ! Is this a new result
 
       INTRINSIC                       :: IAND
- 
+
 ! **********************************************************************************************************************************
       LINKNO = 9
 
@@ -313,7 +313,7 @@
                                                            ! Allocate data to be read in LINK9S from file LINK1Q
       CALL   ALLOCATE_MODEL_STUF ( 'PPNT, PDATA, PTYPE', SUBR_NAME )
       CALL   ALLOCATE_MODEL_STUF ( 'PLOAD4_3D_DATA', SUBR_NAME )
- 
+
       ! Read LINK9S data
       CALL OURTIM
       MODNAM = 'READ MODEL DATA ARRAYS'
@@ -329,7 +329,7 @@
 ! Note: need PG to partition PM if MPC force outout is requested and also need PG if G.P. force balance is requested.
 
       CALL ALLOCATE_SPARSE_MAT ( 'PG', NDOFG, NTERM_PG, SUBR_NAME )
-      
+
       IF ((SOL_NAME(1:7)=='STATICS') .OR. (SOL_NAME(1:8)=='NLSTATIC') .OR. ((SOL_NAME(1:8)=='BUCKLING') .AND. (LOAD_ISTEP==1))) THEN
 
          IF ((ANY_OLOA_OUTPUT > 0) .OR. (ANY_MPCF_OUTPUT > 0) .OR. (ANY_GPFO_OUTPUT > 0) .OR. (WRITE_NEU)) THEN
@@ -353,7 +353,7 @@
                         PART_SUB = 1
                      ENDDO
                      CALL PARTITION_SS_NTERM ( 'PG' , NTERM_PG,  NDOFG, NSUB , SYM_PG , I_PG , J_PG ,      PART_G_NM, PART_SUB,    &
-                                                NUM2, NUM1, PM_ROW_MAX_TERMS, 'PM', NTERM_PM, SYM_PM ) 
+                                                NUM2, NUM1, PM_ROW_MAX_TERMS, 'PM', NTERM_PM, SYM_PM )
                      CALL ALLOCATE_SPARSE_MAT ( 'PM', NDOFM, NTERM_PM, SUBR_NAME )
 
                      CALL PARTITION_SS ( 'PG' , NTERM_PG , NDOFG, NSUB , SYM_PG , I_PG , J_PG , PG , PART_G_NM, PART_SUB,          &
@@ -368,7 +368,7 @@
       ENDIF
 
       ! Read files with KSF, MSF, QSYS (used to calc SPC constraint forces, QS), but only if they will be needed.
-      ! For any SOL_NAME they will be needed if any SPC constraint force output is requested or GP force balance or if WRITE_NEU. 
+      ! For any SOL_NAME they will be needed if any SPC constraint force output is requested or GP force balance or if WRITE_NEU.
       ! For non CB they will be needed also if MEFFMASS, MPFACTOR are to be calculated (done via SPC force total method)
       READ_SPCARRAYS = 'N'
       IF (SOL_NAME == 'GEN CB MODEL') THEN
@@ -381,7 +381,7 @@
             READ_SPCARRAYS = 'Y'
          ENDIF
       ENDIF
-      
+
       CALL ALLOCATE_SPARSE_MAT ( 'KSF' , NDOFS, NTERM_KFS , SUBR_NAME )
       CALL ALLOCATE_SPARSE_MAT ( 'KSFD', NDOFS, NTERM_KFSD, SUBR_NAME )
       CALL ALLOCATE_SPARSE_MAT ( 'MSF' , NDOFS, NTERM_MFS , SUBR_NAME )
@@ -390,7 +390,7 @@
       CALL ALLOCATE_COL_VEC ('QSYS_COL',NDOFS,SUBR_NAME)! Alloc this here since OFP2 uses it (will be zero's if NTERM_QSYS = 0)
 
       IF (READ_SPCARRAYS == 'Y') THEN
- 
+
          IF ((SOL_NAME(1:8) == 'BUCKLING') .AND. (LOAD_ISTEP == 2)) THEN
 
             IF (NTERM_KFSD > 0) THEN
@@ -435,7 +435,7 @@
                   WRITE(SC1,9092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
                   CLOSE_IT   = 'Y'
                   CALL READ_MATRIX_1 ( LINK2S, L2S, 'N', CLOSE_IT, L2SSTAT, L2S_MSG, 'MSF', NTERM_MFS , 'Y', NDOFS,                &
-                                       I_MSF , J_MSF , MSF  ) 
+                                       I_MSF , J_MSF , MSF  )
                ENDIF
 
             ENDIF
@@ -451,7 +451,7 @@
                CLOSE_IT   = 'Y'
                CALL READ_MATRIX_1 ( LINK2C, L2C, 'N', CLOSE_IT, L2CSTAT, L2C_MSG, 'QSYS', NTERM_QSYS, 'Y', NDOFS,                  &
                                     I_QSYS, J_QSYS, QSYS )
-               COL_NUM  = 1                                   ! Put QSYS nonzero terms into QSYS_COL. 
+               COL_NUM  = 1                                   ! Put QSYS nonzero terms into QSYS_COL.
                NUM_COLS = 1
                IF (NTERM_QSYS > 0) THEN
                   CALL GET_SPARSE_CRS_COL ('QSYS_COL  ', COL_NUM, NTERM_QSYS, NDOFS, NUM_COLS, I_QSYS, J_QSYS, QSYS, ONE,          &
@@ -476,7 +476,7 @@
          ENDIF
 
       ENDIF
-      
+
       ! Read MPC constraint matrices
       IF ((ANY_MPCF_OUTPUT > 0) .OR. (ANY_GPFO_OUTPUT > 0) .OR. (WRITE_NEU)) THEN
 
@@ -489,7 +489,7 @@
                WRITE(SC1,9092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
                CLOSE_IT   = 'Y'
                CALL ALLOCATE_SPARSE_MAT ( 'GMN',  NDOFM, NTERM_GMN, SUBR_NAME )
-               CALL READ_MATRIX_1 ( LINK2A, L2A, 'N', CLOSE_IT, L2ASTAT, L2A_MSG, 'GMN', NTERM_GMN, 'Y', NDOFM                     &
+               CALL READ_MATRIX_1 ( LINK2A, L2A, 'N', CLOSE_IT, 'KEEP', L2A_MSG, 'GMN', NTERM_GMN, 'Y', NDOFM                     &
                                   , I_GMN, J_GMN, GMN )
                CALL ALLOCATE_SPARSE_MAT ( 'GMNt', NDOFN, NTERM_GMN, SUBR_NAME )
                CALL MATTRNSP_SS ( NDOFM, NDOFN, NTERM_GMN, 'GMN', I_GMN, J_GMN, GMN, 'GMNt', I_GMNt, J_GMNt, GMNt )
@@ -554,12 +554,12 @@
       ENDIF
 
 ! Determine if we need to open F25 to write element disp, loads to unformatted file
- 
+
 !xx   ANY_U_P_OUTPUT = IAND(OELDT,IBIT(ELDT_F25_U_P_BIT))
 !xx   IF (ANY_U_P_OUTPUT > 0) THEN
 !xx      CALL FILE_OPEN ( F25, F25FIL, OUNT, 'REPLACE', F25_MSG, 'WRITE_STIME', 'UNFORMATTED', 'WRITE', 'REWIND', 'Y', 'N', 'Y' )
 !xx   ENDIF
-  
+
       ! Open data files for reading displacements (will be read below in loop over number of subcases/vectors)
       CALL FILE_OPEN ( L5A, LINK5A, OUNT, 'OLD', L5A_MSG, 'READ_STIME', 'UNFORMATTED', 'READ', 'REWIND', 'Y', 'N', 'Y' )
 
@@ -569,12 +569,12 @@
       ZERO_GEN_STIFF = 'N'
       IF ((SOL_NAME(1:5) == 'MODES') .OR. (SOL_NAME(1:12) == 'GEN CB MODEL')) THEN
                                                         ! MODE_NUM is not used to det gen stiff but it is read in subr READ_L1M
-         CALL ALLOCATE_EIGEN1_MAT ( 'MODE_NUM' , NUM_EIGENS, 1, SUBR_NAME ) 
-!xx      CALL ALLOCATE_EIGEN1_MAT ( 'EIGEN_VAL', NUM_EIGENS, 1, SUBR_NAME ) 
+         CALL ALLOCATE_EIGEN1_MAT ( 'MODE_NUM' , NUM_EIGENS, 1, SUBR_NAME )
+!xx      CALL ALLOCATE_EIGEN1_MAT ( 'EIGEN_VAL', NUM_EIGENS, 1, SUBR_NAME )
          CALL ALLOCATE_EIGEN1_MAT ( 'GEN_MASS' , NUM_EIGENS, 1, SUBR_NAME )
          IERROR = 0
          CALL READ_L1M ( IERROR )
-         CALL DEALLOCATE_EIGEN1_MAT ( 'MODE_NUM' ) 
+         CALL DEALLOCATE_EIGEN1_MAT ( 'MODE_NUM' )
          IF (IERROR /= 0) THEN
             WRITE(ERR,9995) LINKNO,IERROR
             WRITE(F06,9995) LINKNO,IERROR
@@ -633,11 +633,11 @@
 !-----------------------------------------------------------------------------------------------------------------------------------
       ! Allocate arrays particular to LINK9
       CALL ALLOCATE_LINK9_STUF ( SUBR_NAME )
- 
+
       ! Initialize JTSUB which will become the col no in the elem thermal loads matrix corresponding to the subcases below.
       JTSUB = 0
- 
-      ! Set NUM_SOLNS for use in loop (below) to get outputs for each subcase/solution vector and size. Also, allocate memory for 
+
+      ! Set NUM_SOLNS for use in loop (below) to get outputs for each subcase/solution vector and size. Also, allocate memory for
       ! CB OTM matrices (if CB soln) and open CB OTM output files (OU4(8) for grid related OTM's and OU4(9) for elem related OTM's)
       PROC_PG_OUTPUT = 'Y'
       IF ((SOL_NAME(1:7) == 'STATICS') .OR. (SOL_NAME(1:8) == 'NLSTATIC')) THEN
@@ -793,7 +793,7 @@ j_do: DO JVEC=1,NUM_SOLNS
          ENDIF
 
          WRITE(SC1,9093) LINKNO,MODNAM,JVEC,HOUR,MINUTE,SEC,SFRAC
-                                                           ! Read the displ's for the DOF for this subcase/eigenvector 
+                                                           ! Read the displ's for the DOF for this subcase/eigenvector
          CALL DEALLOCATE_COL_VEC ( 'UG_COL' )
          CALL ALLOCATE_COL_VEC ( 'UG_COL', NDOFG, SUBR_NAME )
          DO I=1,NDOFG
@@ -804,7 +804,7 @@ j_do: DO JVEC=1,NUM_SOLNS
                CALL OUTA_HERE ( 'Y' )
             ENDIF
             UG_COL(I) = UGV
-         ENDDO   
+         ENDDO
 
          ! If this is a CB soln and JVEC <= NDOFR+NVEC, formulate a col of PHIXG from data in file L5B. Otherwise zero
          IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
@@ -875,7 +875,7 @@ j_do: DO JVEC=1,NUM_SOLNS
          ENDIF
          !CALL END_OP2_TABLE(ITABLE)
 
-        ! Calc SPC forces and process SPC force output requests, if there are any or if GP force balance, modal effective mass and/or 
+        ! Calc SPC forces and process SPC force output requests, if there are any or if GP force balance, modal effective mass and/or
         ! participation factor output is requested. Calc anyway if there are any DOF's in the SA (AUTOSPC) set
         NEW_RESULT = .TRUE.
         ITABLE = -1
@@ -896,18 +896,18 @@ j_do: DO JVEC=1,NUM_SOLNS
             CALL ALLOCATE_COL_VEC ( 'PS_COL', NDOFS, SUBR_NAME )
             DO K=1,NDOFS
                PS_COL(K) = ZERO
-            ENDDO 
+            ENDDO
 
             IF      ((SOL_NAME(1: 7) == 'STATICS') .OR.  (SOL_NAME(1:8) == 'NLSTATIC') .OR.                                        &
                     ((SOL_NAME(1:8) == 'BUCKLING') .AND. (LOAD_ISTEP == 1))) THEN
-               IF (NTERM_PS > 0) THEN                  
+               IF (NTERM_PS > 0) THEN
                   CALL GET_SPARSE_CRS_COL ('PS_COL', JVEC      , NTERM_PS, NDOFS, NSUB, I_PS, J_PS, PS, ONE, PS_COL, NULL_COL )
                ENDIF
             ELSE
                DO K=1,NDOFS
                    PS_COL(K) = ZERO
-               ENDDO  
-            ENDIF 
+               ENDDO
+            ENDIF
 
             CALL OURTIM
             MODNAM = 'PROCESS SPC FORCE OUTPUT REQUESTS,                "'
@@ -926,11 +926,11 @@ j_do: DO JVEC=1,NUM_SOLNS
                CALL ALLOCATE_COL_VEC ( 'PM_COL', NDOFM, SUBR_NAME )
                DO K=1,NDOFM
                   PM_COL(K) = ZERO
-               ENDDO 
+               ENDDO
                IF  ((SOL_NAME(1:7) == 'STATICS') .OR. (SOL_NAME(1:8) == 'BUCKLING') .OR. (SOL_NAME(1:8) == 'NLSTATIC')) THEN
-                  IF (NTERM_PM > 0) THEN                  
+                  IF (NTERM_PM > 0) THEN
                      CALL GET_SPARSE_CRS_COL ('PM_COL', JVEC      , NTERM_PM, NDOFM, NSUB, I_PM, J_PM, PM, ONE, PM_COL, NULL_COL )
-                  ENDIF 
+                  ENDIF
                ENDIF
 
                CALL OURTIM
@@ -978,7 +978,7 @@ j_do: DO JVEC=1,NUM_SOLNS
                   ENDDO
                ENDIF
                DO I=1,NDOFG                                ! Calc SPC forces for all grids in requested output set (not only ones
-                  CALL TDOF_COL_NUM ( 'R ', R_SET_COL )    ! that have a component in S-set) 
+                  CALL TDOF_COL_NUM ( 'R ', R_SET_COL )    ! that have a component in S-set)
                   CALL TDOF_COL_NUM ( 'G ', G_SET_COL )
                   RDOF = TDOF(I,R_SET_COL)
                   GDOF = TDOF(I,G_SET_COL)
@@ -1045,7 +1045,7 @@ j_do: DO JVEC=1,NUM_SOLNS
          IF (LOPEN) THEN
             REWIND (L1E)
             READ(L1E,IOSTAT=IOCHK) XTIME
-            MESSAG = 'STIME                   '     
+            MESSAG = 'STIME                   '
             IF (IOCHK /= 0) THEN
                REC_NO = 1
                CALL READERR ( IOCHK, LINK1E, MESSAG, REC_NO, OUNT, 'Y' )
@@ -1057,7 +1057,7 @@ j_do: DO JVEC=1,NUM_SOLNS
          IF (LOPEN) THEN
             REWIND (L2D)
             READ(L2D,IOSTAT=IOCHK) XTIME
-            MESSAG = 'STIME                   '     
+            MESSAG = 'STIME                   '
             IF (IOCHK /= 0) THEN
                REC_NO = 1
                CALL READERR ( IOCHK, LINK2D, MESSAG, REC_NO, OUNT, 'Y' )
@@ -1244,15 +1244,15 @@ j_do: DO JVEC=1,NUM_SOLNS
       ENDIF
 
       IF ((SOL_NAME(1:5) == 'MODES') .OR. (SOL_NAME(1:12) == 'GEN CB MODEL')) THEN
-         CALL DEALLOCATE_EIGEN1_MAT ( 'EIGEN_VAL' )  
-         CALL DEALLOCATE_EIGEN1_MAT ( 'GEN_MASS' )  
+         CALL DEALLOCATE_EIGEN1_MAT ( 'EIGEN_VAL' )
+         CALL DEALLOCATE_EIGEN1_MAT ( 'GEN_MASS' )
          CALL DEALLOCATE_EIGEN1_MAT ( 'MODE_NUM' )
-      ENDIF  
+      ENDIF
 
 ! Deallocate some arrays
 
 !xx   WRITE(SC1, * ) '     DEALLOCATE SOME ARRAYS'
-!xx   WRITE(SC1, * )                                       ! Advance 1 line for screen messages         
+!xx   WRITE(SC1, * )                                       ! Advance 1 line for screen messages
       WRITE(SC1,12345,ADVANCE='NO') '       Deallocate KSF ', CR13  ;   CALL DEALLOCATE_SPARSE_MAT ( 'KSF' )
       WRITE(SC1,12345,ADVANCE='NO') '       Deallocate KSFD', CR13  ;   CALL DEALLOCATE_SPARSE_MAT ( 'KSFD')
       WRITE(SC1,12345,ADVANCE='NO') '       Deallocate MGG ', CR13  ;   CALL DEALLOCATE_SPARSE_MAT ( 'MGG' )
@@ -1264,13 +1264,13 @@ j_do: DO JVEC=1,NUM_SOLNS
       WRITE(SC1,12345,ADVANCE='NO') '       Deallocate GMNt', CR13  ;   CALL DEALLOCATE_SPARSE_MAT ( 'GMNt' )
       WRITE(SC1,12345,ADVANCE='NO') '       Deallocate HMN ', CR13  ;   CALL DEALLOCATE_SPARSE_MAT ( 'HMN' )
       WRITE(SC1,12345,ADVANCE='NO') '       Deallocate MSF ', CR13  ;   CALL DEALLOCATE_SPARSE_MAT ( 'MSF' )
-      
+
       ! save MLL from deallocation in case we need to use it for eigenvalue
       ! estimation in a next step of the eigen solution
       IF ((SOL_NAME(1:8) /= 'BUCKLING') .OR. (LOAD_ISTEP == 2)) THEN
          WRITE(SC1,12345,ADVANCE='NO') '       Deallocate MLL ', CR13  ;   CALL DEALLOCATE_SPARSE_MAT ( 'MLL' )
       END IF
-      
+
       WRITE(SC1,12345,ADVANCE='NO') '       Deallocate LMN ', CR13  ;   CALL DEALLOCATE_SPARSE_MAT ( 'LMN' )
       WRITE(SC1,12345,ADVANCE='NO') '       Deallocate QSYS', CR13  ;   CALL DEALLOCATE_COL_VEC    ( 'QSYS_COL' )
 
@@ -1400,7 +1400,7 @@ j_do: DO JVEC=1,NUM_SOLNS
 
 ! Write LINK9 end to screen
 
-      CALL OURTIM             
+      CALL OURTIM
       WRITE(SC1,153) LINKNO
 
 ! **********************************************************************************************************************************
@@ -1521,8 +1521,8 @@ j_do: DO JVEC=1,NUM_SOLNS
 98988 FORMAT(' *INFORMATION: Due to DEBUG(176) = ',i3                                                                              &
                     ,/,14x,' Plate elem engr forces and stresses will be calculated by multiplying strains by the material matrix' &
                     ,/,14x,' Strains are calculated using the strain-displ matrices:'                                              &
-                    ,/,14x,' BE1 (membrane), BE2 (bending), BE3 (transverse shear) times displacements') 
- 
+                    ,/,14x,' BE1 (membrane), BE2 (bending), BE3 (transverse shear) times displacements')
+
 98989 FORMAT(' *INFORMATION: Due to DEBUG(176) = ',i3                                                                              &
                     ,/,14x,' Plate elem engr forces and stresses will be calculated by multiplying stress-displ matrices:'         &
                     ,/,14x,' SE1 (membrane), SE2 (bending), SE3 (transv shear) times displacements')
@@ -1530,9 +1530,9 @@ j_do: DO JVEC=1,NUM_SOLNS
 12345 FORMAT(A,10X,A)
 
 ! ##################################################################################################################################
- 
+
       CONTAINS
- 
+
 ! ##################################################################################################################################
 
       SUBROUTINE CONCATENATE_TITLES
@@ -1603,75 +1603,75 @@ j_do: DO JVEC=1,NUM_SOLNS
          WRITE(F06,99770)
       ENDIF
 
-      IF (SC_ACCE_OUTPUT > 0) THEN                                                     
+      IF (SC_ACCE_OUTPUT > 0) THEN
          WRITE(F06,*) ' Output transformation matrix for acceleration: OTM_ACCE'
          WRITE(F06,*) ' -------------------------------------------------------'
          WRITE(F06,99771) (I,I=1,NDOFR+NVEC)
-         DO I=1,NROWS_OTM_ACCE                                                                                                    
-            WRITE(F06,99778) I, (OTM_ACCE(I,J),J=1,NDOFR+NVEC)                                                                    
-         ENDDO                                                                                                                    
-         WRITE(F06,*)                                                                                                             
-      ENDIF                                                                                                                       
+         DO I=1,NROWS_OTM_ACCE
+            WRITE(F06,99778) I, (OTM_ACCE(I,J),J=1,NDOFR+NVEC)
+         ENDDO
+         WRITE(F06,*)
+      ENDIF
 
-      IF (SC_DISP_OUTPUT > 0) THEN                                                     
+      IF (SC_DISP_OUTPUT > 0) THEN
          WRITE(F06,*) ' Output transformation matrix for displacement: OTM_DISP'
          WRITE(F06,*) ' -------------------------------------------------------'
          WRITE(F06,99771) (I,I=1,NUM_CB_DOFS)
-         DO I=1,NROWS_OTM_DISP                                                                                                    
-            WRITE(F06,99778) I, (OTM_DISP(I,J),J=1,NUM_CB_DOFS)                                                                   
-         ENDDO                                                                                                                    
-         WRITE(F06,*)                                                                                                             
-      ENDIF                                                                                                                       
+         DO I=1,NROWS_OTM_DISP
+            WRITE(F06,99778) I, (OTM_DISP(I,J),J=1,NUM_CB_DOFS)
+         ENDDO
+         WRITE(F06,*)
+      ENDIF
 
-      IF (SC_MPCF_OUTPUT > 0) THEN                                                     
+      IF (SC_MPCF_OUTPUT > 0) THEN
          WRITE(F06,*) ' Output transformation matrix for MPC forces: OTM_MPCF'
          WRITE(F06,*) ' -----------------------------------------------------'
          WRITE(F06,99771) (I,I=1,NUM_CB_DOFS)
-         DO I=1,NROWS_OTM_MPCF                                                                                                    
-            WRITE(F06,99778) I, (OTM_MPCF(I,J),J=1,NUM_CB_DOFS)                                                                   
-         ENDDO                                                                                                                    
-         WRITE(F06,*)                                                                                                             
-      ENDIF                                                                                                                       
+         DO I=1,NROWS_OTM_MPCF
+            WRITE(F06,99778) I, (OTM_MPCF(I,J),J=1,NUM_CB_DOFS)
+         ENDDO
+         WRITE(F06,*)
+      ENDIF
 
-      IF (SC_SPCF_OUTPUT > 0) THEN                                                     
+      IF (SC_SPCF_OUTPUT > 0) THEN
          WRITE(F06,*) ' Output transformation matrix for SPC forces: OTM_SPCF'
          WRITE(F06,*) ' -----------------------------------------------------'
          WRITE(F06,99771) (I,I=1,NUM_CB_DOFS)
-         DO I=1,NROWS_OTM_SPCF                                                                                                    
-            WRITE(F06,99778) I, (OTM_SPCF(I,J),J=1,NUM_CB_DOFS)                                                                   
-         ENDDO                                                                                                                    
-         WRITE(F06,*)                                                                                                             
-      ENDIF                                                                                                                       
+         DO I=1,NROWS_OTM_SPCF
+            WRITE(F06,99778) I, (OTM_SPCF(I,J),J=1,NUM_CB_DOFS)
+         ENDDO
+         WRITE(F06,*)
+      ENDIF
 
-      IF (SC_ELFE_OUTPUT > 0) THEN                                                     
+      IF (SC_ELFE_OUTPUT > 0) THEN
          WRITE(F06,*) ' Output transformation matrix for element engineering forces: OTM_ELFE'
          WRITE(F06,*) ' ---------------------------------------------------------------------'
          WRITE(F06,99771) (I,I=1,NUM_CB_DOFS)
-         DO I=1,NROWS_OTM_ELFE                                                                                                    
-            WRITE(F06,99778) I, (OTM_ELFE(I,J),J=1,NUM_CB_DOFS)                                                                   
-         ENDDO                                                                                                                    
-         WRITE(F06,*)                                                                                                             
-      ENDIF                                                                                                                       
+         DO I=1,NROWS_OTM_ELFE
+            WRITE(F06,99778) I, (OTM_ELFE(I,J),J=1,NUM_CB_DOFS)
+         ENDDO
+         WRITE(F06,*)
+      ENDIF
 
-      IF (SC_ELFN_OUTPUT > 0) THEN                                                     
+      IF (SC_ELFN_OUTPUT > 0) THEN
          WRITE(F06,*) ' Output transformation matrix for element nodal forces: OTM_ELFN'
          WRITE(F06,*) ' ---------------------------------------------------------------'
          WRITE(F06,99771) (I,I=1,NUM_CB_DOFS)
-         DO I=1,NROWS_OTM_ELFN                                                                                                    
-            WRITE(F06,99778) I, (OTM_ELFN(I,J),J=1,NUM_CB_DOFS)                                                                   
-         ENDDO                                                                                                                    
-         WRITE(F06,*)                                                                                                             
-      ENDIF                                                                                                                       
+         DO I=1,NROWS_OTM_ELFN
+            WRITE(F06,99778) I, (OTM_ELFN(I,J),J=1,NUM_CB_DOFS)
+         ENDDO
+         WRITE(F06,*)
+      ENDIF
 
-      IF (SC_STRE_OUTPUT > 0) THEN                                                     
+      IF (SC_STRE_OUTPUT > 0) THEN
          WRITE(F06,*) ' Output transformation matrix for element stresses: OTM_STRE'
          WRITE(F06,*) ' -----------------------------------------------------------'
          WRITE(F06,99771) (I,I=1,NUM_CB_DOFS)
-         DO I=1,NROWS_OTM_STRE                                                                                                    
-            WRITE(F06,99778) I, (OTM_STRE(I,J),J=1,NUM_CB_DOFS)                                                                   
-         ENDDO                                                                                                                    
-         WRITE(F06,*)                                                                                                             
-      ENDIF                                                                                                                       
+         DO I=1,NROWS_OTM_STRE
+            WRITE(F06,99778) I, (OTM_STRE(I,J),J=1,NUM_CB_DOFS)
+         ENDDO
+         WRITE(F06,*)
+      ENDIF
 
       RETURN
 
@@ -1685,8 +1685,8 @@ j_do: DO JVEC=1,NUM_SOLNS
 99778 format(i8,32767(1es14.6))
 
 ! **********************************************************************************************************************************
- 
-      END SUBROUTINE WRITE_OTM_TO_F06 
+
+      END SUBROUTINE WRITE_OTM_TO_F06
 
 ! ##################################################################################################################################
 
@@ -1704,7 +1704,7 @@ j_do: DO JVEC=1,NUM_SOLNS
 
       IMPLICIT NONE
 
-      INTEGER(LONG)                   :: K                 ! Counter              
+      INTEGER(LONG)                   :: K                 ! Counter
       INTEGER(LONG)                   :: A_SET_COL         ! Col no. in TDOF for A_SET displ set definition
       INTEGER(LONG)                   :: F_SET_COL         ! Col no. in TDOF for F_SET displ set definition
       INTEGER(LONG)                   :: G_SET_COL         ! Col no. in TDOF for G_SET displ set definition
@@ -1758,7 +1758,7 @@ j_do: DO JVEC=1,NUM_SOLNS
          DO I=1,NDOFA
             FA_COL(I) = FL_COL(I)
          ENDDO
- 
+
       ENDIF
 
       CALL DEALLOCATE_COL_VEC ( 'FL_COL' )
@@ -1785,7 +1785,7 @@ j_do: DO JVEC=1,NUM_SOLNS
          DO I=1,NDOFF
             FF_COL(I) = FA_COL(I)
          ENDDO
- 
+
       ENDIF
 
       CALL DEALLOCATE_COL_VEC ( 'FA_COL' )
@@ -1812,7 +1812,7 @@ j_do: DO JVEC=1,NUM_SOLNS
          DO I=1,NDOFN
             FN_COL(I) = FF_COL(I)
          ENDDO
- 
+
       ENDIF
 
       CALL DEALLOCATE_COL_VEC ( 'FF_COL' )
@@ -1838,7 +1838,7 @@ j_do: DO JVEC=1,NUM_SOLNS
          DO I=1,NDOFG
             FG_COL(I) = FN_COL(I)
          ENDDO
- 
+
       ENDIF
 
       CALL DEALLOCATE_COL_VEC ( 'FN_COL' )
