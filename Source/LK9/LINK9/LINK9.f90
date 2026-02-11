@@ -514,7 +514,7 @@
                WRITE(SC1,9092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
                CLOSE_IT   = 'Y'
                CALL ALLOCATE_SPARSE_MAT ( 'LMN',  NDOFM, NTERM_LMN, SUBR_NAME )
-               CALL READ_MATRIX_1 ( LINK2R, L2R, 'N', CLOSE_IT, L2RSTAT, L2R_MSG, 'LMN', NTERM_LMN, 'Y', NDOFM                     &
+               CALL READ_MATRIX_1 ( LINK2R, L2R, 'N', CLOSE_IT, 'KEEP', L2R_MSG, 'LMN', NTERM_LMN, 'Y', NDOFM                     &
                                   , I_LMN, J_LMN, LMN )
             ENDIF
 
