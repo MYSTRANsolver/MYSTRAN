@@ -1,41 +1,41 @@
 ! ##################################################################################################################################
-! Begin MIT license text.                                                                                    
+! Begin MIT license text.
 ! _______________________________________________________________________________________________________
-                                                                                                         
-! Copyright 2022 Dr William R Case, Jr (mystransolver@gmail.com)                                              
-                                                                                                         
-! Permission is hereby granted, free of charge, to any person obtaining a copy of this software and      
+
+! Copyright 2022 Dr William R Case, Jr (mystransolver@gmail.com)
+
+! Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 ! associated documentation files (the "Software"), to deal in the Software without restriction, including
 ! without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-! copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to   
-! the following conditions:                                                                              
-                                                                                                         
-! The above copyright notice and this permission notice shall be included in all copies or substantial   
-! portions of the Software and documentation.                                                                              
-                                                                                                         
-! THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS                                
-! OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,                            
-! FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE                            
-! AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER                                 
-! LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,                          
-! OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN                              
-! THE SOFTWARE.                                                                                          
+! copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to
+! the following conditions:
+
+! The above copyright notice and this permission notice shall be included in all copies or substantial
+! portions of the Software and documentation.
+
+! THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+! OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+! FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+! AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+! LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+! OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+! THE SOFTWARE.
 ! _______________________________________________________________________________________________________
-                                                                                                        
-! End MIT license text.                                                                                      
+
+! End MIT license text.
 
       SUBROUTINE REDUCE_KGGD_TO_KNND ( PART_VEC_G_NM )
- 
+
 ! Call routines to reduce the KGGD differential stiffness matrix from the G-set to the N, M-sets
- 
+
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
-      USE IOUNT1, ONLY                :  ERR, F04, F06, L2J, LINK2J, L2J_MSG, SC1, WRT_ERR, WRT_LOG
+      USE IOUNT1, ONLY                :  ERR, F04, F06, LINK2A, L2A, L2ASTAT, L2A_MSG, L2J, LINK2J, L2J_MSG, SC1, WRT_ERR, WRT_LOG
       USE SCONTR, ONLY                :  BLNK_SUB_NAM, FATAL_ERR, NDOFG, NDOFN, NDOFM, NTERM_HMN, NTERM_KGGD, NTERM_KNND,          &
                                          NTERM_KNMD, NTERM_KMMD, NTERM_GMN
       USE PARAMS, ONLY                :  EPSIL, SPARSTOR
       USE TIMDAT, ONLY                :  TSEC
       USE SUBR_BEGEND_LEVELS, ONLY    :  REDUCE_KGGD_TO_KNND_BEGEND
-      USE CONSTANTS_1, ONLY           :  ONE 
+      USE CONSTANTS_1, ONLY           :  ONE
       USE SPARSE_MATRICES, ONLY       :  I_HMN, J_HMN, HMN, I_KGGD, J_KGGD, KGGD, I_KNND, J_KNND, KNND, I_KNMD, J_KNMD, KNMD,      &
                                          I_KMMD, J_KMMD, KMMD, I_KMND, J_KMND, KMND, I_GMN, J_GMN, GMN,  I_GMNt, J_GMNt, GMNt
       USE SPARSE_MATRICES, ONLY       :  SYM_GMN, SYM_HMN, SYM_KGGD, SYM_KNND, SYM_KNMD, SYM_KMMD, SYM_KMND
@@ -51,8 +51,8 @@
 !                                                              'N' for nonsymmetric storage)
       CHARACTER(  1*BYTE)             :: SYM_CRS3            ! Storage format for matrix CRS3 (either 'Y' for sym storage or
 !                                                              'N' for nonsymmetric storage)
- 
-      INTEGER(LONG), INTENT(IN)       :: PART_VEC_G_NM(NDOFG)! Partitioning vector (G set into N and M sets) 
+
+      INTEGER(LONG), INTENT(IN)       :: PART_VEC_G_NM(NDOFG)! Partitioning vector (G set into N and M sets)
       INTEGER(LONG)                   :: AROW_MAX_TERMS      ! Output from MATMULT_SFS_NTERM and input to MATMULT_SFS
       INTEGER(LONG)                   :: I,J                 ! DO loop indices
 !                                                              the ones on and above the diagonal (controlled by param SPARSTOR)
@@ -60,10 +60,10 @@
       INTEGER(LONG)                   :: KNMD_ROW_MAX_TERMS   ! Output from subr PARTITION_SIZE (max terms in any row of matrix)
 !xx   INTEGER(LONG)                   :: KMND_ROW_MAX_TERMS   ! Output from subr PARTITION_SIZE (max terms in any row of matrix)
       INTEGER(LONG)                   :: KMMD_ROW_MAX_TERMS   ! Output from subr PARTITION_SIZE (max terms in any row of matrix)
-      INTEGER(LONG)                   :: NTERM_CCS1          ! Number of terms in matrix CCS1  
-      INTEGER(LONG)                   :: NTERM_CRS1          ! Number of terms in matrix CRS1  
-      INTEGER(LONG)                   :: NTERM_CRS2          ! Number of terms in matrix CRS2  
-      INTEGER(LONG)                   :: NTERM_CRS3          ! Number of terms in matrix CRS3  
+      INTEGER(LONG)                   :: NTERM_CCS1          ! Number of terms in matrix CCS1
+      INTEGER(LONG)                   :: NTERM_CRS1          ! Number of terms in matrix CRS1
+      INTEGER(LONG)                   :: NTERM_CRS2          ! Number of terms in matrix CRS2
+      INTEGER(LONG)                   :: NTERM_CRS3          ! Number of terms in matrix CRS3
       INTEGER(LONG)                   :: NTERM_KMND           ! Number of nonzeros in sparse matrix KMND (should = NTERM_KNMD)
       INTEGER(LONG), PARAMETER        :: NUM1        = 1     ! Used in subr's that partition matrices
       INTEGER(LONG), PARAMETER        :: NUM2        = 2     ! Used in subr's that partition matrices
@@ -84,11 +84,11 @@
       IF (NDOFN > 0) THEN
 
          CALL PARTITION_SS_NTERM ( 'KGGD', NTERM_KGGD, NDOFG, NDOFG, SYM_KGGD, I_KGGD, J_KGGD,      PART_VEC_G_NM, PART_VEC_G_NM,  &
-                                    NUM1, NUM1, KNND_ROW_MAX_TERMS, 'KNND', NTERM_KNND, SYM_KNND ) 
+                                    NUM1, NUM1, KNND_ROW_MAX_TERMS, 'KNND', NTERM_KNND, SYM_KNND )
 
          CALL ALLOCATE_SPARSE_MAT ( 'KNND', NDOFN, NTERM_KNND, SUBR_NAME )
 
-         IF (NTERM_KNND > 0) THEN      
+         IF (NTERM_KNND > 0) THEN
             CALL PARTITION_SS ( 'KGGD', NTERM_KGGD, NDOFG, NDOFG, SYM_KGGD, I_KGGD, J_KGGD, KGGD, PART_VEC_G_NM, PART_VEC_G_NM,    &
                                  NUM1, NUM1, KNND_ROW_MAX_TERMS, 'KNND', NTERM_KNND, NDOFN, SYM_KNND, I_KNND, J_KNND, KNND )
          ENDIF
@@ -100,7 +100,7 @@
       IF ((NDOFN > 0) .AND. (NDOFM > 0)) THEN
 
          CALL PARTITION_SS_NTERM ( 'KGGD', NTERM_KGGD, NDOFG, NDOFG, SYM_KGGD, I_KGGD, J_KGGD,      PART_VEC_G_NM, PART_VEC_G_NM,  &
-                                    NUM1, NUM2, KNMD_ROW_MAX_TERMS, 'KNMD', NTERM_KNMD, SYM_KNMD ) 
+                                    NUM1, NUM2, KNMD_ROW_MAX_TERMS, 'KNMD', NTERM_KNMD, SYM_KNMD )
 
          CALL ALLOCATE_SPARSE_MAT ( 'KNMD', NDOFN, NTERM_KNMD, SUBR_NAME )
 
@@ -116,7 +116,7 @@
       IF ((NDOFN > 0) .AND. (NDOFM > 0)) THEN
 
 !xx      CALL PARTITION_SS_NTERM ( 'KGGD', NTERM_KGGD, NDOFG, NDOFG, SYM_KGGD, I_KGGD, J_KGGD,      PART_VEC_G_NM, PART_VEC_G_NM,  &
-!xx                                 NUM2, NUM1, KMND_ROW_MAX_TERMS, 'KMND', NTERM_KMND, SYM_KMND ) 
+!xx                                 NUM2, NUM1, KMND_ROW_MAX_TERMS, 'KMND', NTERM_KMND, SYM_KMND )
 
 !xx      IF (NTERM_KMND /= NTERM_KNMD) THEN
 !xx         FATAL_ERR = FATAL_ERR + 1
@@ -147,7 +147,7 @@
       IF (NDOFM > 0) THEN
 
          CALL PARTITION_SS_NTERM ( 'KGGD', NTERM_KGGD, NDOFG, NDOFG, SYM_KGGD, I_KGGD, J_KGGD,      PART_VEC_G_NM, PART_VEC_G_NM,  &
-                                    NUM2, NUM2, KMMD_ROW_MAX_TERMS, 'KMMD', NTERM_KMMD, SYM_KMMD ) 
+                                    NUM2, NUM2, KMMD_ROW_MAX_TERMS, 'KMMD', NTERM_KMMD, SYM_KMMD )
 
          CALL ALLOCATE_SPARSE_MAT ( 'KMMD', NDOFM, NTERM_KMMD, SUBR_NAME )
 
@@ -165,6 +165,10 @@
 
          IF (.NOT. ALLOCATED(GMN)) THEN
             CALL ALLOCATE_SPARSE_MAT ( 'GMN' , NDOFN, NTERM_GMN, SUBR_NAME )
+
+            CALL READ_MATRIX_1 ( LINK2A, L2A, 'N', 'N', L2ASTAT, L2A_MSG, &
+                                 'GMN', NTERM_GMN, 'Y', NDOFM,           &
+                                 I_GMN, J_GMN, GMN )
          ENDIF
          CALL ALLOCATE_SPARSE_MAT ( 'GMNt', NDOFN, NTERM_GMN, SUBR_NAME )
          CALL MATTRNSP_SS ( NDOFM, NDOFN, NTERM_GMN, 'GMN', I_GMN, J_GMN, GMN, 'GMNt', I_GMNt, J_GMNt, GMNt )
@@ -203,7 +207,7 @@
             CALL DEALLOCATE_SCR_MAT ( 'CRS2' )             ! I-6, deallocate CRS2 which was (KNMD*GMN)t
 
                                                            ! I-7, CRS3 = (KNMD*GMN) + (KNMD*GMN)t has all nonzero terms in it.
-            IF      (SPARSTOR == 'SYM   ') THEN            !      If SPARSTOR == 'SYM   ', rewrite CRS3 as sym in CRS1     
+            IF      (SPARSTOR == 'SYM   ') THEN            !      If SPARSTOR == 'SYM   ', rewrite CRS3 as sym in CRS1
 
                CALL SPARSE_CRS_TERM_COUNT ( NDOFN, NTERM_CRS3, '(KNMD*GMN) + (KNMD*GMN)t', I_CRS3, J_CRS3, NTERM_CRS1 )
                CALL ALLOCATE_SCR_CRS_MAT ( 'CRS1', NDOFN, NTERM_CRS1, SUBR_NAME )
@@ -242,11 +246,11 @@
             CALL MATADD_SSS ( NDOFN, 'KNND-bar', NTERM_KNND, I_KNND, J_KNND, KNND, ONE, 'KNMD*GMN + (KNMD*GMN)t', NTERM_CRS1,      &
                                       I_CRS1, J_CRS1, CRS1, ONE, 'CRS1', NTERM_CRS3, I_CRS3, J_CRS3, CRS3 )
 
-            CALL DEALLOCATE_SCR_MAT ( 'CRS1' )             ! I-10, deallocate CRS1 = KNMD*GMN + (KNMD*GMN)t 
+            CALL DEALLOCATE_SCR_MAT ( 'CRS1' )             ! I-10, deallocate CRS1 = KNMD*GMN + (KNMD*GMN)t
 
             NTERM_KNND = NTERM_CRS3                        ! I-11, reallocate KNND to be size of CRS3
             WRITE(SC1, * ) '    Reallocate KNND'
-      !xx   WRITE(SC1, * )                                 ! Advance 1 line for screen messages         
+      !xx   WRITE(SC1, * )                                 ! Advance 1 line for screen messages
             WRITE(SC1,12345,ADVANCE='NO') '       Deallocate KNND', CR13
             CALL DEALLOCATE_SPARSE_MAT ( 'KNND' )
             WRITE(SC1,12345,ADVANCE='NO') '       Allocate   KNND', CR13
@@ -258,7 +262,7 @@
             DO J=1,NTERM_KNND
                J_KNND(J) = J_CRS3(J)
                  KNND(J) =   CRS3(J)
-            ENDDO 
+            ENDDO
 
             CALL DEALLOCATE_SCR_MAT ( 'CRS3' )             ! I-13, deallocate CRS3
                                                            ! At this point, CRS1, CRS2, CRS3 are deallocated, CCS1 is being used
@@ -319,7 +323,7 @@
             CALL DEALLOCATE_SCR_MAT ( 'CCS1' )             ! II-6, deallocate CCS1
 
                                                            ! II-7, CRS1 = GMNt*KMMD*GMN has all nonzero terms in it.
-            IF      (SPARSTOR == 'SYM   ') THEN            !      If SPARSTOR == 'SYM   ', rewrite CRS1 as sym in CRS3     
+            IF      (SPARSTOR == 'SYM   ') THEN            !      If SPARSTOR == 'SYM   ', rewrite CRS1 as sym in CRS3
 
                CALL SPARSE_CRS_TERM_COUNT ( NDOFN, NTERM_CRS1, 'GMNt*KMMD*GMN all nonzeros', I_CRS1, J_CRS1, NTERM_CRS3 )
                CALL ALLOCATE_SCR_CRS_MAT ( 'CRS3', NDOFN, NTERM_CRS3, SUBR_NAME )
@@ -360,7 +364,7 @@
 
             NTERM_KNND = NTERM_CRS2                        ! II-11, reallocate KNND to be size of CRS2
             WRITE(SC1, * ) '    Reallocate KNND'
-      !xx   WRITE(SC1, * )                                 ! Advance 1 line for screen messages         
+      !xx   WRITE(SC1, * )                                 ! Advance 1 line for screen messages
             WRITE(SC1,12345,ADVANCE='NO') '       Deallocate KNND', CR13
             CALL DEALLOCATE_SPARSE_MAT ( 'KNND' )
             WRITE(SC1,12345,ADVANCE='NO') '       Allocate   KNND', CR13
@@ -402,7 +406,7 @@
          ENDIF
 
          WRITE(SC1, * ) '     DEALLOCATE SOME ARRAYS'
-   !xx   WRITE(SC1, * )                                    ! Advance 1 line for screen messages         
+   !xx   WRITE(SC1, * )                                    ! Advance 1 line for screen messages
          WRITE(SC1,12345,ADVANCE='NO') '       Deallocate GMNt', CR13
          CALL DEALLOCATE_SPARSE_MAT ( 'GMNt' )
          WRITE(SC1,12345,ADVANCE='NO') '       Deallocate HMN ', CR13
@@ -429,5 +433,5 @@
 12345 FORMAT(A,10X,A)
 
 ! **********************************************************************************************************************************
- 
+
       END SUBROUTINE REDUCE_KGGD_TO_KNND

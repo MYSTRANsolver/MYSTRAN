@@ -1,45 +1,46 @@
 ! ##################################################################################################################################
-! Begin MIT license text.                                                                                    
+! Begin MIT license text.
 ! _______________________________________________________________________________________________________
-                                                                                                         
-! Copyright 2022 Dr William R Case, Jr (mystransolver@gmail.com)                                              
-                                                                                                         
-! Permission is hereby granted, free of charge, to any person obtaining a copy of this software and      
+
+! Copyright 2022 Dr William R Case, Jr (mystransolver@gmail.com)
+
+! Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 ! associated documentation files (the "Software"), to deal in the Software without restriction, including
 ! without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-! copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to   
-! the following conditions:                                                                              
-                                                                                                         
-! The above copyright notice and this permission notice shall be included in all copies or substantial   
-! portions of the Software and documentation.                                                                              
-                                                                                                         
-! THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS                                
-! OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,                            
-! FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE                            
-! AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER                                 
-! LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,                          
-! OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN                              
-! THE SOFTWARE.                                                                                          
+! copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to
+! the following conditions:
+
+! The above copyright notice and this permission notice shall be included in all copies or substantial
+! portions of the Software and documentation.
+
+! THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+! OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+! FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+! AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+! LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+! OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+! THE SOFTWARE.
 ! _______________________________________________________________________________________________________
-                                                                                                        
-! End MIT license text.                                                                                      
- 
+
+! End MIT license text.
+
       SUBROUTINE MPC_PROC
- 
+
 ! Processes MPC equations to get terms for the RMG constraint matrix
- 
+
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
       USE IOUNT1, ONLY                :  WRT_ERR, WRT_LOG, ERR,     F04,     F06,     L1J,     L1S, LINK1S, L1S_MSG
-      USE SCONTR, ONLY                :  BLNK_SUB_NAM, FATAL_ERR, LMPCADDC, NGRID, NMPC, NMPCADD, NUM_MPCSIDS
+      USE SCONTR, ONLY                :  BLNK_SUB_NAM, FATAL_ERR, LMPCADDC, NGRID, NMPC, NMPCADD, NUM_MPCSIDS, SOL_NAME
       USE TIMDAT, ONLY                :  TSEC
       USE SUBR_BEGEND_LEVELS, ONLY    :  MPC_PROC_BEGEND
       USE MODEL_STUF, ONLY            :  GRID_ID, MPCSET, MPCSIDS
       USE DOF_TABLES, ONLY            :  TDOF, TDOF_ROW_START
+      USE NONLINEAR_PARAMS, ONLY      :  LOAD_ISTEP
 
       USE MPC_PROC_USE_IFs
 
       IMPLICIT NONE
- 
+
       CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: SUBR_NAME = 'MPC_PROC'
       CHARACTER( 1*BYTE)              :: MPC_SET_USED      ! 'Y'/'N' indicator if an MPC set in B.D. is used
 
@@ -55,7 +56,7 @@
       INTEGER(LONG)                   :: M_SET_COL_NUM     ! Col no., in TDOF array, of the M-set DOF list
       INTEGER(LONG)                   :: NUM_TRIPLES       ! Counter on number of pairs of grid/comp/coeff triplets on an MPC
 !                                                            logical card. Must be <= MMPC which was counted in subr BD_MPC0
-      INTEGER(LONG)                   :: OUNT(2)           ! File units to write messages to.   
+      INTEGER(LONG)                   :: OUNT(2)           ! File units to write messages to.
       INTEGER(LONG)                   :: REC_NO            ! Record number when reading a file
       INTEGER(LONG)                   :: RMG_COL_NUM       ! Col no. of a term in array RMG
       INTEGER(LONG)                   :: RMG_ROW_NUM       ! Row no. of a term in array RMG
@@ -63,7 +64,7 @@
       INTEGER(LONG)                   :: ROW_NUM_START     ! DOF number where TDOF data begins for a grid
       INTEGER(LONG)                   :: SETID             ! An SPC set ID read from file LINK1O
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = MPC_PROC_BEGEND
- 
+
       REAL(DOUBLE)                    :: COEFF             ! An MPC coeff value read from file LINK1S that we do not need
       REAL(DOUBLE)                    :: COEFF_JUNK        ! An MPC coeff value read from file LINK1S that we do not need
 
@@ -76,13 +77,13 @@
 
 ! **********************************************************************************************************************************
 ! Make units for writing errors the error file and output file
- 
+
       OUNT(1) = ERR
       OUNT(2) = F06
- 
+
 ! **********************************************************************************************************************************
 ! Process MPC data from file L1S (data written when MPC Bulk Data cards were read)
- 
+
 ! File LINK1S contains data from the NMPC number of logical MPC cards in the input B.D. deck. For each logical MPC card, LINK1S has:
 !     1st record          for 1st MPC: the MPC set ID
 !     2nd record          for 1st MPC: the num of triplets of grid/comp/coeff (incl ones for the dependent DOF) on this logical MPC
@@ -90,7 +91,7 @@
 !     4th record          for 1st MPC: grid/comp/coeff for the 1st independent DOF on the this MPC logical card
 !     5th record, and on, for 1st MPC: grid/comp/coeff for the 2nd, and on, independent DOF's (if any) on the this MPC logical card
 
-! The above record structure is repeated for each MPC logical card in the data deck (in the order in which they were read from the 
+! The above record structure is repeated for each MPC logical card in the data deck (in the order in which they were read from the
 ! B.D. deck). All logical MPC cards are included, not only the ones that may be used in a particular execution of MYSTRAN
 
       CALL TDOF_COL_NUM ( 'G ', G_SET_COL_NUM )
@@ -98,8 +99,8 @@
 
       REC_NO = 0
 i_do3:DO I=1,NMPC                                          ! Process data from file LINK1S (contains all info from the NMPC MPC's)
- 
-         READ(L1S,IOSTAT=IOCHK) SETID                      ! Read the SETID for the i-th logical MPC    
+
+         READ(L1S,IOSTAT=IOCHK) SETID                      ! Read the SETID for the i-th logical MPC
          REC_NO = REC_NO + 1
          IF (IOCHK /= 0) THEN
             CALL READERR ( IOCHK, LINK1S, L1S_MSG, REC_NO, OUNT, 'Y' )
@@ -191,10 +192,10 @@ j_do3:   DO J=1,NUM_MPCSIDS
                MPC_SET_USED = 'N'
                CYCLE j_do3
 
-            ENDIF 
+            ENDIF
 
-         ENDDO j_do3 
- 
+         ENDDO j_do3
+
          IF (MPC_SET_USED == 'N') THEN                     ! This MPC set is not to be used, so skip all grid/comp/coeff records
             DO K=1,NUM_TRIPLES
                READ(L1S,IOSTAT=IOCHK) GID_JUNK,COMP_JUNK,COEFF_JUNK
@@ -203,12 +204,15 @@ j_do3:   DO J=1,NUM_MPCSIDS
                   CALL READERR ( IOCHK, LINK1S, L1S_MSG, REC_NO, OUNT, 'Y' )
                   CALL OUTA_HERE ( 'Y' )
                ENDIF
-            ENDDO 
+            ENDDO
          ENDIF
 
-      ENDDO i_do3 
- 
-      CALL DEALLOCATE_MODEL_STUF ( 'MPCSIDS' )
+      ENDDO i_do3
+
+      ! do not deallocate if we're on the first step of a buckling sol
+      IF ((SOL_NAME(1:8) /= 'BUCKLING') .OR. (LOAD_ISTEP /= 1)) THEN
+         CALL DEALLOCATE_MODEL_STUF ( 'MPCSIDS' )
+      END IF
 
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
@@ -235,4 +239,3 @@ j_do3:   DO J=1,NUM_MPCSIDS
 ! **********************************************************************************************************************************
 
       END SUBROUTINE MPC_PROC
-
