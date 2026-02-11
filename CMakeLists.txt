@@ -29,16 +29,6 @@ include_directories("${CMAKE_SOURCE_DIR}/INCLUDE")
 # uncomment this to debug
 # set(CMAKE_VERBOSE_MAKEFILE true)
 
-# a new build type for profiling
-set(CMAKE_PROFILING_FLAGS "-O2 -g -fno-omit-frame-pointer -fno-inline-functions")
-
-set(CMAKE_C_FLAGS_PROFILING "${CMAKE_PROFILING_FLAGS}")
-set(CMAKE_CXX_FLAGS_PROFILING "${CMAKE_PROFILING_FLAGS}")
-set(CMAKE_Fortran_FLAGS_PROFILING "${CMAKE_PROFILING_FLAGS}")
-
-set(CMAKE_EXE_LINKER_FLAGS_PROFILING "")
-set(CMAKE_SHARED_LINKER_FLAGS_PROFILING "")
-
 # register the Profile build type, just in case
 set(CMAKE_CONFIGURATION_TYPES
   Debug
@@ -46,6 +36,7 @@ set(CMAKE_CONFIGURATION_TYPES
   RelWithDebInfo
   MinSizeRel
   Profiling
+  Deterministic
   CACHE STRING "" FORCE
 )
 
@@ -346,6 +337,30 @@ if(CMAKE_COMPILER_IS_GNUCC)
   set(CMAKE_Fortran_FLAGS_DEBUG
     "-g -O0 -fcheck=all -fbacktrace -fbounds-check \
     -fno-inline -fno-ipa-sra -fno-ipa-cp -fno-optimize-sibling-calls")
+  set(CMAKE_Fortran_FLAGS_DETERMINISTIC
+    "-O0 -g \
+     -fno-fast-math \
+     -ffp-contract=off \
+     -fno-unsafe-math-optimizations \
+     -fno-associative-math \
+     -fno-reciprocal-math \
+     -frounding-math"
+  )
+  set(CMAKE_C_FLAGS_DETERMINISTIC
+    "-O0 -g \
+     -fno-fast-math \
+     -ffp-contract=off \
+     -frounding-math"
+  )
+  set(CMAKE_CXX_FLAGS_DETERMINISTIC
+    "${CMAKE_C_FLAGS_DETERMINISTIC}"
+  )
+  set(CMAKE_PROFILING_FLAGS "-O2 -g -fno-omit-frame-pointer -fno-inline-functions")
+  set(CMAKE_C_FLAGS_PROFILING "${CMAKE_PROFILING_FLAGS}")
+  set(CMAKE_CXX_FLAGS_PROFILING "${CMAKE_PROFILING_FLAGS}")
+  set(CMAKE_Fortran_FLAGS_PROFILING "${CMAKE_PROFILING_FLAGS}")
+  set(CMAKE_EXE_LINKER_FLAGS_PROFILING "")
+  set(CMAKE_SHARED_LINKER_FLAGS_PROFILING "")
 endif()
 
 # issue a couple messages about compilation

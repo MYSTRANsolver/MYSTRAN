@@ -1,33 +1,33 @@
 ! ##################################################################################################################################
-! Begin MIT license text.                                                                                    
+! Begin MIT license text.
 ! _______________________________________________________________________________________________________
-                                                                                                         
-! Copyright 2022 Dr William R Case, Jr (mystransolver@gmail.com)                                              
-                                                                                                         
-! Permission is hereby granted, free of charge, to any person obtaining a copy of this software and      
+
+! Copyright 2022 Dr William R Case, Jr (mystransolver@gmail.com)
+
+! Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 ! associated documentation files (the "Software"), to deal in the Software without restriction, including
 ! without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-! copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to   
-! the following conditions:                                                                              
-                                                                                                         
-! The above copyright notice and this permission notice shall be included in all copies or substantial   
-! portions of the Software and documentation.                                                                              
-                                                                                                         
-! THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS                                
-! OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,                            
-! FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE                            
-! AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER                                 
-! LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,                          
-! OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN                              
-! THE SOFTWARE.                                                                                          
+! copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to
+! the following conditions:
+
+! The above copyright notice and this permission notice shall be included in all copies or substantial
+! portions of the Software and documentation.
+
+! THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+! OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+! FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+! AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+! LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+! OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+! THE SOFTWARE.
 ! _______________________________________________________________________________________________________
-                                                                                                        
-! End MIT license text.                                                                                      
+
+! End MIT license text.
 
       SUBROUTINE REDUCE_G_NM
- 
+
 ! Call routines to reduce stiffness, mass, loads and constraint matrices from G-set to N, M-sets
- 
+
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
       USE IOUNT1, ONLY                :  ERR, F04, F06, L1C, LINK1C, L1C_MSG, SC1, WRT_ERR, WRT_LOG
 
@@ -51,15 +51,15 @@
                                          I_MGG , J_MGG , MGG , I_MNN , J_MNN , MNN , I_MNM , J_MNM , MNM , I_MMM , J_MMM , MMM ,   &
                                          I_PG  , J_PG  , PG  , I_PN  , J_PN  , PN  , I_PM  , J_PM  , PM  ,                         &
                                          I_RMG , J_RMG , RMG
-                                         
+
       USE SPARSE_MATRICES, ONLY       :  SYM_KNN
       USE OUTPUT4_MATRICES, ONLY      :  ACT_OU4_MYSTRAN_NAMES, NUM_OU4_REQUESTS
       USE SCRATCH_MATRICES
- 
+
       USE REDUCE_G_NM_USE_IFs
 
       IMPLICIT NONE
-               
+
       CHARACTER, PARAMETER            :: CR13 = CHAR(13)   ! This causes a carriage return simulating the "+" action in a FORMAT
       CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: SUBR_NAME = 'REDUCE_G_NM'
       CHARACTER(  8*BYTE)             :: ASPC_SUM_MSG1       ! Message to be printed out in the AUTOSPC summary table
@@ -69,18 +69,18 @@
       CHARACTER(  1*BYTE)             :: DEALLOCATE_KGGD= 'Y'! Indicator of whether we need to keep KGGD allocated for OU4 output
       CHARACTER(  1*BYTE)             :: DEALLOCATE_MGG = 'Y'! Indicator of whether we need to keep MGG allocated for OU4 output
       CHARACTER(  1*BYTE)             :: DEALLOCATE_PG  = 'Y'! Indicator of whether we need to keep PG  allocated for OU4 output
-      CHARACTER(132*BYTE)             :: MATRIX_NAME         ! Name of matrix for printout 
+      CHARACTER(132*BYTE)             :: MATRIX_NAME         ! Name of matrix for printout
       CHARACTER(44*BYTE)              :: MODNAM              ! Name to write to screen to describe module being run
- 
+
       INTEGER(LONG)                   :: DO_WHICH_CODE_FRAG    ! 1 or 2 depending on which seg of code to run (depends on BUCKLING)
       INTEGER(LONG)                   :: I,J,K               ! DO loop indices
       INTEGER(LONG)                   :: N_SET_COL           ! Col no. in array TDOFI where the N-set is (from subr TDOF_COL_NUM)
       INTEGER(LONG)                   :: N_SET_DOF           ! N-set DOF number
       INTEGER(LONG)                   :: NUM_ASPC_BY_COMP(6) ! Number of AUTOSPC's by component number
       INTEGER(LONG)                   :: NUM_COMPS           ! 6 if GRID_NUM is an physical grid, 1 if an SPOINT
-      INTEGER(LONG)                   :: PART_VEC_G_NM(NDOFG)! Partitioning vector (G set into N and M sets) 
-      INTEGER(LONG)                   :: PART_VEC_M(NDOFM)   ! Partitioning vector (1's for all M set DOF's) 
-      INTEGER(LONG)                   :: PART_VEC_SUB(NSUB)  ! Partitioning vector (1's for all subcases) 
+      INTEGER(LONG)                   :: PART_VEC_G_NM(NDOFG)! Partitioning vector (G set into N and M sets)
+      INTEGER(LONG)                   :: PART_VEC_M(NDOFM)   ! Partitioning vector (1's for all M set DOF's)
+      INTEGER(LONG)                   :: PART_VEC_SUB(NSUB)  ! Partitioning vector (1's for all subcases)
       INTEGER(LONG)                   :: SA_SET_COL          ! Col no. in array TDOF where the SA-set is (from subr TDOF_COL_NUM)
       INTEGER(LONG)                   :: TOT_NUM_ASPC        ! Sum of NUM_ASPC_BY_COMP(6)
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = REDUCE_G_NM_BEGEND
@@ -142,7 +142,7 @@
             DO I=1,NDOFM
                PART_VEC_M(I) = 1
             ENDDO
-    
+
             DO I=1,NSUB
                PART_VEC_SUB = 1
             ENDDO
@@ -153,9 +153,9 @@
 
             CALL SOLVE_GMN ( PART_VEC_G_NM, PART_VEC_M )   ! First, solve for GMN
       !xx   WRITE(SC1,  * )                                ! Advance 1 line for screen messages
-            WRITE(SC1,12345,ADVANCE='NO') '       Deallocate RMG', CR13   ;   CALL DEALLOCATE_SPARSE_MAT ( 'RMG' ) 
+            WRITE(SC1,12345,ADVANCE='NO') '       Deallocate RMG', CR13   ;   CALL DEALLOCATE_SPARSE_MAT ( 'RMG' )
 
-            IF (NTERM_KGG > 0) THEN                        ! Reduce KGG to KNN 
+            IF (NTERM_KGG > 0) THEN                        ! Reduce KGG to KNN
 
                CALL OURTIM
                IF (MATSPARS == 'Y') THEN
@@ -285,7 +285,7 @@
 
          MODNAM = '  DEALLOCATE G-SET ARRAYS'
          WRITE(SC1,2092) MODNAM,HOUR,MINUTE,SEC,SFRAC
-   !xx   WRITE(SC1, * )                                    ! Advance 1 line for screen messages         
+   !xx   WRITE(SC1, * )                                    ! Advance 1 line for screen messages
 
          IF (DEALLOCATE_KGG == 'Y') THEN
             WRITE(SC1,12345,ADVANCE='NO') '       Deallocate KGG', CR13   ;   CALL DEALLOCATE_SPARSE_MAT ( 'KGG' )
@@ -424,7 +424,7 @@
 ! Now print final AUTOSPC summary table. Need to calc NUM_ASPC_BY_COMP from TDOF table
 
          CALL TDOF_COL_NUM ( 'SA', SA_SET_COL )
-         
+
          DO J=1,6
             NUM_ASPC_BY_COMP(J) = 0
          ENDDO
@@ -463,14 +463,14 @@
             DO I=1,NDOFM
                PART_VEC_M(I) = 1
             ENDDO
-    
+
             DO I=1,NSUB
                PART_VEC_SUB = 1
             ENDDO
 
 ! Reduce KGG to KNN
 
-            IF (NTERM_KGGD > 0) THEN                          ! Reduce KGGD to KNND 
+            IF (NTERM_KGGD > 0) THEN                          ! Reduce KGGD to KNND
 
                CALL OURTIM
                MODNAM = '  REDUCE KGGD TO KNND (SPARSE MATRIX ROUTINES)'
@@ -487,7 +487,7 @@
 
             ENDIF
 
-            CALL DEALLOCATE_SPARSE_MAT ( 'RMG' ) 
+            CALL DEALLOCATE_SPARSE_MAT ( 'RMG' )
 
 ! There is no M-set, so equate N and G sets
 
@@ -510,7 +510,7 @@
 
          MODNAM = '  DEALLOCATE G-SET ARRAYS'
          WRITE(SC1,2092) MODNAM,HOUR,MINUTE,SEC,SFRAC
-   !xx   WRITE(SC1, * )                                    ! Advance 1 line for screen messages         
+   !xx   WRITE(SC1, * )                                    ! Advance 1 line for screen messages
 
          IF (DEALLOCATE_KGGD == 'Y') THEN
             WRITE(SC1,12345,ADVANCE='NO') '       Deallocate KGGD', CR13   ;   CALL DEALLOCATE_SPARSE_MAT ( 'KGGD' )
@@ -563,14 +563,14 @@
 ! **********************************************************************************************************************************
 
 ! ##################################################################################################################################
- 
+
       CONTAINS
- 
+
 ! ##################################################################################################################################
 
       SUBROUTINE N_SET_AUTOSPC_PROC_1
 
-! Checks KNN to see if any rows are null for DOF's not already in the S or O-sets, and, if so, puts these in the SA set and 
+! Checks KNN to see if any rows are null for DOF's not already in the S or O-sets, and, if so, puts these in the SA set and
 ! reruns subr TDOF_PROC and writes the new TSET, TDOF, TDOFI tables to file L1C
 
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
@@ -599,7 +599,7 @@
       INTEGER(LONG)                   :: N_SET_COL          ! Col no. in array TDOF where the  N-set is (from subr TDOF_COL_NUM)
       INTEGER(LONG)                   :: R_SET_COL          ! Col no. in array TDOF where the  R-set is (from subr TDOF_COL_NUM)
       INTEGER(LONG)                   :: S_SET_COL          ! Col no. in array TDOF where the  S-set is (from subr TDOF_COL_NUM)
-      INTEGER(LONG)                   :: OUNT(2)            ! File units to write messages to. Input to subr UNFORMATTED_OPEN  
+      INTEGER(LONG)                   :: OUNT(2)            ! File units to write messages to. Input to subr UNFORMATTED_OPEN
 
 ! **********************************************************************************************************************************
       OUNT(1) = ERR
@@ -631,11 +631,11 @@
 
       DO I=1,6                                             ! Initialize NUM_ASPC_BY_COMP
          NUM_ASPC_BY_COMP(I) = 0
-      ENDDO 
+      ENDDO
 
       NUM_N_SET_ROWS_NULL = 0
       JSTART = 1
-!xx   WRITE(SC1, * )                                       ! Advance 1 line for screen messages         
+!xx   WRITE(SC1, * )                                       ! Advance 1 line for screen messages
       CALL COUNTER_INIT('       Proc N-set DOF ', NDOFN)
 i_do: DO I=1,NDOFN
          IF (I_KNN(I+1) == I_KNN(I)) THEN                  ! If true, row i is null
@@ -692,7 +692,7 @@ j_do:       DO J=JSTART,NDOFG                              ! Loop over rows of T
             WRITE(F06,57)
             DO J = 1,NGRID
                WRITE(F06,58) GRID(J,1), GRID_SEQ(J), (TSET(J,K),K = 1,6)
-            ENDDO   
+            ENDDO
             WRITE(F06,'(//)')
          ENDIF
 
@@ -778,7 +778,7 @@ j_do:       DO J=JSTART,NDOFG                              ! Loop over rows of T
       INTEGER(LONG)                   :: N_SET_COL          ! Col no. in array TDOF where the  N-set is (from subr TDOF_COL_NUM)
       INTEGER(LONG)                   :: R_SET_COL          ! Col no. in array TDOF where the  R-set is (from subr TDOF_COL_NUM)
       INTEGER(LONG)                   :: S_SET_COL          ! Col no. in array TDOF where the  S-set is (from subr TDOF_COL_NUM)
-      INTEGER(LONG)                   :: OUNT(2)            ! File units to write messages to. Input to subr UNFORMATTED_OPEN  
+      INTEGER(LONG)                   :: OUNT(2)            ! File units to write messages to. Input to subr UNFORMATTED_OPEN
 
 ! **********************************************************************************************************************************
       OUNT(1) = ERR
@@ -810,12 +810,12 @@ j_do:       DO J=JSTART,NDOFG                              ! Loop over rows of T
 
       DO I=1,6                                             ! Initialize NUM_ASPC_BY_COMP
          NUM_ASPC_BY_COMP(I) = 0
-      ENDDO 
+      ENDDO
 
       NUM_NSET_DOFS_SPCD = 0
       JSTART = 1
-!xx   WRITE(SC1, * )                                       ! Advance 1 line for screen messages      
-      CALL COUNTER_INIT('       Proc N-set DOF ', NDOFN)   
+!xx   WRITE(SC1, * )                                       ! Advance 1 line for screen messages
+      CALL COUNTER_INIT('       Proc N-set DOF ', NDOFN)
 i_do: DO I=1,NDOFN
          IF ((DABS(KNN_DIAG(I)/KNN_MAX_DIAG) < AUTOSPC_RAT) .OR. (KNN_DIAG(I) < ZERO)) THEN
 j_do:       DO J=JSTART,NDOFG                               ! Loop over rows of TDOFI to find where this N-set row is null
@@ -871,7 +871,7 @@ j_do:       DO J=JSTART,NDOFG                               ! Loop over rows of 
             WRITE(F06,57)
             DO J = 1,NGRID
                WRITE(F06,58) GRID(J,1), GRID_SEQ(J), (TSET(J,K),K = 1,6)
-            ENDDO   
+            ENDDO
             WRITE(F06,'(//)')
          ENDIF
 
