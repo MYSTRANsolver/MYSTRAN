@@ -1,29 +1,29 @@
 ! ##################################################################################################################################
-! Begin MIT license text.                                                                                    
+! Begin MIT license text.
 ! _______________________________________________________________________________________________________
-                                                                                                         
-! Copyright 2022 Dr William R Case, Jr (mystransolver@gmail.com)                                              
-                                                                                                         
-! Permission is hereby granted, free of charge, to any person obtaining a copy of this software and      
+
+! Copyright 2022 Dr William R Case, Jr (mystransolver@gmail.com)
+
+! Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 ! associated documentation files (the "Software"), to deal in the Software without restriction, including
 ! without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-! copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to   
-! the following conditions:                                                                              
-                                                                                                         
-! The above copyright notice and this permission notice shall be included in all copies or substantial   
-! portions of the Software and documentation.                                                                              
-                                                                                                         
-! THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS                                
-! OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,                            
-! FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE                            
-! AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER                                 
-! LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,                          
-! OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN                              
-! THE SOFTWARE.                                                                                          
+! copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to
+! the following conditions:
+
+! The above copyright notice and this permission notice shall be included in all copies or substantial
+! portions of the Software and documentation.
+
+! THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+! OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+! FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+! AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+! LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+! OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+! THE SOFTWARE.
 ! _______________________________________________________________________________________________________
-                                                                                                        
-! End MIT license text.                                                                                      
- 
+
+! End MIT license text.
+
       SUBROUTINE LOADC
 
       ! LOADC reads in the CASE CONTROL DECK
@@ -36,11 +36,11 @@
       USE SUBR_BEGEND_LEVELS, ONLY    :  LOADC_BEGEND
       USE MODEL_STUF, ONLY            :  CC_EIGR_SID, MEFFMASS_CALC, MPCSET, MPCSETS, MPFACTOR_CALC, SCNUM, SPCSET, SPCSETS, SUBLOD
       USE CC_OUTPUT_DESCRIBERS, ONLY  :  STRN_LOC, STRE_LOC, FORC_LOC
- 
+
       USE LOADC_USE_IFs
 
       IMPLICIT NONE
- 
+
       CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: SUBR_NAME   = 'LOADC'
 
       CHARACTER( 1*BYTE)              :: DOLLAR_WARN       ! Indicator of whether there was a $ sign in col 1
@@ -54,7 +54,7 @@
       INTEGER(LONG)                   :: IERR              ! Error indicator. If CHAR not found, IERR set to 1
       INTEGER(LONG)                   :: IOCHK             ! IOSTAT error number when reading a Case Control card from unit IN1
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = LOADC_BEGEND
- 
+
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
          CALL OURTIM
@@ -82,11 +82,11 @@ outer:DO
          IF (IOCHK > 0) THEN
             WRITE(ERR,1010) DECK_NAME
             WRITE(F06,1010) DECK_NAME
-            WRITE(F06,'(A)') CARD 
+            WRITE(F06,'(A)') CARD
             FATAL_ERR = FATAL_ERR + 1
             CYCLE outer
          ENDIF
- 
+
          WRITE(F06,101) CARD
 
          ! Replace all tab characters with a white space
@@ -98,7 +98,7 @@ outer:DO
          ! Check for CASE CONTROL cards. Exit loop on 'BEGIN BULK'
          IF      (CARD1(1:4) == 'ACCE'    ) THEN
             CALL CC_ACCE ( CARD1 )
- 
+
          ELSE IF(CARD1(1:10) == 'BEGIN BULK') THEN
             IF (DOLLAR_WARN == 'Y') THEN
                WARN_ERR = WARN_ERR + 1
@@ -108,58 +108,58 @@ outer:DO
                ENDIF
             ENDIF
             EXIT outer
- 
+
          ELSE IF((CARD1(1:4) == 'DISP'    ) .OR.  (CARD1(1:6) == 'VECTOR'  )) THEN
             CALL CC_DISP   ( CARD1 )
- 
+
          ELSE IF (CARD1(1:4) == 'ECHO'    ) THEN
             CALL CC_ECHO   ( CARD1 )
- 
+
          ELSE IF (CARD1(1:4) == 'ELDA'    ) THEN
             CALL CC_ELDA   ( CARD1 )
             BUGOUT = 'Y'
- 
+
          ELSE IF((CARD1(1:7) == 'ELFORCE') .OR. (CARD1(1:4) == 'ELFO').OR. (CARD1(1:5) == 'FORCE')) THEN
             CALL CC_ELFO   ( CARD1 )
- 
+
          ELSE IF (CARD1(1:8) == 'ENFORCED') THEN
             CALL CC_ENFO   ( CARD1 )
             ENFORCED = 'Y'
- 
+
          ELSE IF (CARD1(1:4) == 'GPFO'    ) THEN
             CALL CC_GPFO   ( CARD1 )
- 
+
          ELSE IF (CARD1(1:4) == 'LABE'    ) THEN
             CALL CC_LABE   ( CARD1 )
- 
+
          ELSE IF (CARD1(1:4) == 'LOAD'    ) THEN
             CALL CC_LOAD   ( CARD1 )
- 
+
          ELSE IF (CARD1(1:8) == 'MEFFMASS') THEN
             IF ((SOL_NAME(1:5) == 'MODES') .OR. (SOL_NAME(1:12) == 'GEN CB MODEL')) THEN
                MEFFMASS_CALC = 'Y'
             ENDIF
- 
+
          ELSE IF (CARD1(1:4) == 'METH'    ) THEN
             CALL CC_METH   ( CARD1 )
- 
+
          ELSE IF((CARD1(1:3) == 'MPC'     ) .AND. (CARD1(1:4) /= 'MPCF'    )) THEN
             CALL CC_MPC    ( CARD1 )
- 
+
          ELSE IF (CARD1(1:4) == 'MPCF'    ) THEN
             CALL CC_MPCF   ( CARD1 )
- 
+
          ELSE IF (CARD1(1:8) == 'MPFACTOR') THEN
             IF ((SOL_NAME(1:5) == 'MODES') .OR. (SOL_NAME(1:12) == 'GEN CB MODEL')) THEN
                MPFACTOR_CALC = 'Y'
             ENDIF
- 
+
          ELSE IF (CARD1(1:6) == 'NLPARM'  ) THEN
             CALL CC_NLPARM ( CARD1 )
- 
+
          ELSE IF (CARD1(1:4) == 'OLOA'    ) THEN
             CALL CC_OLOA   ( CARD1 )
- 
+
          ELSE IF (CARD1(1:6) == 'OUTPUT' ) THEN            ! Normal OUTPUT entry is OK. Ones like OUTPUT(PLOT) we end CC processing.
             IF (INDEX(CARD,"(") > 0) THEN                  ! If we find "(" in an OUTPUT CC entry it indicates, e.g., OUTPUT(PLOT),
                WARN_ERR = WARN_ERR + 1
@@ -180,34 +180,34 @@ inner:         DO
             ELSE                                           ! The OUTPUT entry was a normal one (with no "(PLOT)", etc delimiter,
                CYCLE outer                                 ! so continue processing CC entries
             ENDIF
-  
+
          ELSE IF (CARD1(1:3) == 'SET'     ) THEN
             CALL CC_SET    ( CARD1 )
- 
+
          ELSE IF((CARD1(1:3) == 'SPC'     ) .AND. (CARD1(1:4) /= 'SPCF'    )) THEN
             CALL CC_SPC    ( CARD1 )
- 
+
          ELSE IF (CARD1(1:4) == 'SPCF'    ) THEN
             CALL CC_SPCF   ( CARD1 )
- 
+
          ELSE IF((CARD1(1:4) == 'STRA'    ) .OR.  (CARD1(1:4) == 'STRN'    ) .OR.  (CARD1(1:8) == 'ELSTRAIN')) THEN
             CALL CC_STRN   ( CARD1 )
- 
+
          ELSE IF((CARD1(1:4) == 'STRE'    ) .OR.  (CARD1(1:4) == 'STRS'    ) .OR.  (CARD1(1:8) == 'ELSTRESS')) THEN
             CALL CC_STRE   ( CARD1 )
- 
+
          ELSE IF (CARD1(1:8) == 'SUBCASE ') THEN
             CALL CC_SUBC   ( CARD1 )
- 
+
          ELSE IF (CARD1(1:4) == 'SUBT'    ) THEN
             CALL CC_SUBT   ( CARD1 )
- 
+
          ELSE IF (CARD1(1:4) == 'TEMP'    ) THEN
             CALL CC_TEMP   ( CARD1 )
- 
+
          ELSE IF (CARD1(1:4) == 'TITL'    ) THEN
             CALL CC_TITL   ( CARD1 )
- 
+
          ELSE IF (CARD(1:1) == '$') THEN
             DO I=IACHAR('A'),IACHAR('Z')
                IF (CARD(2:2) == ACHAR(I)) THEN
@@ -227,9 +227,9 @@ inner:         DO
             ENDIF
 
          ENDIF
- 
+
       ENDDO outer
- 
+
       IF (STRN_LOC /= 'CENTER  ') THEN
          WRITE(ERR,1016) STRN_LOC, 'STRAIN'
          IF (SUPINFO == 'N') THEN
@@ -262,16 +262,20 @@ inner:         DO
              FATAL_ERR = FATAL_ERR + 1
          ENDIF
       ENDIF
- 
-     ! If SOL is buckling there should be 2 subcases; the first with a load 
+
+     ! If SOL is buckling there should be 2 subcases; the first with a load
      ! and the second with a METH (METH checked above)
-     ! If any load, SPC or MPC is found in the 2nd subcase, make sure it is 
+     ! If any load, SPC or MPC is found in the 2nd subcase, make sure it is
      ! the same as in subcase 1
       IF (SOL_NAME == 'BUCKLING') THEN
          IF (NSUB /= 2) THEN                               ! Check for 2 subcases
-            WRITE(ERR,1101) NSUB
-            WRITE(F06,1101) NSUB
+            WRITE(ERR,1101)
+            WRITE(F06,1101)
             FATAL_ERR = FATAL_ERR + 1
+            IF (NSUB < 2) THEN
+               ! further code will crash if we continue with just one subcase
+               CALL OUTA_HERE ( 'Y' )
+            END IF
          ENDIF
          ! Check that subcase 1 has a mechanical or thermal load
          IF ((SUBLOD(1,1) == 0) .AND. (SUBLOD(1,2) == 0)) THEN
@@ -315,7 +319,7 @@ inner:         DO
          FATAL_ERR = FATAL_ERR + 1
          WRITE(ERR,1803) NTSUB, NSUB
          WRITE(F06,1803) NTSUB, NSUB
-      ENDIF 
+      ENDIF
 
 
      ! Make sure that, if there are more than 1 of SPC or MPC set requests
@@ -394,5 +398,5 @@ inner:         DO
  9993 FORMAT(' *WARNING    : PRIOR ENTRY NOT PROCESSED BY ',A)
 
 ! **********************************************************************************************************************************
- 
+
       END SUBROUTINE LOADC

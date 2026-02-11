@@ -96,6 +96,7 @@
       INTEGER(LONG)                   :: NUM_EST_EIGENS    ! Number of estimated eigens in the freq interval (EIG_FRQ2 - EIG_FRQ1)
       INTEGER(LONG)                   :: NUM_KMSM_DIAG_0   ! Number of zero diagonal terms in KMSM
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = EIG_LANCZOS_ARPACK_BEGEND
+      INTEGER(LONG)                   :: MIN_NCV, MAX_NCV
 
       REAL(DOUBLE)                    :: EPS1              ! A small number to compare zero to
 
@@ -323,7 +324,53 @@
          NEV = NUM1 - 1
       ENDIF
 
-      NCV    = MIN ( EIG_NCVFACL*NEV, NDOFL )              ! Represents the dim of the Lanczos basis constructed by ARPACK dsaupd
+      MIN_NCV = NEV + 2
+      MAX_NCV = NDOFL - NUM_MLL_DIAG_ZEROS - 2
+
+      ! sanity check on feasible NCV range
+      IF (MIN_NCV > MAX_NCV) THEN
+         WRITE(ERR,9776) NDOFL, NEV
+         WRITE(F06,9776) NDOFL, NEV
+         FATAL_ERR = FATAL_ERR + 1
+         CALL OUTA_HERE ( 'Y' )
+      END IF
+
+      ! NCV determination step (try user factor first)
+      DO I=EIG_NCVFACL,2,-1
+         NCV = I*NEV
+         IF (NCV >= MIN_NCV .AND. NCV <= MAX_NCV) THEN
+            EXIT
+         END IF
+      END DO
+
+      ! still invalid? (too large OR too small)
+      IF (NCV > MAX_NCV .OR. NCV < MIN_NCV) THEN
+         DO I=5,2,-1
+            NCV = NEV+I
+            IF (NCV >= MIN_NCV .AND. NCV <= MAX_NCV) THEN
+               EXIT
+            END IF
+         END DO
+      END IF
+
+      ! no valid NCV.
+      IF (NCV > MAX_NCV .OR. NCV < MIN_NCV) THEN
+         WRITE(ERR,9777) NDOFL, NEV
+         WRITE(F06,9777) NDOFL, NEV
+         FATAL_ERR = FATAL_ERR + 1
+         CALL OUTA_HERE ( 'Y' )
+      END IF
+
+      ! inform the user if we didn't use EIG_NCFACL*NEV
+      IF (NCV < (EIG_NCVFACL*NEV)) THEN
+         WARN_ERR = WARN_ERR + 1
+         WRITE(ERR,9778) NEV, NDOFL, NCV, (EIG_NCVFACL*NEV)
+         IF (SUPWARN == 'N') THEN
+            WRITE(F06,9778) NEV, NDOFL, NCV, (EIG_NCVFACL*NEV)
+         ENDIF
+      END IF
+
+
       LWORKL = NCV*(NCV + 8)                               ! Size of WORKL workspace used by ARPACK
 
       KL = KMSM_SDIA
@@ -499,6 +546,16 @@
 48006 FORMAT(' *WARNING    : THE L-SET MASS MATRIX HAS ONLY ',I8,' NONZEROS ON ITS DIAGONAL. THERE ARE NO MORE FINITE EIGENVALUES',&
                            ' BEYOND THIS NUMBER'                                                                                   &
                     ,/,14x,' (NOTE: USE OF BULK DATA PARAM ART_MASS WITH SMALL VALUE MAY ALLOW MGIV TO FIND MORE EIGENVALUES)')
+
+ 9776 FORMAT(' *ERROR  9776: TOO MANY EIGENVALUES REQUESTED FOR THIS PROBLEM SIZE: NDOFL=',I0,', NEV=',I0,'.')
+
+ 9777 FORMAT(' *ERROR  9777: UNABLE TO DETERMINE KRYLOV SUBSPACE SIZE NCV. NDOFL=',I0,', NEV=',I0,'.',/,15X,&
+             'USER HAS LIKELY REQUESTED TOO MANY EIGENVALUES FOR THIS MODEL.',/,15X,&
+             'NCV MUST BE AT LEAST NEV+2, BUT NO MORE THAN NDOFL-2.')
+
+ 9778 FORMAT(' *WARNING    : DUE TO THE REQUESTED EIGENVALUES (NEV=',I0,') RELATIVE TO MODEL SIZE (NDOFL=',I0,'),',/,15X,&
+             'NCVFACL WAS NOT USED FOR DETERMINATION OF THE KRYLOV SUBSPACE SIZE NCV.',/,15X,&
+             'NCV WAS SET TO ',I0,' INSTEAD OF NEV*NCVFACL=',I0,'.')
 
 
 ! **********************************************************************************************************************************
