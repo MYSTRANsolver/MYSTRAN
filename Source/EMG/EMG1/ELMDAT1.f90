@@ -490,6 +490,7 @@
 
       ENDIF
 
+! **********************************************************************************************************************************
 ! Generate ISOLID array of solid element integer data (matl coord system, integration order, stress location, scheme)
 
       IF ((TYPE(1:4) == 'HEXA') .OR. (TYPE(1:5) == 'PENTA') .OR. (TYPE(1:5) == 'TETRA')) THEN
@@ -498,43 +499,104 @@
          ENDDO
       ENDIF
 
-! Check solid element integration order for validity for this element type
+! Set default integration order if IN = blank
 
-      IF (TYPE == 'HEXA8'  ) THEN
-         IF (ISOLID(4) == 0) THEN
-            ISOLID(4) = 2
-         ENDIF
-      ENDIF
+      IF (ISOLID(4) == -1) THEN
 
-      IF (TYPE == 'HEXA20' ) THEN
-         IF (ISOLID(4) == 0) THEN
+        IF (TYPE == 'HEXA8'  ) THEN
+            WRITE(ERR,1964) TYPE
+            WRITE(F06,1964) TYPE
+            NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
+            FATAL_ERR = FATAL_ERR + 1
+        ELSE IF (TYPE == 'HEXA20' ) THEN
             ISOLID(4) = 3
-         ENDIF
-      ENDIF
-
-      IF (TYPE == 'PENTA6' ) THEN
-         IF (ISOLID(4) == 0) THEN
-            ISOLID(4) = 2
-         ENDIF
-      ENDIF
-
-      IF (TYPE == 'PENTA15') THEN
-         IF (ISOLID(4) == 0) THEN
+        ELSE IF (TYPE == 'PENTA6' ) THEN
+            WRITE(ERR,1964) TYPE
+            WRITE(F06,1964) TYPE
+            NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
+            FATAL_ERR = FATAL_ERR + 1
+        ELSE IF (TYPE == 'PENTA15') THEN
             ISOLID(4) = 3
-         ENDIF
-      ENDIF
-
-      IF (TYPE == 'TETRA4' ) THEN
-         IF (ISOLID(4) == 0) THEN
+        ELSE IF (TYPE == 'TETRA4' ) THEN
             ISOLID(4) = 2
-         ENDIF
-      ENDIF
-
-      IF (TYPE == 'TETRA10') THEN
-         IF (ISOLID(4) == 0) THEN
+        ELSE IF (TYPE == 'TETRA10') THEN
             ISOLID(4) = 3
-         ENDIF
-      ENDIF
+        ELSE
+            WRITE(ERR,1967) SUBR_NAME
+            WRITE(F06,1967) SUBR_NAME
+            NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
+            FATAL_ERR = FATAL_ERR + 1
+        ENDIF
+
+      ELSE IF (ISOLID(4) == 2) THEN
+
+        IF (TYPE == 'TETRA10') THEN
+            WRITE(ERR,1965) "IN","TWO",TYPE
+            WRITE(F06,1965) "IN","TWO",TYPE
+            NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
+            FATAL_ERR = FATAL_ERR + 1
+        END IF
+
+      END IF
+
+! Set reduced/standard integration option if ISOP = blank, 0, or 1
+
+      IF (ISOLID(6) == -3) then ! -3 means ISOP = 1
+
+        IF ((TYPE == 'HEXA8'  ) .OR. (TYPE == 'HEXA20' ) .OR. (TYPE == 'PENTA6' ) .OR. (TYPE == 'PENTA15')) THEN
+          ISOLID(6) = 1
+        ELSE IF ((TYPE == 'TETRA4' ) .OR. (TYPE == 'TETRA10')) THEN
+            WRITE(ERR,1965) "ISOP","1",TYPE
+            WRITE(F06,1965) "ISOP","1",TYPE
+            NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
+            FATAL_ERR = FATAL_ERR + 1
+        ELSE
+            WRITE(ERR,1967) SUBR_NAME
+            WRITE(F06,1967) SUBR_NAME
+            NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
+            FATAL_ERR = FATAL_ERR + 1
+        ENDIF
+
+      ELSE IF (ISOLID(6) == -2) then ! -2 means ISOP = 0
+
+        IF ((TYPE == 'HEXA8'  ) .OR. (TYPE == 'HEXA20' ) .OR. (TYPE == 'PENTA6' ) .OR. (TYPE == 'PENTA15')) THEN
+          ISOLID(6) = 0
+        ELSE IF ((TYPE == 'TETRA4' ) .OR. (TYPE == 'TETRA10')) THEN
+            WRITE(ERR,1965) "ISOP","0",TYPE
+            WRITE(F06,1965) "ISOP","0",TYPE
+            NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
+            FATAL_ERR = FATAL_ERR + 1
+        ELSE
+            WRITE(ERR,1967) SUBR_NAME
+            WRITE(F06,1967) SUBR_NAME
+            NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
+            FATAL_ERR = FATAL_ERR + 1
+        ENDIF
+
+      ELSE IF (ISOLID(6) == -1) then ! -1 means ISOP = blank
+
+        IF ((TYPE == 'HEXA8'  ) .OR. (TYPE == 'HEXA20' ) .OR. (TYPE == 'PENTA6' ) .OR. (TYPE == 'PENTA15')) THEN
+          ISOLID(6) = 0
+        ELSE IF ((TYPE == 'TETRA4' ) .OR. (TYPE == 'TETRA10')) THEN
+          ISOLID(6) = 1
+        ELSE
+            WRITE(ERR,1967) SUBR_NAME
+            WRITE(F06,1967) SUBR_NAME
+            NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
+            FATAL_ERR = FATAL_ERR + 1
+        ENDIF
+
+      ELSE IF (ISOLID(6) == 0) then ! 0 means ISOP = REDUCED
+
+        IF ((TYPE == 'TETRA4' ) .OR. (TYPE == 'TETRA10')) THEN
+            WRITE(ERR,1965) "ISOP","REDUCED",TYPE
+            WRITE(F06,1965) "ISOP","REDUCED",TYPE
+            NUM_EMG_FATAL_ERRS = NUM_EMG_FATAL_ERRS + 1
+            FATAL_ERR = FATAL_ERR + 1
+        ENDIF
+
+      END IF
+
 
 ! **********************************************************************************************************************************
 ! Generate EMAT matl props for this elem.  Shell elems with PCOMP_PROPS are handled in subr SHELL_ABD_MATRICES.
@@ -1045,7 +1107,11 @@
  1960 FORMAT(' *ERROR  1960: ',A,I8,' MUST HAVE A CID COORD SYSTEM (FIELD 9 OF CBUSH BULK DATA ENTRY) DEFINED WHEN THE 2 GRIDS ARE'&
                                    ,' COINCIDENT. HOWEVER, CID = ',I8)
 
+ 1964 FORMAT(' *ERROR  1964: PSOLID ENTRY HAD FIELD FOR IN BLANK WITH ELEMENT TYPE ',A)
 
+ 1965 FORMAT(' *ERROR  1965: PSOLID ENTRY HAD FIELD FOR ',A,' = "',A,'" WITH ELEMENT TYPE ',A)
+
+ 1967 FORMAT(' *ERROR  1967: PROGRAMMING ERROR IN SUBROUTINE ',A)
 
 
 

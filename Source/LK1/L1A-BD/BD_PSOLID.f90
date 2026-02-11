@@ -131,8 +131,8 @@
       PSOLID(NPSOLID,4) = 0                                ! Read integration order and enter into array PSOLID
       CHR_FLD = JCARD(5)
       CALL LEFT_ADJ_BDFLD ( CHR_FLD )
-      IF       (CHR_FLD(1:) == ' ') THEN                   ! Don't allow actual 0
-         PSOLID(NPSOLID,4) = 0                             ! Temporarily set  int order to 0. Subr ELMDAT1 will change this
+      IF       (CHR_FLD(1:) == ' ') THEN
+         PSOLID(NPSOLID,4) = -1                            ! Temporary value that will be changed in ELMDAT1
       ELSE IF ((CHR_FLD(1:8) == 'TWO     ') .OR. (CHR_FLD(1:8) == '2       ')) THEN
          PSOLID(NPSOLID,4) = 2
       ELSE IF ((CHR_FLD(1:8) == 'THREE   ') .OR. (CHR_FLD(1:8) == '3       ')) THEN
@@ -149,9 +149,15 @@
       PSOLID(NPSOLID,6) = 0                                ! Read integration scheme and enter into array PSOLID
       CHR_FLD = JCARD(7)
       CALL LEFT_ADJ_BDFLD ( CHR_FLD )
-      IF      ((CHR_FLD(1:8) == 'REDUCED ') .OR. (CHR_FLD(1:8) == '        ') .OR. (CHR_FLD(1:8) == '0       ')) THEN
+      IF      (CHR_FLD(1:8) == '1       ') THEN
+         ID = -3                                           ! Temporary value that will be changed in ELMDAT1
+      ELSE IF (CHR_FLD(1:8) == '0       ') THEN
+         ID = -2                                           ! Temporary value that will be changed in ELMDAT1
+      ELSE IF (CHR_FLD(1:8) == '        ') THEN
+         ID = -1                                           ! Temporary value that will be changed in ELMDAT1
+      ELSE IF (CHR_FLD(1:8) == 'REDUCED ') THEN
          ID = 0
-      ELSE IF ((CHR_FLD(1:8) == 'FULL    ') .OR. (CHR_FLD(1:8) == '1       ')) THEN
+      ELSE IF (CHR_FLD(1:8) == 'FULL    ') THEN
          ID = 1
       ELSE
          FATAL_ERR = FATAL_ERR + 1
@@ -159,21 +165,6 @@
          WRITE(F06,1104) JCARD(7),JF(7),JCARD(1),JCARD(2)
       ENDIF
       PSOLID(NPSOLID,6) = ID
-
-! Make sure that the entries for integrtion order and scheme make sense
-
-      IF ((PSOLID(NPSOLID,4) == 0) .AND. (PSOLID(NPSOLID,6) /= 0)) THEN
-         PSOLID(NPSOLID,6) = 0
-         WARN_ERR = WARN_ERR + 1
-         WRITE(ERR,101) CARD
-         WRITE(ERR,1107) JCARD(2)
-         IF (SUPWARN == 'N') THEN
-            IF (ECHO == 'NONE  ') THEN
-               WRITE(F06,101) CARD
-            ENDIF
-            WRITE(F06,1107) JCARD(2)
-         ENDIF
-      ENDIF
 
       CALL BD_IMBEDDED_BLANK ( JCARD,2,3,4,5,0,7,0,0 )     ! Make sure that there are no imbedded blanks in fields 2-5,7
       CALL CARD_FLDS_NOT_BLANK ( JCARD,0,0,0,0,6,0,8,9 )   ! Issue warning if fields 6, 8 and 9 not blank
@@ -192,8 +183,6 @@
   101 FORMAT(A)
 
  1104 FORMAT(' *ERROR  1104: INVALID ENTRY = "',A,'" IN FIELD ',I3,' OF ',A,' ENTRY WITH ID = ',A)
-
- 1107 FORMAT(' *WARNING    : DATA IN FIELDS 5 AND 7 OF PSOLID ENTRY WITH ID = ',A,' ARE INCONSISTENT. DEFAULTS WILL BE USED')
 
  1145 FORMAT(' *ERROR  1145: DUPLICATE ',A,' ENTRY WITH ID = ',I8)
  
