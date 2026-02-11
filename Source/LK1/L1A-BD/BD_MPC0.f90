@@ -111,9 +111,9 @@
          IF (ICONT == 1) THEN
             DO J=3,8,3                                     ! Count up to 2 triplets per cont card (fields 3,4,5 and fields 6,7,8)
                IF ((JCARD(J)(1:) /= ' ') .OR. (JCARD(J+1)(1:) /= ' ') .OR. (JCARD(J+2)(1:) /= ' ')) THEN
-                  CYCLE
-               ELSE
                   IMPC = IMPC + 1
+               ELSE
+                  CYCLE
                ENDIF
             ENDDO  
          ELSE
