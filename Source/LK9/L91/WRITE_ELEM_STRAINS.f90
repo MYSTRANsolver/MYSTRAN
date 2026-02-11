@@ -35,7 +35,7 @@
                                          NVEC, SOL_NAME
       USE TIMDAT, ONLY                :  TSEC
       USE CONSTANTS_1, ONLY           :  ZERO
-      USE PARAMS, ONLY                :  PRTANS
+      USE PARAMS, ONLY                :  PRTANS, STR_CID
       USE DEBUG_PARAMETERS, ONLY      :  DEBUG
       USE NONLINEAR_PARAMS, ONLY      :  LOAD_ISTEP
       USE SUBR_BEGEND_LEVELS, ONLY    :  WRITE_ELEM_STRAINS_BEGEND
@@ -244,7 +244,7 @@
 
          ! -- F06 1st 2 header lines for strain output description
          IF (.TRUE.) THEN  ! f06/print
-             IF (TYPE(1:4) == 'ELAS') THEN
+            IF (TYPE(1:4) == 'ELAS') THEN
                 IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
                    IF (WRITE_F06) WRITE(F06,302) FILL(1: 20)
                    IF (WRITE_ANS) WRITE(ANS,302) FILL(1: 36)
@@ -255,30 +255,50 @@
                 IF (WRITE_F06) WRITE(F06,401) FILL(1: 40), ONAME
                 IF (WRITE_ANS) WRITE(ANS,401) FILL(1: 56), ONAME
 
-             ELSE IF ((TYPE(1:4) == 'HEXA') .OR. (TYPE(1:5) == 'PENTA') .OR. (TYPE(1:5) == 'TETRA')) THEN
-                IF (STRN_OPT == 'VONMISES') THEN
-                   IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
-                      IF (WRITE_F06) WRITE(F06,302) FILL(1: 15)
-                      IF (WRITE_ANS) WRITE(ANS,302) FILL(1: 15)
+            ELSE IF ((TYPE(1:4) == 'HEXA') .OR. (TYPE(1:5) == 'PENTA') .OR. (TYPE(1:5) == 'TETRA')) THEN
+               IF (STRN_OPT == 'VONMISES') THEN
+                  IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
+                     IF(STR_CID == -2) THEN
+                        IF (WRITE_F06) WRITE(F06,312) FILL(1: 20)
+                        IF (WRITE_ANS) WRITE(ANS,312) FILL(1: 20)
+                     ELSE
+                        IF (WRITE_F06) WRITE(F06,302) FILL(1: 15)
+                        IF (WRITE_ANS) WRITE(ANS,302) FILL(1: 15)
+                     ENDIF
                    ELSE
-                      IF (WRITE_F06) WRITE(F06,301) FILL(1: 27)
-                      IF (WRITE_ANS) WRITE(ANS,301) FILL(1: 27)
+                     IF(STR_CID == -2) THEN
+                        IF (WRITE_F06) WRITE(F06,311) FILL(1: 32)
+                        IF (WRITE_ANS) WRITE(ANS,311) FILL(1: 32)
+                     ELSE
+                        IF (WRITE_F06) WRITE(F06,301) FILL(1: 27)
+                        IF (WRITE_ANS) WRITE(ANS,301) FILL(1: 27)
+                     ENDIF
                    ENDIF
                    IF (WRITE_F06) WRITE(F06,401) FILL(1: 55), ONAME
                    IF (WRITE_ANS) WRITE(ANS,401) FILL(1: 55), ONAME
-                ELSE
-                   IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
-                      IF (WRITE_F06) WRITE(F06,302) FILL(1: 22)
-                      IF (WRITE_ANS) WRITE(ANS,302) FILL(1: 22)
-                   ELSE
-                      IF (WRITE_F06) WRITE(F06,301) FILL(1: 33)
-                      IF (WRITE_ANS) WRITE(ANS,301) FILL(1: 33)
-                   ENDIF
-                   IF (WRITE_F06) WRITE(F06,401) FILL(1: 61), ONAME
-                   IF (WRITE_ANS) WRITE(ANS,401) FILL(1: 61), ONAME
+               ELSE
+                  IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
+                     IF(STR_CID == -2) THEN
+                        IF (WRITE_F06) WRITE(F06,312) FILL(1: 27)
+                        IF (WRITE_ANS) WRITE(ANS,312) FILL(1: 27)
+                     ELSE
+                        IF (WRITE_F06) WRITE(F06,302) FILL(1: 22)
+                        IF (WRITE_ANS) WRITE(ANS,302) FILL(1: 22)
+                     ENDIF
+                  ELSE
+                     IF(STR_CID == -2) THEN
+                        IF (WRITE_F06) WRITE(F06,311) FILL(1: 38)
+                        IF (WRITE_ANS) WRITE(ANS,311) FILL(1: 38)
+                     ELSE
+                        IF (WRITE_F06) WRITE(F06,301) FILL(1: 33)
+                        IF (WRITE_ANS) WRITE(ANS,301) FILL(1: 33)
+                     ENDIF
+                  ENDIF
+                  IF (WRITE_F06) WRITE(F06,401) FILL(1: 61), ONAME
+                  IF (WRITE_ANS) WRITE(ANS,401) FILL(1: 61), ONAME
                 ENDIF
 
-             ELSE IF ((TYPE(1:5) == 'QUAD4') .OR. (TYPE(1:5) == 'QUAD8')) THEN
+            ELSE IF ((TYPE(1:5) == 'QUAD4') .OR. (TYPE(1:5) == 'QUAD8')) THEN
                 IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
                    IF (WRITE_F06) WRITE(F06,302) FILL(1: 20)
                    IF (WRITE_ANS) WRITE(ANS,302) FILL(1: 20)
@@ -289,7 +309,7 @@
                 IF (WRITE_F06) WRITE(F06,401) FILL(1: 71), ONAME
                 IF (WRITE_ANS) WRITE(ANS,401) FILL(1: 71), ONAME
 
-             ELSE IF (TYPE(1:3) == 'ROD') THEN
+            ELSE IF (TYPE(1:3) == 'ROD') THEN
                 IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
                    IF (WRITE_F06) WRITE(F06,302) FILL(1: 20)
                    IF (WRITE_ANS) WRITE(ANS,302) FILL(1: 36)
@@ -300,7 +320,7 @@
                 IF (WRITE_F06) WRITE(F06,401) FILL(1: 42), ONAME
                 IF (WRITE_ANS) WRITE(ANS,401) FILL(1: 58), ONAME
 
-             ELSE IF (TYPE(1:5) == 'SHEAR') THEN
+            ELSE IF (TYPE(1:5) == 'SHEAR') THEN
                 IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
                    IF (WRITE_F06) WRITE(F06,302) FILL(1: 20)
                    IF (WRITE_ANS) WRITE(ANS,302) FILL(1: 36)
@@ -311,7 +331,7 @@
                 IF (WRITE_F06) WRITE(F06,401) FILL(1: 42), ONAME
                 IF (WRITE_ANS) WRITE(ANS,401) FILL(1: 81), ONAME
 
-             ELSE IF (TYPE(1:5) == 'TRIA3') THEN
+            ELSE IF (TYPE(1:5) == 'TRIA3') THEN
                 IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
                    IF (WRITE_F06) WRITE(F06,302) FILL(1: 20)
                    IF (WRITE_ANS) WRITE(ANS,302) FILL(1: 36)
@@ -322,7 +342,7 @@
                 IF (WRITE_F06) WRITE(F06,401) FILL(1: 65), ONAME
                 IF (WRITE_ANS) WRITE(ANS,401) FILL(1: 81), ONAME
 
-             ELSE IF (TYPE(1:4) == 'BUSH') THEN
+            ELSE IF (TYPE(1:4) == 'BUSH') THEN
                 IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
                    IF (WRITE_F06) WRITE(F06,302) FILL(1:  0)
                    IF (WRITE_ANS) WRITE(ANS,302) FILL(1: 36)
@@ -332,12 +352,12 @@
                 ENDIF
                 IF (WRITE_F06) WRITE(F06,401) FILL(1: 39), ONAME
                 IF (WRITE_ANS) WRITE(ANS,401) FILL(1: 81), ONAME
-             ELSE
+            ELSE
                WRITE(ERR,9300) SUBR_NAME,TYPE
                WRITE(F06,9300) SUBR_NAME,TYPE
                FATAL_ERR = FATAL_ERR + 1
                CALL OUTA_HERE ( 'Y' )                            ! Coding error (elem type not valid) , so quit
-             ENDIF  ! element types - header
+            ENDIF  ! element types - header
 
              ! -- F06 header lines describing strain columns
              IF (TYPE(1:4) == 'ELAS') THEN
@@ -763,6 +783,10 @@
 
   302 FORMAT(1X,A,'C B   E L E M E N T   S T R A I N S   O T M   I N   L O C A L   E L E M E N T   C O O R D I N A T E',           &
   '   S Y S T E M')
+
+  311 FORMAT(1X,A,'E L E M E N T   S T R A I N S   I N   M A T E R I A L   C O O R D I N A T E   S Y S T E M')
+
+  312 FORMAT(1X,A,'C B   E L E M E N T   S T R A I N S   O T M   I N   M A T E R I A L   C O O R D I N A T E   S Y S T E M')
 
   401 FORMAT(A,'F O R   E L E M E N T   T Y P E   ',A11)
 

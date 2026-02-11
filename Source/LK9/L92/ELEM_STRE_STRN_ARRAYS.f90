@@ -45,7 +45,7 @@
       USE SUBR_BEGEND_LEVELS, ONLY    :  ELEM_STRE_STRN_ARRAYS_BEGEND
       USE CONSTANTS_1, ONLY           :  ZERO, one, four
       USE MODEL_STUF, ONLY            :  ALPVEC, BE1, BE2, BE3, DT, EM, EB, ES, ET, ELDOF, PEL, PHI_SQ, STRAIN, STRESS, SUBLOD,    &
-                                         TREF, TYPE, UEL, UEB, SE1, SE2, SE3, STE1, STE2, STE3, ELGP
+                                         TREF, TYPE, UEL, UEB, SE1, SE2, SE3, STE1, STE2, STE3, ELGP, ISOLID
       USE DEBUG_PARAMETERS
       USE PARAMS, ONLY                :  STR_CID, QUAD4TYP
 
@@ -60,6 +60,7 @@
       INTEGER(LONG)                   :: I,J               ! DO loop indices
       INTEGER(LONG)                   :: K                 ! Counter
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = ELEM_STRE_STRN_ARRAYS_BEGEND
+      INTEGER(LONG)                   :: STR_CID_SOLID
  
       REAL(DOUBLE)                    :: ALPT(6)           ! Col of ALPVEC times temperatures
       REAL(DOUBLE)                    :: ALPTM(3)          ! Col of ALPVEC times temperatures
@@ -325,102 +326,133 @@
 ! **********************************************************************************************************************************
 ! Transform coord for STRESS/STRAIN arrays, if requested (and if for 2D or 3D elements)
 
-      IF (STR_CID /= -1) THEN                              ! User req diff stress/strain/engr force output coord sys than elem local
+      IF (STR_CID /= -1) THEN                         ! User req diff stress/strain/engr force output coord sys than elem local
 
-! Warning. The titles of stress and strain in .f06 still say L O C A L   E L E M E N T   C O O R D I N A T E   S Y S T E M
-! even when it's transformed here.
+! Warning. For STR_CID >= 0, the titles of stress and strain in .f06 still say
+! L O C A L   E L E M E N T   C O O R D I N A T E   S Y S T E M even when it's transformed here.
+! STR_CID == -2 says M A T E R I A L   C O O R D I N A T E   S Y S T E M for solids.
 
-         IF      ((TYPE (1:5) == 'QUAD4') .OR. (TYPE(1:5) == 'TRIA3')) THEN         
+         IF      ((TYPE (1:5) == 'QUAD4') .OR. (TYPE(1:5) == 'TRIA3')) THEN
 
+            IF (STR_CID /= -2) THEN
 ! Shells don't work because STR_TENSOR_TRANSFORM should be between setting STR_TENSOR and setting stress
 ! and shear strain may need factor of 2 before transforming.
-            WRITE(ERR,9303)
-            WRITE(F06,9303)
-            FATAL_ERR = FATAL_ERR + 1
-            CALL OUTA_HERE ( 'Y' )
+               WRITE(ERR,9303)
+               WRITE(F06,9303)
+               FATAL_ERR = FATAL_ERR + 1
+               CALL OUTA_HERE ( 'Y' )
 
 ! Some of this code could be replaced with calls to TRANSFORM_SHELL_STR
-                                                           ! Transform 2D membrane and transverse shear stresses
-            STR_TENSOR(1,1) = STRESS(1)   ;   STR_TENSOR(1,2) = STRESS(3)   ;   STR_TENSOR(1,3) = STRESS(7)
-            STR_TENSOR(2,1) = STRESS(3)   ;   STR_TENSOR(2,2) = STRESS(2)   ;   STR_TENSOR(2,3) = STRESS(8)
-            STR_TENSOR(3,1) = STRESS(7)   ;   STR_TENSOR(3,2) = STRESS(8)   ;   STR_TENSOR(3,3) = ZERO
+                                                              ! Transform 2D membrane and transverse shear stresses
+               STR_TENSOR(1,1) = STRESS(1)   ;   STR_TENSOR(1,2) = STRESS(3)   ;   STR_TENSOR(1,3) = STRESS(7)
+               STR_TENSOR(2,1) = STRESS(3)   ;   STR_TENSOR(2,2) = STRESS(2)   ;   STR_TENSOR(2,3) = STRESS(8)
+               STR_TENSOR(3,1) = STRESS(7)   ;   STR_TENSOR(3,2) = STRESS(8)   ;   STR_TENSOR(3,3) = ZERO
 
-            STRESS(1) = STR_TENSOR(1,1)
-            STRESS(2) = STR_TENSOR(2,2)
-            STRESS(3) = STR_TENSOR(1,2)
-            STRESS(7) = STR_TENSOR(1,3)
-            STRESS(8) = STR_TENSOR(2,3)
+               STRESS(1) = STR_TENSOR(1,1)
+               STRESS(2) = STR_TENSOR(2,2)
+               STRESS(3) = STR_TENSOR(1,2)
+               STRESS(7) = STR_TENSOR(1,3)
+               STRESS(8) = STR_TENSOR(2,3)
 
-            CALL STR_TENSOR_TRANSFORM ( STR_TENSOR, STR_CID )
-                                                           ! Transform 2D bending stresses
-            STR_TENSOR(1,1) = STRESS(4)   ;   STR_TENSOR(1,2) = STRESS(6)   ;   STR_TENSOR(1,3) = ZERO
-            STR_TENSOR(2,1) = STRESS(6)   ;   STR_TENSOR(2,2) = STRESS(5)   ;   STR_TENSOR(2,3) = ZERO
-            STR_TENSOR(3,1) = ZERO        ;   STR_TENSOR(3,2) = ZERO        ;   STR_TENSOR(3,3) = ZERO
+               CALL STR_TENSOR_TRANSFORM ( STR_TENSOR, STR_CID )
+                                                              ! Transform 2D bending stresses
+               STR_TENSOR(1,1) = STRESS(4)   ;   STR_TENSOR(1,2) = STRESS(6)   ;   STR_TENSOR(1,3) = ZERO
+               STR_TENSOR(2,1) = STRESS(6)   ;   STR_TENSOR(2,2) = STRESS(5)   ;   STR_TENSOR(2,3) = ZERO
+               STR_TENSOR(3,1) = ZERO        ;   STR_TENSOR(3,2) = ZERO        ;   STR_TENSOR(3,3) = ZERO
 
-            STRESS(4) = STR_TENSOR(1,1)
-            STRESS(5) = STR_TENSOR(2,2)
-            STRESS(6) = STR_TENSOR(1,2)
+               STRESS(4) = STR_TENSOR(1,1)
+               STRESS(5) = STR_TENSOR(2,2)
+               STRESS(6) = STR_TENSOR(1,2)
 
-            CALL STR_TENSOR_TRANSFORM ( STR_TENSOR, STR_CID )
-                                                           ! Transform 2D membrane and transverse shear strains
-            STR_TENSOR(1,1) = STRAIN(1)   ;   STR_TENSOR(1,2) = STRAIN(3)   ;   STR_TENSOR(1,3) = STRAIN(7)
-            STR_TENSOR(2,1) = STRAIN(3)   ;   STR_TENSOR(2,2) = STRAIN(2)   ;   STR_TENSOR(2,3) = STRAIN(8)
-            STR_TENSOR(3,1) = STRAIN(7)   ;   STR_TENSOR(3,2) = STRAIN(8)   ;   STR_TENSOR(3,3) = ZERO
+               CALL STR_TENSOR_TRANSFORM ( STR_TENSOR, STR_CID )
+                                                              ! Transform 2D membrane and transverse shear strains
+               STR_TENSOR(1,1) = STRAIN(1)   ;   STR_TENSOR(1,2) = STRAIN(3)   ;   STR_TENSOR(1,3) = STRAIN(7)
+               STR_TENSOR(2,1) = STRAIN(3)   ;   STR_TENSOR(2,2) = STRAIN(2)   ;   STR_TENSOR(2,3) = STRAIN(8)
+               STR_TENSOR(3,1) = STRAIN(7)   ;   STR_TENSOR(3,2) = STRAIN(8)   ;   STR_TENSOR(3,3) = ZERO
 
-            STRAIN(1) = STR_TENSOR(1,1)
-            STRAIN(2) = STR_TENSOR(2,2)
-            STRAIN(3) = STR_TENSOR(1,2)
-            STRAIN(7) = STR_TENSOR(1,3)
-            STRAIN(8) = STR_TENSOR(2,3)
+               STRAIN(1) = STR_TENSOR(1,1)
+               STRAIN(2) = STR_TENSOR(2,2)
+               STRAIN(3) = STR_TENSOR(1,2)
+               STRAIN(7) = STR_TENSOR(1,3)
+               STRAIN(8) = STR_TENSOR(2,3)
 
-            CALL STR_TENSOR_TRANSFORM ( STR_TENSOR, STR_CID )
-                                                           ! Transform 2D bending strains
-            STR_TENSOR(1,1) = STRAIN(4)   ;   STR_TENSOR(1,2) = STRAIN(6)   ;   STR_TENSOR(1,3) = ZERO
-            STR_TENSOR(2,1) = STRAIN(6)   ;   STR_TENSOR(2,2) = STRAIN(5)   ;   STR_TENSOR(2,3) = ZERO
-            STR_TENSOR(3,1) = ZERO        ;   STR_TENSOR(3,2) = ZERO        ;   STR_TENSOR(3,3) = ZERO
+               CALL STR_TENSOR_TRANSFORM ( STR_TENSOR, STR_CID )
+                                                              ! Transform 2D bending strains
+               STR_TENSOR(1,1) = STRAIN(4)   ;   STR_TENSOR(1,2) = STRAIN(6)   ;   STR_TENSOR(1,3) = ZERO
+               STR_TENSOR(2,1) = STRAIN(6)   ;   STR_TENSOR(2,2) = STRAIN(5)   ;   STR_TENSOR(2,3) = ZERO
+               STR_TENSOR(3,1) = ZERO        ;   STR_TENSOR(3,2) = ZERO        ;   STR_TENSOR(3,3) = ZERO
 
-            STRAIN(4) = STR_TENSOR(1,1)
-            STRAIN(5) = STR_TENSOR(2,2)
-            STRAIN(6) = STR_TENSOR(1,2)
+               STRAIN(4) = STR_TENSOR(1,1)
+               STRAIN(5) = STR_TENSOR(2,2)
+               STRAIN(6) = STR_TENSOR(1,2)
 
-            CALL STR_TENSOR_TRANSFORM ( STR_TENSOR, STR_CID )
+               CALL STR_TENSOR_TRANSFORM ( STR_TENSOR, STR_CID )
 
+            ENDIF
 
          ELSE IF ((TYPE(1:4) == 'HEXA') .OR. (TYPE(1:5) == 'PENTA') .OR. (TYPE(1:5) == 'TETRA')) THEN
+
+            IF (STR_CID == -2) THEN
+               STR_CID_SOLID = ISOLID(3)                   ! CORDM from PSOLID card.
+            ELSE
+               STR_CID_SOLID = STR_CID
+            ENDIF
+
+            IF(STR_CID_SOLID == -1) then
+                                                           ! STR_CID_SOLID is -1 if ISOLID(3) is -1 which means
+                                                           ! material coordinates = element coordinates so don't
+                                                           ! transform it.
+            
+            ELSE IF(STR_CID_SOLID >= 0) THEN                    
+                                                           
                                                            ! Transform 3D stresses
-            STR_TENSOR(1,1) = STRESS(1)   ;   STR_TENSOR(1,2) = STRESS(4)   ;   STR_TENSOR(1,3) = STRESS(6)
-            STR_TENSOR(2,1) = STRESS(4)   ;   STR_TENSOR(2,2) = STRESS(2)   ;   STR_TENSOR(2,3) = STRESS(5)
-            STR_TENSOR(3,1) = STRESS(6)   ;   STR_TENSOR(3,2) = STRESS(5)   ;   STR_TENSOR(3,3) = STRESS(3)
+               STR_TENSOR(1,1) = STRESS(1)   ;   STR_TENSOR(1,2) = STRESS(4)   ;   STR_TENSOR(1,3) = STRESS(6)
+               STR_TENSOR(2,1) = STRESS(4)   ;   STR_TENSOR(2,2) = STRESS(2)   ;   STR_TENSOR(2,3) = STRESS(5)
+               STR_TENSOR(3,1) = STRESS(6)   ;   STR_TENSOR(3,2) = STRESS(5)   ;   STR_TENSOR(3,3) = STRESS(3)
 
-            CALL STR_TENSOR_TRANSFORM ( STR_TENSOR, STR_CID )
+               CALL STR_TENSOR_TRANSFORM ( STR_TENSOR, STR_CID_SOLID )
 
-            STRESS(1) = STR_TENSOR(1,1)
-            STRESS(2) = STR_TENSOR(2,2)
-            STRESS(3) = STR_TENSOR(3,3)
-            STRESS(4) = STR_TENSOR(1,2)
-            STRESS(5) = STR_TENSOR(2,3)
-            STRESS(6) = STR_TENSOR(1,3)
+               STRESS(1) = STR_TENSOR(1,1)
+               STRESS(2) = STR_TENSOR(2,2)
+               STRESS(3) = STR_TENSOR(3,3)
+               STRESS(4) = STR_TENSOR(1,2)
+               STRESS(5) = STR_TENSOR(2,3)
+               STRESS(6) = STR_TENSOR(1,3)
 
                                                            ! Transform 3D strains
-            STR_TENSOR(1,1) = STRAIN(1)   ;   STR_TENSOR(1,2) = STRAIN(4)/2 ;   STR_TENSOR(1,3) = STRAIN(6)/2
-            STR_TENSOR(2,1) = STRAIN(4)/2 ;   STR_TENSOR(2,2) = STRAIN(2)   ;   STR_TENSOR(2,3) = STRAIN(5)/2
-            STR_TENSOR(3,1) = STRAIN(6)/2 ;   STR_TENSOR(3,2) = STRAIN(5)/2 ;   STR_TENSOR(3,3) = STRAIN(3)
+               STR_TENSOR(1,1) = STRAIN(1)   ;   STR_TENSOR(1,2) = STRAIN(4)/2 ;   STR_TENSOR(1,3) = STRAIN(6)/2
+               STR_TENSOR(2,1) = STRAIN(4)/2 ;   STR_TENSOR(2,2) = STRAIN(2)   ;   STR_TENSOR(2,3) = STRAIN(5)/2
+               STR_TENSOR(3,1) = STRAIN(6)/2 ;   STR_TENSOR(3,2) = STRAIN(5)/2 ;   STR_TENSOR(3,3) = STRAIN(3)
 
-            CALL STR_TENSOR_TRANSFORM ( STR_TENSOR, STR_CID )
+               CALL STR_TENSOR_TRANSFORM ( STR_TENSOR, STR_CID_SOLID )
 
-            STRAIN(1) = STR_TENSOR(1,1)
-            STRAIN(2) = STR_TENSOR(2,2)
-            STRAIN(3) = STR_TENSOR(3,3)
-            STRAIN(4) = STR_TENSOR(1,2)*2
-            STRAIN(5) = STR_TENSOR(2,3)*2
-            STRAIN(6) = STR_TENSOR(1,3)*2
+               STRAIN(1) = STR_TENSOR(1,1)
+               STRAIN(2) = STR_TENSOR(2,2)
+               STRAIN(3) = STR_TENSOR(3,3)
+               STRAIN(4) = STR_TENSOR(1,2)*2
+               STRAIN(5) = STR_TENSOR(2,3)*2
+               STRAIN(6) = STR_TENSOR(1,3)*2
+
+            ELSE
+
+               ! We don't know what to do for CORDM <= -2 because it's not defined in Mystran.
+               WRITE(ERR,9304)
+               WRITE(F06,9304)
+               FATAL_ERR = FATAL_ERR + 1
+               CALL OUTA_HERE ( 'Y' )
+
+            ENDIF
 
          ELSE
 
-            WRITE(ERR,9203) TYPE
-            WRITE(F06,9203) TYPE
-            FATAL_ERR = FATAL_ERR + 1
-            CALL OUTA_HERE ( 'Y' )
+                                                           ! Other element types are not an error for STR_CID = -2 or -1,
+                                                           ! both of which mean leave them as they are.
+            IF (STR_CID /= -2) THEN
+               WRITE(ERR,9203) TYPE
+               WRITE(F06,9203) TYPE
+               FATAL_ERR = FATAL_ERR + 1
+               CALL OUTA_HERE ( 'Y' )
+            ENDIF
 
          ENDIF
 
@@ -441,21 +473,7 @@
  
  9303 FORMAT(' *ERROR  9303: PARAM,STR_CID not implemented for QUAD and TRIA elements.' )
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+ 9304 FORMAT(' *ERROR  9304: PSOLID field 4, CORDM <= -2 not allowed for solid elements.' )
 
 
 ! ##################################################################################################################################

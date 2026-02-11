@@ -34,7 +34,7 @@
                                          NVEC, SOL_NAME
       USE TIMDAT, ONLY                :  TSEC
       USE CONSTANTS_1, ONLY           :  ZERO
-      USE PARAMS, ONLY                :  PRTANS
+      USE PARAMS, ONLY                :  PRTANS, STR_CID
       USE DEBUG_PARAMETERS, ONLY      :  DEBUG
       USE NONLINEAR_PARAMS, ONLY      :  LOAD_ISTEP
       USE SUBR_BEGEND_LEVELS, ONLY    :  WRITE_ELEM_STRESSES_BEGEND
@@ -284,21 +284,41 @@
          ELSE IF ((TYPE(1:4) == 'HEXA') .OR. (TYPE(1:5) == 'PENTA') .OR. (TYPE(1:5) == 'TETRA')) THEN
             IF (STRE_OPT == 'VONMISES') THEN
                IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
-                  IF (WRITE_F06) WRITE(F06,302) FILL(1: 15)
-                  IF (WRITE_ANS) WRITE(ANS,302) FILL(1: 15)
+                  IF(STR_CID == -2) THEN
+                     IF (WRITE_F06) WRITE(F06,312) FILL(1: 20)
+                     IF (WRITE_ANS) WRITE(ANS,312) FILL(1: 20)
+                  ELSE
+                     IF (WRITE_F06) WRITE(F06,302) FILL(1: 15)
+                     IF (WRITE_ANS) WRITE(ANS,302) FILL(1: 15)
+                  ENDIF
                ELSE
-                  IF (WRITE_F06) WRITE(F06,301) FILL(1: 27)
-                  IF (WRITE_ANS) WRITE(ANS,301) FILL(1: 27)
+                  IF(STR_CID == -2) THEN
+                     IF (WRITE_F06) WRITE(F06,311) FILL(1: 32)
+                     IF (WRITE_ANS) WRITE(ANS,311) FILL(1: 32)
+                  ELSE
+                     IF (WRITE_F06) WRITE(F06,301) FILL(1: 27)
+                     IF (WRITE_ANS) WRITE(ANS,301) FILL(1: 27)
+                  ENDIF
                ENDIF
                IF (WRITE_F06) WRITE(F06,401) FILL(1: 55), ONAME
                IF (WRITE_ANS) WRITE(ANS,401) FILL(1: 55), ONAME
             ELSE
                IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
-                  IF (WRITE_F06) WRITE(F06,302) FILL(1: 22)
-                  IF (WRITE_ANS) WRITE(ANS,302) FILL(1: 22)
+                  IF(STR_CID == -2) THEN
+                     IF (WRITE_F06) WRITE(F06,312) FILL(1: 27)
+                     IF (WRITE_ANS) WRITE(ANS,312) FILL(1: 27)
+                  ELSE
+                     IF (WRITE_F06) WRITE(F06,302) FILL(1: 22)
+                     IF (WRITE_ANS) WRITE(ANS,302) FILL(1: 22)
+                  ENDIF
                ELSE
-                  IF (WRITE_F06) WRITE(F06,301) FILL(1: 33)
-                  IF (WRITE_ANS) WRITE(ANS,301) FILL(1: 33)
+                  IF(STR_CID == -2) THEN
+                     IF (WRITE_F06) WRITE(F06,311) FILL(1: 38)
+                     IF (WRITE_ANS) WRITE(ANS,311) FILL(1: 38)
+                  ELSE
+                     IF (WRITE_F06) WRITE(F06,301) FILL(1: 33)
+                     IF (WRITE_ANS) WRITE(ANS,301) FILL(1: 33)
+                  ENDIF
                ENDIF
                IF (WRITE_F06) WRITE(F06,401) FILL(1: 61), ONAME
                IF (WRITE_ANS) WRITE(ANS,401) FILL(1: 61), ONAME
@@ -765,6 +785,10 @@
 
   302 FORMAT(A,'C B   E L E M E N T   S T R E S S E S   O T M   I N   L O C A L   E L E M E N T   C O O R D I N A T E',            &
   '   S Y S T E M')
+
+  311 FORMAT(A,'E L E M E N T   S T R E S S E S   I N   M A T E R I A L   C O O R D I N A T E   S Y S T E M')
+
+  312 FORMAT(A,'C B   E L E M E N T   S T R E S S E S   O T M   I N   M A T E R I A L   C O O R D I N A T E   S Y S T E M')
 
   401 FORMAT(A,'F O R   E L E M E N T   T Y P E   ',A11)
 
