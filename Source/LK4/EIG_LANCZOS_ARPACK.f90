@@ -96,7 +96,7 @@
       INTEGER(LONG)                   :: NUM_EST_EIGENS    ! Number of estimated eigens in the freq interval (EIG_FRQ2 - EIG_FRQ1)
       INTEGER(LONG)                   :: NUM_KMSM_DIAG_0   ! Number of zero diagonal terms in KMSM
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = EIG_LANCZOS_ARPACK_BEGEND
-      INTEGER(LONG)                   :: MIN_NCV, MAX_NCV
+      INTEGER(LONG)                   :: MIN_NCV, MAX_NCV, LNONZEROS
 
       REAL(DOUBLE)                    :: EPS1              ! A small number to compare zero to
 
@@ -295,10 +295,24 @@
 
 ! Check that user did not ask for more than NDOFL-1 eigens (Lanczos can't be used to find all). If request is > NDOFL-1, decrease
 ! request to NDOFL-1 and give warning
+      IF (SOL_NAME(1:8) == 'BUCKLING') THEN
+         LNONZEROS = NDOFL - NUM_KLLD_DIAG_ZEROS
+      ELSE
+         LNONZEROS = NDOFL - NUM_MLL_DIAG_ZEROS
+      ENDIF
+
 
       IF (NUM_EST_EIGENS > 0) THEN
          NEV = NUM_EST_EIGENS + EIG_LANCZOS_NEV_DELT
       ELSE
+         ! prevent the addition of DARPACK from crashing ARPACK
+         IF ((EIG_N2 + DARPACK) > (LNONZEROS - 4)) THEN
+            WRITE(ERR,9775) NDOFL, DARPACK
+            IF (SUPWARN == 'N') THEN
+               WRITE(F06,9775) NDOFL, DARPACK
+            ENDIF
+            DARPACK = 0
+         END IF
          NEV = EIG_N2 + DARPACK
       ENDIF
       IF (DEBUG(185) == 0) THEN                            ! If 0, only find finite eigens within the range requested
@@ -325,7 +339,7 @@
       ENDIF
 
       MIN_NCV = NEV + 2
-      MAX_NCV = NDOFL - NUM_MLL_DIAG_ZEROS - 2
+      MAX_NCV = LNONZEROS - 2
 
       ! sanity check on feasible NCV range
       IF (MIN_NCV > MAX_NCV) THEN
@@ -546,6 +560,9 @@
 48006 FORMAT(' *WARNING    : THE L-SET MASS MATRIX HAS ONLY ',I8,' NONZEROS ON ITS DIAGONAL. THERE ARE NO MORE FINITE EIGENVALUES',&
                            ' BEYOND THIS NUMBER'                                                                                   &
                     ,/,14x,' (NOTE: USE OF BULK DATA PARAM ART_MASS WITH SMALL VALUE MAY ALLOW MGIV TO FIND MORE EIGENVALUES)')
+
+ 9775 FORMAT(' *WARNING    : DUE TO THE SIZE OF THE PROBLEM (NDOFL=',I0,'), PARAMETER DARPACK',/,15X,&
+             'WAS SET TO ZERO TO PREVENT ARPACK FROM CRASHING. ORIGINAL VALUE: ',I0)
 
  9776 FORMAT(' *ERROR  9776: TOO MANY EIGENVALUES REQUESTED FOR THIS PROBLEM SIZE: NDOFL=',I0,', NEV=',I0,'.')
 
