@@ -99,7 +99,7 @@
 !        CALL CALC_TDOF_ROW_NUM ( AGRID(I), ROW_NUM_START, 'N' )
          CALL GET_ARRAY_ROW_NUM ( 'GRID_ID', SUBR_NAME, NGRID, GRID_ID, AGRID(I), IGRID )
          ROW_NUM_START = TDOF_ROW_START(IGRID)
-         CALL GET_GRID_NUM_COMPS ( AGRID(I), NUM_COMPS, SUBR_NAME )
+         CALL GET_GRID_NUM_COMPS ( BGRID(I), NUM_COMPS, SUBR_NAME )
          DO J=1,NUM_COMPS
             CALL TDOF_COL_NUM ( 'G ', G_SET_COL )
             TDOF_ROW = ROW_NUM_START + J - 1               ! TDOF has rows in grid point numerical order
@@ -124,7 +124,7 @@
 !        ---------------------------------------------------------------------------------------------------------------------------
          I2 = 0                                            ! (1) Transform global displs at grids to global displs at elem nodes
          DO I=1,ELGP                                          ! First assume no offset at this node
-            CALL GET_GRID_NUM_COMPS ( AGRID(I), NUM_COMPS, SUBR_NAME )
+            CALL GET_GRID_NUM_COMPS ( BGRID(I), NUM_COMPS, SUBR_NAME )
             DO J=1,NUM_COMPS
                I2 = I2 + 1
                UEG(I2) = UGG(I2)
@@ -174,7 +174,7 @@
                ENDDO   
                I2 = I2 + NUM_COMPS
             ELSE                                           ! If global is basic, get UEB terms directly from UEG
-               CALL GET_GRID_NUM_COMPS ( AGRID(I), NUM_COMPS, SUBR_NAME )
+               CALL GET_GRID_NUM_COMPS ( BGRID(I), NUM_COMPS, SUBR_NAME )
                DO J=1,NUM_COMPS
                   I2 = I2 + 1
                   UEB(I2) = UEG(I2)
@@ -260,7 +260,7 @@
       I2 = 0
       DO I=1,ELGP
          ROW_NUM_START = TDOF_ROW_START(IGRID)
-         CALL GET_GRID_NUM_COMPS ( AGRID(I), NUM_COMPS, SUBR_NAME )
+         CALL GET_GRID_NUM_COMPS ( BGRID(I), NUM_COMPS, SUBR_NAME )
          DO J=1,NUM_COMPS
             CALL TDOF_COL_NUM ( 'G ', G_SET_COL )
             TDOF_ROW = ROW_NUM_START + J - 1
@@ -271,7 +271,7 @@
 
       I2 = 0
       DO I=1,ELGP
-         CALL GET_GRID_NUM_COMPS ( AGRID(I), NUM_COMPS, SUBR_NAME )
+         CALL GET_GRID_NUM_COMPS ( BGRID(I), NUM_COMPS, SUBR_NAME )
          DO J=1,NUM_COMPS
             I2 = I2 + 1
          ENDDO
@@ -279,7 +279,7 @@
 
       I2 = 0
       DO I=1,ELGP
-         CALL GET_GRID_NUM_COMPS ( AGRID(I), NUM_COMPS, SUBR_NAME )
+         CALL GET_GRID_NUM_COMPS ( BGRID(I), NUM_COMPS, SUBR_NAME )
          DO J=1,NUM_COMPS
             I2 = I2 + 1
          ENDDO
@@ -287,7 +287,7 @@
 
       I2 = 0
       DO I=1,ELGP
-         CALL GET_GRID_NUM_COMPS ( AGRID(I), NUM_COMPS, SUBR_NAME )
+         CALL GET_GRID_NUM_COMPS ( BGRID(I), NUM_COMPS, SUBR_NAME )
          DO J=1,NUM_COMPS
             I2 = I2 + 1
          ENDDO

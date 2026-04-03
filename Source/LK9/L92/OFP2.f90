@@ -246,7 +246,7 @@
 !xx            CALL CALC_TDOF_ROW_NUM ( GRID_ID(I), ROW_NUM_START, 'N' )
                CALL GET_ARRAY_ROW_NUM ( 'GRID_ID', SUBR_NAME, NGRID, GRID_ID, GRID_ID(I), IGRID )
                ROW_NUM_START = TDOF_ROW_START(IGRID)
-               CALL GET_GRID_NUM_COMPS ( GRID_ID(I), NUM_COMPS, SUBR_NAME )
+               CALL GET_GRID_NUM_COMPS ( I, NUM_COMPS, SUBR_NAME )
 
 !xx            WRITE_OGEL(NUM) = 'N'                       ! Set WRITE_OGEL to 'Y' for all grids that have a component in S-set
 !xx            DO J=1,NUM_COMPS
@@ -342,7 +342,7 @@
                   ENDDO
                   K = 0
                   DO I=1,NGRID
-                     CALL GET_GRID_NUM_COMPS ( GRID_ID(I), NUM_COMPS, SUBR_NAME )
+                     CALL GET_GRID_NUM_COMPS ( I, NUM_COMPS, SUBR_NAME )
                      DO J=1,NUM_COMPS
                         K = K + 1
                         QGs_MEFM_SUM(J) = QGs_MEFM_SUM(J) + QGs_MEFM(K)
@@ -380,7 +380,7 @@
 !xx            CALL CALC_TDOF_ROW_NUM ( GRID_ID(I), ROW_NUM_START, 'N' )
                CALL GET_ARRAY_ROW_NUM ( 'GRID_ID', SUBR_NAME, NGRID, GRID_ID, GRID_ID(I), IGRID )
                ROW_NUM_START = TDOF_ROW_START(IGRID)
-               CALL GET_GRID_NUM_COMPS ( GRID_ID(I), NUM_COMPS, SUBR_NAME )
+               CALL GET_GRID_NUM_COMPS ( I, NUM_COMPS, SUBR_NAME )
                DO J=1,NUM_COMPS
                   CALL TDOF_COL_NUM ( 'S' , S_SET_COL )
                   CALL TDOF_COL_NUM ( 'SA', SA_SET_COL )
@@ -557,7 +557,7 @@
 !xx            CALL CALC_TDOF_ROW_NUM ( GRID_ID(I), ROW_NUM_START, 'N' )
                CALL GET_ARRAY_ROW_NUM ( 'GRID_ID', SUBR_NAME, NGRID, GRID_ID, GRID_ID(I), IGRID )
                ROW_NUM_START = TDOF_ROW_START(IGRID)
-               CALL GET_GRID_NUM_COMPS ( GRID_ID(I), NUM_COMPS, SUBR_NAME )
+               CALL GET_GRID_NUM_COMPS ( I, NUM_COMPS, SUBR_NAME )
                DO J=1,NUM_COMPS
                   CALL TDOF_COL_NUM ( 'G ', G_SET_COL )
                   TDOF_ROW = ROW_NUM_START + J - 1

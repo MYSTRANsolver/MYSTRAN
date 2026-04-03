@@ -123,7 +123,7 @@
             WRITE(F06,1822) 'GRID ', AGRID, NAME, CONM2(I,1)
          ENDIF
          IF (IERROR == 0) THEN
-            CALL GET_GRID_NUM_COMPS ( AGRID, NUM_COMPS, SUBR_NAME )
+            CALL GET_GRID_NUM_COMPS ( GRID_ID_ROW_NUM, NUM_COMPS, SUBR_NAME )
             IF (NUM_COMPS == 1) THEN
                NUM_RCONM2_RESET = NUM_RCONM2_RESET + 1
                DO J=2,MRCONM2                                 ! Keep mass but reset offsets amd MOI's to zero for SPOINT's

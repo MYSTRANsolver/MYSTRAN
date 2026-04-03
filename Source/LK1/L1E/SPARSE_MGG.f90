@@ -146,7 +146,7 @@ i_do: DO I = 1,NGRID
 !xx      CALL CALC_TDOF_ROW_NUM ( GRID_NUM, IROW_START, 'N' )
          CALL GET_ARRAY_ROW_NUM ( 'GRID_ID', SUBR_NAME, NGRID, GRID_ID, GRID_NUM, IGRID )
          ROW_NUM_START = TDOF_ROW_START(IGRID)
-         CALL GET_GRID_NUM_COMPS ( GRID_NUM, NUM_COMPS, SUBR_NAME )
+         CALL GET_GRID_NUM_COMPS ( I, NUM_COMPS, SUBR_NAME )
 k_do:    DO K=1,NUM_COMPS
 
             IK = ROW_NUM_START + K - 1
@@ -320,7 +320,7 @@ j_do3:      DO J = 1,NUM
       IF (DEBUG(36) > 0) THEN
          WRITE(F06,1101)
          DO K=1,NGRID
-            CALL GET_GRID_NUM_COMPS ( GRID_ID(K), NUM_COMPS, SUBR_NAME )
+            CALL GET_GRID_NUM_COMPS ( K, NUM_COMPS, SUBR_NAME )
             IF (NUM_COMPS == 6) THEN                       ! Only do output for actual grids, not SPOINT's
                CALL GET_ARRAY_ROW_NUM ( 'GRID_ID', SUBR_NAME, NGRID, GRID_ID, GRID_ID(K), IGRID )
                IF (IGRID == -1) THEN

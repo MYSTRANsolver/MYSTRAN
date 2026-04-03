@@ -131,7 +131,7 @@
                DO J=GID1,GID2                              ! GID2 > GID1 was checked when ASET/OMIT B.D. cards were read
                   CALL GET_ARRAY_ROW_NUM ( 'GRID_ID', SUBR_NAME, NGRID, GRID_ID, J, GRID_ID_ROW_NUM )
                   IF (GRID_ID_ROW_NUM /= -1) THEN
-                     CALL GET_GRID_NUM_COMPS ( GRID(GRID_ID_ROW_NUM,1), NUM_COMPS, SUBR_NAME )
+                     CALL GET_GRID_NUM_COMPS ( GRID_ID_ROW_NUM, NUM_COMPS, SUBR_NAME )
                      DO K = 1,NUM_COMPS                       
                         IF (CDOF1(K) == '1') THEN
                            IF ((TSET(GRID_ID_ROW_NUM,K) == '  ') .OR. (TSET(GRID_ID_ROW_NUM,K) == DOFSET)) THEN
@@ -155,7 +155,7 @@
 
          IF ((ASET_FND == 'Y').AND.(OMIT_FND == 'N')) THEN ! Make all DOF's not as yet set be O-set
             DO I=1,NGRID
-               CALL GET_GRID_NUM_COMPS ( GRID(I,1), NUM_COMPS, SUBR_NAME )
+               CALL GET_GRID_NUM_COMPS ( I, NUM_COMPS, SUBR_NAME )
                DO K=1,NUM_COMPS
                   IF (TSET(I,K) == '  ') THEN
                      TSET(I,K) = 'O '
@@ -167,7 +167,7 @@
 
          IF ((ASET_FND == 'N').AND.(OMIT_FND == 'Y')) THEN ! Make all DOF's not as yet set be A-set
             DO I=1,NGRID
-               CALL GET_GRID_NUM_COMPS ( GRID(I,1), NUM_COMPS, SUBR_NAME )
+               CALL GET_GRID_NUM_COMPS ( I, NUM_COMPS, SUBR_NAME )
                DO K=1,NUM_COMPS
                   IF (TSET(I,K) == '  ') THEN
                      TSET(I,K) = 'A '

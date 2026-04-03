@@ -71,7 +71,7 @@
          ENDIF
          IROW = 0
          DO I = 1,NGRID
-            CALL GET_GRID_NUM_COMPS ( GRID_ID(I), NUM_COMPS, SUBR_NAME )
+            CALL GET_GRID_NUM_COMPS ( I, NUM_COMPS, SUBR_NAME )
             DO J = 1,NUM_COMPS
                IROW = IROW + 1
                IF (J == 1) THEN
@@ -111,7 +111,7 @@
          ENDIF
          IROW = 0
          DO I = 1,NGRID
-            CALL GET_GRID_NUM_COMPS ( GRID_ID(INV_GRID_SEQ(I)), NUM_COMPS, SUBR_NAME )
+            CALL GET_GRID_NUM_COMPS ( INV_GRID_SEQ(I), NUM_COMPS, SUBR_NAME )
             DO J = 1,NUM_COMPS
                IROW = IROW + 1
                IF (J == 1) THEN

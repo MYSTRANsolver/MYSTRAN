@@ -88,7 +88,7 @@
       DO K=1,NGRID
 
          AGRID = GRID_ID(INV_GRID_SEQ(K))
-         CALL GET_GRID_NUM_COMPS ( AGRID, NUM_COMPS, SUBR_NAME )
+         CALL GET_GRID_NUM_COMPS ( INV_GRID_SEQ(K), NUM_COMPS, SUBR_NAME )
          IF (NUM_COMPS == 6) THEN                          ! Only 6 comp grids need transforming
 
             CALL GET_ARRAY_ROW_NUM ( 'GRID_ID', SUBR_NAME, NGRID, GRID_ID, AGRID, GRID_ID_ROW_NUM )
@@ -156,7 +156,7 @@ j_do_2:  DO J=1,NCORD
             DO K=1,NGRID
 
                AGRID = GRID_ID(INV_GRID_SEQ(K))
-               CALL GET_GRID_NUM_COMPS ( AGRID, NUM_COMPS, SUBR_NAME )
+               CALL GET_GRID_NUM_COMPS ( INV_GRID_SEQ(K), NUM_COMPS, SUBR_NAME )
 
                IF (NUM_COMPS == 6) THEN                          ! Only 6 comp grids need transforming
 

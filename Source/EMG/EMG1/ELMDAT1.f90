@@ -168,7 +168,7 @@
 
       ELDOF = 0
       DO I=1,ELGP
-         CALL GET_GRID_NUM_COMPS ( AGRID(I), NUM_COMPS, SUBR_NAME )
+         CALL GET_GRID_NUM_COMPS ( BGRID(I), NUM_COMPS, SUBR_NAME )
          ELDOF = ELDOF + NUM_COMPS
       ENDDO
 
@@ -1006,7 +1006,7 @@
          DO I=1,2                                          ! If displ comps on CELAS1,2 entry were blank or 0, change to 1,2
             ELAS_COMP(I) = EDAT(EPNTK+3+I)                 ! (i.e. ELAS has 2 components of displ)
             IF (ELAS_COMP(I) == 0) THEN
-               CALL GET_GRID_NUM_COMPS ( AGRID(I), NUM_COMPS, SUBR_NAME )
+               CALL GET_GRID_NUM_COMPS ( BGRID(I), NUM_COMPS, SUBR_NAME )
                IF (NUM_COMPS > 1) THEN
                   NUM_EMG_FATAL_ERRS  = NUM_EMG_FATAL_ERRS + 1
                   FATAL_ERR = FATAL_ERR + 1

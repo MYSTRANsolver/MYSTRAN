@@ -130,7 +130,7 @@
          R3_VEC(I)    = ZERO
 
          GRID_NUMS(I) = GRID_ID(INV_GRID_SEQ(I))
-         CALL GET_GRID_NUM_COMPS ( GRID_NUMS(I), NUM_COMPS, SUBR_NAME )
+         CALL GET_GRID_NUM_COMPS ( INV_GRID_SEQ(I), NUM_COMPS, SUBR_NAME )
          IF (NUM_COMPS == 6) THEN                          ! Grid point, 6 DOF
             IDOFG = IDOFG + 1   ;  T1_VEC(I)    = GRID_VEC(IDOFG)
             IDOFG = IDOFG + 1   ;  T2_VEC(I)    = GRID_VEC(IDOFG)
