@@ -86,7 +86,7 @@
 
 ! Parametric coords of points are in array XEP. They are obtained from the corner node coords in array XEL from:
 
-!                                   XEA = PSH_MAT*XEL
+!                                   XEA = PSH_MAT^T * XEL
 
 ! The terms in PSH_MAT are the shape functions from the PSH rows from subr SHP2DQ for each of the 4 XEP points.
 
@@ -101,22 +101,22 @@
       REAL(DOUBLE)                    :: DPSHG(2,ELGP)       ! Derivatives of PSH wrt elem isopar coords (not used here).
 
                                                              ! 4x4 matrix used to calc Gauss pt coords from node coords
-      REAL(DOUBLE)                    :: PSH_MAT(IORD*IORD,ELGP)
+      REAL(DOUBLE)                    :: PSH_MAT(ELGP,IORD*IORD)
 
 ! **********************************************************************************************************************************
 
-! The PSH_MAT rows are from subr SHP2DQ for each of the 4 XEP parametric coord points for the element. 
+! The PSH_MAT columns are from subr SHP2DQ for each of the 4 XEP parametric coord points for the element. 
 ! We want the XEA orderd in the same fashion as the element node coords in XEL (namely 1-2-3-4 clockwise around the element).
 
-      CALL SHP2DQ ( 1, 1, ELGP, SUBR_NAME, ' ', IORD, XEP(1,1), XEP(1,2), 'Y', PSH_MAT(1,:), DPSHG )
-      CALL SHP2DQ ( 2, 1, ELGP, SUBR_NAME, ' ', IORD, XEP(2,1), XEP(2,2), 'Y', PSH_MAT(2,:), DPSHG )
-      CALL SHP2DQ ( 2, 2, ELGP, SUBR_NAME, ' ', IORD, XEP(3,1), XEP(3,2), 'Y', PSH_MAT(3,:), DPSHG )
-      CALL SHP2DQ ( 1, 2, ELGP, SUBR_NAME, ' ', IORD, XEP(4,1), XEP(4,2), 'Y', PSH_MAT(4,:), DPSHG )
+      CALL SHP2DQ ( 1, 1, ELGP, SUBR_NAME, ' ', IORD, XEP(1,1), XEP(1,2), 'Y', PSH_MAT(:,1), DPSHG )
+      CALL SHP2DQ ( 2, 1, ELGP, SUBR_NAME, ' ', IORD, XEP(2,1), XEP(2,2), 'Y', PSH_MAT(:,2), DPSHG )
+      CALL SHP2DQ ( 2, 2, ELGP, SUBR_NAME, ' ', IORD, XEP(3,1), XEP(3,2), 'Y', PSH_MAT(:,3), DPSHG )
+      CALL SHP2DQ ( 1, 2, ELGP, SUBR_NAME, ' ', IORD, XEP(4,1), XEP(4,2), 'Y', PSH_MAT(:,4), DPSHG )
 
 
 ! Multiply shape functions by grid point coordinates to get Gauss point coordinates
 ! Only the first ELGP rows of XEL are used because it may have additional unused rows.
-      CALL MATMULT_FFF ( PSH_MAT, XEL(1:ELGP,:), IORD*IORD, ELGP, 3, XEA )
+      CALL MATMULT_FFF_T ( PSH_MAT, XEL(1:ELGP,:), ELGP, IORD*IORD, 3, XEA )
 
 
 ! Debug output
