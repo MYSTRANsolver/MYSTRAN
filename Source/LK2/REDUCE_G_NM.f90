@@ -434,7 +434,7 @@
          WRITE(SC1,2092) MODNAM,HOUR,MINUTE,SEC,SFRAC
          K = 0
          DO I=1,NGRID
-            CALL GET_GRID_NUM_COMPS ( GRID_ID(I), NUM_COMPS, SUBR_NAME )
+            CALL GET_GRID_NUM_COMPS ( I, NUM_COMPS, SUBR_NAME )
             DO J=1,NUM_COMPS
                K = K + 1
                IF (TDOF(K,SA_SET_COL) /= 0) THEN

@@ -90,7 +90,7 @@
       DO I=1,NGRID
          IF (GRID(I,4) /= 0) THEN
             CALL RDOF ( GRID(I,4), CDOF )
-            CALL GET_GRID_NUM_COMPS ( GRID(I,1), NUM_COMPS, SUBR_NAME )
+            CALL GET_GRID_NUM_COMPS ( I, NUM_COMPS, SUBR_NAME )
             DO K = 1,NUM_COMPS
                IF (CDOF(K) == '1') THEN
                   IF ((TSET(I,K) == '  ') .OR. (TSET(I,K) == 'SB')) THEN
@@ -201,7 +201,7 @@ j_do6:   DO J=1,NUM_SPCSIDS
                   DO GRID_NUM=GRID1,GRID2                  ! GRID2 >= GRID1 was checked in subr BD_SPC1
                      CALL GET_ARRAY_ROW_NUM ( 'GRID_ID', SUBR_NAME, NGRID, GRID_ID, GRID_NUM, GRID_ID_ROW_NUM )
                      IF (GRID_ID_ROW_NUM /= -1) THEN
-                        CALL GET_GRID_NUM_COMPS ( GRID(GRID_ID_ROW_NUM,1), NUM_COMPS, SUBR_NAME )
+                        CALL GET_GRID_NUM_COMPS ( GRID_ID_ROW_NUM, NUM_COMPS, SUBR_NAME )
                         DO K = 1,NUM_COMPS                 ! Put data in TSET and write enforced displ to L1H.
                            IF (CDOF(K) == '1') THEN
                               IF      (DOFSET == 'SE') THEN

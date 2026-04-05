@@ -36,7 +36,7 @@
       USE SCONTR, ONLY                :  BLNK_SUB_NAM
       USE TIMDAT, ONLY                :  TSEC
       USE SUBR_BEGEND_LEVELS, ONLY    :  ELAS1_BEGEND
-      USE MODEL_STUF, ONLY            :  AGRID, ELAS_COMP, EID, EPROP, FCONV, KE, SE1, TYPE
+      USE MODEL_STUF, ONLY            :  AGRID, BGRID, ELAS_COMP, EID, EPROP, FCONV, KE, SE1, TYPE
  
       USE ELAS1_USE_IFs
 
@@ -72,7 +72,7 @@
          FCONV(1) = 1.D0 
       ENDIF
       I1       = ELAS_COMP(1)
-      CALL GET_GRID_NUM_COMPS ( AGRID(1), NUM_COMPS_GRID_1, SUBR_NAME )
+      CALL GET_GRID_NUM_COMPS ( BGRID(1), NUM_COMPS_GRID_1, SUBR_NAME )
       I2       = NUM_COMPS_GRID_1 + ELAS_COMP(2)
 
 ! **********************************************************************************************************************************

@@ -83,7 +83,7 @@
       IF (TYPE(1:4) == 'ELAS') THEN                        ! Calculate forces for ELAS1-4 elems
  
          I1 = ELAS_COMP(1)
-         CALL GET_GRID_NUM_COMPS ( AGRID(1), NUM_COMPS_GRID_1, SUBR_NAME )
+         CALL GET_GRID_NUM_COMPS ( BGRID(1), NUM_COMPS_GRID_1, SUBR_NAME )
          I2 = NUM_COMPS_GRID_1 + ELAS_COMP(2)
          PEL(I1) = KE(I1,I1)*UEL(I1) + KE(I1,I2)*UEL(I2)   ! Note: KE is global and local for the ELAS elems
          PEL(I2) = KE(I2,I1)*UEL(I1) + KE(I2,I2)*UEL(I2)

@@ -154,9 +154,12 @@
 ! Start reading at the 2nd record of L1F for this RBE3 (first record, RYPE, was read above in calling subr, RIGID_ELEM_PROC):
                                                            ! Read 2nd record from L1F for this RBE3
       READ(L1F,IOSTAT=IOCHK) REID, AGRID_D, COMPS_D, IRBE3, WT
+
+      CALL GET_ARRAY_ROW_NUM ( 'GRID_ID', SUBR_NAME, NGRID, GRID_ID, AGRID_D, GRID_ID_ROW_NUM_D )
+
       REC_NO = REC_NO + 1
       IF (IOCHK == 0) THEN
-         CALL GET_GRID_NUM_COMPS ( AGRID_D, NUM_COMPS, SUBR_NAME )
+         CALL GET_GRID_NUM_COMPS ( GRID_ID_ROW_NUM_D, NUM_COMPS, SUBR_NAME )
          IF (NUM_COMPS /= 6) THEN
             IERR  = IERR + 1
             JERR = JERR + 1
@@ -195,7 +198,6 @@
 
 ! Get T0D (transforms global vector at AGRID_D to basic)
 
-      CALL GET_ARRAY_ROW_NUM ( 'GRID_ID', SUBR_NAME, NGRID, GRID_ID, AGRID_D, GRID_ID_ROW_NUM_D )
       ECORD_D = GRID(GRID_ID_ROW_NUM_D,3)
       IF (ECORD_D /= 0) THEN
          DO I=1,NCORD
@@ -444,7 +446,9 @@ do_j1:      DO J=1,IRBE3                                   ! Cycle over "indep" 
                                                            ! Get T0I (transforms global vector at AGRID_I to basic)
                CALL RDOF ( COMPS_I(J), CDOF_I )
 
-               CALL GET_GRID_NUM_COMPS ( AGRID_I(J), NUM_COMPS, SUBR_NAME )
+               CALL GET_ARRAY_ROW_NUM ( 'GRID_ID', SUBR_NAME, NGRID, GRID_ID, AGRID_I(J), GRID_ID_ROW_NUM_I )
+
+               CALL GET_GRID_NUM_COMPS ( GRID_ID_ROW_NUM_I, NUM_COMPS, SUBR_NAME )
                IF (NUM_COMPS /= 6) THEN
                   IERR  = IERR + 1
                   JERR  = JERR + 1
@@ -454,7 +458,6 @@ do_j1:      DO J=1,IRBE3                                   ! Cycle over "indep" 
                   RETURN
                ENDIF
 
-               CALL GET_ARRAY_ROW_NUM ( 'GRID_ID', SUBR_NAME, NGRID, GRID_ID, AGRID_I(J), GRID_ID_ROW_NUM_I )
                ECORD_I= GRID(GRID_ID_ROW_NUM_I,3)
                IF (ECORD_I /= 0) THEN
                   DO K=1,NCORD

@@ -623,7 +623,7 @@ j_do: DO J = 1,NUM_SOLNS
             WRITE(F06,99886) (J,J=1,NUM_CB_DOFS)
             L = 0
             DO I=1,NGRID
-               CALL GET_GRID_NUM_COMPS ( GRID_ID(INV_GRID_SEQ(I)), NUM_COMPS, SUBR_NAME )
+               CALL GET_GRID_NUM_COMPS ( INV_GRID_SEQ(I), NUM_COMPS, SUBR_NAME )
                DO K=1,NUM_COMPS
                   L = L + 1
                   IF (K == 1) THEN

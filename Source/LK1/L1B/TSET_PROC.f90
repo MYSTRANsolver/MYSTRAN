@@ -106,7 +106,7 @@
 
       WRITE(SC1,12345,ADVANCE='NO') '       Initializing           ', CR13
       DO I=1,NGRID
-         CALL GET_GRID_NUM_COMPS ( GRID(I,1), NUM_COMPS, SUBR_NAME )
+         CALL GET_GRID_NUM_COMPS ( I, NUM_COMPS, SUBR_NAME )
          IF (NUM_COMPS == 1) THEN
             DO K=2,6
                TSET(I,K) = '--'
@@ -141,7 +141,7 @@
       NDOFO = 0
       IF (NAOCARD == 0) THEN                               ! If no ASET,1/OMIT,1 cards, then, for time being, set all remaining DOF
          DO I = 1,NGRID                                    ! to A-set  (if there are SUPORT's some will get changed to R set below)
-            CALL GET_GRID_NUM_COMPS ( GRID(I,1), NUM_COMPS, SUBR_NAME )
+            CALL GET_GRID_NUM_COMPS ( I, NUM_COMPS, SUBR_NAME )
             DO K = 1,NUM_COMPS
                IF (TSET(I,K) == '  ') THEN
                   TSET(I,K) = 'A '   

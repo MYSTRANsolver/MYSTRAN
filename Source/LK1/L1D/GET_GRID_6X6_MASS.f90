@@ -68,7 +68,7 @@
 ! **********************************************************************************************************************************
 ! If AGRID is an SPOINT give error and quit
 
-      CALL GET_GRID_NUM_COMPS ( AGRID, NUM_COMPS, SUBR_NAME )
+      CALL GET_GRID_NUM_COMPS ( IGRID, NUM_COMPS, SUBR_NAME )
       IF (NUM_COMPS /= 6) THEN
          FATAL_ERR = FATAL_ERR + 1
          WRITE(ERR,1502) AGRID, NUM_COMPS

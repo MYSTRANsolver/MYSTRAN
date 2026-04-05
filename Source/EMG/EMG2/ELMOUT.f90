@@ -88,7 +88,7 @@
          GRID_TYPE(I) = 'undefined   '
       ENDDO
       DO I=1,ELGP
-         CALL GET_GRID_NUM_COMPS ( AGRID(I), NUM_COMPS, SUBR_NAME )
+         CALL GET_GRID_NUM_COMPS ( BGRID(I), NUM_COMPS, SUBR_NAME )
          IF      (NUM_COMPS == 1) THEN
             GRID_TYPE(I) = 'scalar point'
          ELSE IF (NUM_COMPS == 6) THEN
@@ -658,7 +658,7 @@
                DO J=1,6
                   OEL(J) = ZERO
                ENDDO
-               CALL GET_GRID_NUM_COMPS ( AGRID(I), NUM_COMPS, SUBR_NAME )
+               CALL GET_GRID_NUM_COMPS ( BGRID(I), NUM_COMPS, SUBR_NAME )
                DO J=1,NUM_COMPS
                   I2 = I2 + 1
                   OEL(J) = UEL(I2)
@@ -674,7 +674,7 @@
                DO J=1,6
                   OEL(J) = ZERO
                ENDDO
-               CALL GET_GRID_NUM_COMPS ( AGRID(I), NUM_COMPS, SUBR_NAME )
+               CALL GET_GRID_NUM_COMPS ( BGRID(I), NUM_COMPS, SUBR_NAME )
                DO J=1,NUM_COMPS
                   I2 = I2 + 1
                   OEL(J) = PEL(I2)
@@ -692,7 +692,7 @@
                DO J=1,6
                   OEL(J) = ZERO
                ENDDO
-               CALL GET_GRID_NUM_COMPS ( AGRID(I), NUM_COMPS, SUBR_NAME )
+               CALL GET_GRID_NUM_COMPS ( BGRID(I), NUM_COMPS, SUBR_NAME )
                DO J=1,NUM_COMPS
                   I2 = I2 + 1
                   OEL(J) = UEB(I2)
@@ -708,7 +708,7 @@
                DO J=1,6
                   OEL(J) = ZERO
                ENDDO
-               CALL GET_GRID_NUM_COMPS ( AGRID(I), NUM_COMPS, SUBR_NAME )
+               CALL GET_GRID_NUM_COMPS ( BGRID(I), NUM_COMPS, SUBR_NAME )
                DO J=1,NUM_COMPS
                   I2 = I2 + 1
                   OEL(J) = PEB(I2)
@@ -726,7 +726,7 @@
                DO J=1,6
                   OEL(J) = ZERO
                ENDDO
-               CALL GET_GRID_NUM_COMPS ( AGRID(I), NUM_COMPS, SUBR_NAME )
+               CALL GET_GRID_NUM_COMPS ( BGRID(I), NUM_COMPS, SUBR_NAME )
                DO J=1,NUM_COMPS
                   I2 = I2 + 1
                   OEL(J) = UEG(I2)
@@ -742,7 +742,7 @@
                DO J=1,6
                   OEL(J) = ZERO
                ENDDO
-               CALL GET_GRID_NUM_COMPS ( AGRID(I), NUM_COMPS, SUBR_NAME )
+               CALL GET_GRID_NUM_COMPS ( BGRID(I), NUM_COMPS, SUBR_NAME )
                DO J=1,NUM_COMPS
                   I2 = I2 + 1
                   OEL(J) = PEG(I2)

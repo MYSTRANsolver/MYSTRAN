@@ -136,7 +136,7 @@
                WRITE(F06,1408) SUBR_NAME, AGRID_R, 'GRID_ID'
                CALL OUTA_HERE ( 'Y' )
             ENDIF
-            CALL GET_GRID_NUM_COMPS ( AGRID_R, NUM_COMPS, SUBR_NAME )
+            CALL GET_GRID_NUM_COMPS ( GRID_ID_ROW_NUM_R, NUM_COMPS, SUBR_NAME )
             IF (NUM_COMPS == 6) THEN                       ! AGRID_R is a physical grid
                X0_R = RGRID(GRID_ID_ROW_NUM_R,1)
                Y0_R = RGRID(GRID_ID_ROW_NUM_R,2)
@@ -211,7 +211,7 @@
       DO K=1,NGRID
 
          AGRID_K = GRID_ID(INV_GRID_SEQ(K))
-         CALL GET_GRID_NUM_COMPS ( AGRID_K, NUM_COMPS, SUBR_NAME )
+         CALL GET_GRID_NUM_COMPS ( INV_GRID_SEQ(K), NUM_COMPS, SUBR_NAME )
 
          IF (NUM_COMPS == 6) THEN                          ! Only process physical grids. Let rows of RBGLOBAL = 0 otherwise
 
@@ -332,7 +332,7 @@
          DO I=1,NGRID
             AGRID_K = GRID_ID(INV_GRID_SEQ(I))
             AGRID = GRID_ID(INV_GRID_SEQ(I))
-            CALL GET_GRID_NUM_COMPS ( AGRID, NUM_COMPS, SUBR_NAME )
+            CALL GET_GRID_NUM_COMPS ( INV_GRID_SEQ(I), NUM_COMPS, SUBR_NAME )
             DO J=1,NUM_COMPS
                L = L + 1
                IF (J == 1) THEN

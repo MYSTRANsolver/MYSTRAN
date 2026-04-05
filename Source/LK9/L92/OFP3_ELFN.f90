@@ -37,7 +37,7 @@
       USE SUBR_BEGEND_LEVELS, ONLY    :  OFP3_ELFN_BEGEND
       USE PARAMS, ONLY                :  ELFORCEN, OTMSKIP
       USE MODEL_STUF, ONLY            :  EDAT, EPNT, ETYPE, AGRID, EID, ELDT, ELGP, ELMTYP, ELOUT, METYPE, NUM_EMG_FATAL_ERRS,     &
-                                         PEB, PEG, PEL, PLY_NUM, TYPE, SCNUM
+                                         PEB, PEG, PEL, PLY_NUM, TYPE, SCNUM, BGRID
       USE LINK9_STUFF, ONLY           :  GID_OUT_ARRAY, EID_OUT_ARRAY, MAXREQ, OGEL
       USE OUTPUT4_MATRICES, ONLY      :  OTM_ELFN, TXT_ELFN
   
@@ -177,7 +177,7 @@ elems_1: DO J = 1,NELE
                         DO L=1,6
                            OGEL(NUM_OGEL,L) = ZERO
                         ENDDO
-                        CALL GET_GRID_NUM_COMPS ( AGRID(K), NUM_COMPS, SUBR_NAME )
+                        CALL GET_GRID_NUM_COMPS ( BGRID(K), NUM_COMPS, SUBR_NAME )
                         DO L=1,NUM_COMPS
                            I2 = I2 + 1
                            IF      (ELFORCEN == 'LOCAL') THEN

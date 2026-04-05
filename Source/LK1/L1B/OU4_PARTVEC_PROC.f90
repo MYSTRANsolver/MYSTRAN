@@ -292,7 +292,7 @@ j_do1:   DO J=1,NUM_PARTVEC_RECORDS
                   DO GRID_NUM=GRID1,GRID2                  ! GRID2 >= GRID1 was checked in subr BD_SPC1
                      CALL GET_ARRAY_ROW_NUM ( 'GRID_ID', SUBR_NAME, NGRID, GRID_ID, GRID_NUM, GRID_ID_ROW_NUM )
                      IF (GRID_ID_ROW_NUM /= -1) THEN
-                        CALL GET_GRID_NUM_COMPS ( GRID(GRID_ID_ROW_NUM,1), NUM_COMPS, SUBR_NAME )
+                        CALL GET_GRID_NUM_COMPS ( GRID_ID_ROW_NUM, NUM_COMPS, SUBR_NAME )
                         DO K = 1,NUM_COMPS                 ! Put data in PSET
                            IF (CDOF(K) == '1') THEN
                               IF ((PSET(GRID_ID_ROW_NUM,K,I) == '--') .OR. (PSET(GRID_ID_ROW_NUM,K,I) == PSET_CHAR(I))) THEN
@@ -341,7 +341,7 @@ j_do1:   DO J=1,NUM_PARTVEC_RECORDS
                   IF (NDIM_F(I) > 0) THEN
                      DO K=1,NGRID
                         IGRID = INV_GRID_SEQ(K)
-                        CALL GET_GRID_NUM_COMPS ( GRID_ID(IGRID), NUM_COMPS, SUBR_NAME )
+                        CALL GET_GRID_NUM_COMPS ( IGRID, NUM_COMPS, SUBR_NAME )
                         DO J=1,NUM_COMPS
                            IF (PSET(IGRID,J,I) == PSET_CHAR(I)) THEN
                               IROW = TDOF_ROW_START(IGRID) + J - 1

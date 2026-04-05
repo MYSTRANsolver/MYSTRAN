@@ -68,7 +68,7 @@
       IGRID = 0
       IDOFG = 0
       DO I = 1,NGRID
-         CALL GET_GRID_NUM_COMPS ( GRID_ID(I), NUM_COMPS, SUBR_NAME )
+         CALL GET_GRID_NUM_COMPS ( I, NUM_COMPS, SUBR_NAME )
          DO J = 1,NUM_COMPS
             IDOFG = IDOFG + 1
             IF (IDOFG > NDOFG) CALL ARRAY_SIZE_ERROR_1 ( SUBR_NAME, IDOFG, 'TDOFI' )
@@ -100,7 +100,7 @@
 
       IDOFG = 0
       DO I = 1,NGRID
-         CALL GET_GRID_NUM_COMPS ( GRID_ID(I), NUM_COMPS, SUBR_NAME )
+         CALL GET_GRID_NUM_COMPS ( I, NUM_COMPS, SUBR_NAME )
 j_do2:   DO J = 1,NUM_COMPS
             IDOFG = IDOFG + 1
             IF (J <= 3) THEN                               ! We only want the 3 translations (or 1 if SPOINT)

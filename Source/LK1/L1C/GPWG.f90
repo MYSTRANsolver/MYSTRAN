@@ -216,7 +216,7 @@ k_do111:                      DO K=1,NCORD
                         ENDIF
                      ENDIF
 
-                     CALL GET_GRID_NUM_COMPS ( AGRID(J), NUM_COMPS, SUBR_NAME )
+                     CALL GET_GRID_NUM_COMPS ( BGRID(J), NUM_COMPS, SUBR_NAME )
                      JDOF  = NUM_COMPS*(J - 1) + 1
                      M0    = ME(JDOF,JDOF)
                      MASS  = MASS + M0

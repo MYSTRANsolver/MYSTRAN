@@ -102,16 +102,20 @@
       JERR = 0 
 
       READ(L1F,IOSTAT=IOCHK) REID, AGRID_D, DDOF, AGRID_I   
+
+      CALL GET_ARRAY_ROW_NUM ( 'GRID_ID', SUBR_NAME, NGRID, GRID_ID, AGRID_D, GRID_ID_ROW_NUM_D )
+      CALL GET_ARRAY_ROW_NUM ( 'GRID_ID', SUBR_NAME, NGRID, GRID_ID, AGRID_I, GRID_ID_ROW_NUM_I )
+
       REC_NO = REC_NO + 1
       IF (IOCHK == 0) THEN
-         CALL GET_GRID_NUM_COMPS ( AGRID_D, NUM_COMPS_D, SUBR_NAME )
+         CALL GET_GRID_NUM_COMPS ( GRID_ID_ROW_NUM_D, NUM_COMPS_D, SUBR_NAME )
          IF (NUM_COMPS_D /= 6) THEN
             IERR = IERR + 1
             JERR = JERR + 1
             WRITE(ERR,1951) 'RBE2', REID, NUM_COMPS_D
             WRITE(F06,1951) 'RBE2', REID, NUM_COMPS_D
          ENDIF
-         CALL GET_GRID_NUM_COMPS ( AGRID_I, NUM_COMPS_I, SUBR_NAME )
+         CALL GET_GRID_NUM_COMPS ( GRID_ID_ROW_NUM_I, NUM_COMPS_I, SUBR_NAME )
          IF (NUM_COMPS_I /= 6) THEN
             IERR = IERR + 1
             JERR = JERR + 1
@@ -134,7 +138,6 @@
 ! We know that the indep and dep grids (AGRID_I and AGRID_D) exist. This was checked in subr DOF_PROC.
 ! Get the basic-to-global trensformation matrices for AGRID_D and AGRID_I
 
-      CALL GET_ARRAY_ROW_NUM ( 'GRID_ID', SUBR_NAME, NGRID, GRID_ID, AGRID_D, GRID_ID_ROW_NUM_D )
       ECORD_D = GRID(GRID_ID_ROW_NUM_D,3)
       IF (ECORD_D /= 0) THEN
          DO I=1,NCORD
@@ -153,7 +156,6 @@
          ENDDO   
       ENDIF
  
-      CALL GET_ARRAY_ROW_NUM ( 'GRID_ID', SUBR_NAME, NGRID, GRID_ID, AGRID_I, GRID_ID_ROW_NUM_I )
       ECORD_I = GRID(GRID_ID_ROW_NUM_I,3)
       IF (ECORD_I /= 0) THEN
          DO I=1,NCORD

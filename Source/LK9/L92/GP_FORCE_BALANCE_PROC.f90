@@ -356,7 +356,7 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
          !FLUSH(ERR)
          IB = IAND(GROUT(I,INT_SC_NUM),IBIT(GROUT_GPFO_BIT))
          GRID_NUM  = GRID(I,1)
-         CALL GET_GRID_NUM_COMPS ( GRID_NUM, NUM_COMPS, SUBR_NAME )
+         CALL GET_GRID_NUM_COMPS ( I, NUM_COMPS, SUBR_NAME )
 
          IF ((IB > 0) .AND. (NUM_COMPS == 6)) THEN         ! Do not do force balance for SPOINT's
             G_CID = GRID(I,3)
@@ -442,7 +442,7 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
       DO I=1,NGRID
          IB = IAND(GROUT(I,INT_SC_NUM),IBIT(GROUT_GPFO_BIT))
          GRID_NUM  = GRID(I,1)
-         CALL GET_GRID_NUM_COMPS ( GRID_NUM, NUM_COMPS, SUBR_NAME )
+         CALL GET_GRID_NUM_COMPS ( I, NUM_COMPS, SUBR_NAME )
 
          IF ((IB > 0) .AND. (NUM_COMPS == 6)) THEN         ! Do not do force balance for SPOINT's
             G_CID = GRID(I,3)
@@ -494,7 +494,7 @@ i_do1:   DO I=1,NGRID                                      ! (2) Set initial val
             ! get applied load, thermal load, SPC force, MPC force for a single node
             CALL GET_ARRAY_ROW_NUM ( 'GRID_ID', SUBR_NAME, NGRID, GRID_ID, GRID_NUM, IGRID )
             ROW_NUM_START = TDOF_ROW_START(IGRID)
-            CALL GET_GRID_NUM_COMPS ( GRID_NUM, NUM_COMPS, SUBR_NAME )
+            CALL GET_GRID_NUM_COMPS ( I, NUM_COMPS, SUBR_NAME )
             DO J=1,NUM_COMPS
                CALL TDOF_COL_NUM ( 'G ', G_SET_COL )
                TDOF_ROW = ROW_NUM_START + J - 1

@@ -112,7 +112,7 @@
 !xx   CALL CALC_TDOF_ROW_NUM  ( AGRID, ROW_NUM_START, 'N' )! Det where in TDOF (not TDOFI) the DOF data begins for AGRID
       CALL GET_ARRAY_ROW_NUM ( 'GRID_ID', SUBR_NAME, NGRID, GRID_ID, AGRID, IGRID )
       ROW_NUM_START = TDOF_ROW_START(IGRID)
-      CALL GET_GRID_NUM_COMPS ( AGRID, NUM_COMPS, 'N' )
+      CALL GET_GRID_NUM_COMPS ( IGRID, NUM_COMPS, 'N' )
 comps:IF (NUM_COMPS == 6) THEN                             ! Physical grid with 6 components represented in KGRD
 
 comps6:  DO K=1,2                                          ! K=1 is for translational DOF's and K=2 is for rotational DOF's

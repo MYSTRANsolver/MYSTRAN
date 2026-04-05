@@ -235,7 +235,7 @@
          DO J = 1,ELGP
             CALL GET_ARRAY_ROW_NUM ( 'GRID_ID', SUBR_NAME, NGRID, GRID_ID, AGRID(J), IGRID )
             ROW_NUM_START = TDOF_ROW_START(IGRID)
-            CALL GET_GRID_NUM_COMPS ( AGRID(J), NUM_COMPS, SUBR_NAME )
+            CALL GET_GRID_NUM_COMPS ( IGRID, NUM_COMPS, SUBR_NAME )
             DO K = 1,NUM_COMPS
                CALL TDOF_COL_NUM ( 'G ',  G_SET_COL_NUM )
                TDOF_ROW_NUM       = ROW_NUM_START + K - 1
@@ -666,7 +666,7 @@ stfpnt0:          DO                                       ! so, run this loop u
       SUBROUTINE WRITE_NEG_DIAG_STIFFNESS ( WHAT )
 
       USE CONSTANTS_1,ONLY            :  ZERO
-      USE MODEL_STUF, ONLY            :  AGRID, EID, ELGP, ELDOF, TYPE
+      USE MODEL_STUF, ONLY            :  AGRID, BGRID, EID, ELGP, ELDOF, TYPE
 
       IMPLICIT NONE
 
@@ -715,7 +715,7 @@ stfpnt0:          DO                                       ! so, run this loop u
          WRITE(F06,97533)
          KK=0
          DO LL=1,ELGP
-            CALL GET_GRID_NUM_COMPS ( AGRID(LL), NUM_COMPS, SUBR_NAME )
+            CALL GET_GRID_NUM_COMPS ( BGRID(LL), NUM_COMPS, SUBR_NAME )
             DO MM=1,NUM_COMPS
                KK = KK + 1
                RATIO = ZERO
