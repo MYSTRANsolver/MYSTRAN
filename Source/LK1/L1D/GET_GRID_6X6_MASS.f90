@@ -37,6 +37,7 @@
       USE CONSTANTS_1, ONLY           :  ZERO
       USE DOF_TABLES, ONLY            :  TDOF
       USE SPARSE_MATRICES, ONLY       :  I2_MGG, J_MGG, MGG
+      USE MODEL_STUF, ONLY            :  GRID_SEQ
  
       USE GET_GRID_6X6_MASS_USE_IFs
 
@@ -85,7 +86,7 @@
          ENDDO
       ENDDO
 
-      IGRID_DOF_NUM = 6*(IGRID - 1) + 1
+      IGRID_DOF_NUM = 6*(GRID_SEQ(IGRID) - 1) + 1
 k_do: DO K=1,NTERM_MGG
 
          IF ((I2_MGG(K) >= IGRID_DOF_NUM) .AND. (I2_MGG(K) <= IGRID_DOF_NUM + 5)) THEN

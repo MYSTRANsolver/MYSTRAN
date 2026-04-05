@@ -84,8 +84,7 @@
       IROW_START = 1
 i_do1:DO I=1,NGRID
 
-!xx      GRID_NUM = GRID_ID(INV_GRID_SEQ(I))               ! GRID_NUM's are in TDOFI order (internal DOF order)
-         GRID_NUM = GRID_ID(I)
+         GRID_NUM = GRID_ID(INV_GRID_SEQ(I))               ! GRID_NUM's are in TDOFI order (internal DOF order)
          CALL MGG_CONM2_PROC ( I, GRID_NUM, MGG_CONM2, MGG_CONM2_NONZERO )
          CALL GET_GRID_NUM_COMPS ( GRID_NUM, NUM_COMPS, SUBR_NAME )
 
