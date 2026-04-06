@@ -660,12 +660,6 @@
  9100 FORMAT(' *ERROR  9100: PROGRAMMING ERROR IN SUBROUTINE ',A                                                                   &
                     ,/,14X,' ILLEGAL INPUT FOR VARIABLE "WHAT" = ',A)
 
- 9111 FORMAT(10X,'             -------------- -------------- -------------- -------------- -------------- --------------',/,       &
-             1X,'ABS AUTOSPC FORCES  :',6(ES15.6))
-
- 9113 FORMAT(10X,'             -------------- -------------- -------------- -------------- -------------- --------------',/,       &
-             1X,'AUTOSPC FORCE TOTALS:',6(ES15.6),/,5X,'(for output set)')
-
  9121 FORMAT(1X,'ABS AUTOSPC FORCES  :',6(ES15.6))
 
  9123 FORMAT(1X,'AUTOSPC FORCE TOTALS:',6(ES15.6),/,5X,'(for output set)')

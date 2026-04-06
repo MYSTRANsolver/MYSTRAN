@@ -259,9 +259,6 @@
 
  2006 FORMAT(' *INFORMATION: CANNOT CALCULATE R3 MODAL EFFECTIVE MASS PERCENT OF MODEL IZZ  SO IT IS LEFT BLANK')
 
- 9101 FORMAT(' *ERROR  9101: PROGRAMMING ERROR IN SUBROUTINE ',A                                                                   &
-                    ,/,14X,' PARAM WTMASS SHOULD NOT BE ZERO BUT IS = ',1ES14.6)
-
  9102 FORMAT(14X,'                    E F F E C T I V E   M O D A L   M A S S E S   O R   W E I G H T S',/,                        &
              14X,'                                     (in coordinate system ',I8,')',/,                                           &
              14X,'                       Units are same as units for mass input in the Bulk Data Deck')
@@ -298,19 +295,6 @@
                ,'free mass (i.e. not counting mass at constrained DOF''s).',/,                                                     &
                '  Percentages are only printed for components that have finite model mass.',/,                                     &
                '                                                               -----')
- 9202 FORMAT(21X,'                    E F F E C T I V E   M O D A L   M A S S E S   O R   W E I G H T S',/,                        &
-             21X,'                                     (in coordinate system ',I8,')',/,                                           &
-             21X,'                       Units are same as units for mass input in the Bulk Data Deck')
-
- 9207 FORMAT(20X,'MODE     CYCLES          T1            T2            T3            R1            R2            R3',/,            &
-             20X,' NUM')
-
- 9210 FORMAT(16X,I8,7(1ES14.6))
-
- 9212 FORMAT(39X,' ------------  ------------  ------------  ------------  ------------  ------------',/,                          &
-             10X,'Sum all modes:',14X,6(1ES14.6))
-
- 9216 FORMAT(7X,'Total model mass:',14X,6(1ES14.6))
 
 ! **********************************************************************************************************************************
  

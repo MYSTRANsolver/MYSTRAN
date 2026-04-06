@@ -715,8 +715,6 @@
 
  1103 FORMAT(5(A,I8,1ES14.6))
 
- 1104 FORMAT(A,I8,1ES14.6)
-
 ! 3D Elems >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
  1301 FORMAT(1X,A,'  Elem  Location            Epsilon-xx    Epsilon-yy    Epsilon-zz     Gamma-xy      Gamma-yz      Gamma-zx  ', &
              '   von Mises'                                                                                                        &
@@ -756,21 +754,6 @@
 
  1306 FORMAT(1X,A,10X,'GRD',I8,5X,8(1ES14.6))
 
- 1313 FORMAT(16X,I8,8(1ES14.6))
-
- 1314 FORMAT(28X,'------------- ------------- ------------- ------------- ------------- ------------- -------------',/,            &
-             1X,'MAX (for output set):  ',7(ES14.6),/,                                                                             &
-             1X,'MIN (for output set):  ',7(ES14.6),//,                                                                            &
-             1X,'ABS (for output set):  ',7(ES14.6),/,                                                                             &
-             1X,'*for output set')
-
- 1315 FORMAT(28X,'------------- ------------- ------------- ------------- ------------- ------------- -------------',              &
-                 ' -------------',/,                                                                                               &
-             1X,'MAX (for output set):  ',8(ES14.6),/,                                                                             &
-             1X,'MIN (for output set):  ',8(ES14.6),//,                                                                            &
-             1X,'ABS (for output set):  ',8(ES14.6),/,                                                                             &
-             1X,'*for output set')
-
 ! QUAD4 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
  1401 FORMAT(1X,A,'Elem  Location         Fibre      Strains In Element Coord System       Principal Strains (Zero Shear)',        &
   '                 Transverse   Transverse   % Poly',/,1X,A,                                                                      &
@@ -798,20 +781,6 @@
              1X,A,'MIN* : ',25x,3(ES13.5),8X,5(ES13.5),E9.1,//,                                                                    &
              1X,A,'ABS* : ',25x,3(ES13.5),8X,5(ES13.5),E9.1,/,                                                                     &
              1X,A,'*for output set')
-
- 1413 FORMAT(1X,I8,2X,'CENTER  ',5X,4(1ES14.6),0PF14.3,5(1ES14.6))
-
- 1414 FORMAT(9X,15X,4(1ES14.6),0PF14.3,3(1ES14.6))
-
- 1415 FORMAT(21X,'GRID',I8,1X,4(1ES14.6),0PF9.3,5(1ES14.6),F13.2,'% (',I1,')')
-
- 1417 FORMAT(9X,15X,4(1ES14.6),0PF9.3,3(1ES14.6))
-
- 1418 FORMAT(39X,'------------- ------------- -------------               ------------- ------------- ------------- -------------',&
-                 ' ------------- -------------',/,  &
-             1X,'MAX (for output set): ',15X,3(ES14.6),14X,5(ES14.6),F14.2,/,                                                      &
-             1X,'MIN (for output set): ',15X,3(ES14.6),14X,5(ES14.6),F14.2,//,                                                     &
-             1X,'ABS (for output set): ',15X,3(ES14.6),14X,5(ES14.6),F14.2)
 
  1498 FORMAT(' NOTE: Explanation of errors in the polynomial fit to extrapolate element corner point strains from values at the',  &
                    ' Gauss points:')
@@ -851,30 +820,17 @@
              1X,'ABS* : ',28x,3(ES13.5),9X,5(ES13.5),/,                                                                            &
              1X,'*for output set')
 
- 1713 FORMAT(1X,I8,4X,'Anywhere',3X,4(1ES14.6),0PF14.3,5(1ES14.6))
-
- 1714 FORMAT(13X,'in elem',4X,4(1ES14.6),0PF14.3,5(1ES14.6))
-
- 1715 FORMAT(39X,'------------- ------------- -------------               ------------- ------------- ------------- ---------',/,  &
-             1X,'MAX (for output set): ',15X,3(ES14.6),14X,5(ES14.6),/,                                                            &
-             1X,'MIN (for output set): ',15X,3(ES14.6),14X,5(ES14.6),//,                                                           &
-             1X,'ABS (for output set): ',15X,3(ES14.6),14X,5(ES14.6),/)
-
 ! BUSH >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
  1801 FORMAT(20X,A,'Element    Strain-1      Strain-2      Strain-3      Strain-4      Strain-5      Strain-6'                     &
           ,/,20X,A,'   ID')
 
  1802 FORMAT(19X,I8,6(1ES14.6))
 
- 1812 FORMAT(16X,I8,6(1ES14.6))
-
 ! USERIN >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
  1901 FORMAT(20X,A,'Element    Strain-1      Strain-2      Strain-3      Strain-4      Strain-5      Strain-6'                     &
           ,/,20X,A,'   ID')
 
  1902 FORMAT(19X,I8,6(1ES14.6))
-
- 1912 FORMAT(19X,I8,6(1ES14.6))
 
 ! >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
  9300 FORMAT(' *ERROR  9300: PROGRAMMING ERROR IN SUBROUTINE ',A                                                                   &
@@ -1056,13 +1012,6 @@
              1X,'MIN* : ',28x,3(ES13.5),9X,5(ES13.5),//,                                                                           &
              1X,'ABS* : ',28x,3(ES13.5),9X,5(ES13.5),/,                                                                            &
              1X,'*for output set')
-
- 1713 FORMAT(1X,I8,4X,'Anywhere',3X,4(1ES14.6),0PF14.3,5(1ES14.6))
- 1714 FORMAT(13X,'in elem',4X,4(1ES14.6),0PF14.3,5(1ES14.6))
- 1715 FORMAT(39X,'------------- ------------- -------------               ------------- ------------- ------------- ---------',/,  &
-             1X,'MAX (for output set): ',15X,3(ES14.6),14X,5(ES14.6),/,                                                            &
-             1X,'MIN (for output set): ',15X,3(ES14.6),14X,5(ES14.6),//,                                                           &
-             1X,'ABS (for output set): ',15X,3(ES14.6),14X,5(ES14.6),/)
 
       IF(.TRUE.) THEN
         DO I=1,NUM

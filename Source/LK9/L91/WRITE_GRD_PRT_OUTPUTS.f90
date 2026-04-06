@@ -334,8 +334,6 @@
 
  9013 FORMAT(' OUTPUT FOR CRAIG-BAMPTON DOF ',I8,' OF ',I8,' (boundary ',A,' for grid',I8,' component',I2,')')
 
- 9014 FORMAT(' OUTPUT FOR CRAIG-BAMPTON ACCEL OTM COL ',I8,' OF ',I8)
-
  9015 FORMAT(' OUTPUT FOR CRAIG-BAMPTON DOF ',I8,' OF ',I8,' (modal acceleration for mode ',I8,')')
 
  9100 FORMAT(' *ERROR  9100: PROGRAMMING ERROR IN SUBROUTINE ',A                                                                   &
@@ -379,11 +377,6 @@
              16X,'ABS* :  ',6A14,/,                                                                                                &
              16X,'*for output set')
 
- 9611 FORMAT(11X,'              ------------- ------------- ------------- ------------- ------------- -------------',/,            &
-             1X,'MAX (for output set):  ',6(ES14.6),/,                                                                             &
-             1X,'MIN (for output set):  ',6(ES14.6),//,                                                                            &
-             1X,'ABS (for output set):  ',6(ES14.6))
-
  9701 FORMAT(11X,'              ------------- ------------- ------------- ------------- ------------- -------------',/,            &
              1X,'APPLIED FORCE TOTALS:  ',6A14,/,3X,'(for output set)')
 
@@ -393,15 +386,6 @@
  9703 FORMAT(11X,'              ------------- ------------- ------------- ------------- ------------- -------------',/,            &
              1X,'    MPC FORCE TOTALS:  ',6A14,/,5X,'(for output set)')
 
- 9791 FORMAT(11X,'              ------------- ------------- ------------- ------------- ------------- -------------',/,            &
-             1X,'APPLIED FORCE TOTALS:  ',6(1ES14.6),/,3X,'(for output set)')
-
- 9792 FORMAT(11X,'              ------------- ------------- ------------- ------------- ------------- -------------',/,            &
-             1X,'    SPC FORCE TOTALS:  ',6(1ES14.6),/,5X,'(for output set)')
-
- 9793 FORMAT(11X,'              ------------- ------------- ------------- ------------- ------------- -------------',/,            &
-             1X,'    MPC FORCE TOTALS:  ',6(1ES14.6),/,5X,'(for output set)')
-
  9711 FORMAT(11X,'              ------------- ------------- ------------- ------------- ------------- -------------',/,            &
              1X,'APPLIED FORCE TOTALS: not printed since all grids do not have the same global coordinate system')
 
@@ -410,8 +394,6 @@
 
  9713 FORMAT(11X,'              ------------- ------------- ------------- ------------- ------------- -------------',/,            &
              1X,'    MPC FORCE TOTALS: not printed since all grids do not have the same global coordinate system')
-
- 9901 FORMAT(6X,2(1X,I8),6(ES14.6))
 
  9902 FORMAT(6X,2(1X,I8),6A)
 

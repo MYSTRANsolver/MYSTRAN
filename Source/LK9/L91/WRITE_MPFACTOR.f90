@@ -172,14 +172,8 @@
  9004 FORMAT(13X,'                           M O D A L   P A R T I C I P A T I O N   F A C T O R S',/,                             &
              13X,'              (dimensionless, in coordinate sys ',I8,' with cols marked by R-set grid/comp)',/)
 
- 9014 FORMAT(20X,'                           M O D A L   P A R T I C I P A T I O N   F A C T O R S',/,                             &
-             20X,'              (dimensionless, in coordinate sys ',I8,' with cols marked by R-set grid/comp)',/)
-
  9005 FORMAT(13X,'                           M O D A L   P A R T I C I P A T I O N   F A C T O R S',/,                             &
              13X,'                                (dimensionless, in coordinate sys ',I8,')')
-
- 9015 FORMAT(20X,'                           M O D A L   P A R T I C I P A T I O N   F A C T O R S',/,                             &
-             20X,'                                (dimensionless, in coordinate sys ',I8,')')
 
  9006 FORMAT(14X,'                          Reference point is the basic coordinate system origin',/)
 
@@ -203,8 +197,6 @@
 
  9301 FORMAT(9X,I8,32767(1ES14.6))
 
- 9311 FORMAT(16X,I8,32767(1ES14.6))
-
  9302 FORMAT(9X,I8,32767(1ES14.2))
 
  9501 FORMAT(13X,'MODE     CYCLES          T1            T2            T3            R1            R2            R3',/,            &
@@ -214,8 +206,6 @@
              13X,' NUM')
 
  9503 FORMAT(9X,I8,7(1ES14.6))
-
- 9513 FORMAT(16X,I8,7(1ES14.6))
 
  9504 FORMAT(9X,I8,7(1ES14.2))
 
