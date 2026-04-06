@@ -32,7 +32,7 @@
 
 
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
-      USE IOUNT1, ONLY                :  ANS, F04, F06, IN1, SC1, WRT_ERR, WRT_LOG
+      USE IOUNT1, ONLY                :  F04, F06, IN1, SC1, WRT_ERR, WRT_LOG
       USE SCONTR, ONLY                :  BLNK_SUB_NAM, FATAL_ERR, PROG_NAME
       USE TIMDAT, ONLY                :  STIME, TSEC
       USE DEBUG_PARAMETERS

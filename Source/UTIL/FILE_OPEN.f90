@@ -95,7 +95,7 @@
       ! FILE_OPEN ( OP2, OP2FIL, OUNT,'OLD    ', OP2_MSG,'NEITHER','UNFORMATTED','WRITE','REWIND','N','N','Y')
       !
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
-      USE IOUNT1, ONLY                :  ANS, F04, F06, IN1, SC1, WRT_ERR, WRT_LOG
+      USE IOUNT1, ONLY                :  F04, F06, IN1, SC1, WRT_ERR, WRT_LOG
       USE SCONTR, ONLY                :  BLNK_SUB_NAM, FATAL_ERR, PROG_NAME
       USE TIMDAT, ONLY                :  STIME, TSEC
       USE DEBUG_PARAMETERS
@@ -293,13 +293,8 @@
                WRITE(UNIT) STIME
             ENDIF
             IF (WRITE_VER == 'Y') THEN
-               IF (UNIT == ANS) THEN
-                  WRITE(UNIT,118) PROG_NAME, MYSTRAN_VER_NUM, MYSTRAN_VER_MONTH, MYSTRAN_VER_DAY, MYSTRAN_VER_YEAR,                &
-                                  MYSTRAN_AUTHOR
-               ELSE
-                  WRITE(UNIT,117) PROG_NAME, MYSTRAN_VER_NUM, MYSTRAN_VER_MONTH, MYSTRAN_VER_DAY, MYSTRAN_VER_YEAR,                &
-                                  MYSTRAN_AUTHOR, MYSTRAN_COMMENT
-               ENDIF
+               WRITE(UNIT,117) PROG_NAME, MYSTRAN_VER_NUM, MYSTRAN_VER_MONTH, MYSTRAN_VER_DAY, MYSTRAN_VER_YEAR,                &
+                               MYSTRAN_AUTHOR, MYSTRAN_COMMENT
             ENDIF
          ENDIF
       ELSE
