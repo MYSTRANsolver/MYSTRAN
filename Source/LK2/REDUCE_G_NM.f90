@@ -84,7 +84,6 @@
       INTEGER(LONG)                   :: SA_SET_COL          ! Col no. in array TDOF where the SA-set is (from subr TDOF_COL_NUM)
       INTEGER(LONG)                   :: TOT_NUM_ASPC        ! Sum of NUM_ASPC_BY_COMP(6)
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = REDUCE_G_NM_BEGEND
-
       REAL(DOUBLE)                    :: KNN_DIAG(NDOFN)     ! Diagonal terms from KNN
       REAL(DOUBLE)                    :: KNN_MAX_DIAG        ! Max diag term from  KNN
       REAL(DOUBLE)                    :: KNND_DIAG(NDOFN)    ! Diagonal terms from KNND
@@ -574,7 +573,7 @@
 ! reruns subr TDOF_PROC and writes the new TSET, TDOF, TDOFI tables to file L1C
 
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
-      USE SCONTR, ONLY                :  DATA_NAM_LEN, NDOFG, NDOFSA, NGRID, NUM_PCHD_SPC1
+      USE SCONTR, ONLY                :  DATA_NAM_LEN, FATAL_ERR, NDOFG, NDOFSA, NGRID, NUM_PCHD_SPC1
       USE IOUNT1, ONLY                :  WRT_ERR, WRT_LOG, ERR, F04, F06, L1C, L1C_MSG, LINK1C, SPC, SPCFIL
       USE PARAMS, ONLY                :  AUTOSPC, AUTOSPC_INFO, AUTOSPC_NSET, PCHSPC1, PRTTSET, SPC1SID
       USE DOF_TABLES, ONLY            :  TDOF, TDOFI, TSET
@@ -593,14 +592,13 @@
       INTEGER(LONG)                   :: GRID_ID_ROW_NUM    ! Row number in array GRID_ID where AGRID is found
       INTEGER(LONG)                   :: I,J                ! DO loop indices
       INTEGER(LONG)                   :: IOCHK              ! IOSTAT error number when opening/reading a file
-      INTEGER(LONG)                   :: JSTART             ! DO loop start point
       INTEGER(LONG)                   :: NUM_ASPC_BY_COMP(6)! Number of AUTOSPC's by component number
       INTEGER(LONG)                   :: NUM_N_SET_ROWS_NULL! Number of rows in KNN that are null and are not S or O-set members
       INTEGER(LONG)                   :: N_SET_COL          ! Col no. in array TDOF where the  N-set is (from subr TDOF_COL_NUM)
+      INTEGER(LONG), ALLOCATABLE      :: N_SET_TDOFI_ROW(:) ! Row in TDOFI for each N-set DOF number
       INTEGER(LONG)                   :: R_SET_COL          ! Col no. in array TDOF where the  R-set is (from subr TDOF_COL_NUM)
       INTEGER(LONG)                   :: S_SET_COL          ! Col no. in array TDOF where the  S-set is (from subr TDOF_COL_NUM)
       INTEGER(LONG)                   :: OUNT(2)            ! File units to write messages to. Input to subr UNFORMATTED_OPEN
-
 ! **********************************************************************************************************************************
       OUNT(1) = ERR
       OUNT(2) = F06
@@ -622,6 +620,21 @@
       CALL TDOF_COL_NUM ( 'R ',  R_SET_COL )
       CALL TDOF_COL_NUM ( 'S ',  S_SET_COL )
 
+      IF (NDOFN > 0) THEN
+         ALLOCATE ( N_SET_TDOFI_ROW(NDOFN), STAT=IOCHK )
+         IF (IOCHK /= 0) THEN
+            WRITE(ERR,*) ' *ERROR: ALLOCATING N_SET_TDOFI_ROW IN ', SUBR_NAME
+            WRITE(F06,*) ' *ERROR: ALLOCATING N_SET_TDOFI_ROW IN ', SUBR_NAME
+            FATAL_ERR = FATAL_ERR + 1
+            CALL OUTA_HERE ( 'Y' )
+         ENDIF
+         N_SET_TDOFI_ROW = 0
+         DO J=1,NDOFG
+            N_SET_DOF = TDOFI(J,N_SET_COL)
+            IF (N_SET_DOF > 0) N_SET_TDOFI_ROW(N_SET_DOF) = J
+         ENDDO
+      ENDIF
+
       WRITE(ERR,101) AUTOSPC_NSET, PROG_NAME
       IF (SUPINFO == 'N') THEN
          WRITE(F06,101) AUTOSPC_NSET, PROG_NAME
@@ -634,12 +647,12 @@
       ENDDO
 
       NUM_N_SET_ROWS_NULL = 0
-      JSTART = 1
 !xx   WRITE(SC1, * )                                       ! Advance 1 line for screen messages
       CALL COUNTER_INIT('       Proc N-set DOF ', NDOFN)
 i_do: DO I=1,NDOFN
          IF (I_KNN(I+1) == I_KNN(I)) THEN                  ! If true, row i is null
-j_do:       DO J=JSTART,NDOFG                              ! Loop over rows of TDOFI to find where this N-set row is null
+            J = N_SET_TDOFI_ROW(I)
+            IF (J > 0) THEN
                IF (TDOFI(J,N_SET_COL) == I) THEN
                   IF ((TDOFI(J,S_SET_COL) == 0) .AND. (TDOFI(J,R_SET_COL) == 0)) THEN
                      NUM_N_SET_ROWS_NULL = NUM_N_SET_ROWS_NULL + 1
@@ -659,11 +672,19 @@ j_do:       DO J=JSTART,NDOFG                              ! Loop over rows of T
                         WRITE(SPC,109) SPC1SID, COMP, AGRID
                         NUM_PCHD_SPC1 = NUM_PCHD_SPC1 + 1
                      ENDIF
-                     JSTART = J
-                     EXIT j_do
                   ENDIF
+               ELSE
+                  WRITE(ERR,*) ' *ERROR: N_SET_AUTOSPC_PROC_1 LOOKUP MISMATCH FOR N-SET DOF ', I
+                  WRITE(F06,*) ' *ERROR: N_SET_AUTOSPC_PROC_1 LOOKUP MISMATCH FOR N-SET DOF ', I
+                  FATAL_ERR = FATAL_ERR + 1
+                  CALL OUTA_HERE ( 'Y' )
                ENDIF
-            ENDDO j_do
+            ELSE
+               WRITE(ERR,*) ' *ERROR: N_SET_AUTOSPC_PROC_1 LOOKUP FAILED FOR N-SET DOF ', I
+               WRITE(F06,*) ' *ERROR: N_SET_AUTOSPC_PROC_1 LOOKUP FAILED FOR N-SET DOF ', I
+               FATAL_ERR = FATAL_ERR + 1
+               CALL OUTA_HERE ( 'Y' )
+            ENDIF
          ENDIF
          CALL COUNTER_PROGRESS(I)
       ENDDO i_do
@@ -719,7 +740,6 @@ j_do:       DO J=JSTART,NDOFG                              ! Loop over rows of T
          ENDIF
 
       ENDIF
-
 ! **********************************************************************************************************************************
    56 FORMAT(64X,'DEGREE OF FREEDOM SET TABLE (TSET)')
 
@@ -779,7 +799,6 @@ j_do:       DO J=JSTART,NDOFG                              ! Loop over rows of T
       INTEGER(LONG)                   :: R_SET_COL          ! Col no. in array TDOF where the  R-set is (from subr TDOF_COL_NUM)
       INTEGER(LONG)                   :: S_SET_COL          ! Col no. in array TDOF where the  S-set is (from subr TDOF_COL_NUM)
       INTEGER(LONG)                   :: OUNT(2)            ! File units to write messages to. Input to subr UNFORMATTED_OPEN
-
 ! **********************************************************************************************************************************
       OUNT(1) = ERR
       OUNT(2) = F06
@@ -900,9 +919,8 @@ j_do:       DO J=JSTART,NDOFG                               ! Loop over rows of 
          ENDIF
 
       ENDIF
-
 ! **********************************************************************************************************************************
-   56 FORMAT(64X,'DEGREE OF FREEDOM SET TABLE (TSET)')
+  56 FORMAT(64X,'DEGREE OF FREEDOM SET TABLE (TSET)')
 
    57 FORMAT(33x,'     GRID SEQUENCE       T1       T2       T3       R1       R2       R3',/)
 
