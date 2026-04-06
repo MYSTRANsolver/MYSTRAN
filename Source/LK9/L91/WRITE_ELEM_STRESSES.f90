@@ -215,154 +215,163 @@
          LABELI = LABEL(INT_SC_NUM)
 
          IF (WRITE_F06) THEN
-             IF (TITLE(INT_SC_NUM)(1:)  /= ' ') THEN
-                 WRITE(F06,201) TITLE(INT_SC_NUM)
-             ENDIF
+            IF (TITLE(INT_SC_NUM)(1:)  /= ' ') THEN
+               WRITE(F06,201) TITLE(INT_SC_NUM)
+            ENDIF
 
-             IF (STITLE(INT_SC_NUM)(1:) /= ' ') THEN
-                 WRITE(F06,201) STITLE(INT_SC_NUM)
-             ENDIF
+            IF (STITLE(INT_SC_NUM)(1:) /= ' ') THEN
+               WRITE(F06,201) STITLE(INT_SC_NUM)
+            ENDIF
 
-             IF (LABEL(INT_SC_NUM)(1:)  /= ' ') THEN
-                 WRITE(F06,201) LABEL(INT_SC_NUM)
-             ENDIF
+            IF (LABEL(INT_SC_NUM)(1:)  /= ' ') THEN
+               WRITE(F06,201) LABEL(INT_SC_NUM)
+            ENDIF
+            WRITE(F06,*)
+
+           ! -- F06 1st 2 header lines for stress output description
+            IF     ((TYPE(1:3) == 'BAR') .OR. (TYPE(1:4) == 'BEAM')) THEN
+               IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
+                  WRITE(F06,302) FILL(1: 20)
+               ELSE
+                  WRITE(F06,301) FILL(1: 13)
+               ENDIF
+               WRITE(F06,401) FILL(1: 42), ONAME
+
+            ELSE IF (TYPE(1:4) == 'BUSH') THEN
+               IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
+                  WRITE(F06,302) FILL(1: 20)
+               ELSE
+                  WRITE(F06,301) FILL(1: 11)
+               ENDIF
+               WRITE(F06,401) FILL(1: 40), ONAME
+
+            ELSE IF (TYPE(1:4) == 'ELAS') THEN
+               IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
+                  WRITE(F06,302) FILL(1: 20)
+               ELSE
+                  WRITE(F06,301) FILL(1: 11)
+               ENDIF
+               WRITE(F06,401) FILL(1: 40), ONAME
+
+            ELSE IF ((TYPE(1:4) == 'HEXA') .OR. (TYPE(1:5) == 'PENTA') .OR. (TYPE(1:5) == 'TETRA')) THEN
+               IF (STRE_OPT == 'VONMISES') THEN
+                  IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
+                     IF(STR_CID == -2) THEN
+                        WRITE(F06,312) FILL(1: 20)
+                     ELSE
+                        WRITE(F06,302) FILL(1: 15)
+                     ENDIF
+                  ELSE
+                     IF(STR_CID == -2) THEN
+                        WRITE(F06,311) FILL(1: 32)
+                     ELSE
+                        WRITE(F06,301) FILL(1: 27)
+                     ENDIF
+                  ENDIF
+                  WRITE(F06,401) FILL(1: 55), ONAME
+               ELSE
+                  IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
+                     IF(STR_CID == -2) THEN
+                        WRITE(F06,312) FILL(1: 27)
+                     ELSE
+                        WRITE(F06,302) FILL(1: 22)
+                     ENDIF
+                  ELSE
+                     IF(STR_CID == -2) THEN
+                        WRITE(F06,311) FILL(1: 38)
+                     ELSE
+                        WRITE(F06,301) FILL(1: 33)
+                     ENDIF
+                  ENDIF
+                  WRITE(F06,401) FILL(1: 61), ONAME
+               ENDIF
+
+            ELSE IF ((TYPE(1:5) == 'QUAD4') .OR. (TYPE(1:5) == 'QUAD8')) THEN
+               IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
+                  WRITE(F06,302) FILL(1: 20)
+               ELSE
+                  WRITE(F06,301) FILL(1: 42)
+               ENDIF
+               WRITE(F06,401) FILL(1: 71), ONAME
+
+            ELSE IF (TYPE(1:3) == 'ROD') THEN
+               IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
+                  WRITE(F06,302) FILL(1: 20)
+               ELSE
+                  WRITE(F06,301) FILL(1: 13)
+               ENDIF
+               WRITE(F06,401) FILL(1: 42), ONAME
+
+            ELSE IF (TYPE(1:5) == 'SHEAR') THEN
+               IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
+                  WRITE(F06,302) FILL(1: 20)
+               ELSE
+                  WRITE(F06,301) FILL(1: 13)
+               ENDIF
+               WRITE(F06,401) FILL(1: 42), ONAME
+
+            ELSE IF (TYPE(1:5) == 'TRIA3') THEN
+               IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
+                  WRITE(F06,302) FILL(1: 20)
+               ELSE
+                  WRITE(F06,301) FILL(1: 36)
+               ENDIF
+               WRITE(F06,401) FILL(1: 65), ONAME
+            ENDIF
+
+            ! -- F06 header lines describing stress columns
+            IF      (TYPE == 'BAR     ') THEN
+               IF (BARTOR == 'Y') THEN
+                  WRITE(F06,1101) FILL(1:1), FILL(1:1)
+               ELSE
+                  WRITE(F06,1102) FILL(1:1), FILL(1:1)
+               ENDIF
+
+            ELSE IF (TYPE(1:4) == 'ELAS') THEN
+               WRITE(F06,1201) FILL(1:1), FILL(1:1)
+
+            ELSE IF((TYPE(1:4) == 'HEXA') .OR. (TYPE(1:5) == 'PENTA') .OR. (TYPE(1:5) == 'TETRA')) THEN
+               IF (STRE_OPT == 'VONMISES') THEN
+                  WRITE(F06,1301) FILL(1: 1), FILL(1: 1)
+               ELSE
+                  WRITE(F06,1302) FILL(1: 1), FILL(1: 1)
+               ENDIF
+
+            ELSE IF ((TYPE(1:5) == 'QUAD4') .OR. (TYPE(1:5) == 'QUAD8')) THEN
+               IF (STRE_OPT == 'VONMISES') THEN
+                  WRITE(F06,1401) FILL(1: 1), FILL(1: 1), FILL(1: 1)
+               ELSE
+                  WRITE(F06,1402) FILL(1: 1), FILL(1: 1)
+               ENDIF
+
+            ELSE IF  (TYPE == 'ROD     ') THEN
+               WRITE(F06,1501) FILL(1: 1), FILL(1: 1)
+
+            ELSE IF (TYPE(1:5) == 'SHEAR') THEN
+               WRITE(F06,1601) FILL(1: 1), FILL(1: 1)
+
+            ELSE IF (TYPE(1:5) == 'TRIA3') THEN
+               IF (STRE_OPT == 'VONMISES') THEN
+                  WRITE(F06,1701) FILL(1: 1), FILL(1: 1), FILL(1: 1)
+               ELSE
+                  WRITE(F06,1702) FILL(1: 1), FILL(1: 1)
+               ENDIF
+
+            ELSE IF  (TYPE == 'BUSH    ') THEN
+               WRITE(F06,1801) FILL(1: 1), FILL(1: 1)
+
+            ELSE IF  (TYPE == 'USERIN  ') THEN
+               WRITE(F06,1901) FILL(1: 1), FILL(1: 1)
+
+            ENDIF
+
+
          ENDIF  ! write f06
-         IF (WRITE_F06) WRITE(F06,*)
 
-        ! -- F06 1st 2 header lines for stress output description
-         IF     ((TYPE(1:3) == 'BAR') .OR. (TYPE(1:4) == 'BEAM')) THEN
-            IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
-               IF (WRITE_F06) WRITE(F06,302) FILL(1: 20)
-            ELSE
-               IF (WRITE_F06) WRITE(F06,301) FILL(1: 13)
-            ENDIF
-            IF (WRITE_F06) WRITE(F06,401) FILL(1: 42), ONAME
 
-         ELSE IF (TYPE(1:4) == 'BUSH') THEN
-            IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
-               IF (WRITE_F06) WRITE(F06,302) FILL(1: 20)
-            ELSE
-               IF (WRITE_F06) WRITE(F06,301) FILL(1: 11)
-            ENDIF
-            IF (WRITE_F06) WRITE(F06,401) FILL(1: 40), ONAME
 
-         ELSE IF (TYPE(1:4) == 'ELAS') THEN
-            IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
-               IF (WRITE_F06) WRITE(F06,302) FILL(1: 20)
-            ELSE
-               IF (WRITE_F06) WRITE(F06,301) FILL(1: 11)
-            ENDIF
-            IF (WRITE_F06) WRITE(F06,401) FILL(1: 40), ONAME
 
-         ELSE IF ((TYPE(1:4) == 'HEXA') .OR. (TYPE(1:5) == 'PENTA') .OR. (TYPE(1:5) == 'TETRA')) THEN
-            IF (STRE_OPT == 'VONMISES') THEN
-               IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
-                  IF(STR_CID == -2) THEN
-                     IF (WRITE_F06) WRITE(F06,312) FILL(1: 20)
-                  ELSE
-                     IF (WRITE_F06) WRITE(F06,302) FILL(1: 15)
-                  ENDIF
-               ELSE
-                  IF(STR_CID == -2) THEN
-                     IF (WRITE_F06) WRITE(F06,311) FILL(1: 32)
-                  ELSE
-                     IF (WRITE_F06) WRITE(F06,301) FILL(1: 27)
-                  ENDIF
-               ENDIF
-               IF (WRITE_F06) WRITE(F06,401) FILL(1: 55), ONAME
-            ELSE
-               IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
-                  IF(STR_CID == -2) THEN
-                     IF (WRITE_F06) WRITE(F06,312) FILL(1: 27)
-                  ELSE
-                     IF (WRITE_F06) WRITE(F06,302) FILL(1: 22)
-                  ENDIF
-               ELSE
-                  IF(STR_CID == -2) THEN
-                     IF (WRITE_F06) WRITE(F06,311) FILL(1: 38)
-                  ELSE
-                     IF (WRITE_F06) WRITE(F06,301) FILL(1: 33)
-                  ENDIF
-               ENDIF
-               IF (WRITE_F06) WRITE(F06,401) FILL(1: 61), ONAME
-            ENDIF
 
-         ELSE IF ((TYPE(1:5) == 'QUAD4') .OR. (TYPE(1:5) == 'QUAD8')) THEN
-            IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
-               IF (WRITE_F06) WRITE(F06,302) FILL(1: 20)
-            ELSE
-               IF (WRITE_F06) WRITE(F06,301) FILL(1: 42)
-            ENDIF
-            IF (WRITE_F06) WRITE(F06,401) FILL(1: 71), ONAME
-
-         ELSE IF (TYPE(1:3) == 'ROD') THEN
-            IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
-               IF (WRITE_F06) WRITE(F06,302) FILL(1: 20)
-            ELSE
-               IF (WRITE_F06) WRITE(F06,301) FILL(1: 13)
-            ENDIF
-            IF (WRITE_F06) WRITE(F06,401) FILL(1: 42), ONAME
-
-         ELSE IF (TYPE(1:5) == 'SHEAR') THEN
-            IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
-               IF (WRITE_F06) WRITE(F06,302) FILL(1: 20)
-            ELSE
-               IF (WRITE_F06) WRITE(F06,301) FILL(1: 13)
-            ENDIF
-            IF (WRITE_F06) WRITE(F06,401) FILL(1: 42), ONAME
-
-         ELSE IF (TYPE(1:5) == 'TRIA3') THEN
-            IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
-               IF (WRITE_F06) WRITE(F06,302) FILL(1: 20)
-            ELSE
-               IF (WRITE_F06) WRITE(F06,301) FILL(1: 36)
-            ENDIF
-            IF (WRITE_F06) WRITE(F06,401) FILL(1: 65), ONAME
-         ENDIF
-
-         ! -- F06 header lines describing stress columns
-         IF      (TYPE == 'BAR     ') THEN
-            IF (BARTOR == 'Y') THEN
-               IF (WRITE_F06) WRITE(F06,1101) FILL(1:1), FILL(1:1)
-            ELSE
-               IF (WRITE_F06) WRITE(F06,1102) FILL(1:1), FILL(1:1)
-            ENDIF
-
-         ELSE IF (TYPE(1:4) == 'ELAS') THEN
-            IF (WRITE_F06) WRITE(F06,1201) FILL(1:1), FILL(1:1)
-
-         ELSE IF((TYPE(1:4) == 'HEXA') .OR. (TYPE(1:5) == 'PENTA') .OR. (TYPE(1:5) == 'TETRA')) THEN
-            IF (STRE_OPT == 'VONMISES') THEN
-               IF (WRITE_F06) WRITE(F06,1301) FILL(1: 1), FILL(1: 1)
-            ELSE
-               IF (WRITE_F06) WRITE(F06,1302) FILL(1: 1), FILL(1: 1)
-            ENDIF
-
-         ELSE IF ((TYPE(1:5) == 'QUAD4') .OR. (TYPE(1:5) == 'QUAD8')) THEN
-            IF (STRE_OPT == 'VONMISES') THEN
-               IF (WRITE_F06) WRITE(F06,1401) FILL(1: 1), FILL(1: 1), FILL(1: 1)
-            ELSE
-               IF (WRITE_F06) WRITE(F06,1402) FILL(1: 1), FILL(1: 1)
-            ENDIF
-
-         ELSE IF  (TYPE == 'ROD     ') THEN
-            IF (WRITE_F06) WRITE(F06,1501) FILL(1: 1), FILL(1: 1)
-
-         ELSE IF (TYPE(1:5) == 'SHEAR') THEN
-               IF (WRITE_F06) WRITE(F06,1601) FILL(1: 1), FILL(1: 1)
-         ELSE IF (TYPE(1:5) == 'TRIA3') THEN
-            IF (STRE_OPT == 'VONMISES') THEN
-               IF (WRITE_F06) WRITE(F06,1701) FILL(1: 1), FILL(1: 1), FILL(1: 1)
-            ELSE
-               IF (WRITE_F06) WRITE(F06,1702) FILL(1: 1), FILL(1: 1)
-            ENDIF
-
-         ELSE IF  (TYPE == 'BUSH    ') THEN
-            IF (WRITE_F06) WRITE(F06,1801) FILL(1: 1), FILL(1: 1)
-
-         ELSE IF  (TYPE == 'USERIN  ') THEN
-            IF (WRITE_F06) WRITE(F06,1901) FILL(1: 1), FILL(1: 1)
-         ENDIF
 
       ENDIF
 
@@ -474,12 +483,10 @@
 
          CALL GET_MAX_MIN_ABS_STR ( NUM, NCOLS, 'N', MAX_ANS, MIN_ANS, ABS_ANS )
 
-         IF (STRE_OPT == 'VONMISES') THEN
-            IF (WRITE_F06) THEN
+         IF (WRITE_F06) THEN
+            IF (STRE_OPT == 'VONMISES') THEN
                WRITE(F06,1304) (MAX_ANS(J),J=1,7), (MIN_ANS(J),J=1,7), (ABS_ANS(J),J=1,7)
-            ENDIF
-         ELSE
-            IF (WRITE_F06) THEN
+            ELSE
                WRITE(F06,1305) (MAX_ANS(J),J=1,8), (MIN_ANS(J),J=1,8), (ABS_ANS(J),J=1,8)
             ENDIF
          ENDIF
@@ -666,14 +673,18 @@
              WRITE(OP2) (EID_OUT_ARRAY(I,1)*10+DEVICE_CODE,(REAL(OGEL(I,J),4),J=1,6), I=1,NUM)
          ENDIF
 
-         DO I=1,NUM
-            IF (WRITE_F06) WRITE(F06,1802) EID_OUT_ARRAY(I,1), (OGEL(I,J),J=1,6)
-         ENDDO
+         IF (WRITE_F06) THEN
+            DO I=1,NUM
+               WRITE(F06,1802) EID_OUT_ARRAY(I,1), (OGEL(I,J),J=1,6)
+            ENDDO
+         ENDIF
 
       ELSE IF (TYPE == 'USERIN  ') THEN
-         DO I=1,NUM
-            IF (WRITE_F06) WRITE(F06,1902) EID_OUT_ARRAY(I,1), (OGEL(I,J),J=1,6)
-         ENDDO
+         IF (WRITE_F06) THEN
+            DO I=1,NUM
+               WRITE(F06,1902) EID_OUT_ARRAY(I,1), (OGEL(I,J),J=1,6)
+            ENDDO
+         ENDIF
 
       ELSE
          WRITE(ERR,9300) SUBR_NAME,TYPE

@@ -223,91 +223,89 @@
              IF (LABEL(INT_SC_NUM)(1:)  /= ' ') THEN
                 WRITE(F06,201) LABEL(INT_SC_NUM)
              ENDIF
-         ENDIF
-         IF (WRITE_F06) WRITE(F06,*)
+             WRITE(F06,*)
 
-         ! -- F06 1st 2 header lines for strain output description
-         IF (.TRUE.) THEN  ! f06/print
+            ! -- F06 1st 2 header lines for strain output description
             IF (TYPE(1:4) == 'ELAS') THEN
                 IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
-                   IF (WRITE_F06) WRITE(F06,302) FILL(1: 20)
+                   WRITE(F06,302) FILL(1: 20)
                 ELSE
-                   IF (WRITE_F06) WRITE(F06,301) FILL(1: 11)
+                   WRITE(F06,301) FILL(1: 11)
                 ENDIF
-                IF (WRITE_F06) WRITE(F06,401) FILL(1: 40), ONAME
+                WRITE(F06,401) FILL(1: 40), ONAME
 
             ELSE IF ((TYPE(1:4) == 'HEXA') .OR. (TYPE(1:5) == 'PENTA') .OR. (TYPE(1:5) == 'TETRA')) THEN
                IF (STRN_OPT == 'VONMISES') THEN
                   IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
                      IF(STR_CID == -2) THEN
-                        IF (WRITE_F06) WRITE(F06,312) FILL(1: 20)
+                        WRITE(F06,312) FILL(1: 20)
                      ELSE
-                        IF (WRITE_F06) WRITE(F06,302) FILL(1: 15)
-                     ENDIF
-                   ELSE
-                     IF(STR_CID == -2) THEN
-                        IF (WRITE_F06) WRITE(F06,311) FILL(1: 32)
-                     ELSE
-                        IF (WRITE_F06) WRITE(F06,301) FILL(1: 27)
-                     ENDIF
-                   ENDIF
-                   IF (WRITE_F06) WRITE(F06,401) FILL(1: 55), ONAME
-               ELSE
-                  IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
-                     IF(STR_CID == -2) THEN
-                        IF (WRITE_F06) WRITE(F06,312) FILL(1: 27)
-                     ELSE
-                        IF (WRITE_F06) WRITE(F06,302) FILL(1: 22)
+                        WRITE(F06,302) FILL(1: 15)
                      ENDIF
                   ELSE
                      IF(STR_CID == -2) THEN
-                        IF (WRITE_F06) WRITE(F06,311) FILL(1: 38)
+                        WRITE(F06,311) FILL(1: 32)
                      ELSE
-                        IF (WRITE_F06) WRITE(F06,301) FILL(1: 33)
+                        WRITE(F06,301) FILL(1: 27)
                      ENDIF
                   ENDIF
-                  IF (WRITE_F06) WRITE(F06,401) FILL(1: 61), ONAME
-                ENDIF
+                  WRITE(F06,401) FILL(1: 55), ONAME
+               ELSE
+                  IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
+                     IF(STR_CID == -2) THEN
+                        WRITE(F06,312) FILL(1: 27)
+                     ELSE
+                        WRITE(F06,302) FILL(1: 22)
+                     ENDIF
+                  ELSE
+                     IF(STR_CID == -2) THEN
+                        WRITE(F06,311) FILL(1: 38)
+                     ELSE
+                        WRITE(F06,301) FILL(1: 33)
+                     ENDIF
+                  ENDIF
+                  WRITE(F06,401) FILL(1: 61), ONAME
+               ENDIF
 
             ELSE IF ((TYPE(1:5) == 'QUAD4') .OR. (TYPE(1:5) == 'QUAD8')) THEN
-                IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
-                   IF (WRITE_F06) WRITE(F06,302) FILL(1: 20)
-                ELSE
-                   IF (WRITE_F06) WRITE(F06,301) FILL(1: 42)
-                ENDIF
-                IF (WRITE_F06) WRITE(F06,401) FILL(1: 71), ONAME
+               IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
+                  WRITE(F06,302) FILL(1: 20)
+               ELSE
+                  WRITE(F06,301) FILL(1: 42)
+               ENDIF
+               WRITE(F06,401) FILL(1: 71), ONAME
 
             ELSE IF (TYPE(1:3) == 'ROD') THEN
-                IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
-                   IF (WRITE_F06) WRITE(F06,302) FILL(1: 20)
-                ELSE
-                   IF (WRITE_F06) WRITE(F06,301) FILL(1: 13)
-                ENDIF
-                IF (WRITE_F06) WRITE(F06,401) FILL(1: 42), ONAME
+               IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
+                  WRITE(F06,302) FILL(1: 20)
+               ELSE
+                  WRITE(F06,301) FILL(1: 13)
+               ENDIF
+               WRITE(F06,401) FILL(1: 42), ONAME
 
             ELSE IF (TYPE(1:5) == 'SHEAR') THEN
-                IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
-                   IF (WRITE_F06) WRITE(F06,302) FILL(1: 20)
-                ELSE
-                   IF (WRITE_F06) WRITE(F06,301) FILL(1: 13)
-                ENDIF
-                IF (WRITE_F06) WRITE(F06,401) FILL(1: 42), ONAME
+               IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
+                  WRITE(F06,302) FILL(1: 20)
+               ELSE
+                  WRITE(F06,301) FILL(1: 13)
+               ENDIF
+               WRITE(F06,401) FILL(1: 42), ONAME
 
             ELSE IF (TYPE(1:5) == 'TRIA3') THEN
-                IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
-                   IF (WRITE_F06) WRITE(F06,302) FILL(1: 20)
-                ELSE
-                   IF (WRITE_F06) WRITE(F06,301) FILL(1: 36)
-                ENDIF
-                IF (WRITE_F06) WRITE(F06,401) FILL(1: 65), ONAME
+               IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
+                  WRITE(F06,302) FILL(1: 20)
+               ELSE
+                  WRITE(F06,301) FILL(1: 36)
+               ENDIF
+               WRITE(F06,401) FILL(1: 65), ONAME
 
             ELSE IF (TYPE(1:4) == 'BUSH') THEN
-                IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
-                   IF (WRITE_F06) WRITE(F06,302) FILL(1:  0)
-                ELSE
-                   IF (WRITE_F06) WRITE(F06,301) FILL(1: 10)
-                ENDIF
-                IF (WRITE_F06) WRITE(F06,401) FILL(1: 39), ONAME
+               IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
+                  WRITE(F06,302) FILL(1:  0)
+               ELSE
+                  WRITE(F06,301) FILL(1: 10)
+               ENDIF
+               WRITE(F06,401) FILL(1: 39), ONAME
             ELSE
                WRITE(ERR,9300) SUBR_NAME,TYPE
                WRITE(F06,9300) SUBR_NAME,TYPE
@@ -316,48 +314,49 @@
             ENDIF  ! element types - header
 
              ! -- F06 header lines describing strain columns
-             IF (TYPE(1:4) == 'ELAS') THEN
-                IF (WRITE_F06) WRITE(F06,1201) FILL(1:1), FILL(1:1)
+            IF (TYPE(1:4) == 'ELAS') THEN
+               WRITE(F06,1201) FILL(1:1), FILL(1:1)
+            ELSE IF((TYPE(1:4) == 'HEXA') .OR. (TYPE(1:5) == 'PENTA') .OR. (TYPE(1:5) == 'TETRA')) THEN
+               IF (STRN_OPT == 'VONMISES') THEN
+                  WRITE(F06,1301) FILL(1: 1), FILL(1: 1)
+               ELSE
+                  WRITE(F06,1302) FILL(1: 1), FILL(1: 1)
+               ENDIF
+            ELSE IF ((TYPE(1:5) == 'QUAD4') .OR. (TYPE(1:5) == 'QUAD8')) THEN
+               IF (STRN_OPT == 'VONMISES') THEN
+                  WRITE(F06,1401) FILL(1: 1), FILL(1: 1), FILL(1: 1)
+               ELSE
+                  WRITE(F06,1402) FILL(1: 1), FILL(1: 1)
+               ENDIF
 
-             ELSE IF((TYPE(1:4) == 'HEXA') .OR. (TYPE(1:5) == 'PENTA') .OR. (TYPE(1:5) == 'TETRA')) THEN
-                IF (STRN_OPT == 'VONMISES') THEN
-                   IF (WRITE_F06) WRITE(F06,1301) FILL(1: 1), FILL(1: 1)
-                ELSE
-                   IF (WRITE_F06) WRITE(F06,1302) FILL(1: 1), FILL(1: 1)
-                ENDIF
+            ELSE IF  (TYPE == 'ROD     ') THEN
+               WRITE(F06,1501) FILL(1: 1), FILL(1: 1)
 
-             ELSE IF ((TYPE(1:5) == 'QUAD4') .OR. (TYPE(1:5) == 'QUAD8')) THEN
-                IF (STRN_OPT == 'VONMISES') THEN
-                   IF (WRITE_F06) WRITE(F06,1401) FILL(1: 1), FILL(1: 1), FILL(1: 1)
-                ELSE
-                   IF (WRITE_F06) WRITE(F06,1402) FILL(1: 1), FILL(1: 1)
+            ELSE IF (TYPE(1:5) == 'SHEAR') THEN
+               WRITE(F06,1601) FILL(1: 1), FILL(1: 1)
+            ELSE IF (TYPE(1:5) == 'TRIA3') THEN
+               IF (STRN_OPT == 'VONMISES') THEN
+                  WRITE(F06,1701) FILL(1: 1), FILL(1: 1), FILL(1: 1)
+               ELSE
+                  WRITE(F06,1702) FILL(1: 1), FILL(1: 1)
+               ENDIF
+
+            ELSE IF  (TYPE == 'BUSH    ') THEN
+               WRITE(F06,1801) FILL(1:  1), FILL(1:  1)
+
+            ELSE IF  (TYPE == 'USERIN  ') THEN
+               WRITE(F06,1901) FILL(1:  1), FILL(1:  1)
+            ELSE
+               WRITE(ERR,9300) SUBR_NAME,TYPE
+               WRITE(F06,9300) SUBR_NAME,TYPE
+               FATAL_ERR = FATAL_ERR + 1
+               CALL OUTA_HERE ( 'Y' )     ! Coding error (elem type not valid) , so quit
             ENDIF
 
-             ELSE IF  (TYPE == 'ROD     ') THEN
-                IF (WRITE_F06) WRITE(F06,1501) FILL(1: 1), FILL(1: 1)
 
-             ELSE IF (TYPE(1:5) == 'SHEAR') THEN
-                   IF (WRITE_F06) WRITE(F06,1601) FILL(1: 1), FILL(1: 1)
-             ELSE IF (TYPE(1:5) == 'TRIA3') THEN
-                IF (STRN_OPT == 'VONMISES') THEN
-                   IF (WRITE_F06) WRITE(F06,1701) FILL(1: 1), FILL(1: 1), FILL(1: 1)
-                ELSE
-                   IF (WRITE_F06) WRITE(F06,1702) FILL(1: 1), FILL(1: 1)
-                ENDIF
+         ENDIF ! write f06
 
-             ELSE IF  (TYPE == 'BUSH    ') THEN
-                IF (WRITE_F06) WRITE(F06,1801) FILL(1:  1), FILL(1:  1)
-
-             ELSE IF  (TYPE == 'USERIN  ') THEN
-                WRITE(F06,1901) FILL(1:  1), FILL(1:  1)
-             ELSE
-                WRITE(ERR,9300) SUBR_NAME,TYPE
-                WRITE(F06,9300) SUBR_NAME,TYPE
-                FATAL_ERR = FATAL_ERR + 1
-                CALL OUTA_HERE ( 'Y' )     ! Coding error (elem type not valid) , so quit
-             ENDIF
-         ENDIF
-      ENDIF  ! write f06
+      ENDIF    
 
       ! Write the element strain output
       !IF      (TYPE == 'BAR     ') THEN
@@ -532,92 +531,94 @@
          ENDIF  ! write op2
 
          !IF(WRITE_F06) THEN
-             K = 0
-             DO I=1,NUM,NUM_PTS
- 4              FORMAT(' *DEBUG:  WRITE_CQUAD4-144:  I=',I4, " K=", I4)
-                K = K + 1
-                WRITE(ERR,4) I,K
-            WRITE(F06,*)
-            WRITE(F06,1403) FILL(1: 0), EID_OUT_ARRAY(I,1),(OGEL(K,J),J=1,10)
-
-                K = K + 1
-                WRITE(F06,1404) FILL(1: 0), (OGEL(K,J),J=1,8)
-
-                DO L=1,NUM_PTS-1
-                   K = K + 1
-                   WRITE(ERR,4) I,K
-
+            K = 0
+            DO I=1,NUM,NUM_PTS
+ 4             FORMAT(' *DEBUG:  WRITE_CQUAD4-144:  I=',I4, " K=", I4)
+               K = K + 1
+               WRITE(ERR,4) I,K
                WRITE(F06,*)
-               IF (DABS(POLY_FIT_ERR(I+L)) >= 0.01D0) THEN
-                  WRITE(F06,1405) FILL(1: 0), GID_OUT_ARRAY(I,L+1),(OGEL(K,J),J=1,10), POLY_FIT_ERR(I+L), POLY_FIT_ERR_INDEX(I+L)
-                  WRT_ERR_INDEX_NOTE(POLY_FIT_ERR_INDEX(I+L)) = 'Y'
-               ELSE
-                  WRITE(F06,1406) FILL(1: 0), GID_OUT_ARRAY(I,L+1),(OGEL(K,J),J=1,10), POLY_FIT_ERR(I+L)
+               WRITE(F06,1403) FILL(1: 0), EID_OUT_ARRAY(I,1),(OGEL(K,J),J=1,10)
+
+               K = K + 1
+               WRITE(F06,1404) FILL(1: 0), (OGEL(K,J),J=1,8)
+
+               DO L=1,NUM_PTS-1
+                  K = K + 1
+                  WRITE(ERR,4) I,K
+
+                  WRITE(F06,*)
+                  IF (DABS(POLY_FIT_ERR(I+L)) >= 0.01D0) THEN
+                     WRITE(F06,1405) FILL(1: 0), GID_OUT_ARRAY(I,L+1),(OGEL(K,J),J=1,10), POLY_FIT_ERR(I+L), POLY_FIT_ERR_INDEX(I+L)
+                     WRT_ERR_INDEX_NOTE(POLY_FIT_ERR_INDEX(I+L)) = 'Y'
+                  ELSE
+                     WRITE(F06,1406) FILL(1: 0), GID_OUT_ARRAY(I,L+1),(OGEL(K,J),J=1,10), POLY_FIT_ERR(I+L)
+                  ENDIF
+
+                  K = K + 1
+                  WRITE(F06,1407) FILL(1: 0), (OGEL(K,J),J=1,8)
+               ENDDO
+            ENDDO  ! num_pts
+
+            CALL GET_MAX_MIN_ABS_STR ( NUM, 10, 'Y', MAX_ANS, MIN_ANS, ABS_ANS )
+
+            ! Get max POLY_FIT_ERR
+            MAX_ANS(11) = ZERO
+            K = 0
+            DO I=1,NUM
+               K = K + 1
+               IF (POLY_FIT_ERR(I) > MAX_ANS(11)) THEN
+                  MAX_ANS(11) = POLY_FIT_ERR(I)
                ENDIF
+               K = K + 1
+            ENDDO
+            MIN_ANS(11) = MAX_ANS(11)
 
-                   K = K + 1
-               WRITE(F06,1407) FILL(1: 0), (OGEL(K,J),J=1,8)
-                ENDDO
-             ENDDO  ! num_pts
+            ! Get min POLY_FIT_ERR
+            K = 0
+            DO I=1,NUM
+               K = K + 1
+               IF (POLY_FIT_ERR(I) < MIN_ANS(11)) THEN
+                  MIN_ANS(11) = POLY_FIT_ERR(I)
+               ENDIF
+               K = K + 1
+            ENDDO
 
-             CALL GET_MAX_MIN_ABS_STR ( NUM, 10, 'Y', MAX_ANS, MIN_ANS, ABS_ANS )
+            ! Get abs POLY_FIT_ERR
+            ABS_ANS(11) = MAX( DABS(MAX_ANS(11)), DABS(MIN_ANS(11)) )
 
-             ! Get max POLY_FIT_ERR
-             MAX_ANS(11) = ZERO
-             K = 0
-             DO I=1,NUM
-                K = K + 1
-                IF (POLY_FIT_ERR(I) > MAX_ANS(11)) THEN
-                   MAX_ANS(11) = POLY_FIT_ERR(I)
-                ENDIF
-                K = K + 1
-             ENDDO
-             MIN_ANS(11) = MAX_ANS(11)
-
-             ! Get min POLY_FIT_ERR
-             K = 0
-             DO I=1,NUM
-                K = K + 1
-                IF (POLY_FIT_ERR(I) < MIN_ANS(11)) THEN
-                   MIN_ANS(11) = POLY_FIT_ERR(I)
-                ENDIF
-                K = K + 1
-             ENDDO
-
-             ! Get abs POLY_FIT_ERR
-             ABS_ANS(11) = MAX( DABS(MAX_ANS(11)), DABS(MIN_ANS(11)) )
-
-               IF ((STRN_LOC == 'CORNER  ') .OR. (TYPE(1:5) == 'QUAD8')) THEN
-                WRITE(F06,1408) FILL(1: 0), FILL(1: 0), MAX_ANS(2),MAX_ANS(3),MAX_ANS(4),MAX_ANS(6),MAX_ANS(7),MAX_ANS(8), &
+            IF ((STRN_LOC == 'CORNER  ') .OR. (TYPE(1:5) == 'QUAD8')) THEN
+               WRITE(F06,1408) FILL(1: 0), FILL(1: 0), MAX_ANS(2),MAX_ANS(3),MAX_ANS(4),MAX_ANS(6),MAX_ANS(7),MAX_ANS(8), &
                                             MAX_ANS(9), MAX_ANS(10),MAX_ANS(11),                                           &
                                             FILL(1: 0), MIN_ANS(2),MIN_ANS(3),MIN_ANS(4),MIN_ANS(6),MIN_ANS(7),MIN_ANS(8), &
                                                         MIN_ANS(9),MIN_ANS(10),MIN_ANS(11),                                &
                                             FILL(1: 0), ABS_ANS(2),ABS_ANS(3),ABS_ANS(4),ABS_ANS(6),ABS_ANS(7),ABS_ANS(8), &
                                                         ABS_ANS(9),ABS_ANS(10),ABS_ANS(11), FILL(1: 0)
-               ELSE
-                WRITE(F06,1408) FILL(1: 0), FILL(1: 0), MAX_ANS(2),MAX_ANS(3),MAX_ANS(4),MAX_ANS(6),MAX_ANS(7),MAX_ANS(8), &
+            ELSE
+               WRITE(F06,1408) FILL(1: 0), FILL(1: 0), MAX_ANS(2),MAX_ANS(3),MAX_ANS(4),MAX_ANS(6),MAX_ANS(7),MAX_ANS(8), &
                                                         MAX_ANS(9),MAX_ANS(10),MAX_ANS(11),                                &
                                             FILL(1: 0), MIN_ANS(2),MIN_ANS(3),MIN_ANS(4),MIN_ANS(6),MIN_ANS(7),MIN_ANS(8), &
                                                         MIN_ANS(9),MIN_ANS(10),MIN_ANS(11),                                &
                                             FILL(1: 0), ABS_ANS(2),ABS_ANS(3),ABS_ANS(4),ABS_ANS(6),ABS_ANS(7),ABS_ANS(8), &
                                                         ABS_ANS(9),ABS_ANS(10),ABS_ANS(11), FILL(1: 0)
+            ENDIF
+
+            WRITE_NOTES = 'N'
+            DO I=1,MAX_NUM_STR
+               IF (WRT_ERR_INDEX_NOTE(I) == 'Y') THEN
+                  WRITE_NOTES = 'Y'
                ENDIF
+            ENDDO
 
-             WRITE_NOTES = 'N'
-             DO I=1,MAX_NUM_STR
-                IF (WRT_ERR_INDEX_NOTE(I) == 'Y') THEN
-                   WRITE_NOTES = 'Y'
-                ENDIF
-             ENDDO
+            IF (WRITE_NOTES == 'Y') THEN
+               WRITE(F06,1498)
+               DO I=1,MAX_NUM_STR
+                  IF (WRT_ERR_INDEX_NOTE(I) == 'Y') THEN
+                     WRITE(F06,1499) ERR_INDEX_NOTE(I)
+                  ENDIF
+               ENDDO
+            ENDIF
 
-         IF (WRITE_NOTES == 'Y') THEN
-                WRITE(F06,1498)
-                DO I=1,MAX_NUM_STR
-                   IF (WRT_ERR_INDEX_NOTE(I) == 'Y') THEN
-                      WRITE(F06,1499) ERR_INDEX_NOTE(I)
-                   ENDIF
-                ENDDO
-         ENDIF
+
 
       ELSE IF (TYPE == 'ROD     ') THEN
          CALL WRITE_ROD (ISUBCASE, NUM, FILL(1:1), FILL(1:16), ITABLE, TITLEI, STITLEI, LABELI, &
