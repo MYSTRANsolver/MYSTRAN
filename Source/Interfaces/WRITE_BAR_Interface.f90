@@ -30,7 +30,7 @@
 
       SUBROUTINE WRITE_BAR (NUM, FILL_F06, FILL_ANS, ISUBCASE, ITABLE,  &
                             TITLE, SUBTITLE, LABEL,           &
-                            FIELD5_INT_MODE, FIELD6_EIGENVALUE )
+                            FIELD5_INT_MODE, FIELD6_EIGENVALUE, WRITE_F06 )
 
  
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
@@ -57,7 +57,8 @@
       CHARACTER(LEN=128), INTENT(IN)  :: LABEL             ! the subcase LABEL
       INTEGER(LONG), INTENT(IN)       :: FIELD5_INT_MODE
       REAL(DOUBLE),  INTENT(IN)       :: FIELD6_EIGENVALUE
- 
+      LOGICAL,       INTENT(IN)       :: WRITE_F06
+
       END SUBROUTINE WRITE_BAR
 
    END INTERFACE

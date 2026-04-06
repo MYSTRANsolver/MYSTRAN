@@ -26,7 +26,7 @@
 
       SUBROUTINE WRITE_BAR (NUM, FILL_F06, FILL_ANS, ISUBCASE, ITABLE,  &
                             TITLE, SUBTITLE, LABEL,                     &
-                            FIELD5_INT_MODE, FIELD6_EIGENVALUE )
+                            FIELD5_INT_MODE, FIELD6_EIGENVALUE, WRITE_F06 )
 
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
       USE IOUNT1, ONLY                :  WRT_ERR, WRT_LOG, ANS, ERR, F04, F06, OP2
@@ -52,6 +52,7 @@
       CHARACTER(LEN=128), INTENT(IN)  :: LABEL             ! the subcase LABEL
       INTEGER(LONG), INTENT(IN)       :: FIELD5_INT_MODE
       REAL(DOUBLE),  INTENT(IN)       :: FIELD6_EIGENVALUE
+      LOGICAL,       INTENT(IN)       :: WRITE_F06
 
       CHARACTER(133*BYTE)             :: BLINE1A           ! Result of concatenating char. variables BOUT1, BMS1, BMSF1, BTOR to
 !                                                            make the 1st line of stress output for a CBAR with torsional stress
@@ -190,13 +191,13 @@
          ENDIF
 
          ! Write the two lines of stress output for one element to F06
-         WRITE(F06,*)
+         IF (WRITE_F06) WRITE(F06,*)
          IF (PRTANS == 'Y') WRITE(ANS,*)
          IF (BARTOR == 'Y') THEN
             BLINE1A = BOUT1//BMS1//BMSF1//BTOR
             BLINE2A = BOUT2//BMS2//BMSF2//BMS3//BMSF3
-            WRITE(F06,9031) BLINE1A
-            WRITE(F06,9031) BLINE2A
+            IF (WRITE_F06) WRITE(F06,9031) BLINE1A
+            IF (WRITE_F06) WRITE(F06,9031) BLINE2A
             IF (PRTANS == 'Y') THEN
                WRITE(ANS,9901) FILL_ANS, EID_OUT_ARRAY(I,1), (OGEL(K-1,J),J=1,9)
                WRITE(ANS,9902) FILL_ANS, (OGEL(K,J),J=1,9)
@@ -204,8 +205,8 @@
          ELSE
             BLINE1B = BOUT1//BMS1//BMSF1
             BLINE2B = BOUT2//BMS2//BMSF2
-            WRITE(F06,9031) BLINE1B
-            WRITE(F06,9031) BLINE2B
+            IF (WRITE_F06) WRITE(F06,9031) BLINE1B
+            IF (WRITE_F06) WRITE(F06,9031) BLINE2B
             IF (PRTANS == 'Y') THEN
                WRITE(ANS,9903) FILL_ANS, EID_OUT_ARRAY(I,1), (OGEL(K-1,J),J=1,8)
                WRITE(ANS,9904) FILL_ANS, (OGEL(K,J),J=1,8)
@@ -218,9 +219,11 @@
       ENDDO
 
       CALL GET_MAX_MIN_ABS ( 1, 8 )
-      WRITE(F06,9108) (MAX_ANS_CHAR(J),J=1,7), MAX_ANS(8), (MAX_ANS_CHAR(J),J=9,15), MAX_ANS(16),                                  &
-                      (MIN_ANS_CHAR(J),J=1,7), MIN_ANS(8), (MIN_ANS_CHAR(J),J=9,15), MIN_ANS(16),                                  &
-                      (ABS_ANS_CHAR(J),J=1,7), ABS_ANS(8), (ABS_ANS_CHAR(J),J=9,15), ABS_ANS(16)
+      IF (WRITE_F06) THEN
+         WRITE(F06,9108) (MAX_ANS_CHAR(J),J=1,7), MAX_ANS(8), (MAX_ANS_CHAR(J),J=9,15), MAX_ANS(16),                               &
+                         (MIN_ANS_CHAR(J),J=1,7), MIN_ANS(8), (MIN_ANS_CHAR(J),J=9,15), MIN_ANS(16),                               &
+                         (ABS_ANS_CHAR(J),J=1,7), ABS_ANS(8), (ABS_ANS_CHAR(J),J=9,15), ABS_ANS(16)
+      ENDIF
       IF (PRTANS == 'Y') THEN
          WRITE(ANS,9118) (MAX_ANS(J),J=1,16),(MIN_ANS(J),J=1,16), (ABS_ANS(J),J=1,16)
       ENDIF
