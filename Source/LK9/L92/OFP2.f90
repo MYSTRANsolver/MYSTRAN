@@ -60,7 +60,7 @@
 
       IMPLICIT NONE
 
-      LOGICAL                         :: WRITE_F06, WRITE_OP2, WRITE_PCH, WRITE_ANS   ! flag
+      LOGICAL                         :: WRITE_F06, WRITE_OP2, WRITE_PCH   ! flag
       CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: SUBR_NAME = 'OFP2'
       CHARACTER(LEN=*) , INTENT(IN)   :: WHAT              ! Indicator of whether to process output requests for SPC or MPC forces
       CHARACTER(LEN=*) , INTENT(IN)   :: ZERO_GEN_STIFF    ! Indicator of whether there are zero gen stiffs (can't calc MEFFMASS)

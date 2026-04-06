@@ -29,12 +29,11 @@
 ! Writes blocks of element ply strains for one subcase one element type for elements with PCOMP properties.
  
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
-      USE IOUNT1, ONLY                :  WRT_ERR, WRT_LOG, ANS, ERR, F04, F06, OP2
+      USE IOUNT1, ONLY                :  WRT_ERR, WRT_LOG, ERR, F04, F06, OP2
       USE SCONTR, ONLY                :  BLNK_SUB_NAM, FATAL_ERR, BARTOR, INT_SC_NUM, LPCOMP_PLIES, NDOFR, NUM_CB_DOFS,            &
                                          NVEC, SOL_NAME
       USE TIMDAT, ONLY                :  TSEC
       USE CONSTANTS_1, ONLY           :  ZERO
-      USE PARAMS, ONLY                :  PRTANS
       USE DEBUG_PARAMETERS, ONLY      :  DEBUG
       USE NONLINEAR_PARAMS, ONLY      :  LOAD_ISTEP
       USE SUBR_BEGEND_LEVELS, ONLY    :  WRITE_PLY_STRAINS_BEGEND
@@ -216,65 +215,6 @@
                WRITE(F06,1404) FILL(1: 0), ONAME, FILL(1: 0), FILL(1: 0)
             ENDIF
          ENDIF
-
-         IF (PRTANS == 'Y') THEN
-            WRITE(ANS,*)
-            WRITE(ANS,*)
-            IF    ((SOL_NAME(1:7) == 'STATICS') .OR. (SOL_NAME(1:8) == 'NLSTATIC')) THEN
-               WRITE(ANS,101) SCNUM(JSUB)
-
-            ELSE IF ((SOL_NAME(1:8) == 'BUCKLING') .AND. (LOAD_ISTEP == 1)) THEN
-               WRITE(ANS,101) SCNUM(JSUB)
-
-            ELSE IF ((SOL_NAME(1:8) == 'BUCKLING') .AND. (LOAD_ISTEP == 2)) THEN
-               WRITE(ANS,102) JSUB
-
-            ELSE IF (SOL_NAME(1:5) == 'MODES') THEN
-               WRITE(ANS,102) JSUB
-
-            ELSE IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN   ! Write info on what CB DOF the output is for
-
-               IF ((JSUB <= NDOFR) .OR. (JSUB >= NDOFR+NVEC)) THEN 
-                  IF (JSUB <= NDOFR) THEN
-                     BDY_DOF_NUM = JSUB
-                  ELSE
-                     BDY_DOF_NUM = JSUB-(NDOFR+NVEC)
-                  ENDIF
-                  CALL GET_GRID_AND_COMP ( 'R ', BDY_DOF_NUM, BDY_GRID, BDY_COMP  )
-               ENDIF
-
-               IF       (JSUB <= NDOFR) THEN
-                  WRITE(ANS,103) JSUB, NUM_CB_DOFS, 'acceleration', BDY_GRID, BDY_COMP
-               ELSE IF ((JSUB > NDOFR) .AND. (JSUB <= NDOFR+NVEC)) THEN
-                  WRITE(ANS,104) JSUB, NUM_CB_DOFS, JSUB-NDOFR
-               ELSE
-                  WRITE(ANS,103) JSUB, NUM_CB_DOFS, 'displacement', BDY_GRID, BDY_COMP
-               ENDIF
-
-            ENDIF
-
-            WRITE(ANS,*)
-
-            IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
-               WRITE(ANS,302) FILL(1:16)
-            ELSE
-               WRITE(ANS,301) FILL(1:16)
-            ENDIF
-            IF (ANY_FAILURE_THEORY == 'N') THEN
-               IF (STRN_OPT == 'VONMISES') THEN
-                  WRITE(ANS,1401) FILL(1:16), ONAME, FILL(1: 0), FILL(1: 0)
-               ELSE
-                  WRITE(ANS,1402) FILL(1:16), ONAME, FILL(1: 0), FILL(1: 0)
-               ENDIF
-            ELSE
-               IF (STRN_OPT == 'VONMISES') THEN
-                  WRITE(ANS,1403) FILL(1:16), ONAME, FILL(1: 0), FILL(1: 0)
-               ELSE
-                  WRITE(ANS,1404) FILL(1:16), ONAME, FILL(1: 0), FILL(1: 0)
-               ENDIF
-            ENDIF
-
-         ENDIF
  
       ENDIF
  
@@ -338,13 +278,6 @@
                WRITE(F06,1408) FILL(1: 0), EID_OUT_ARRAY(I,2), (OGEL(I,J),J=1,9)
             ENDIF
          ENDIF
-         IF (PRTANS == 'Y') THEN
-            IF (ANY_FAILURE_THEORY == 'Y') THEN
-               WRITE(ANS,1416) EID_OUT_ARRAY(I,1), EID_OUT_ARRAY(I,2), (OGEL(I,J),J=1,9)
-            ELSE
-               WRITE(ANS,1416) EID_OUT_ARRAY(I,1), EID_OUT_ARRAY(I,2), (OGEL(I,J),J=1,9)
-            ENDIF
-         ENDIF
 
       ENDDO
 
@@ -380,9 +313,6 @@
                       FILL(1: 0)            , (MIN_ANS(I),I=1,10),                                                                 &
                       FILL(1: 0)            , (ABS_ANS(I),I=1,10), FILL(1: 0)
 
-      IF (PRTANS == 'Y') THEN
-         WRITE(ANS,1419) (MAX_ANS(I),I=1,10), (MIN_ANS(I),I=1,10), (ABS_ANS(I),I=1,10)
-      ENDIF
 
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN

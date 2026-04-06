@@ -28,12 +28,12 @@
  
       ! Writes output for modal effective mass
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
-      USE IOUNT1, ONLY                :  WRT_ERR, WRT_LOG, ANS, ERR, F04, F06
+      USE IOUNT1, ONLY                :  WRT_ERR, WRT_LOG, ERR, F04, F06
       USE SCONTR, ONLY                :  BLNK_SUB_NAM, NVEC
       USE TIMDAT, ONLY                :  TSEC
       USE SUBR_BEGEND_LEVELS, ONLY    :  WRITE_MEFFMASS_BEGEND
       USE CONSTANTS_1, ONLY           :  ZERO, ONE, TWO, ONE_HUNDRED, PI
-      USE PARAMS, ONLY                :  PRTANS, PRTF06, PRTOP2
+      USE PARAMS, ONLY                :  PRTF06, PRTOP2
       USE DEBUG_PARAMETERS, ONLY      :  DEBUG
       USE EIGEN_MATRICES_1, ONLY      :  EIGEN_VAL, MEFFMASS
       USE MODEL_STUF, ONLY            :  MEFM_RB_MASS, LABEL, STITLE, TITLE
@@ -56,7 +56,6 @@
       REAL(DOUBLE)                    :: MODES_PCT(6)      ! Modal mass as % of total mass
       !LOGICAL                        :: WRITE_F06  ! flag
       !LOGICAL                        :: WRITE_OP2  ! flag
-      LOGICAL                         :: WRITE_ANS  ! flag
       LOGICAL                         :: IS_LOW_PRECISION  ! Print MPFACTOR, MEFFMASS values with 2 decimal places of accuracy rather than 6
 
 
@@ -68,7 +67,6 @@
       ENDIF
 
 ! **********************************************************************************************************************************
-      WRITE_ANS = (PRTANS == 'Y')
       IS_LOW_PRECISION = (DEBUG(174) == 0)
       !--------------------------------------------------
 
@@ -105,12 +103,6 @@
          WRITE(F06,9108)
       ENDIF
 
-      IF (WRITE_ANS) THEN
-         WRITE(ANS,*)
-         WRITE(ANS,9202) MEFMCORD
-         WRITE(ANS,9207)
-      ENDIF
-
       DO J=1,6
          MEFM_TOTALS(J) = ZERO
       ENDDO   
@@ -122,10 +114,6 @@
             WRITE(F06,9110) I, CYCLES, (MEFFMASS(I,J)/WTMASS,J=1,6)
          ELSE ! low precision (2 digits)
             WRITE(F06,9111) I, CYCLES, (MEFFMASS(I,J)/WTMASS,J=1,6)
-         ENDIF
-
-         IF (WRITE_ANS) THEN
-            WRITE(ANS,9210) I, CYCLES, (MEFFMASS(I,J)/WTMASS,J=1,6)
          ENDIF
 
          DO J=1,6
@@ -145,12 +133,7 @@
       ELSE
          WRITE(F06,9117) (MEFM_RB_MASS(I,I),I=1,6)
       ENDIF
-
-      IF (WRITE_ANS) THEN
-         WRITE(ANS,9212) (MEFM_TOTALS(J),J=1,6)
-         WRITE(ANS,9216) (MEFM_RB_MASS(I,I),I=1,6)
-      ENDIF
-   
+      
       ! For each of the 6 modal masses, calc % of total mass.
       ! A character variable is used to store the % so that blank percentages can
       ! be printed if zero modal mass exists for a component (T1 - R3) or 

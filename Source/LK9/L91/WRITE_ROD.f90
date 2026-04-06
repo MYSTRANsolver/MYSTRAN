@@ -24,22 +24,21 @@
                                                                                                         
 ! End MIT license text.                                                                                      
  
-      SUBROUTINE WRITE_ROD ( ISUBCASE, NUM, FILL_F06, FILL_ANS, ITABLE, &
+      SUBROUTINE WRITE_ROD ( ISUBCASE, NUM, FILL_F06, ITABLE,           &
                              TITLE, SUBTITLE, LABEL,                    &
                              FIELD5_INT_MODE, FIELD6_EIGENVALUE, WRITE_OP2)
  
-! Routine for writing output to text files F06 and ANS for ROD element stresses. Up to 2 elements written per line of output.
-! Data is first written to character variables and then that character variable is output the F06 and ANS.
+! Routine for writing output to text files F06 for ROD element stresses. Up to 2 elements written per line of output.
+! Data is first written to character variables and then that character variable is output the F06.
  
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
-      USE IOUNT1, ONLY                :  WRT_ERR, WRT_LOG, ANS, ERR, F04, F06
+      USE IOUNT1, ONLY                :  WRT_ERR, WRT_LOG, ERR, F04, F06
       USE SCONTR, ONLY                :  BLNK_SUB_NAM
       USE TIMDAT, ONLY                :  TSEC
       USE SUBR_BEGEND_LEVELS, ONLY    :  WRITE_ROD_BEGEND
       USE CONSTANTS_1, ONLY           :  ZERO
       USE DEBUG_PARAMETERS, ONLY      :  DEBUG
       USE LINK9_STUFF, ONLY           :  EID_OUT_ARRAY, MSPRNT, OGEL
-      USE PARAMS, ONLY                :  PRTANS
       USE WRITE_ROD_USE_IFs
 
       IMPLICIT NONE
@@ -47,7 +46,6 @@
       CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: SUBR_NAME = 'WRITE_ROD'
       INTEGER(LONG), INTENT(IN)       :: ISUBCASE          ! the current subcase
       CHARACTER(LEN=*), INTENT(IN)    :: FILL_F06          ! Padding for output format
-      CHARACTER(LEN=*), INTENT(IN)    :: FILL_ANS          ! Padding for output format
       INTEGER(LONG), INTENT(IN)       :: ITABLE            ! the current op2 subtable, should be -3, -5, ...
       CHARACTER(LEN=128), INTENT(IN) :: TITLE              ! the model TITLE
       CHARACTER(LEN=128), INTENT(IN) :: SUBTITLE           ! the subcase SUBTITLE
@@ -59,8 +57,6 @@
       CHARACTER(  1*BYTE)             :: MSFLAG            ! If margin is negative, MSFLAG is an *
       CHARACTER(118*BYTE)             :: RLINE_F06         ! Result of concatenating char. variables below to make a line of
 !                                                            stress output for 1 or 2 CROD's
-      CHARACTER( 59*BYTE)             :: RLINE_ANS         ! Result of concatenating char. variables below to make a line of
-!                                                            stress output for 1 CROD
 
       CHARACTER(  8*BYTE)             :: REID1             ! Internal file: element ID of 1st CROD
       CHARACTER( 14*BYTE)             :: RSTR11            ! Internal file: axial stress in 1st CROD
@@ -107,7 +103,6 @@
       DO I=1,NUM,2
  
          RLINE_F06(1:)  = ' '
-         RLINE_ANS(1:)  = ' '
 
          REID1(1:)  = ' '
          RSTR11(1:) = ' '
@@ -195,22 +190,11 @@
          RLINE_F06 = REID1//RSTR11//RMS11//RMSF11//RSTR12//RMS12//RMSF12//REID2//RSTR21//RMS21//RMSF21//RSTR22//RMS22//RMSF22
 
          WRITE(F06,2205) FILL_F06, RLINE_F06
-         IF (PRTANS == 'Y') THEN
-            RLINE_ANS = REID1//RSTR11//RMS31//RSTR12//RMS32
-            WRITE(ANS,2205) FILL_ANS, RLINE_ANS
-            IF (I+1 <= NUM) THEN
-               RLINE_ANS = REID2//RSTR21//RMS41//RSTR22//RMS42
-               WRITE(ANS,2205) FILL_ANS, RLINE_ANS
-            ENDIF
-         ENDIF
  
       ENDDO   
  
       CALL GET_MAX_MIN_ABS ( 1, 4 )
       WRITE(F06,9104) (MAX_ANS(J),J=1,4),(MIN_ANS(J),J=1,4),(ABS_ANS(J),J=1,4)
-      IF (PRTANS == 'Y') THEN
-         WRITE(ANS,9114) (MAX_ANS(J),J=1,4),(MIN_ANS(J),J=1,4),(ABS_ANS(J),J=1,4)
-      ENDIF
 
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
@@ -309,7 +293,7 @@
       SUBROUTINE OUTPUT2_WRITE_OES_ROD(ISUBCASE, ELEM_TYPE, NUM, ITABLE, TITLE, SUBTITLE, LABEL, &
                                        FIELD5_INT_MODE, FIELD6_EIGENVALUE, WRITE_OP2)
 !     writes the CROD/CTUBE/CONROD stress/strain results.
-!     Data is first written to character variables and then that character variable is output the F06 and ANS.
+!     Data is first written to character variables and then that character variable is output the F06.
 !     
 !     Parameters
 !     ==========

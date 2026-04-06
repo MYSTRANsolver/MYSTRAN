@@ -28,7 +28,7 @@
  
       ! Writes output for modal participation factors
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
-      USE IOUNT1, ONLY                :  WRT_ERR, WRT_LOG, ANS, F04, F06
+      USE IOUNT1, ONLY                :  WRT_ERR, WRT_LOG, F04, F06
       USE SCONTR, ONLY                :  BLNK_SUB_NAM, NDOFG, NDOFR, NVEC, SOL_NAME
       USE TIMDAT, ONLY                :  TSEC
       USE SUBR_BEGEND_LEVELS, ONLY    :  WRITE_MPFACTOR_BEGEND
@@ -36,7 +36,7 @@
       USE DEBUG_PARAMETERS, ONLY      :  DEBUG
       USE EIGEN_MATRICES_1, ONLY      :  EIGEN_VAL, MPFACTOR_NR, MPFACTOR_N6
       USE MODEL_STUF, ONLY            :  LABEL, STITLE, TITLE
-      USE PARAMS, ONLY                :  GRDPNT, MEFMCORD, MEFMGRID, MEFMLOC, MPFOUT, PRTANS, PRTF06, PRTOP2
+      USE PARAMS, ONLY                :  GRDPNT, MEFMCORD, MEFMGRID, MEFMLOC, MPFOUT, PRTF06, PRTOP2
       USE DOF_TABLES, ONLY            :  TDOFI
   
       USE WRITE_MPFACTOR_USE_IFs
@@ -57,7 +57,6 @@
       REAL(DOUBLE)                    :: CYCLES            ! Circular frequency of a mode
       !LOGICAL                        :: WRITE_F06  ! flag
       !LOGICAL                        :: WRITE_OP2  ! flag
-      LOGICAL                         :: WRITE_ANS  ! flag
       LOGICAL                         :: IS_LOW_PRECISION  ! Print MPFACTOR, MEFFMASS values with 2 decimal places of accuracy rather than 6
 
 ! **********************************************************************************************************************************
@@ -68,7 +67,6 @@
       ENDIF
 
 ! **********************************************************************************************************************************
-      WRITE_ANS = (PRTANS == 'Y')
       IS_LOW_PRECISION = (DEBUG(174) == 0)
       !--------------------------------------------------
 
@@ -96,10 +94,6 @@
       IF ((SOL_NAME(1:12) == 'GEN CB MODEL') .AND. (MPFOUT == 'R')) THEN
 
          WRITE(F06,9004) MEFMCORD
-         IF (WRITE_ANS) THEN
-            WRITE(ANS,*)
-            WRITE(ANS,9014) MEFMCORD
-         ENDIF
 
          IF (IS_LOW_PRECISION) THEN
             WRITE(F06,9101) (I,I=1,NDOFR)
@@ -121,11 +115,6 @@
                WRITE(F06,9302) I, CYCLES, (MPFACTOR_NR(I,J),J=1,NDOFR)
             ENDIF
 
-            IF (WRITE_ANS) THEN
-               ! Only <= 10 will fit in the DIF Excel spreadsheet
-               WRITE(ANS,9311) I, CYCLES, (MPFACTOR_NR(I,J),J=1,10)
-            ENDIF
-
          ENDDO
 
       ELSE
@@ -141,11 +130,6 @@
             WRITE(F06,9008)
          ELSE IF (MEFMLOC == 'GRID  ') THEN
             WRITE(F06,9009) MEFMGRID
-         ENDIF
-
-         IF (WRITE_ANS) THEN
-            WRITE(ANS,*)
-            WRITE(ANS,9015) MEFMCORD
          ENDIF
 
          IF (IS_LOW_PRECISION) THEN
@@ -164,18 +148,11 @@
                WRITE(F06,9504) I, CYCLES, (MPFACTOR_N6(I,J),J=1,6)
             ENDIF
 
-            IF (WRITE_ANS) THEN
-               WRITE(ANS,9513) I, CYCLES, (MPFACTOR_N6(I,J),J=1,6)
-            ENDIF
-
          ENDDO         
 
       ENDIF
 
       WRITE(F06,*)
-      IF (WRITE_ANS) THEN
-         WRITE(ANS,*)
-      ENDIF
 
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN

@@ -29,9 +29,9 @@
 ! Writes blocks of elem nodal force output for one elem type, one subcase. All elements can have node force output
  
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
-      USE IOUNT1, ONLY                :  WRT_ERR, WRT_LOG, ANS, ERR, F04, F06
+      USE IOUNT1, ONLY                :  WRT_ERR, WRT_LOG, ERR, F04, F06
       USE SCONTR, ONLY                :  BLNK_SUB_NAM, INT_SC_NUM, NDOFR, NUM_CB_DOFS, MOGEL, NVEC, SOL_NAME
-      USE PARAMS, ONLY                :  ELFORCEN, PRTANS
+      USE PARAMS, ONLY                :  ELFORCEN
       USE TIMDAT, ONLY                :  TSEC
       USE CONSTANTS_1, ONLY           :  ZERO
       USE DEBUG_PARAMETERS, ONLY      :  DEBUG
@@ -146,52 +146,6 @@
          WRITE(F06,212) ONAME
          WRITE(F06,213)
 
-         IF (PRTANS == 'Y') THEN
-            WRITE(ANS,*)
-            WRITE(ANS,*)
-            IF    ((SOL_NAME(1:7) == 'STATICS') .OR. (SOL_NAME(1:8) == 'NLSTATIC')) THEN
-
-               WRITE(ANS,9101) SCNUM(JSUB)
-
-            ELSE IF (SOL_NAME(1:5) == 'MODES') THEN
-
-               WRITE(ANS,9102) JSUB
-
-            ELSE IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN   ! Write info on what CB DOF the output is for
-
-               IF ((JSUB <= NDOFR) .OR. (JSUB >= NDOFR+NVEC)) THEN 
-                  IF (JSUB <= NDOFR) THEN
-                     BDY_DOF_NUM = JSUB
-                  ELSE
-                     BDY_DOF_NUM = JSUB-(NDOFR+NVEC)
-                  ENDIF
-                  CALL GET_GRID_AND_COMP ( 'R ', BDY_DOF_NUM, BDY_GRID, BDY_COMP  )
-               ENDIF
-
-               IF       (JSUB <= NDOFR) THEN
-                  WRITE(ANS,9103) JSUB, NUM_CB_DOFS, 'acceleration', BDY_GRID, BDY_COMP
-               ELSE IF ((JSUB > NDOFR) .AND. (JSUB <= NDOFR+NVEC)) THEN
-                  WRITE(ANS,9105) JSUB, NUM_CB_DOFS, JSUB-NDOFR
-               ELSE
-                  WRITE(ANS,9103) JSUB, NUM_CB_DOFS, 'displacement', BDY_GRID, BDY_COMP
-               ENDIF
-
-            ENDIF
-
-            WRITE(ANS,*)
-
-            IF      (ELFORCEN == 'LOCAL') THEN
-               FORCE_COORD_SYS = 'L O C A L'
-            ELSE IF (ELFORCEN == 'GLOBAL') THEN
-               FORCE_COORD_SYS = 'G L O B A L'
-            ELSE IF (ELFORCEN == 'BASIC' ) THEN
-               FORCE_COORD_SYS = 'B A S I C  '
-            ENDIF
-            WRITE(ANS,201) FORCE_COORD_SYS
-            WRITE(ANS,212) ONAME
-            WRITE(ANS,213)
-         ENDIF
-
       ENDIF
  
 ! Get MAX, MIN, ABS values
@@ -267,22 +221,13 @@
 
             IF (J == 1) THEN
                WRITE(F06,221) EID_OUT_ARRAY(I,1),GID_OUT_ARRAY(I,J),(OGEL_CHAR(K),K=1,6)
-               IF (PRTANS == 'Y') THEN
-                  WRITE(ANS,291) EID_OUT_ARRAY(I,1),GID_OUT_ARRAY(I,J),(OGEL(L,K),K=1,6)
-               ENDIF
             ELSE
                WRITE(F06,222) GID_OUT_ARRAY(I,J),(OGEL_CHAR(K),K=1,6)        
-               IF (PRTANS == 'Y') THEN
-                  WRITE(ANS,292) GID_OUT_ARRAY(I,J),(OGEL(L,K),K=1,6)        
-               ENDIF
             ENDIF
 
          ENDDO
  
          WRITE(F06,*)
-         IF (PRTANS == 'Y') THEN
-            WRITE(ANS,*)
-         ENDIF
 
       ENDDO 
   
@@ -291,9 +236,6 @@
       ENDDO
 
       WRITE(F06,9111) (MAX_ANS_CHAR(J),J=1,6),(MIN_ANS_CHAR(J),J=1,6),(ABS_ANS_CHAR(J),J=1,6)
-      IF (PRTANS == 'Y') THEN
-         WRITE(ANS,9191) (MAX_ANS(J),J=1,6),(MIN_ANS(J),J=1,6),(ABS_ANS (J),J=1,6)
-      ENDIF
 
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
