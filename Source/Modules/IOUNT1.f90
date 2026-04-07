@@ -55,7 +55,6 @@
 
 ! Following are the variable names for all files (except for units SC1, SCR, which do not have file names) used by Program
 
-      CHARACTER(FILE_NAM_MAXLEN*BYTE) :: ANSFIL                ! (filename.ANS) On ly has answers from LINK9
       CHARACTER(FILE_NAM_MAXLEN*BYTE) :: BUGFIL                ! (filename.BUG) Debug file: ELDATA C.C. request elem debug info
       CHARACTER(FILE_NAM_MAXLEN*BYTE) :: EINFIL                ! (filename.EIN) Eigenvector scale factors (used to change signs)
       CHARACTER(FILE_NAM_MAXLEN*BYTE) :: ENFFIL                ! (filename.ENF) Enforced displs - file for DOF's that are enforced
@@ -143,7 +142,6 @@
 ! are PARAMETER. These are files that the user would not want to be deleted (BUGFIL would want to be kept but only if something
 ! has been written to it
                                         
-      CHARACTER(  8*BYTE)             :: ANSSTAT       = 'DELETE  '  ! close status for file ANSFIL 
       CHARACTER(  8*BYTE)             :: BUGSTAT       = 'DELETE  '  ! close status for file BUGFIL 
       CHARACTER(  8*BYTE)             :: EINSTAT       = 'KEEP    '  ! close status for file EINFIL 
       CHARACTER(  8*BYTE)             :: ENFSTAT       = 'KEEP    '  ! close status for file ENFFIL 
@@ -231,7 +229,6 @@
 
 ! The following are messages that describe what the files are (no message for SC1)
 
-      CHARACTER( 64*BYTE)             :: ANS_MSG       = 'PROBLEM ANSWERS'
       CHARACTER( 64*BYTE)             :: BUG_MSG       = 'ELEMENT DEBUG OUTPUT FILE'
       CHARACTER( 64*BYTE)             :: EIN_MSG       = 'EIGENVEC NUMBERS FOR SIGN CHANGE'
       CHARACTER( 64*BYTE)             :: ENF_MSG       = 'ENFORCED DISPL FOR ALL DOFs FILE'
@@ -331,7 +328,6 @@
 
       INTEGER(LONG)                   :: SC1           =    6 ! Unit no. for screen
 
-      INTEGER(LONG)                   :: ANS           =    1 ! Unit no. for answer file
       INTEGER(LONG)                   :: BUG           =    2 ! Unit no. for debug output file
       INTEGER(LONG)                   :: EIN           = 1001 ! Unit no. for text file w/ eigenvec scale facs (if supplied)
       INTEGER(LONG)                   :: ENF           = 1002 ! Unit no. for text file w/ enforced displ for all grids/comps
@@ -438,9 +434,6 @@
 
 ! Description of files:
 ! ---------------------
-
-! ANSFIL is a formatted file containing only the answers from LINK9. It is only generated if a DEBUG parameter is set and is
-!        used in checkout of MYSTRAN (for comparing answers to the archive answers)
 
 ! BUGFIL is a formatted file containing element data written if ELDATA Case Control requests are made
 

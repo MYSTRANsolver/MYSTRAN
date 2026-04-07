@@ -34,7 +34,7 @@
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
       USE IOUNT1, ONLY                :  FILE_NAM_MAXLEN,  MOT4,    MOU4,    OU4_EXT, OT4_EXT, WRT_LOG
 
-      USE IOUNT1, ONLY                :  ANS,     BUG,     EIN,     ENF,     ERR,     F04,     F06,     IN0,     IN1,     NEU,     &
+      USE IOUNT1, ONLY                :  BUG,     EIN,     ENF,     ERR,     F04,     F06,     IN0,     IN1,     NEU,              &
                                          PCH,     SEQ,     SC1,     SPC,                                                           &
                                          F21,     F22,     F23,     F24,     F25,                                                  &
                                          L1A,     L1B,     L1C,     L1D,     L1E,     L1F,     L1G,     L1H,     L1I,     L1J,     &
@@ -45,7 +45,7 @@
                                          L3A,     L4A,     L4B,     L4C,     L4D,     L5A,     L5B,     OP2,     OT4,     OU4,     &
                                          MAX_FIL
 
-      USE IOUNT1, ONLY                :  ANSFIL,  BUGFIL,  EINFIL,  ENFFIL,  ERRFIL,  F04FIL,  F06FIL,  IN0FIL,  INFILE,  NEUFIL,  &
+      USE IOUNT1, ONLY                :  BUGFIL,  EINFIL,  ENFFIL,  ERRFIL,  F04FIL,  F06FIL,  IN0FIL,  INFILE,  NEUFIL,           &
                                          PCHFIL,  SEQFIL,  SPCFIL,                                                                 &
                                          F21FIL,  F22FIL,  F23FIL,  F24FIL,  F25FIL,                                               &
                                          LINK1A,  LINK1B,  LINK1C,  LINK1D,  LINK1E,  LINK1F,  LINK1G,  LINK1H,  LINK1I,  LINK1J,  &

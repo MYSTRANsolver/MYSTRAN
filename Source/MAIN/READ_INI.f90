@@ -36,7 +36,7 @@
 
       USE IOUNT1, ONLY                :  FILE_NAM_MAXLEN, DEFDIR, INIFIL, SC1, MOU4, WRT_ERR, WRT_LOG
 
-      USE IOUNT1, ONLY                :  ANS,     BUG,     ERR,     F04,     F06,     IN0,     IN1,     INI,     L1A,     NEU,     &
+      USE IOUNT1, ONLY                :  BUG,     ERR,     F04,     F06,     IN0,     IN1,     INI,     L1A,     NEU,              &
                                          SEQ,     SPC,                                                                             &
                                          F21,     F22,     F23,     F24,     F25,                                                  &
                                          L1B,     L1C,     L1D,     L1E,     L1F,     L1G,     L1H,     L1I,     L1J,     L1K,     &
@@ -46,7 +46,7 @@
                                          L2K,     L2L,     L2M,     L2N,     L2O,     L2P,     L2Q,     L2R,     L2S,     L2T,     &
                                          L3A,     L4A,     L4B,     L4C,     L4D,     L5A,     L5B,     OP2,     OU4
 
-      USE IOUNT1, ONLY                :  WRT_BUG, WRT_ERR, WRT_LOG, ANSSTAT, BUGSTAT, ERRSTAT, F04STAT, F06STAT, IN0STAT, IN1STAT, &
+      USE IOUNT1, ONLY                :  WRT_BUG, WRT_ERR, WRT_LOG, BUGSTAT, ERRSTAT, F04STAT, F06STAT, IN0STAT, IN1STAT,          &
                                          L1ASTAT, NEUSTAT, SEQSTAT, SPCSTAT,                                                       &
                                          F21STAT, F22STAT, F23STAT, F24STAT, F25STAT,                                              &
                                          L1BSTAT, L1CSTAT, L1DSTAT, L1ESTAT, L1FSTAT, L1GSTAT, L1HSTAT, L1ISTAT, L1JSTAT, L1KSTAT, &
@@ -225,9 +225,6 @@
                ELSE IF (CARD(1:3) == 'SC1') THEN           ! 01
                   DUMSTAT(1:) = ' '
                   CALL READ_INI_LINE ( 'SC1', SC1, DUMSTAT, WRT_HDR, WRT_CARD, FLD_ERR_MSG )
-
-               ELSE IF (CARD(1:3) == 'ANS') THEN           ! 02 (NOTE: ANSSTAT not allowed to be changed here) 
-                  CALL READ_INI_LINE ( 'ANS', ANS, ANSSTAT, WRT_HDR, WRT_CARD, FLD_ERR_MSG )
 
                ELSE IF (CARD(1:3) == 'BUG') THEN           ! 03 (NOTE: BUGSTAT not allowed to be changed here)
                   CALL READ_INI_LINE ( 'BUG', BUG, BUGSTAT, WRT_HDR, WRT_CARD, FLD_ERR_MSG )

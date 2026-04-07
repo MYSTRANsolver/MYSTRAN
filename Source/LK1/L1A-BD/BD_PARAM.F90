@@ -70,7 +70,7 @@
                                          THRESHK         , THRESHK_LAP     , TINY            ,                                     &
                                          TSTM_DEF        , USR_JCT         , USR_LTERM_KGG   , USR_LTERM_MGG   , WINAMEM         , &
                                          WTMASS          , K6ROT,                                                                  &
-                                         PRTALL          , PRTANS          , PRTF06          , PRTNEU          , PRTOP2          , &
+                                         PRTALL          , PRTF06          , PRTNEU          , PRTOP2          ,                   &
                                          SPIENV6         , SPIENV7         , SPIENV8         , SLU_NTHR
 
       USE BD_PARAM_USE_IFs
@@ -819,16 +819,10 @@
          PARNAM = 'PRTALL  '
          CALL YES_NO_CHECK(CARD, JCARD, CHRPARM, PARNAM, PRTALL)
          IF (PRTALL == 'Y') THEN
-             PRTANS = 'Y'
              PRTF06 = 'Y'
              PRTNEU = 'Y'
              PRTOP2 = 'Y'
          ENDIF
-
-      ! PRTANS writes all outputs for the ans file regardless of other flags besides PRTALL
-      ELSE IF ((PARAM_NAME(1:8) == 'PRTANS  ') .OR. (PARAM_NAME(1:8) == 'ANS     ')) THEN
-         PARNAM = 'PRTANS  '
-         CALL YES_NO_CHECK(CARD, JCARD, CHRPARM, PARNAM, PRTANS)
 
       ! PRTOP2 writes all outputs for the f06 file regardless of other flags besides PRTALL
       ELSE IF ((PARAM_NAME(1:8) == 'PRTF06  ') .OR. (PARAM_NAME(1:8) == 'F06     ')) THEN

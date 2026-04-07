@@ -41,10 +41,10 @@
       USE PENTIUM_II_KIND, ONLY       :  BYTE, SHORT, LONG, SINGLE, DOUBLE, QUAD
 
       USE IOUNT1, ONLY                :  MOU4, SC1, WRT_BUG, WRT_LOG
-      USE IOUNT1, ONLY                :  ANS, BUG, ERR, F06, F21, F22, F23, F24, F25, IN1, L1B, L1C, L1D, L1F, L1G, L1H, L1I, L1K, &
+      USE IOUNT1, ONLY                :  BUG, ERR, F06, F21, F22, F23, F24, F25, IN1, L1B, L1C, L1D, L1F, L1G, L1H, L1I, L1K, &
                                          L1L, L1N, L1O, L1P, L1Q, L1S, L1T, L1U, L1V, L1W, L1X, L1Y, OP2, OU4, SEQ
 
-      USE IOUNT1, ONLY                :  ANSFIL, F04, F21FIL, F22FIL, F23FIL, F24FIL, F25FIL, INFILE, LINK1B, LINK1C, LINK1D,      &
+      USE IOUNT1, ONLY                :  F04, F21FIL, F22FIL, F23FIL, F24FIL, F25FIL, INFILE, LINK1B, LINK1C, LINK1D,              &
                                          LINK1F, LINK1H, LINK1I, LINK1K, LINK1L, LINK1N, LINK1O, LINK1P, LINK1Q, LINK1S, LINK1T,   &
                                          LINK1U, LINK1V, LINK1W, LINK1X, LINK1Y, OP2FIL, OU4FIL, SEQFIL
 
@@ -70,7 +70,7 @@
       USE DOF_TABLES, ONLY            :  TDOFI
       USE PARAMS, ONLY                :  CHKGRDS, EPSIL, EQCHK_OUTPUT, GRDPNT, GRDPNT_IN, GRIDSEQ, MEFMGRID, MEFMLOC, PRTCONN,     &
                                          PRTBASIC, PRTCORD, PRTDOF, PRTTSET, PRTSTIFD, PRTSTIFF, SETLKTK, SETLKTM, SUPINFO,        &
-                                         SUPWARN, WTMASS, PRTANS, PRTF06, PRTOP2
+                                         SUPWARN, WTMASS, PRTF06, PRTOP2
       USE NONLINEAR_PARAMS, ONLY      :  LOAD_ISTEP
       USE MACHINE_PARAMS, ONLY        :  MACH_PREC
       USE MODEL_STUF, ONLY            :  ANY_GPFO_OUTPUT, EIG_METH, ELDT, ETYPE, MEFFMASS_CALC, NUM_EMG_FATAL_ERRS, PLY_NUM, OELDT,&
@@ -122,7 +122,6 @@
       REAL(DOUBLE)                    :: KGG_MAX_DIAG      ! Max diag term from KGG (needed for equil check on RESTART)
       !LOGICAL                        :: WRITE_F06  ! flag
       !LOGICAL                        :: WRITE_OP2  ! flag
-      LOGICAL                         :: WRITE_ANS  ! flag
 
       INTRINSIC                       :: IAND
    
@@ -134,9 +133,6 @@
       DO I=0,MBUG-1
          WRT_BUG(I) = 0
       ENDDO
-
-      ! Initialize WRITE_ANS
-      WRITE_ANS = (PRTANS == 'Y')
 
       RBG_GSET_ALLOCATED = 'N'
 
@@ -505,11 +501,6 @@ res13:IF (RESTART == 'N') THEN
             CALL FILE_CLOSE ( L1X, LINK1X, 'KEEP', 'Y' )
          ELSE
             CALL FILE_CLOSE ( L1X, LINK1X, 'DELETE', 'Y' )
-         ENDIF
-
-         IF (WRITE_ANS) THEN
-            ! ANS was opened in subr MYSTRAN_FILES. We only need it if DEBUG(200) > 0
-            CALL FILE_CLOSE ( ANS, ANSFIL, 'DELETE', 'Y' )
          ENDIF
  
          CALL SET_SPARSE_MAT_SYM                           ! Set sparse matrix sym

@@ -273,10 +273,6 @@
 
 !        DEBUG 199  > 0 check matrix times its inverse = identity matrix in
 
-!        DEBUG 200  > 0 write problem answers (displs, etc) to filename.ANS as well as to filename.F06 (where filename is the name
-!                       of the DAT data deck submitted to MYSTRAN. This feature is generally only useful to the author when
-!                       performing checkout of test problem answers
-
 !        DEBUG 201 /= 0 allow SOL = BUCKLING or DIFFEREN to run even if some elements are not coded for these soln's
 
 !        DEBUG 202  > 0 calculate RB and constant strain sanity checks on strain-displacement matrices

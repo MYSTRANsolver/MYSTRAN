@@ -29,13 +29,12 @@
 ! Writes printed output for grid point related quantities (accels, displacements, eigenvectors, applied loads and SPC, MPC forces)
  
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
-      USE IOUNT1, ONLY                :  WRT_ERR, WRT_LOG, ANS, ERR, F04, F06, PCH
+      USE IOUNT1, ONLY                :  WRT_ERR, WRT_LOG, ERR, F04, F06, PCH
       USE SCONTR, ONLY                :  BLNK_SUB_NAM, FATAL_ERR, INT_SC_NUM, MELGP, MOGEL, NDOFR, NVEC, NUM_CB_DOFS,              &
                                          SOL_NAME
       USE TIMDAT, ONLY                :  TSEC
       USE SUBR_BEGEND_LEVELS, ONLY    :  WRITE_GRD_PRT_OUTPUTS_BEGEND
       USE CONSTANTS_1, ONLY           :  ZERO
-      USE PARAMS, ONLY                :  PRTANS
       USE DEBUG_PARAMETERS, ONLY      :  DEBUG
       USE NONLINEAR_PARAMS, ONLY      :  LOAD_ISTEP
       USE LINK9_STUFF, ONLY           :  GID_OUT_ARRAY, MAXREQ, OGEL
@@ -192,58 +191,7 @@
             ENDIF
          ENDIF
          WRITE(F06,9501)
-         
-         IF (PRTANS == 'Y') THEN
-            WRITE(ANS,*)
-            WRITE(ANS,*)
-            IF    ((SOL_NAME(1:7) == 'STATICS') .OR. (SOL_NAME(1:8) == 'NLSTATIC')) THEN
-               WRITE(ANS,9011) SCNUM(JVEC)
-            ELSE IF ((SOL_NAME(1:8) == 'BUCKLING') .AND. (LOAD_ISTEP == 1)) THEN
-               WRITE(ANS,9011) SCNUM(JVEC)
-            ELSE IF ((SOL_NAME(1:8) == 'BUCKLING') .AND. (LOAD_ISTEP == 2)) THEN
-               WRITE(ANS,9012) JVEC
-            ELSE IF (SOL_NAME(1:5) == 'MODES') THEN
-               WRITE(ANS,9012) JVEC
-            ELSE IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
-                  WRITE(ANS,9013) JVEC, NUM_CB_DOFS
-            ENDIF
-
-            WRITE(ANS,*)
- 
-            IF (WHAT == 'DISP') THEN
-
-               IF    ((SOL_NAME(1:7) == 'STATICS') .OR. (SOL_NAME(1:8) == 'NLSTATIC')) THEN
-                  WRITE(ANS,9322)
-               ELSE IF ((SOL_NAME(1:8) == 'BUCKLING') .AND. (LOAD_ISTEP == 1)) THEN
-                  WRITE(ANS,9322)
-               ELSE IF ((SOL_NAME(1:8) == 'BUCKLING') .AND. (LOAD_ISTEP == 2)) THEN
-                  WRITE(ANS,9323)
-               ELSE IF (SOL_NAME(1:5) == 'MODES') THEN
-                  WRITE(ANS,9323)
-               ELSE IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
-                  WRITE(ANS,9324)
-               ENDIF
-
-            ELSE IF (WHAT == 'OLOAD') THEN
-
-               WRITE(ANS,9331)
-               IF (SUBLOD(INT_SC_NUM,2) > 0) THEN
-                  WRITE(ANS,9332)
-               ENDIF
-
-            ELSE IF (WHAT == 'SPCF') THEN
-
-               WRITE(ANS,9341)
-
-            ELSE IF (WHAT == 'MPCF') THEN
-
-               WRITE(ANS,9351)
-
-            ENDIF
-
-            WRITE(ANS,9501)
-
-         ENDIF
+        
 
       ENDIF
  
@@ -332,10 +280,6 @@
                ENDDO
             ENDIF
 
-            IF (PRTANS == 'Y') THEN
-               WRITE(ANS,9901) GID_OUT_ARRAY(I,1),GID_OUT_ARRAY(I,2),(OGEL(I,J),J=1,6)
-            ENDIF
-
             LINES_WRITTEN = LINES_WRITTEN + 1
 
          ENDIF
@@ -344,9 +288,6 @@
  
       IF (LINES_WRITTEN > 2) THEN
          WRITE(F06,9601) (MAX_ANS_CHAR(J),J=1,6), (MIN_ANS_CHAR(J),J=1,6), (ABS_ANS_CHAR(J),J=1,6)
-         IF (PRTANS == 'Y') THEN
-            WRITE(ANS,9611) (MAX_ANS(J),J=1,6), (MIN_ANS(J),J=1,6), (ABS_ANS(J),J=1,6)
-         ENDIF
       ENDIF
 
       IF (DEBUG(92) == 0) THEN
@@ -359,36 +300,18 @@
          IF (PRINT_TOTALS == 'Y') THEN
             IF (WHAT == 'OLOAD') THEN
                WRITE(F06,9701) (TOTALS_CHAR(J),J=1,6)
-               IF (PRTANS == 'Y') THEN
-                  WRITE(ANS,9791) (TOTALS(J),J=1,6)
-               ENDIF
             ELSE IF (WHAT == 'SPCF' ) THEN
                WRITE(F06,9702) (TOTALS_CHAR(J),J=1,6)
-               IF (PRTANS == 'Y') THEN
-                  WRITE(ANS,9792) (TOTALS(J),J=1,6)
-               ENDIF
             ELSE IF (WHAT == 'MPCF' ) THEN
                WRITE(F06,9703) (TOTALS_CHAR(J),J=1,6)
-               IF (PRTANS == 'Y') THEN
-                  WRITE(ANS,9793) (TOTALS(J),J=1,6)
-               ENDIF
             ENDIF
          ELSE
             IF (WHAT == 'OLOAD') THEN
                WRITE(F06,9711)
-               IF (PRTANS == 'Y') THEN
-                  WRITE(ANS,9711)
-               ENDIF
             ELSE IF (WHAT == 'SPCF' ) THEN
                WRITE(F06,9712)
-               IF (PRTANS == 'Y') THEN
-                  WRITE(ANS,9712)
-               ENDIF
             ELSE IF (WHAT == 'MPCF' ) THEN
                WRITE(F06,9713)
-               IF (PRTANS == 'Y') THEN
-                  WRITE(ANS,9713)
-               ENDIF
             ENDIF
          ENDIF
       ENDIF
@@ -410,8 +333,6 @@
  9012 FORMAT(' OUTPUT FOR EIGENVECTOR ',I8)
 
  9013 FORMAT(' OUTPUT FOR CRAIG-BAMPTON DOF ',I8,' OF ',I8,' (boundary ',A,' for grid',I8,' component',I2,')')
-
- 9014 FORMAT(' OUTPUT FOR CRAIG-BAMPTON ACCEL OTM COL ',I8,' OF ',I8)
 
  9015 FORMAT(' OUTPUT FOR CRAIG-BAMPTON DOF ',I8,' OF ',I8,' (modal acceleration for mode ',I8,')')
 
@@ -456,11 +377,6 @@
              16X,'ABS* :  ',6A14,/,                                                                                                &
              16X,'*for output set')
 
- 9611 FORMAT(11X,'              ------------- ------------- ------------- ------------- ------------- -------------',/,            &
-             1X,'MAX (for output set):  ',6(ES14.6),/,                                                                             &
-             1X,'MIN (for output set):  ',6(ES14.6),//,                                                                            &
-             1X,'ABS (for output set):  ',6(ES14.6))
-
  9701 FORMAT(11X,'              ------------- ------------- ------------- ------------- ------------- -------------',/,            &
              1X,'APPLIED FORCE TOTALS:  ',6A14,/,3X,'(for output set)')
 
@@ -470,15 +386,6 @@
  9703 FORMAT(11X,'              ------------- ------------- ------------- ------------- ------------- -------------',/,            &
              1X,'    MPC FORCE TOTALS:  ',6A14,/,5X,'(for output set)')
 
- 9791 FORMAT(11X,'              ------------- ------------- ------------- ------------- ------------- -------------',/,            &
-             1X,'APPLIED FORCE TOTALS:  ',6(1ES14.6),/,3X,'(for output set)')
-
- 9792 FORMAT(11X,'              ------------- ------------- ------------- ------------- ------------- -------------',/,            &
-             1X,'    SPC FORCE TOTALS:  ',6(1ES14.6),/,5X,'(for output set)')
-
- 9793 FORMAT(11X,'              ------------- ------------- ------------- ------------- ------------- -------------',/,            &
-             1X,'    MPC FORCE TOTALS:  ',6(1ES14.6),/,5X,'(for output set)')
-
  9711 FORMAT(11X,'              ------------- ------------- ------------- ------------- ------------- -------------',/,            &
              1X,'APPLIED FORCE TOTALS: not printed since all grids do not have the same global coordinate system')
 
@@ -487,8 +394,6 @@
 
  9713 FORMAT(11X,'              ------------- ------------- ------------- ------------- ------------- -------------',/,            &
              1X,'    MPC FORCE TOTALS: not printed since all grids do not have the same global coordinate system')
-
- 9901 FORMAT(6X,2(1X,I8),6(ES14.6))
 
  9902 FORMAT(6X,2(1X,I8),6A)
 

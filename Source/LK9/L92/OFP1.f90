@@ -35,7 +35,7 @@
       USE TIMDAT, ONLY                :  TSEC
       USE SUBR_BEGEND_LEVELS, ONLY    :  OFP1_BEGEND
       USE CONSTANTS_1, ONLY           :  ZERO
-      USE PARAMS, ONLY                :  OTMSKIP, PRTANS, PRTNEU
+      USE PARAMS, ONLY                :  OTMSKIP, PRTNEU
       USE DOF_TABLES, ONLY            :  TDOF, TDOF_ROW_START
       USE MODEL_STUF, ONLY            :  ANY_ACCE_OUTPUT, ANY_DISP_OUTPUT, ANY_OLOA_OUTPUT, GROUT, GRID, GRID_ID
       USE LINK9_STUFF, ONLY           :  GID_OUT_ARRAY, MAXREQ, OGEL
@@ -48,7 +48,7 @@
 
       IMPLICIT NONE
 
-      LOGICAL                         :: WRITE_F06, WRITE_OP2, WRITE_PCH, WRITE_ANS   ! flag
+      LOGICAL                         :: WRITE_F06, WRITE_OP2, WRITE_PCH   ! flag
       CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: SUBR_NAME = 'OFP1'
       CHARACTER(LEN=*) , INTENT(IN)   :: WHAT              ! Indicator whether to process displ or force output requests
       CHARACTER( 1*BYTE)              :: ACCE_ALL_SAME_CID ! Indicator of whether all grids, for the output set, have the same
@@ -88,7 +88,6 @@
       WRITE(ERR,9000) "OFP1 - disp, accel and applied force output"
  9000 FORMAT(' *DEBUG:    RUNNING=', A)
 
-      WRITE_ANS = (PRTANS == 'Y')
       WRITE_NEU = (PRTNEU == 'Y')
 
 ! **********************************************************************************************************************************

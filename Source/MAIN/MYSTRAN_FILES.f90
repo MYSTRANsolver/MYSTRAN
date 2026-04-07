@@ -27,7 +27,7 @@
       SUBROUTINE MYSTRAN_FILES ( START_MONTH, START_DAY, START_YEAR, START_HOUR, START_MINUTE, START_SEC, START_SFRAC)
  
 ! Sets all MYSTRAN file names. Opens all files and closes and deletes them so that no confusion about files if MYSTRAN aborts
-! Reopen ANS, BUG, ERR, F04, F06
+! Reopen BUG, ERR, F04, F06
 
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
 
@@ -36,7 +36,7 @@
 
       USE IOUNT1, ONLY                :  OU4_EXT, OT4_EXT
 
-      USE IOUNT1, ONLY                :  ANS,     BUG,     EIN,     ENF,     ERR,     F04,     F06,     IN0,     PCH,     SC1,     &
+      USE IOUNT1, ONLY                :  BUG,     EIN,     ENF,     ERR,     F04,     F06,     IN0,     PCH,     SC1,              &
                                          SEQ,     SPC,                                                                             &
                                          L1A,     L1B,     L1C,     L1D,     L1E,     L1F,     L1G,     L1H,     L1I,     L1J,     &
                                          L1K,     L1L,     L1M,     L1N,     L1O,     L1P,     L1Q,     L1R,     L1S,     L1T,     &
@@ -46,7 +46,7 @@
                                          L3A,     L4A,     L4B,     L4C,     L4D,     L5A,     L5B,                                &
                                          NEU,     F21,     F22,     F23,     F24,     F25,     OP2,     OT4,     OU4
 
-      USE IOUNT1, ONLY                :  ANSFIL,  BUGFIL,  EINFIL,  ENFFIL,  ERRFIL,  F04FIL,  F06FIL,  IN0FIL,  INFILE,  PCHFIL,  &
+      USE IOUNT1, ONLY                :  BUGFIL,  EINFIL,  ENFFIL,  ERRFIL,  F04FIL,  F06FIL,  IN0FIL,  INFILE,  PCHFIL,           &
                                          OT4FIL,  SEQFIL,  SPCFIL,                                                                 &
                                          LINK1A,  LINK1B,  LINK1C,  LINK1D,  LINK1E,  LINK1F,  LINK1G,  LINK1H,  LINK1I,  LINK1J,  &
                                          LINK1K,  LINK1L,  LINK1M,  LINK1N,  LINK1O,  LINK1P,  LINK1Q,  LINK1R,  LINK1S,  LINK1T,  &
@@ -56,7 +56,7 @@
                                          LINK3A,  LINK4A,  LINK4B,  LINK4C,  LINK4D,  LINK5A,  LINK5B,                             &
                                          NEUFIL,  F21FIL,  F22FIL,  F23FIL,  F24FIL,  F25FIL,  OP2FIL,  OT4FIL,  OU4FIL
 
-      USE IOUNT1, ONLY                :  ANS_MSG, BUG_MSG, EIN_MSG, ENF_MSG, ERR_MSG, F04_MSG, F06_MSG, IN0_MSG, OT4_MSG, PCH_MSG, &
+      USE IOUNT1, ONLY                :  BUG_MSG, EIN_MSG, ENF_MSG, ERR_MSG, F04_MSG, F06_MSG, IN0_MSG, OT4_MSG, PCH_MSG,          &
                                          SEQ_MSG, L1A_MSG, L1B_MSG, L1C_MSG, L1D_MSG, L1E_MSG, L1F_MSG, L1G_MSG, L1H_MSG, L1I_MSG, &
                                          L1J_MSG, L1K_MSG, L1L_MSG, L1M_MSG, L1N_MSG, L1O_MSG, L1P_MSG, L1Q_MSG, L1R_MSG, L1S_MSG, &
                                          L1T_MSG, L1U_MSG, L1V_MSG, L1W_MSG, L1X_MSG, L1Y_MSG, L1Z_MSG,                            &
@@ -107,7 +107,7 @@
 ! Form file names then open them and close and delete them. In this way, we can get rid of all of these files before
 ! we begin and start anew.
 
-! Formatted files. Note: for F04, ANS, ERR, F06, BUG reopen them after deleting any old version and write STIME
+! Formatted files. Note: for F04, ERR, F06, BUG reopen them after deleting any old version and write STIME
 
       F04FIL(1:I1)  = FILNAM(1:I1)
       F04FIL(I1+1:) = 'F04'
@@ -251,29 +251,6 @@
             ELSE
                WRITE(ERR,150) START_MONTH, START_DAY, START_YEAR, START_HOUR, START_MINUTE, START_SEC, START_SFRAC, INFILE
             ENDIF
-            WRITE(F04,*)
-         ENDIF
-      ENDIF
-
-      ANSFIL(1:I1)  = FILNAM(1:I1)
-      ANSFIL(I1+1:) = 'ANS'
-      IF (ANS /= SC1) THEN
-         INQUIRE ( FILE=ANSFIL, EXIST=FILE_EXIST )
-         IF (FILE_EXIST) THEN
-            IF (RESTART == 'Y') THEN
-               CALL FILE_OPEN ( ANS, ANSFIL, OUNT,'OLD    ', ANS_MSG,'NEITHER'    ,'FORMATTED','READWRITE','APPEND','N','N','Y')
-               WRITE(ANS,170) START_MONTH, START_DAY, START_YEAR, START_HOUR, START_MINUTE, START_SEC, START_SFRAC, INFILE
-               CALL FILE_CLOSE ( ANS, ANSFIL,'KEEP','Y')
-            ELSE
-               CALL FILE_OPEN ( ANS, ANSFIL, OUNT,'REPLACE', ANS_MSG,'NEITHER'    ,'FORMATTED','READWRITE','REWIND','N','N','Y')
-               CALL FILE_CLOSE ( ANS, ANSFIL,'DELETE','Y')
-               CALL FILE_OPEN ( ANS, ANSFIL, OUNT,'NEW'    , ANS_MSG,'WRITE_STIME','FORMATTED','WRITE'    ,'REWIND','Y','Y','Y')
-               WRITE(ANS,150) START_MONTH, START_DAY, START_YEAR, START_HOUR, START_MINUTE, START_SEC, START_SFRAC, INFILE
-            ENDIF
-            WRITE(F04,*)
-         ELSE
-            CALL FILE_OPEN ( ANS, ANSFIL, OUNT,'NEW', ANS_MSG,'WRITE_STIME','FORMATTED','WRITE','REWIND','Y','Y','Y')
-            WRITE(ANS,150) START_MONTH, START_DAY, START_YEAR, START_HOUR, START_MINUTE, START_SEC, START_SFRAC, INFILE
             WRITE(F04,*)
          ENDIF
       ENDIF

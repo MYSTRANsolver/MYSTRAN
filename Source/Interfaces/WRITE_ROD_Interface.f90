@@ -28,12 +28,12 @@
 
    INTERFACE
 
-      SUBROUTINE WRITE_ROD ( ISUBCASE, NUM, FILL_F06, FILL_ANS, ITABLE, TITLE, SUBTITLE, LABEL, &
+      SUBROUTINE WRITE_ROD ( ISUBCASE, NUM, FILL_F06, ITABLE, TITLE, SUBTITLE, LABEL, &
                              FIELD5_INT_MODE, FIELD6_EIGENVALUE, WRITE_OP2 )
 
  
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
-      USE IOUNT1, ONLY                :  WRT_ERR, WRT_LOG, ANS, ERR, F04, F06
+      USE IOUNT1, ONLY                :  WRT_ERR, WRT_LOG, ERR, F04, F06
       USE SCONTR, ONLY                :  BLNK_SUB_NAM
       USE TIMDAT, ONLY                :  TSEC
       USE SUBR_BEGEND_LEVELS, ONLY    :  WRITE_ROD_BEGEND
@@ -45,7 +45,6 @@
  
       INTEGER(LONG), INTENT(IN)       :: ISUBCASE          ! the current subcase
       CHARACTER(LEN=*), INTENT(IN)    :: FILL_F06          ! Padding for output format
-      CHARACTER(LEN=*), INTENT(IN)    :: FILL_ANS          ! Padding for output format
       CHARACTER(LEN=128), INTENT(IN) :: TITLE              ! the model TITLE
       CHARACTER(LEN=128), INTENT(IN) :: SUBTITLE           ! the subcase SUBTITLE
       CHARACTER(LEN=128), INTENT(IN) :: LABEL              ! the subcase LABEL

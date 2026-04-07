@@ -29,12 +29,12 @@
 ! Prints eigenvalue analysis summary table
  
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
-      USE IOUNT1, ONLY                :  WRT_LOG, ANS, ANSFIL, ANS_MSG, ERR, F04, F06
+      USE IOUNT1, ONLY                :  WRT_LOG, ERR, F04, F06
       USE SCONTR, ONLY                :  BLNK_SUB_NAM, NDOFL, NUM_EIGENS, NVEC, NUM_KLLD_DIAG_ZEROS, NUM_MLL_DIAG_ZEROS, SOL_NAME, &
                                          WARN_ERR
       USE TIMDAT, ONLY                :  TSEC
       USE DEBUG_PARAMETERS, ONLY      :  DEBUG
-      USE PARAMS, ONLY                :  ART_MASS, ART_ROT_MASS, ART_TRAN_MASS, DARPACK, SOLLIB, SUPINFO, SUPWARN, PRTANS
+      USE PARAMS, ONLY                :  ART_MASS, ART_ROT_MASS, ART_TRAN_MASS, DARPACK, SOLLIB, SUPINFO, SUPWARN
       USE SUBR_BEGEND_LEVELS, ONLY    :  EIG_SUMMARY_BEGEND
       USE CONSTANTS_1, ONLY           :  ZERO, TWO, PI
       USE EIGEN_MATRICES_1, ONLY      :  GEN_MASS, MODE_NUM, EIGEN_VAL
@@ -72,14 +72,6 @@
       OUNT(1) = ERR
       OUNT(2) = F06
 
-      IF (PRTANS == 'Y') THEN
-         INQUIRE (FILE=ANSFIL, OPENED=FILE_OPND)
-         IF (.NOT.FILE_OPND) THEN                          ! Otherwise we assume it is positioned at its end and ready for write
-            CALL FILE_OPEN ( ANS, ANSFIL, OUNT, 'OLD', ANS_MSG, 'WRITE_STIME', 'FORMATTED', 'READWRITE', 'REWIND', 'Y', 'Y', 'Y' )
-         ENDIF
-         WRITE(ANS,*)
-         WRITE(ANS,*)
-      ENDIF
 
       IF (EIG_METH == 'LANCZOS') THEN
 
@@ -142,15 +134,6 @@
          WRITE(F06,94201)
          WRITE(F06,94202)
       ENDIF
-      IF (PRTANS == 'Y') THEN
-         IF (SOL_NAME(1:8) == 'BUCKLING') THEN
-            WRITE(ANS,94301)
-            WRITE(ANS,94302)
-         ELSE
-            WRITE(ANS,94401)
-            WRITE(ANS,94402)
-         ENDIF
-      ENDIF
 
       NUM_NEG_EIGENS = 0
       DO I=1,NUM_EIGENS
@@ -164,25 +147,11 @@
             ELSE
                WRITE(F06,95302) MODE_NUM(I),I,EIGEN_VAL(I),ASTERISK,RADS1,CYCLES1,GEN_MASS(I),GEN_STIFF1
             ENDIF
-            IF (PRTANS == 'Y') THEN
-               IF (SOL_NAME(1:8) == 'BUCKLING') THEN
-                  WRITE(ANS,95311) MODE_NUM(I),I,EIGEN_VAL(I),ASTERISK
-               ELSE
-                  WRITE(ANS,95312) MODE_NUM(I),I,EIGEN_VAL(I),ASTERISK,RADS1,CYCLES1,GEN_MASS(I),GEN_STIFF1
-               ENDIF
-            ENDIF
          ELSE
             IF (SOL_NAME(1:8) == 'BUCKLING') THEN
                WRITE(F06,95401) MODE_NUM(I),I,EIGEN_VAL(I)
             ELSE
                WRITE(F06,95402) MODE_NUM(I),I,EIGEN_VAL(I),         RADS1,CYCLES1,GEN_MASS(I),GEN_STIFF1
-            ENDIF
-            IF (PRTANS == 'Y') THEN
-               IF (SOL_NAME(1:8) == 'BUCKLING') THEN
-                  WRITE(ANS,95411) MODE_NUM(I),I,EIGEN_VAL(I)
-               ELSE
-                  WRITE(ANS,95412) MODE_NUM(I),I,EIGEN_VAL(I),         RADS1,CYCLES1,GEN_MASS(I),GEN_STIFF1
-               ENDIF
             ENDIF
          ENDIF
       ENDDO 
@@ -235,10 +204,6 @@
          ENDIF
       ENDIF
 
-      IF (PRTANS == 'Y') THEN
-         WRITE(ANS,*)
-      ENDIF
-
       IF (NUM_NEG_EIGENS > 0) THEN
          WRITE(F06,*)
          WRITE(F06,99000) NUM_NEG_EIGENS
@@ -246,10 +211,6 @@
       WRITE(F06,*)
       WRITE(F06,*)
 
-      IF (PRTANS == 'Y') THEN
-         WRITE(ANS,*)
-         WRITE(ANS,*)
-      ENDIF
 
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
@@ -289,9 +250,6 @@
 92007 FORMAT(32X,'NUMBER OF OFF DIAGONAL GENERALIZED MASS')
 
 92008 FORMAT(32X,'TERMS FAILING CRITERION OF ',1ES8.1,'. . . . .',2X,I8,/)
- 
-92009 FORMAT(32X,'RATIO OF HIGHEST REAL MGIV EIGENVALUE'                                                                           &
-          ,/,32X,'TO LOWEST "INFINITE" EIGENVALUE. . . . . . .  ',1ES8.1)
 
 92010 FORMAT(4X,'NO EIGENVECTORS WERE REQUESTED TO BE OUTPUT, SO NO GENERALIZED MASS OR GENERALIZED STIFFNESS HAS BEEN CALCULATED',&
              /)
@@ -306,30 +264,13 @@
 &        ',/,3X,'NUMBER   ORDER                                                                        MASS              STIFFNESS'&
           ,/)
 
-94301 FORMAT(44X,'R E A L   E I G E N V A L U E S',/,43X,'(subcase 1 buckling load factors)',/)
-
-94302 FORMAT(40X,' MODE  EXTRACTION      EIGENVALUE',/,40X,'NUMBER   ORDER',/)
-
-94401 FORMAT(40X,'R E A L   E I G E N V A L U E S')
-
-94402 FORMAT(9X,' MODE    EXTRACT  EIGENVALUE     RADIANS        CYCLES      GENERALIZED   GENERALIZED&
-&        ',/,9X,'NUMBER    ORDER                                                MASS        STIFFNESS',/)
-
 95301 FORMAT(38X,2I8,1ES20.6,A)
 
 95302 FORMAT(1X,2I8,1ES20.6,A,1ES19.6,3(1ES20.6))
 
-95311 FORMAT(6X,2I9,1ES14.6,A)
-
-95312 FORMAT(6X,2I9,1ES14.6,A,1ES13.6,3(1ES14.6))
-
 95401 FORMAT(38X,2I8,1ES20.6)
 
 95402 FORMAT(1X,2I8,5(1ES20.6))
-
-95411 FORMAT(6X,2I9,1ES14.6)
-
-95412 FORMAT(6X,2I9,5(1ES14.6))
 
 98006 FORMAT(' *WARNING    : THE BULK DATA EIGR/EIGRL ENTRY ASKED FOR MODES UP TO NUMBER',I8,'. HOWEVER, THIS MODEL HAS ONLY',I8   &
                     ,/,14X,' FINITE EIGENVALUES DUE TO THE FACT THAT THE L-SET MASS MATRIX HAS',I8,' ZERO MASS DEGREES OF FREEDOM.'&

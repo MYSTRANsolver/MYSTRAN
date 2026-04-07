@@ -31,17 +31,17 @@
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
       USE IOUNT1, ONLY                :  WRT_BUG, WRT_ERR, WRT_LOG
 
-      USE IOUNT1, ONLY                :  ANS, ERR, F04, F06, F25, L1E, L1M, L1R, L2A, L2B, L2C, L2D, L2I, L2J, L2R, L2S,           &
+      USE IOUNT1, ONLY                :  ERR, F04, F06, F25, L1E, L1M, L1R, L2A, L2B, L2C, L2D, L2I, L2J, L2R, L2S,                &
                                          L5A, L5B, NEU, OT4, OU4, PCH, SC1
 
-      USE IOUNT1, ONLY                :  ANSFIL, F06FIL, F25FIL, LINK1B, LINK1E, LINK1M, LINK1R, LINK2A, LINK2B, LINK2C, LINK2D,   &
+      USE IOUNT1, ONLY                :  F06FIL, F25FIL, LINK1B, LINK1E, LINK1M, LINK1R, LINK2A, LINK2B, LINK2C, LINK2D,           &
                                          LINK2I, LINK2J, LINK2R, LINK2S, LINK5A, LINK5B, MOT4  , MOU4  , NEUFIL, OT4FIL, OU4FIL,   &
                                          PCHFIL
 
       USE IOUNT1, ONLY                :  L1ASTAT, L1ESTAT, L1MSTAT, L1RSTAT, L2ASTAT, L2BSTAT, L2CSTAT, L2ISTAT, L2JSTAT, L2RSTAT, &
                                          L2SSTAT, OT4STAT, OU4STAT, PCHSTAT
 
-      USE IOUNT1, ONLY                :  ANS_MSG, F25_MSG, L1E_MSG, L1M_MSG, L1R_MSG, L2A_MSG, L2B_MSG, L2C_MSG, L2D_MSG, L2I_MSG, &
+      USE IOUNT1, ONLY                :  F25_MSG, L1E_MSG, L1M_MSG, L1R_MSG, L2A_MSG, L2B_MSG, L2C_MSG, L2D_MSG, L2I_MSG,          &
                                          L2J_MSG, L2R_MSG, L2S_MSG, L5A_MSG, L5B_MSG, NEU_MSG, PCH_MSG,                            &
                                          OT4_MSG, OU4_MSG, OT4_GRD_OTM, OT4_ELM_OTM, OU4_GRD_OTM, OU4_ELM_OTM
 
@@ -64,7 +64,7 @@
       USE TIMDAT, ONLY                :  YEAR, MONTH, DAY, HOUR, MINUTE, SEC, SFRAC, STIME, TSEC
       USE SUBR_BEGEND_LEVELS, ONLY    :  LINK9_BEGEND
       USE CONSTANTS_1, ONLY           :  ZERO, ONE
-      USE PARAMS, ONLY                :  EPSIL, MPFOUT, SUPINFO, SUPWARN, WTMASS, PRTANS, PRTF06, PRTOP2, PRTNEU
+      USE PARAMS, ONLY                :  EPSIL, MPFOUT, SUPINFO, SUPWARN, WTMASS, PRTF06, PRTOP2, PRTNEU
       USE NONLINEAR_PARAMS, ONLY      :  LOAD_ISTEP
       USE COL_VECS, ONLY              :  FG_COL, UG_COL, PG_COL, PM_COL, PS_COL, QSYS_COL, QGm_COL, QGr_COL, QGs_COL, QR_COL,      &
                                          PHIXG_COL, PHIXN_COL
@@ -94,7 +94,7 @@
 
       IMPLICIT NONE
 
-      LOGICAL                         :: WRITE_F06, WRITE_OP2, WRITE_PCH, WRITE_ANS, WRITE_NEU   ! flag
+      LOGICAL                         :: WRITE_F06, WRITE_OP2, WRITE_PCH, WRITE_NEU   ! flag
       LOGICAL                         :: LEXIST            ! .TRUE. if a file exists
       LOGICAL                         :: LOPEN             ! .TRUE. if a file is opened
 
@@ -187,7 +187,7 @@
       EPS1 = EPSIL(1)
 
       WRITE_NEU = (PRTNEU == 'Y')
-      ! setup PRTANS, PRTF06, PRTNEU, PRTOP2
+      ! setup PRTF06, PRTNEU, PRTOP2
       !IF (DEBUG(200) > 0) THEN
       !   PRTNEU = 'Y'
       !ENDIF
@@ -230,13 +230,6 @@
       WRITE_F06 = (DISP_OUT(1:1) == 'Y')
       WRITE_OP2 = (DISP_OUT(2:2) == 'Y')
       WRITE_PCH = (DISP_OUT(3:3) == 'Y')
-      WRITE_ANS = (PRTANS == 'Y')
-      IF (WRITE_ANS) THEN
-         INQUIRE (FILE=ANSFIL, OPENED=LOPEN)
-         IF (.NOT.LOPEN) THEN                          ! Otherwise we assume it is positioned at its end and ready for write
-            CALL FILE_OPEN ( ANS, ANSFIL, OUNT, 'OLD', ANS_MSG, 'WRITE_STIME', 'FORMATTED', 'READWRITE', 'REWIND', 'Y', 'Y', 'Y' )
-         ENDIF
-      ENDIF
       IF (WRITE_PCH) THEN
          INQUIRE (FILE=PCHFIL, OPENED=LOPEN)
          IF (.NOT.LOPEN) THEN                          ! Otherwise we assume it is positioned at its end and ready for write
@@ -1384,12 +1377,7 @@ j_do: DO JVEC=1,NUM_SOLNS
       ENDIF
       WRITE(F06,151) LINKNO
 
-      ! Close ANS but leave the closing of BUG, ERR, F04, F06 files until after LINK9 returns to MYSTRAN.for
-      IF (WRITE_ANS) THEN
-         CALL FILE_CLOSE ( ANS, ANSFIL, 'KEEP', 'Y' )
-      ELSE
-         CALL FILE_CLOSE ( ANS, ANSFIL, 'DELETE', 'Y' )
-      ENDIF
+      ! Leave the closing of BUG, ERR, F04, F06 files until after LINK9 returns to MYSTRAN.for
 
       ! Close some files
       IF ((SOL_NAME(1:8) == 'BUCKLING') .OR. (SOL_NAME(1:8) == 'DIFFEREN') .OR. (SOL_NAME(1:8) == 'NLSTATIC')) THEN
