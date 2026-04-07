@@ -55,8 +55,8 @@ SUBROUTINE COUNTER_PROGRESS(NEW_VALUE)
       RETURN
    END IF
 
-   ! Compute the new percentage
-   NEW_PERC = FLOOR(100.0 * NEW_VALUE / COUNTER_TOTAL)
+   ! Compute the new percentage in increments of 10%
+   NEW_PERC = FLOOR(10.0 * NEW_VALUE / COUNTER_TOTAL) * 10
    
 
    ! Check if there has been a change, or if the amount is zero
