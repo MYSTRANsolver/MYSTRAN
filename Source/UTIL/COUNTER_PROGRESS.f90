@@ -1,27 +1,27 @@
 ! ##################################################################################################################################
-! Begin MIT license text.                                                                                    
+! Begin MIT license text.
 ! _______________________________________________________________________________________________________
-                                                                                                         
-! Copyright 2022 Dr William R Case, Jr (mystransolver@gmail.com)                                              
-                                                                                                         
-! Permission is hereby granted, free of charge, to any person obtaining a copy of this software and      
+
+! Copyright 2022 Dr William R Case, Jr (mystransolver@gmail.com)
+
+! Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 ! associated documentation files (the "Software"), to deal in the Software without restriction, including
 ! without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-! copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to   
-! the following conditions:                                                                              
-                                                                                                         
-! The above copyright notice and this permission notice shall be included in all copies or substantial   
-! portions of the Software and documentation.                                                                              
-                                                                                                         
-! THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS                                
-! OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,                            
-! FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE                            
-! AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER                                 
-! LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,                          
-! OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN                              
-! THE SOFTWARE.                                                                                          
+! copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to
+! the following conditions:
+
+! The above copyright notice and this permission notice shall be included in all copies or substantial
+! portions of the Software and documentation.
+
+! THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+! OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+! FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+! AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+! LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+! OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+! THE SOFTWARE.
 ! _______________________________________________________________________________________________________
-                                                                                                        
+
 ! End MIT license text.
 
 ! This subroutine increases the progress of a counter by some amount.
@@ -30,40 +30,62 @@
 ! performance impact.
 
 ! Arguments:
-!   NEW_VALUE: the new value for the counter.
-SUBROUTINE COUNTER_PROGRESS(NEW_VALUE)
+!   NEW_VALUE_OR_NEGATIVE: the new value for the counter, or a negative for 100% (force-finish)
+SUBROUTINE COUNTER_PROGRESS(NEW_VALUE_OR_NEGATIVE)
 
    USE PENTIUM_II_KIND, ONLY : LONG, DOUBLE
    USE SCONTR, ONLY : COUNTER_VALUE, COUNTER_PERC, COUNTER_TOTAL, &
-                      COUNTER_STARTED, COUNTER_PREFIX, COUNTER_FMT
+                      COUNTER_STARTED, COUNTER_PREFIX, COUNTER_FMT, &
+                      COUNTER_UPDATED, COUNTER_LIMITER
    USE IOUNT1, ONLY : SC1
    USE CONSTANTS_1, ONLY : ZERO
    USE PARAMS, ONLY : NOCOUNTS
-                      
+
    USE COUNTER_PROGRESS_USE_IFs
 
    IMPLICIT NONE
 
-   INTEGER(LONG), INTENT(IN) :: NEW_VALUE
+   INTEGER(LONG), INTENT(IN) :: NEW_VALUE_OR_NEGATIVE
    INTEGER(LONG)             :: NEW_PERC, ETA, NEW_TIME, ELAPSED, &
                                 ETA_HOURS, ETA_MINS, ETA_SECS, &
-                                ELAPSED_HOURS, ELAPSED_MINS, ELAPSED_SECS
+                                ELAPSED_HOURS, ELAPSED_MINS, ELAPSED_SECS, &
+                                NEW_VALUE
    REAL(DOUBLE)              :: SPEED
+   LOGICAL                   :: FORCED_PRINT, PERC_CHANGED, TOO_MANY
 
    ! Do nothing if NOCOUNTS is set
    IF (NOCOUNTS == 'Y') THEN
       RETURN
    END IF
 
+   IF (NEW_VALUE_OR_NEGATIVE < 0) THEN
+      NEW_VALUE = COUNTER_TOTAL
+   ELSE
+      NEW_VALUE = NEW_VALUE_OR_NEGATIVE
+   END IF
+
    ! Compute the new percentage
    NEW_PERC = FLOOR(100.0 * NEW_VALUE / COUNTER_TOTAL)
-   
 
+   FORCED_PRINT = NEW_VALUE == 0 .OR. NEW_VALUE == COUNTER_TOTAL
+   PERC_CHANGED = NEW_PERC /= COUNTER_PERC
+   TOO_MANY = .FALSE.
    ! Check if there has been a change, or if the amount is zero
-   IF (NEW_VALUE == 0 .OR. NEW_PERC /= COUNTER_PERC .OR. NEW_VALUE == COUNTER_TOTAL) THEN
+   IF (FORCED_PRINT .OR. PERC_CHANGED) THEN
       ! Compute elapsed time, 0 means we're too fast
       CALL UNIX_TIME(NEW_TIME)
       ELAPSED = NEW_TIME - COUNTER_STARTED
+      ! Zero the counter limiter if the current second has changed
+      IF (COUNTER_UPDATED /= NEW_TIME) THEN
+         COUNTER_LIMITER = 0
+      END IF
+      ! Limit to two non-forced updates
+      TOO_MANY = COUNTER_LIMITER >= 1
+   END IF
+
+   IF (FORCED_PRINT .OR. (PERC_CHANGED .AND. .NOT. TOO_MANY)) THEN
+      COUNTER_LIMITER = COUNTER_LIMITER + 1
+      COUNTER_UPDATED = NEW_TIME
       ! Okay, percentage change. Let's do this.
       ! First, print the basic string.
       WRITE(SC1, 4000, ADVANCE="NO") CHAR(13)
