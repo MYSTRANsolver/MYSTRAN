@@ -233,11 +233,13 @@ endif()
 # collect all fortran source files
 file(GLOB_RECURSE ALL_FORTRAN_FILES
   "${CMAKE_SOURCE_DIR}/*.f"
+  "${CMAKE_SOURCE_DIR}/*.F"
   "${CMAKE_SOURCE_DIR}/*.f90"
   "${CMAKE_SOURCE_DIR}/*.F90"
-  "${CMAKE_SOURCE_DIR}/*.F"
-  "${CMAKE_SOURCE_DIR}/*.F95"
   "${CMAKE_SOURCE_DIR}/*.f95"
+  "${CMAKE_SOURCE_DIR}/*.F95"
+  "${CMAKE_SOURCE_DIR}/*.f03"
+  "${CMAKE_SOURCE_DIR}/*.F03"
 )
 
 # same BLAS-finding subroutine as SuperLU
