@@ -1,4 +1,4 @@
-! ###############################################################################################################################
+! ##################################################################################################################################
 ! Begin MIT license text.
 ! _______________________________________________________________________________________________________
 
@@ -24,20 +24,25 @@
 
 ! End MIT license text.
 
-MODULE UNIX_TIME_Interface
+! Computes the current UNIX timestamp via C's time().
+
+SUBROUTINE UNIX_TIME(T)
+
+   USE PENTIUM_II_KIND, ONLY: LONG
+   USE ISO_C_BINDING,   ONLY: C_PTR, C_NULL_PTR, C_LONG
+
+   IMPLICIT NONE
+
+   INTEGER(LONG), INTENT(OUT) :: T
 
    INTERFACE
-
-      SUBROUTINE UNIX_TIME(T)
-
-         USE PENTIUM_II_KIND, ONLY: LONG
-
-         IMPLICIT NONE
-
-         INTEGER(LONG), INTENT(OUT) :: T
-
-      END SUBROUTINE UNIX_TIME
-
+      FUNCTION C_TIME(TLOC) BIND(C, NAME='time')
+         IMPORT :: C_PTR, C_LONG
+         TYPE(C_PTR), VALUE  :: TLOC
+         INTEGER(C_LONG)     :: C_TIME
+      END FUNCTION C_TIME
    END INTERFACE
 
-END MODULE UNIX_TIME_Interface
+   T = INT(C_TIME(C_NULL_PTR), LONG)
+
+END SUBROUTINE UNIX_TIME
