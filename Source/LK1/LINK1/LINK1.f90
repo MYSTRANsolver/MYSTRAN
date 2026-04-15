@@ -52,16 +52,16 @@
                                          FATAL_ERR, IBIT, LINKNO, LTERM_KGG, LTERM_KGGD, LTERM_MGGE, NDOFM, NFORCE,                &
                                          NGRAV, NMPC, NPLOAD, NRFORCE, NRIGEL, NSLOAD, NTERM_RMG, NTSUB, RESTART, SOL_NAME
 
-      USE TIMDAT, ONLY                :  YEAR, MONTH, DAY, HOUR, MINUTE, SEC, SFRAC, STIME, TSEC
       USE DOF_TABLES, ONLY            :  TDOFI
 
       USE PARAMS, ONLY                :  EMP0_PAUSE, ESP0_PAUSE, SETLKTK, SKIPMGG
       USE NONLINEAR_PARAMS, ONLY      :  LOAD_ISTEP
       USE MODEL_STUF, ONLY            :  OELDT
       USE DEBUG_PARAMETERS, ONLY      :  DEBUG
-  
+        
       USE LINK1_USE_IFs
-                       
+      USE LINK_MESSAGE_Interface
+      
       IMPLICIT NONE
 
       LOGICAL                         :: LEXIST            ! .TRUE. if a file exists
@@ -70,7 +70,6 @@
       CHARACTER, PARAMETER            :: CR13 = CHAR(13)   ! This causes a carriage return simulating the "+" action in a FORMAT
       CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: SUBR_NAME = 'LINK1'
       CHARACTER(10*BYTE)              :: LTERM_NAME        ! Name for an LTERM value
-      CHARACTER(44*BYTE)              :: MODNAM            ! Name to write to screen to describe module being run
       CHARACTER( 1*BYTE)              :: RESPONSE          ! User response ('Y' or 'N') to a screen prompt
      
       INTEGER(LONG)                   :: BUCKLING_STEP     ! If SOL is BUCKLING then this is step 1 or 2 in the process, otherwise 0
@@ -126,9 +125,7 @@
 
 ! Allocate DOF tables
 
-      CALL OURTIM
-      MODNAM = 'ALLOCATE DOF TABLES'
-      WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+      CALL LINK_MESSAGE('ALLOCATE DOF TABLES')
 
 ! Set BUCKLING_STEP based on LOAD_ISTEP (see subr MYSTRAN.FOR)
 
@@ -154,31 +151,24 @@ res19:IF (RESTART == 'N') THEN
 
             IF (NMPC > 0) THEN 
                CALL FILE_OPEN ( L1S, LINK1S, OUNT, 'OLD', L1S_MSG, 'READ_STIME', 'UNFORMATTED', 'READ', 'REWIND', 'Y', 'N', 'Y' )
-               CALL OURTIM
-               MODNAM = 'MPC PROCESSOR                               '
-               WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+               CALL LINK_MESSAGE('MPC PROCESSOR                               ')
                CALL MPC_PROC
                CALL FILE_CLOSE ( L1S, LINK1S, 'KEEP', 'Y' )
             ENDIF
 
             IF (NRIGEL > 0) THEN                           ! Process rigid elements.
                CALL FILE_OPEN ( L1F, LINK1F, OUNT, 'OLD', L1F_MSG, 'READ_STIME', 'UNFORMATTED', 'READ', 'REWIND', 'Y', 'N', 'Y' )
-               CALL OURTIM
-               MODNAM = 'RIGID ELEMENT PROCESSOR                     '
-               WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+               CALL LINK_MESSAGE('RIGID ELEMENT PROCESSOR                     ')
                CALL RIGID_ELEM_PROC
                CALL FILE_CLOSE ( L1F, LINK1F, 'KEEP', 'Y' )
             ENDIF
 
             CALL FILE_CLOSE ( L1J, LINK1J, 'KEEP', 'Y' )   ! Subr SPARSE_RMG will reopen LINK1S
 
-            CALL OURTIM
-            MODNAM = 'ALLOCATE MEMORY FOR RMG ARRAY               '
-            WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+            CALL LINK_MESSAGE('ALLOCATE MEMORY FOR RMG ARRAY               ')
 
-            CALL OURTIM                                    ! Generate sparse RMG (constraint) matrix.
-            MODNAM = 'SPARSE RMG PROCESSOR                        '
-            WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+                                                           ! Generate sparse RMG (constraint) matrix.
+            CALL LINK_MESSAGE('SPARSE RMG PROCESSOR                        ')
             CALL SPARSE_RMG
             CALL FILE_CLOSE ( L1J, LINK1J, 'KEEP', 'Y' )
 
@@ -188,14 +178,10 @@ res19:IF (RESTART == 'N') THEN
   
             IF ((SOL_NAME(1:7) == 'STATICS') .OR. (SOL_NAME(1:8) == 'NLSTATIC') .OR.                                               &
                ((SOL_NAME(1:8) == 'BUCKLING') .AND. (LOAD_ISTEP == 1))) THEN
-            CALL OURTIM
-            MODNAM = 'ALLOCATE MEMORY FOR SYS_LOAD ARRAY          '
-            WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+            CALL LINK_MESSAGE('ALLOCATE MEMORY FOR SYS_LOAD ARRAY          ')
             IF (NFORCE > 0) THEN
                CALL FILE_OPEN ( L1I, LINK1I, OUNT, 'OLD', L1I_MSG, 'READ_STIME', 'UNFORMATTED', 'READ', 'REWIND', 'Y', 'N', 'Y' )
-               CALL OURTIM
-               MODNAM = 'FORCE/MOMENT PROCESSOR                      '
-               WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+               CALL LINK_MESSAGE('FORCE/MOMENT PROCESSOR                      ')
                CALL FORCE_MOM_PROC
                CALL FILE_CLOSE ( L1I, LINK1I, L1ISTAT, 'Y' )
             ENDIF
@@ -205,13 +191,9 @@ res19:IF (RESTART == 'N') THEN
   
          IF ((SOL_NAME(1:7) == 'STATICS') .OR. (SOL_NAME(1:8) == 'NLSTATIC') .OR. (SOL_NAME(1:8) == 'BUCKLING')) THEN
 !xx         ((SOL_NAME(1:8) == 'BUCKLING') .AND. (LOAD_ISTEP == 1))) THEN
-            CALL OURTIM
-            MODNAM = 'ALLOCATE MEMORY FOR THERMAL LOAD ARRAYS       '
-            WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+            CALL LINK_MESSAGE('ALLOCATE MEMORY FOR THERMAL LOAD ARRAYS       ')
             IF ((NPLOAD > 0) .OR. (NTSUB > 0)) THEN
-               CALL OURTIM
-               MODNAM = 'ELEMENT THERMAL AND PRESSURE LOAD PROCESSOR '
-               WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+               CALL LINK_MESSAGE('ELEMENT THERMAL AND PRESSURE LOAD PROCESSOR ')
                CALL EPTL
             ENDIF
          ENDIF
@@ -224,9 +206,7 @@ res19:IF (RESTART == 'N') THEN
 ! Generate G-set mass matrix, MGG
          IF (SKIPMGG == 'N') THEN
 
-            CALL OURTIM
-            MODNAM = 'CALCULATE ESTIMATE OF MASS MATRIX SIZE      '
-            WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+            CALL LINK_MESSAGE('CALCULATE ESTIMATE OF MASS MATRIX SIZE      ')
             CALL EMP0                                        ! Calcs estimate of LTERM_MGGE
             IF (EMP0_PAUSE == 'Y') THEN
                WRITE(SC1,'(A,I12)') 'From EMP0: LTERM_MGGE  = ',LTERM_MGGE
@@ -240,14 +220,10 @@ res19:IF (RESTART == 'N') THEN
                ENDIF
             ENDIF
       
-            CALL OURTIM
-            MODNAM = 'ALLOCATE MEM FOR EMSKEY, EMSCOL, EMSPNT, EMS'
-            WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+            CALL LINK_MESSAGE('ALLOCATE MEM FOR EMSKEY, EMSCOL, EMSPNT, EMS')
             CALL ALLOCATE_EMS_ARRAYS ( SUBR_NAME )
       
-            CALL OURTIM
-            MODNAM = 'ELEMENT MASS MATRIX PROCESSOR               '
-            WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+            CALL LINK_MESSAGE('ELEMENT MASS MATRIX PROCESSOR               ')
             CALL EMP
             INQUIRE ( FILE=F22FIL, EXIST=LEXIST, OPENED=LOPEN )
             IF (LOPEN) THEN
@@ -258,21 +234,15 @@ res19:IF (RESTART == 'N') THEN
 
 ! Formulate MGGC mass matrix for concentrated masses
 
-            CALL OURTIM
-            MODNAM = 'CONCENTRATED MASS MATRIX PROCESSOR          '
-            WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+            CALL LINK_MESSAGE('CONCENTRATED MASS MATRIX PROCESSOR          ')
             CALL MGGC_MASS_MATRIX
 
-            CALL OURTIM
-            MODNAM = 'ALLOCATE MEMORY FOR ELEM MASS ARRAYS        '
-            WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+            CALL LINK_MESSAGE('ALLOCATE MEMORY FOR ELEM MASS ARRAYS        ')
             CALL ALLOCATE_L1_MGG ( 'MGGE', SUBR_NAME )
 
 ! Convert system mass matrix from linked list format to sparse format
 
-            CALL OURTIM
-            MODNAM = 'SPARSE MGG PROCESSOR                        '
-            WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+            CALL LINK_MESSAGE('SPARSE MGG PROCESSOR                        ')
             CALL SPARSE_MGG
 
             CALL DEALLOCATE_EMS_ARRAYS
@@ -300,9 +270,7 @@ res19:IF (RESTART == 'N') THEN
                OUNT(1) = ERR
                OUNT(2) = F06
                CALL FILE_OPEN ( L1P, LINK1P, OUNT, 'OLD', L1P_MSG, 'READ_STIME', 'UNFORMATTED', 'READ', 'REWIND', 'Y', 'N', 'Y' )
-               CALL OURTIM
-               MODNAM = 'GRAV LOAD PROCESSOR                         '
-               WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+               CALL LINK_MESSAGE('GRAV LOAD PROCESSOR                         ')
                CALL GRAV_PROC
                CALL FILE_CLOSE ( L1P, LINK1P, L1PSTAT, 'Y' )
             ENDIF
@@ -316,9 +284,7 @@ res19:IF (RESTART == 'N') THEN
                OUNT(1) = ERR
                OUNT(2) = F06
                CALL FILE_OPEN ( L1U, LINK1U, OUNT, 'OLD', L1U_MSG, 'READ_STIME', 'UNFORMATTED', 'READ', 'REWIND', 'Y', 'N', 'Y' )
-               CALL OURTIM
-               MODNAM = 'RFORCE LOAD PROCESSOR                       '
-               WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+               CALL LINK_MESSAGE('RFORCE LOAD PROCESSOR                       ')
                CALL RFORCE_PROC
                CALL FILE_CLOSE ( L1U, LINK1U, L1USTAT, 'Y' )
             ENDIF
@@ -333,9 +299,7 @@ res19:IF (RESTART == 'N') THEN
                OUNT(1) = ERR
                OUNT(2) = F06
                CALL FILE_OPEN ( L1W, LINK1W, OUNT, 'OLD', L1W_MSG, 'READ_STIME', 'UNFORMATTED', 'READ', 'REWIND', 'Y', 'N', 'Y' )
-               CALL OURTIM
-               MODNAM = 'SLOAD LOAD PROCESSOR                        '
-               WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+               CALL LINK_MESSAGE('SLOAD LOAD PROCESSOR                        ')
                CALL SLOAD_PROC
                CALL FILE_CLOSE ( L1W, LINK1W, L1WSTAT, 'Y' )
             ENDIF
@@ -349,24 +313,20 @@ res19:IF (RESTART == 'N') THEN
 
          IF ((SOL_NAME(1:7) == 'STATICS') .OR. (SOL_NAME(1:8) == 'NLSTATIC') .OR.                                                  &
             ((SOL_NAME(1:8) == 'BUCKLING') .AND. (LOAD_ISTEP == 1))) THEN
-            CALL OURTIM
-            MODNAM = 'CONVERT LOADS TO SPARSE MATRIX FORM         '
-            WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+            CALL LINK_MESSAGE('CONVERT LOADS TO SPARSE MATRIX FORM         ')
             CALL SPARSE_PG
             CALL DEALLOCATE_MODEL_STUF ( 'SYS_LOAD' )
          ENDIF
 
 ! Estimate LTERM so arrays can be allocated for G-set stiffness matrix
   
-         CALL OURTIM
-         WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
          CALL ESP0
          IF ((SOL_NAME(1:8) == 'BUCKLING') .AND. (LOAD_ISTEP == 2)) THEN
-            MODNAM     = 'CALCULATE ESTIMATE OF KGGD MATRIX SIZE        '
+            CALL LINK_MESSAGE('CALCULATE ESTIMATE OF KGGD MATRIX SIZE        ')
             LTERM_NAME = 'LTERM_KGGD'
             LTERM      =  LTERM_KGGD
          ELSE
-            MODNAM     = 'CALCULATE ESTIMATE OF KGG MATRIX SIZE         '
+            CALL LINK_MESSAGE('CALCULATE ESTIMATE OF KGG MATRIX SIZE         ')
             LTERM_NAME = 'LTERM_KGG'
             LTERM      =  LTERM_KGG
          ENDIF
@@ -389,9 +349,7 @@ res19:IF (RESTART == 'N') THEN
          ENDIF
    
          if (setlktk /= 3) then                            ! Subr ESP0 estimated LTERM conservatively. Now allocate this amount
-            CALL OURTIM
-            MODNAM = 'ALLOCATE MEM FOR STFKEY, STFCOL, STFPNT, STF'
-            WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+            CALL LINK_MESSAGE('ALLOCATE MEM FOR STFKEY, STFCOL, STFPNT, STF')
             CALL ALLOCATE_STF_ARRAYS ( 'STFKEY', SUBR_NAME )
             CALL ALLOCATE_STF_ARRAYS ( 'STF3', SUBR_NAME )
          else
@@ -401,9 +359,7 @@ res19:IF (RESTART == 'N') THEN
      
 ! Compute element stiffness and merge into system stiffness matrix.
   
-         CALL OURTIM
-         MODNAM = 'G-SET STIFFNESS MATRIX PROCESSOR            '
-         WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+         CALL LINK_MESSAGE('G-SET STIFFNESS MATRIX PROCESSOR            ')
          CALL ESP
 
          IF ((SOL_NAME(1:8) /= 'BUCKLING') .AND. (SOL_NAME(1:8) /= 'NLSTATIC') .AND. (SOL_NAME(1:8) /= 'DIFFEREN')) THEN
@@ -434,17 +390,13 @@ res19:IF (RESTART == 'N') THEN
 ! Convert system stiff matrix from linked list format to sparse format (SPARSE_KGG calls grid singularity check subr)
 
          IF ((SOL_NAME(1:8) == 'BUCKLING') .AND. (LOAD_ISTEP == 2)) THEN
-            CALL OURTIM
-            MODNAM = 'SPARSE KGGD PROCESSOR                       '
-            WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+            CALL LINK_MESSAGE('SPARSE KGGD PROCESSOR                       ')
             CALL SPARSE_KGGD
             CALL DEALLOCATE_MODEL_STUF ( 'MPC_IND_GRIDS' )
             CALL DEALLOCATE_STF_ARRAYS ( 'STFKEY' )
             CALL DEALLOCATE_STF_ARRAYS ( 'STF3' )
          ELSE
-            CALL OURTIM
-            MODNAM = 'SPARSE KGG PROCESSOR                        '
-            WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+            CALL LINK_MESSAGE('SPARSE KGG PROCESSOR                        ')
             CALL SPARSE_KGG
             CALL DEALLOCATE_MODEL_STUF ( 'MPC_IND_GRIDS' )
             CALL DEALLOCATE_STF_ARRAYS ( 'STFKEY' )
@@ -453,10 +405,8 @@ res19:IF (RESTART == 'N') THEN
 
 ! Write DOF tables and deallocate
 
-         CALL OURTIM
-         MODNAM = 'WRITE DOF TABLES TO FILE AND DEALLOCATE     '
          WRITE(SC1,*) CR13
-         WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+         CALL LINK_MESSAGE('WRITE DOF TABLES TO FILE AND DEALLOCATE     ')
          CALL WRITE_DOF_TABLES
          CALL FILE_CLOSE ( L1C, LINK1C, 'KEEP', 'Y' )
 
@@ -465,9 +415,7 @@ res19:IF (RESTART == 'N') THEN
 
             CALL FILE_OPEN ( L1G, LINK1G, OUNT, 'REPLACE', L1G_MSG, 'WRITE_STIME', 'UNFORMATTED', 'WRITE', 'REWIND', 'Y', 'N', 'Y' )
 
-            CALL OURTIM
-            MODNAM = 'WRITE ELEMENT DATA TO FILE                  '
-            WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+            CALL LINK_MESSAGE('WRITE ELEMENT DATA TO FILE                  ')
 
             CALL ELSAVE
 
@@ -532,8 +480,6 @@ res20:IF (RESTART == 'N') THEN
   152 FORMAT(/,' >> LINK',I3,' BEGIN')
 
   154 FORMAT(  ' >> LINK',I3,' END')
-
- 1092 FORMAT(1X,I2,'/',A44,18X,2X,I2,':',I2,':',I2,'.',I3)
 
  9998 FORMAT(/,' PROCESSING TERMINATED DUE TO ',I8,' INPUT ERRORS. CHECK OUTPUT FILE FOR ERROR MESSAGES')
 
