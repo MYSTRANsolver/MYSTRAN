@@ -219,8 +219,6 @@
   991 FORMAT(' *ERROR   991: CANNOT ALLOCATE ',F10.3,' MB OF MEMORY TO ARRAY ',A,' IN SUBROUTINE ',A                               &
                     ,/,14X,' ALLOCATION STAT = ',I8)
 
- 1092 FORMAT(1X,I2,'/',A44,18X,2X,I2,':',I2,':',I2,'.',I3)
-
  1699 FORMAT('               THE SUBR IN WHICH THESE ERRORS WERE FOUND (',A,') WAS CALLED BY SUBR ',A)
 
 12345 FORMAT(5X,'array ',A6,' row ',I8,' of ',I8, A, A)

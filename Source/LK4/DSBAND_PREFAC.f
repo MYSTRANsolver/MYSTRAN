@@ -605,8 +605,6 @@ c
 
  4908 FORMAT(10(1X,1ES12.5))
 
- 4092 FORMAT(1X,I2,'/',A44,18X,2X,I2,':',I2,':',I2,'.',I3)
-
 98710 FORMAT(' dsaupd loop count = ',I4,' ido = ',i4,', "type" = ',I3,
      &       ', using ',a,' LAPACK matrices',/)
 

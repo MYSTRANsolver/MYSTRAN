@@ -33,7 +33,7 @@
       USE IOUNT1, ONLY                :  WRT_ERR, WRT_LOG, ERR, F04, F06
       USE SCONTR, ONLY                :  BLNK_SUB_NAM, FATAL_ERR, KMSM_SDIA, LINKNO, NDOFL, NTERM_KLL, NTERM_KLLD, NTERM_KMSM,     &
                                          NTERM_KMSMs, NTERM_MLL, NUM_EIGENS, NVEC, SOL_NAME, WARN_ERR
-      USE TIMDAT, ONLY                :  HOUR, MINUTE, SEC, SFRAC, TSEC
+      USE TIMDAT, ONLY                :  TSEC
       USE CONSTANTS_1, ONLY           :  ZERO, ONE
       USE PARAMS, ONLY                :  BAILOUT, EPSIL, KLLRAT, MXITERI, SOLLIB, SPARSE_FLAVOR, SPARSTOR, SUPINFO, SUPWARN
       USE SUBR_BEGEND_LEVELS, ONLY    :  EIG_INV_PWR_BEGEND
@@ -46,13 +46,13 @@
       USE DEBUG_PARAMETERS, ONLY      :  DEBUG
  
       USE EIG_INV_PWR_USE_IFs
-
+      USE LINK_MESSAGE_Interface
+      
       IMPLICIT NONE
   
       CHARACTER, PARAMETER            :: CR13 = CHAR(13)   ! This causes a carriage return simulating the "+" action in a FORMAT
       CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: SUBR_NAME = 'EIG_INV_PWR'
       CHARACTER(  1*BYTE)             :: EQUED             ! 'Y' if KLL stiff matrix was equilibrated in subr EQUILIBRATE    
-      CHARACTER(44*BYTE)              :: MODNAM            ! Name to write to screen to describe module being run.
 
       INTEGER(LONG)                   :: DEB_PRT(2)        ! Debug numbers to say whether to write ABAND and/or its decomp to output
 !                                                            file in called subr SYM_MAT_DECOMP_LAPACK (ABAND = band form of KLL)
@@ -96,9 +96,7 @@
          EIG_N2 = 1
       ENDIF
 
-      CALL OURTIM
-      MODNAM = 'SOLVE FOR EIGENVALS/VECTORS - INV POWER METH'
-      WRITE(SC1,4092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+      CALL LINK_MESSAGE('SOLVE FOR EIGENVALS/VECTORS - INV POWER METH')
 
 ! Calc KMSM = KLL - EIG_SIGMA*MLL (or - EIG_SIGMA*KLLD for BUCKLING) where EIG_SIGMA = shift freq
 
@@ -336,9 +334,7 @@ iters:DO
 ! If this is not a CB or BUCKLING soln, dellocate arrays for KLL.
 
       IF ((SOL_NAME(1:12) /= 'GEN CB MODEL' ) .AND. (SOL_NAME(1:8) /= 'BUCKLING')) THEN
-         CALL OURTIM
-         MODNAM = 'DEALLOCATE SPARSE KLL ARRAYS'
-         WRITE(SC1,4092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+         CALL LINK_MESSAGE('DEALLOCATE SPARSE KLL ARRAYS')
    !xx   WRITE(SC1, * )                                    ! Advance 1 line for screen messages         
          WRITE(SC1,32345,ADVANCE='NO') '       Deallocate KLL', CR13
          CALL DEALLOCATE_SPARSE_MAT ( 'KLL' )
@@ -371,8 +367,6 @@ iters:DO
 
  4008 FORMAT(' *INFORMATION: THE INVERSE POWER METHOD PERFORMED ',I8,' ITERATIONS TO CONVERGE TO THE FIRST EIGENVALUE WITHIN '     &
                             ,1ES9.1,'%')
-
- 4092 FORMAT(1X,I2,'/',A44,18X,2X,I2,':',I2,':',I2,'.',I3)
 
  4901 FORMAT(' *WARNING    : REQUEST FOR ',I8,' EIGENVALUES CANNOT BE HONORED. INVERSE POWER CAN BE USED TO FIND NO MORE THAN ONE' &
                  ,I8,/,14X,' ATTEMPT WILL BE MADE TO FIND ONE EIGENVALUE')

@@ -20,6 +20,7 @@
       USE OURTIM_Interface
       USE MATMULT_SFF_Interface
       USE ARPACK_INFO_MSG_Interface
+      USE LINK_MESSAGE_Interface
 
       character(1*byte), parameter   :: cr13_a = char(13)
       CHARACTER(44*BYTE)             :: MODNAM1            ! Name to write to screen to describe module being run.
@@ -684,14 +685,12 @@ c
 
             if      (eig_lap_mat_type(1:3) == 'DGB') then
 
-               call ourtim
-!              write(sc1,4092) linkno,modnam1,hour,minute,sec,sfrac
+!               CALL LINK_MESSAGE(modnam1)
                call dgbtrf(n, n, kl, ku, rfac, lda, iwork, ierr)
 
             else if (eig_lap_mat_type(1:3) == 'DPB') then
 
-               call ourtim
-!              write(sc1,4092) linkno,modnam2,hour,minute,sec,sfrac
+!               CALL LINK_MESSAGE(modnam2)
                call dpbtrf ( 'U', n, ku, rfac, ku+1, ierr )
                do i=1,n
                   iwork(i) = i                                                  ! Pivot indices (no pivoting in DPBTRF)
@@ -732,14 +731,12 @@ c
 
             if      (eig_lap_mat_type(1:3) == 'DGB') then
 
-               call ourtim
-!              write(sc1,4092) linkno,modnam1,hour,minute,sec,sfrac
+!               CALL LINK_MESSAGE(modnam1)
                call dgbtrf(n, n, kl, ku, rfac, lda, iwork, ierr)
 
             else if (eig_lap_mat_type(1:3) == 'DPB') then
 
-               call ourtim
-!              write(sc1,4092) linkno,modnam2,hour,minute,sec,sfrac
+!              CALL LINK_MESSAGE(modnam2)
                call dpbtrf ( 'U', n, ku, rfac, ku+1, ierr )
                do i=1,n
                   iwork(i) = i   ! Pivot indices (no pivoting in DPBTRF)
@@ -1168,8 +1165,6 @@ c
      &        '7',12X,'8',12X,'9',12X,'10')
 
  4908 FORMAT(10(1X,1ES12.5))
-
- 4092 FORMAT(1X,I2,'/',A44,18X,2X,I2,':',I2,':',I2,'.',I3)
 
 98710 FORMAT(' dsaupd loop count = ',I4,' ido = ',i4,', "type" = ',I3,
      &       ', using ',a,' LAPACK matrices',/)

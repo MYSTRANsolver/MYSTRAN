@@ -36,11 +36,11 @@
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
       USE IOUNT1, ONLY                :  ERR, F04, F06, SC1
       USE SCONTR, ONLY                :  BLNK_SUB_NAM, LINKNO
-      USE TIMDAT, ONLY                :  HOUR, MINUTE, SEC, SFRAC       
       USE CONSTANTS_1, ONLY           :  ZERO
       USE PARAMS, ONLY                :  EPSIL, MAXRATIO
       USE MACHINE_PARAMS, ONLY        :  MACH_LARGE_NUM  
-
+      USE LINK_MESSAGE_Interface
+      
       IMPLICIT NONE
 
       LOGICAL                         :: BAILOUT_CHECK
@@ -54,7 +54,6 @@
 !                                                            where the singularity occurs is referenced). If it is not a MYSTRAN
 !                                                            set designator it should be blank
       CHARACTER(LEN=*) , INTENT(IN)   :: PRT_ERRS          ! If not 'N', print singularity errors
-      CHARACTER(54*BYTE)              :: MODNAM            ! Name to write to screen to describe module being run
       CHARACTER( 1*BYTE)              :: NONPOS_DEF        ! Indicates matrix was nonpositive definite
 
       INTEGER(LONG), INTENT(IN)       :: NROWS             ! Number of rows in sparse matrix MATIN
@@ -80,9 +79,7 @@
       
 ! Calculate and print ratios of diag to factor diag (if they are zero or negative or > MAXRATIO).
 
-      CALL OURTIM
-      MODNAM = 'CALC MAX RATIO OF MATRIX DIAGONAL TO FACTOR DIAGONAL'
-      WRITE(SC1,3092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+      CALL LINK_MESSAGE('CALC MAX RATIO OF MATRIX DIAGONAL TO FACTOR DIAGONAL')
 
       CALL COUNTER_INIT("     Getting diagonal of matrix, row", NROWS)
       DO I=1,NROWS                                         ! First, get diagonal terms from MATIN
@@ -172,8 +169,6 @@
                     ,/,14X,' THIS WILL ONLY BE A FATAL ERROR IF PARAM BAILOUT >= 0')
 
   984 FORMAT(' *INFORMATION: THE MAXIMUM ABSOLUTE VALUE OF THE RATIO OF MATRIX DIAGONAL TO FACTOR DIAG FOR MATRIX ',A,' = ',1ES14.6)
-
- 3092 FORMAT(1X,I2,'/',A54,8X,2X,I2,':',I2,':',I2,'.',I3)
 
  9811 FORMAT('               THIS IS FOR ROW AND COL IN THE MATRIX FOR GRID POINT ',I8,' COMP ',I3,'. THE CALLING SUBR WAS: ',A,/)
 
