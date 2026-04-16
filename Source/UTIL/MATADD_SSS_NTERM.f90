@@ -84,6 +84,15 @@
       INTEGER(LONG)                   :: NUM_A_ROW_I       ! Num terms in row I of A matrix
       INTEGER(LONG)                   :: NUM_B_ROW_I       ! Num terms in row I of B matrix
       INTEGER(LONG), PARAMETER        :: SUBR_BEGEND = MATADD_SSS_NTERM_BEGEND
+
+
+      INTEGER(LONG)                   :: ROW
+      INTEGER(LONG)                   :: P_A
+      INTEGER(LONG)                   :: P_B
+      INTEGER(LONG)                   :: COL_A
+      INTEGER(LONG)                   :: COL_B
+      INTEGER(LONG)                   :: CNT
+
        
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN
@@ -107,6 +116,65 @@
       NTERM_C = 0
 
       IF ((DEBUG(81) == 1) .OR. (DEBUG(81) == 3)) CALL MATADD_SSS_NTERM_DEB ( '1', '   ' )
+
+
+
+
+
+
+
+
+!----------
+      CNT = 0
+
+      DO ROW=1,NROWS
+         P_A = I_A(ROW)
+         P_B = I_B(ROW)
+      
+         DO WHILE(P_A < I_A(ROW+1) .OR. P_B < I_B(ROW+1))
+         
+                                                           ! Sentinel when A's row is exhausted
+            IF (P_A < I_A(ROW+1)) then
+               COL_A = J_A(P_A)
+            ELSE
+               COL_A = HUGE(0)
+            ENDIF
+                                                           ! Sentinel when B's row is exhausted
+            IF (P_B < I_B(ROW+1)) then
+               COL_B = J_B(P_B)
+            ELSE
+               COL_B = HUGE(0)
+            ENDIF
+
+ 
+            IF (COL_A < COL_B) THEN                        ! Only A has an entry in this column
+               CNT = CNT + 1
+               P_A = P_A + 1
+            ELSE IF (COL_B < COL_A) THEN                   ! Only B has an entry in this column
+               CNT = CNT + 1
+               P_B = P_B + 1
+            ELSE                                           ! Both have an entry
+               CNT = CNT + 1
+               P_A = P_A + 1
+               P_B = P_B + 1
+            ENDIF
+         
+         ENDDO
+            
+      ENDDO
+
+      NTERM_C = CNT
+
+      RETURN !victor todo do f04/etc stuff at the end
+
+!----------
+
+
+
+
+
+
+
 
 ! Determine the highest col number in arrays J_A and J_B
 
