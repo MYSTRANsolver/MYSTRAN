@@ -141,10 +141,6 @@
 !        DEBUG  67    Not used
 !        DEBUG  80  > 0 print LAPACK_S scale factors, in subr EQUILIBRATE, used to equilibrate the stiffness matrices
 
-!        DEBUG  81  = 1 print data from subr MATADD_SSS_NTERM
-!                     2 print data from subr MATADD_SSS
-!                     3 print data from both subrs
- 
 !        DEBUG  82  = 1 print data from subr MATMULT_SFF
 
 !        DEBUG  83  = 1 print data from subr MATMULT_SFS_NTERM
