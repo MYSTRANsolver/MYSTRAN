@@ -32,7 +32,6 @@
  
       USE SCONTR, ONLY                :  LINKNO, NUM_EIGENS
       USE IOUNT1, ONLY                :  ERR, F06, L1M, L1M_MSG, L1MSTAT, LINK1M, SC1, WRT_ERR, WRT_LOG
-      USE TIMDAT, ONLY                :  HOUR, MINUTE, SEC, SFRAC, STIME, TSEC
       USE DEBUG_PARAMETERS, ONLY      :  DEBUG
       USE EIGEN_MATRICES_1 , ONLY     :  EIGEN_VAL, GEN_MASS, MODE_NUM
 
@@ -41,10 +40,9 @@
                                          MIJ_COL, MIJ_ROW, NUM_FAIL_CRIT
 
       USE WRITE_L1M_USE_IFs
-
+      USE LINK_MESSAGE_Interface
+      
       IMPLICIT NONE
- 
-      CHARACTER(54*BYTE)              :: MODNAM            ! Name to write to screen to describe module being run
 
       INTEGER(LONG)                   :: I                 ! DO loop index
       INTEGER(LONG)                   :: OUNT(2)           ! File units to write messages to
@@ -59,9 +57,7 @@
 !xx   RW     = 'WRITE'
       CALL FILE_OPEN ( L1M, LINK1M, OUNT, 'REPLACE', L1M_MSG, 'WRITE_STIME', 'UNFORMATTED', 'WRITE', 'REWIND', 'Y', 'N', 'Y' )
 
-      CALL OURTIM
-      MODNAM = 'WRITE EIGENVALUE DATA FROM PRIOR LINK'
-      WRITE(SC1,9092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+      CALL LINK_MESSAGE('WRITE EIGENVALUE DATA FROM PRIOR LINK')
 
       WRITE(L1M) EIG_SID
       WRITE(L1M) EIG_METH
@@ -90,8 +86,6 @@
 
       CALL FILE_CLOSE ( L1M, LINK1M, 'KEEP', 'Y' )
 
-! **********************************************************************************************************************************
- 9092 FORMAT(1X,I2,'/',A54,8X,2X,I2,':',I2,':',I2,'.',I3)
 
 ! **********************************************************************************************************************************
  

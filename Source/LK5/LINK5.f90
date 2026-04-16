@@ -39,7 +39,6 @@
       USE SCONTR, ONLY                :  BLNK_SUB_NAM, COMM, FATAL_ERR, LINKNO, MBUG, NDOFA, NDOFF, NDOFG, NDOFL, NDOFM,           &
                                          NDOFN, NDOFO, NDOFR, NDOFS, NDOFSE, NGRID, NSUB, NTERM_GMN, NTERM_GOA, NTERM_PO,          &
                                          NUM_CB_DOFS, NUM_EIGENS, NVEC, SOL_NAME, WARN_ERR
-      USE TIMDAT, ONLY                :  YEAR, MONTH, DAY, HOUR, MINUTE, SEC, SFRAC, STIME, TSEC
       USE CONSTANTS_1, ONLY           :  ZERO, ONE
       USE PARAMS, ONLY                :  EIGNORM2, SUPINFO, SUPWARN
       USE NONLINEAR_PARAMS, ONLY      :  LOAD_ISTEP
@@ -54,7 +53,8 @@
       USE MODEL_STUF, ONLY            :  GRID, GRID_ID, INV_GRID_SEQ, EIG_COMP, EIG_GRID, EIG_NORM, MAXMIJ, MIJ_COL, MIJ_ROW
 
       USE LINK5_USE_IFs
-
+      USE LINK_MESSAGE_Interface
+      
       IMPLICIT NONE
  
       LOGICAL                         :: VEC_SIGN_CHG(NDOFL) ! Indicators of whether user wants to change sign of an eigenvector
@@ -66,7 +66,6 @@
       CHARACTER( 1*BYTE)              :: DO_IT             ! If 'Y' execute some code
       CHARACTER( 1*BYTE)              :: MIJ_COL_FOUND='N' ! 'Y' if MIJ_ROW is processed as a solution vector in this LINK
       CHARACTER( 1*BYTE)              :: MIJ_ROW_FOUND='N' ! 'Y' if MIJ_ROW is processed as a solution vector in this LINK
-      CHARACTER(54*BYTE)              :: MODNAM            ! Name to write to screen to describe module being run
       CHARACTER( 1*BYTE)              :: READ_NTERM        ! 'Y' or 'N' Input to subr READ_MATRIX_1 
       CHARACTER( 1*BYTE)              :: OPND              ! Input to subr READ_MATRIX_i. 'Y'/'N' whether to open  a file or not 
       CHARACTER( 1*BYTE)              :: READ_UO0          ! If 'Y' then read UO0 data from file L2F
@@ -207,9 +206,7 @@
 ! **********************************************************************************************************************************
 ! Allocate arrays for YSe, GMN, GOA
 
-      CALL OURTIM
-      MODNAM = 'ALLOCATE SEVERAL ARRAYS'
-      WRITE(SC1,5092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+      CALL LINK_MESSAGE('ALLOCATE SEVERAL ARRAYS')
       CALL ALLOCATE_SPARSE_MAT ( 'GMN', NDOFM, NTERM_GMN, SUBR_NAME )
       CALL ALLOCATE_SPARSE_MAT ( 'GOA', NDOFO, NTERM_GOA, SUBR_NAME )
       CALL ALLOCATE_COL_VEC ( 'YSe' , NDOFS, SUBR_NAME )
@@ -218,9 +215,7 @@
 
       IF (NTERM_GMN > 0) THEN
 
-         CALL OURTIM
-         MODNAM = 'READ GMN MATRIX'
-         WRITE(SC1,5092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+         CALL LINK_MESSAGE('READ GMN MATRIX')
          READ_NTERM = 'Y'
          OPND       = 'N'
          CLOSE_IT   = 'Y'
@@ -231,9 +226,7 @@
 ! Read GOA matrix if there are omitted DOFs
 
       IF (NTERM_GOA > 0) THEN
-         CALL OURTIM
-         MODNAM = 'READ GOA MATRIX'
-         WRITE(SC1,5092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+         CALL LINK_MESSAGE('READ GOA MATRIX')
          READ_NTERM = 'Y'
          OPND       = 'N'
          CLOSE_IT   = 'Y'
@@ -252,9 +245,7 @@
 
             CALL FILE_OPEN ( L1H, LINK1H, OUNT, 'OLD', L1H_MSG, 'READ_STIME', 'UNFORMATTED', 'READ', 'REWIND', 'Y', 'N', 'Y' )
 
-            CALL OURTIM
-            MODNAM = 'READ YSe ENFORCED DISPLACEMENTS'
-            WRITE(SC1,5092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+            CALL LINK_MESSAGE('READ YSe ENFORCED DISPLACEMENTS')
 
             IERROR = 0
             DO I=1,NDOFSE
@@ -425,21 +416,20 @@ j_do: DO J = 1,NUM_SOLNS
 
          CALL ALLOCATE_COL_VEC ('UL_COL', NDOFL, SUBR_NAME)! Allocate array UL_COL
 
-         CALL OURTIM                                       ! Read UL displs for the current subcase/vector from LINK3A 
+                                                           ! Read UL displs for the current subcase/vector from LINK3A 
          IF     ((SOL_NAME(1: 7) == 'STATICS') .OR. (SOL_NAME(1:8) == 'NLSTATIC')) THEN
-            MODNAM = 'READ  L-SET DISPLACEMENTS                      Subcase'
+            CALL LINK_MESSAGE('READ  L-SET DISPLACEMENTS                      Subcase')
          ELSE IF (SOL_NAME(1: 5) == 'MODES') THEN
-            MODNAM = 'READ  L-SET EIGENVECTORS                       Vector'
+            CALL LINK_MESSAGE('READ  L-SET EIGENVECTORS                       Vector')
          ELSE IF (SOL_NAME(1: 8) == 'BUCKLING') THEN
             IF (LOAD_ISTEP == 1) THEN
-               MODNAM = 'READ  L-SET DISPLACEMENTS                      Subcase'
+               CALL LINK_MESSAGE('READ  L-SET DISPLACEMENTS                      Subcase')
             ELSE IF (LOAD_ISTEP == 2) THEN
-               MODNAM = 'READ  L-SET EIGENVECTORS                       Vector'
+               CALL LINK_MESSAGE('READ  L-SET EIGENVECTORS                       Vector')
             ENDIF
          ELSE IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
-            MODNAM = 'READ  L-SET CB VECTORS (PHIZL)                 CB vec'
+            CALL LINK_MESSAGE('READ  L-SET CB VECTORS (PHIZL)                 CB vec')
          ENDIF
-         WRITE(SC1,5093) LINKNO,MODNAM,J,HOUR,MINUTE,SEC,SFRAC
 
          REC_NO = 0
          IERROR = 0
@@ -460,9 +450,7 @@ j_do: DO J = 1,NUM_SOLNS
                                                            ! Build UA from UL and UR
          CALL ALLOCATE_COL_VEC ( 'UA_COL', NDOFA, SUBR_NAME )
          CALL ALLOCATE_COL_VEC ( 'UR_COL', NDOFR, SUBR_NAME )
-         CALL OURTIM
-         MODNAM = 'BUILD UA DISPLS FROM UL, UR:                      "'
-         WRITE(SC1,5093) LINKNO,MODNAM,J,HOUR,MINUTE,SEC,SFRAC
+         CALL LINK_MESSAGE('BUILD UA DISPLS FROM UL, UR:                      "')
          COL_NUM = 0
          IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
             IF ((J > NDOFR+nvec) .AND. (J <= NUM_CB_DOFS)) THEN
@@ -477,15 +465,11 @@ j_do: DO J = 1,NUM_SOLNS
          CALL ALLOCATE_COL_VEC ( 'UF_COL' , NDOFF, SUBR_NAME )
          CALL ALLOCATE_COL_VEC ( 'UO_COL' , NDOFO, SUBR_NAME )
          CALL ALLOCATE_COL_VEC ( 'UO0_COL', NDOFO, SUBR_NAME )
-         CALL OURTIM
-         MODNAM = 'BUILD UF DISPLS FROM UA, UO:                      "'
-         WRITE(SC1,5093) LINKNO,MODNAM,J,HOUR,MINUTE,SEC,SFRAC
+         CALL LINK_MESSAGE('BUILD UF DISPLS FROM UA, UO:                      "')
          IF (READ_UO0 == 'Y') THEN
             IF (NDOFO > 0) THEN
                IF (NTERM_PO > 0) THEN      
-                  CALL OURTIM
-                  MODNAM = '  READ UO0 DISPLS,                                "'
-                  WRITE(SC1,5093) LINKNO,MODNAM,J,HOUR,MINUTE,SEC,SFRAC 
+                  CALL LINK_MESSAGE('  READ UO0 DISPLS,                                "')
     
                   IERROR = 0
                   DO I=1,NDOFO
@@ -515,9 +499,7 @@ j_do: DO J = 1,NUM_SOLNS
                                                            ! Build UN from UF and US
          CALL ALLOCATE_COL_VEC ( 'UN_COL', NDOFN , SUBR_NAME)
          CALL ALLOCATE_COL_VEC ( 'US_COL', NDOFS, SUBR_NAME )
-         CALL OURTIM
-         MODNAM = 'BUILD UN DISPLS FROM UF, US:                      "'
-         WRITE(SC1,5093) LINKNO,MODNAM,J,HOUR,MINUTE,SEC,SFRAC
+         CALL LINK_MESSAGE('BUILD UN DISPLS FROM UF, US:                      "')
          CALL BUILD_N_FS
          CALL DEALLOCATE_COL_VEC ( 'UF_COL' )
          CALL DEALLOCATE_COL_VEC ( 'US_COL' )
@@ -525,9 +507,7 @@ j_do: DO J = 1,NUM_SOLNS
          CALL DEALLOCATE_COL_VEC ( 'UG_COL' )
          CALL ALLOCATE_COL_VEC ( 'UG_COL', NDOFG, SUBR_NAME )
          CALL ALLOCATE_COL_VEC ( 'UM_COL', NDOFM, SUBR_NAME )
-         CALL OURTIM
-         MODNAM = 'BUILD UG DISPLS FROM UN, UM:                      "'
-         WRITE(SC1,5093) LINKNO,MODNAM,J,HOUR,MINUTE,SEC,SFRAC
+         CALL LINK_MESSAGE('BUILD UG DISPLS FROM UN, UM:                      "')
          CALL BUILD_G_NM
          CALL DEALLOCATE_COL_VEC ( 'UN_COL' )
          CALL DEALLOCATE_COL_VEC ( 'UM_COL' )
@@ -591,9 +571,8 @@ j_do: DO J = 1,NUM_SOLNS
             ENDIF
          ENDIF
 
-         CALL OURTIM                                       ! Write UG displs for this subcase to file LINK5A
-         MODNAM = 'WRITE UG DISPLS TO FILE,                          "'
-         WRITE(SC1,5093) LINKNO,MODNAM,J,HOUR,MINUTE,SEC,SFRAC
+                                                           ! Write UG displs for this subcase to file LINK5A
+         CALL LINK_MESSAGE('WRITE UG DISPLS TO FILE,                          "')
          WRITE(SC1, * )                                    ! Separator between UG_COL calcs
          DO I=1,NDOFG
             WRITE(L5A) UG_COL(I)                           ! For CB this is a col of PHIZG (which is never processed as an array)
@@ -688,9 +667,7 @@ j_do: DO J = 1,NUM_SOLNS
 ! Call OUTPUT4 processor to process output requests for OUTPUT4 matrices generated in this link
 
       IF (NUM_OU4_REQUESTS > 0) THEN
-         CALL OURTIM
-         MODNAM = 'WRITE OUTPUT4 NATRICES      '
-         WRITE(SC1,5092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+         CALL LINK_MESSAGE('WRITE OUTPUT4 NATRICES      ')
          WRITE(F06,*)
          CALL OUTPUT4_PROC ( SUBR_NAME )
       ENDIF
@@ -755,8 +732,6 @@ j_do: DO J = 1,NUM_SOLNS
 
  5002 FORMAT(' *ERROR  5002: PROGRAMMING ERROR IN SUBROUTINE ',A                                                                   &
                      ,/,14X,'VARIABLE LOAD_ISTEP MUST BE 1 OR 2 BUT VALUE IS = ',I8)
-
- 5092 FORMAT(1X,I2,'/',A54,8X,2X,I2,':',I2,':',I2,'.',I3)
 
  5093 FORMAT(1X,I2,'/',A54,I8,2X,I2,':',I2,':',I2,'.',I3)
 
