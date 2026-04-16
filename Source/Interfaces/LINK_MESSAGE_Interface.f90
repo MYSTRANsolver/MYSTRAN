@@ -28,6 +28,7 @@ MODULE LINK_MESSAGE_Interface
 
    INTERFACE
    
+
       SUBROUTINE LINK_MESSAGE(MODNAM)
       
       IMPLICIT NONE
@@ -35,6 +36,19 @@ MODULE LINK_MESSAGE_Interface
       CHARACTER(LEN=*), INTENT(IN)    :: MODNAM            ! Name to write to screen to describe module being run
 
       END SUBROUTINE LINK_MESSAGE
+
+
+      SUBROUTINE LINK_MESSAGE_I(MODNAM, I)
+
+      USE PENTIUM_II_KIND, ONLY       :  LONG
+      
+      IMPLICIT NONE
+
+      CHARACTER(LEN=*), INTENT(IN)    :: MODNAM            ! Name to write to screen to describe module being run
+      INTEGER(LONG), INTENT(IN)       :: I                 ! A number displayed after the string
+
+      END SUBROUTINE LINK_MESSAGE_I
+
 
    END INTERFACE
 

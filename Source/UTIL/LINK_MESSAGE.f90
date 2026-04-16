@@ -50,3 +50,41 @@
 
 
       END SUBROUTINE LINK_MESSAGE
+
+
+
+
+
+
+
+
+
+      SUBROUTINE LINK_MESSAGE_I(MODNAM, I)
+ 
+      USE PENTIUM_II_KIND, ONLY       :  LONG
+      USE IOUNT1, ONLY                :  SC1
+      USE SCONTR, ONLY                :  LINKNO
+      USE TIMDAT, ONLY                :  HOUR, MINUTE, SEC, SFRAC
+
+      USE OURTIM_Interface
+      
+      IMPLICIT NONE
+
+      CHARACTER(LEN=*), INTENT(IN)    :: MODNAM            ! Name to write to screen to describe module being run
+      INTEGER(LONG), INTENT(IN)       :: I                 ! A number displayed after the string
+
+
+! **********************************************************************************************************************************
+
+      CALL OURTIM
+
+      WRITE(SC1,1097) LINKNO,MODNAM,I,HOUR,MINUTE,SEC,SFRAC
+
+      RETURN
+
+! **********************************************************************************************************************************
+
+ 1097 FORMAT(1X,I2,'/',A,T59,I8,2X,I2,':',I2,':',I2,'.',I3)
+
+
+      END SUBROUTINE LINK_MESSAGE_I

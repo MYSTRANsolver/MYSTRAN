@@ -61,7 +61,7 @@
                                          ELDT_F25_U_P_BIT
 
       USE CC_OUTPUT_DESCRIBERS, ONLY  :  DISP_OUT, ACCE_OUT, OLOA_OUT, SPCF_OUT, MPCF_OUT, FORC_OUT, GPFO_OUT, STRE_OUT, STRN_OUT
-      USE TIMDAT, ONLY                :  YEAR, MONTH, DAY, HOUR, MINUTE, SEC, SFRAC, STIME, TSEC
+      USE TIMDAT, ONLY                :  STIME
       USE SUBR_BEGEND_LEVELS, ONLY    :  LINK9_BEGEND
       USE CONSTANTS_1, ONLY           :  ZERO, ONE
       USE PARAMS, ONLY                :  EPSIL, MPFOUT, SUPINFO, SUPWARN, WTMASS, PRTF06, PRTOP2, PRTNEU
@@ -110,7 +110,6 @@
       CHARACTER( 1*BYTE)              :: ZERO_GEN_STIFF    ! Indicator of whether there are zero gen stiffs (can't calc MEFFMASS)
 
       CHARACTER(24*BYTE)              :: MESSAG            ! File description. Input to subr UNFORMATTED_OPEN
-      CHARACTER(54*BYTE)              :: MODNAM            ! Name to write to screen to describe module being run
       CHARACTER( 1*BYTE)              :: NULL_COL          ! An output from subr GET_SPARSE_CRS_COL
       CHARACTER( 1*BYTE)              :: PROC_PG_OUTPUT    ! 'Y' in general. However, for BUCKLING, set to 'N' for eigen subcase
       CHARACTER( 1*BYTE)              :: READ_SPCARRAYS    ! ='Y' if we need to read KSF, etc. See test below.
@@ -735,20 +734,19 @@ j_do: DO JVEC=1,NUM_SOLNS
          SC_MPCF_OUTPUT = IAND(OGROUT(INT_SC_NUM),IBIT(GROUT_MPCF_BIT))
          SC_GPFO_OUTPUT = IAND(OGROUT(INT_SC_NUM),IBIT(GROUT_GPFO_BIT))
 
-         CALL OURTIM                                       ! Write message to screen
+                                                           ! Write message to screen
          IF      ((SOL_NAME(1: 7) == 'STATICS') .OR. (SOL_NAME(1:8) == 'NLSTATIC') .OR.                                            &
                  ((SOL_NAME(1:8) == 'BUCKLING') .AND. (LOAD_ISTEP == 1))) THEN
-            MODNAM = 'READ G-SET DISPLACEMENTS,                      Subcase'
+            CALL LINK_MESSAGE_I('READ G-SET DISPLACEMENTS,                      Subcase', JVEC)
 
          ELSE IF ((SOL_NAME(1: 5) == 'MODES') .OR. ((SOL_NAME(1:8) == 'BUCKLING') .AND. (LOAD_ISTEP == 2))) THEN
-            MODNAM = 'READ G-SET EIGENVECTORS,                      Eigenvec'
+            CALL LINK_MESSAGE_I('READ G-SET EIGENVECTORS,                      Eigenvec', JVEC)
 
          ELSE IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
-            MODNAM = 'READ G-SET CB VECTORS,                       CB vector'
+            CALL LINK_MESSAGE_I('READ G-SET CB VECTORS,                       CB vector', JVEC)
 
          ENDIF
 
-         WRITE(SC1,9093) LINKNO,MODNAM,JVEC,HOUR,MINUTE,SEC,SFRAC
                                                            ! Read the displ's for the DOF for this subcase/eigenvector
          CALL DEALLOCATE_COL_VEC ( 'UG_COL' )
          CALL ALLOCATE_COL_VEC ( 'UG_COL', NDOFG, SUBR_NAME )
@@ -790,9 +788,7 @@ j_do: DO JVEC=1,NUM_SOLNS
         ITABLE = -1
          IF ((SC_ACCE_OUTPUT > 0) .OR. (WRITE_NEU)) THEN
             IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
-               CALL OURTIM
-               MODNAM = 'PROCESS ACCEL OUTPUT REQUESTS,                    "'
-               WRITE(SC1,9093) LINKNO,MODNAM,JVEC,HOUR,MINUTE,SEC,SFRAC
+               CALL LINK_MESSAGE_I('PROCESS ACCEL OUTPUT REQUESTS,                    "',JVEC)
                CALL OFP1 ( JVEC, 'ACCE', SC_ACCE_OUTPUT, FEMAP_SET_ID, ITG, OT4_GROW, ITABLE, NEW_RESULT )
 !              NEW_RESULT = .FALSE.
             ELSE
@@ -806,9 +802,7 @@ j_do: DO JVEC=1,NUM_SOLNS
 
          ! Process displacement output requests
          IF ((SC_DISP_OUTPUT > 0) .OR. (WRITE_NEU)) THEN
-            CALL OURTIM
-            MODNAM = 'PROCESS DISPL OUTPUT REQUESTS,                    "'
-            WRITE(SC1,9093) LINKNO,MODNAM,JVEC,HOUR,MINUTE,SEC,SFRAC
+            CALL LINK_MESSAGE_I('PROCESS DISPL OUTPUT REQUESTS,                    "',JVEC)
             CALL OFP1 ( JVEC, 'DISP', SC_DISP_OUTPUT, FEMAP_SET_ID, ITG, OT4_GROW, ITABLE, NEW_RESULT )
 !           NEW_RESULT = .FALSE.
          ENDIF
@@ -820,9 +814,7 @@ j_do: DO JVEC=1,NUM_SOLNS
          IF (PROC_PG_OUTPUT == 'Y') THEN
             IF ((SC_OLOA_OUTPUT > 0) .OR. (SC_GPFO_OUTPUT > 0) .OR. (WRITE_NEU)) THEN
                IF  ((SOL_NAME(1:7) == 'STATICS') .OR. (SOL_NAME(1:8) == 'BUCKLING') .OR. (SOL_NAME(1:8) == 'NLSTATIC')) THEN
-                  CALL OURTIM
-                  MODNAM = 'PROCESS APPLIED LOAD OUTPUT REQS,                 "'
-                  WRITE(SC1,9093) LINKNO,MODNAM,JVEC,HOUR,MINUTE,SEC,SFRAC
+                  CALL LINK_MESSAGE_I('PROCESS APPLIED LOAD OUTPUT REQS,                 "',JVEC)
                   CALL GET_SPARSE_CRS_COL ('PG_COL    ',JVEC      , NTERM_PG, NDOFG, NSUB, I_PG, J_PG, PG, ONE, PG_COL, NULL_COL)
                   CALL OFP1 ( JVEC, 'OLOAD', SC_OLOA_OUTPUT, FEMAP_SET_ID, ITG, OT4_GROW, ITABLE, NEW_RESULT )
 !                 NEW_RESULT = .FALSE.
@@ -865,9 +857,7 @@ j_do: DO JVEC=1,NUM_SOLNS
                ENDDO
             ENDIF
 
-            CALL OURTIM
-            MODNAM = 'PROCESS SPC FORCE OUTPUT REQUESTS,                "'
-            WRITE(SC1,9093) LINKNO,MODNAM,JVEC,HOUR,MINUTE,SEC,SFRAC
+            CALL LINK_MESSAGE_I('PROCESS SPC FORCE OUTPUT REQUESTS,                "',JVEC)
             CALL ALLOCATE_COL_VEC ( 'QGs_COL', NDOFG, SUBR_NAME )
            CALL OFP2 ( JVEC, 'SPCF', SC_SPCF_OUTPUT, ZERO_GEN_STIFF, FEMAP_SET_ID, ITG, OT4_GROW, ITABLE, NEW_RESULT )
 !           NEW_RESULT = .FALSE.
@@ -889,9 +879,7 @@ j_do: DO JVEC=1,NUM_SOLNS
                   ENDIF
                ENDIF
 
-               CALL OURTIM
-               MODNAM = 'PROCESS MPC FORCE OUTPUT REQUESTS,                "'
-               WRITE(SC1,9093) LINKNO,MODNAM,JVEC,HOUR,MINUTE,SEC,SFRAC
+               CALL LINK_MESSAGE_I('PROCESS MPC FORCE OUTPUT REQUESTS,                "',JVEC)
                CALL ALLOCATE_COL_VEC ( 'QGm_COL', NDOFG, SUBR_NAME )
                CALL OFP2 ( JVEC, 'MPCF', SC_MPCF_OUTPUT, ZERO_GEN_STIFF, FEMAP_SET_ID, ITG, OT4_GROW, ITABLE, NEW_RESULT )
 !              NEW_RESULT = .FALSE.
@@ -946,9 +934,7 @@ j_do: DO JVEC=1,NUM_SOLNS
 
             ENDIF
 
-            CALL OURTIM
-            MODNAM = 'PROCESS G.P. FORCE BALANCE REQUESTS,              "'
-            WRITE(SC1,9093) LINKNO,MODNAM,JVEC,HOUR,MINUTE,SEC,SFRAC
+            CALL LINK_MESSAGE_I('PROCESS G.P. FORCE BALANCE REQUESTS,              "',JVEC)
             CALL GP_FORCE_BALANCE_PROC ( JVEC, 'Y' )
             CALL DEALLOCATE_COL_VEC ( 'FG_COL' )
             CALL DEALLOCATE_COL_VEC ( 'QGr_COL' )
@@ -969,9 +955,7 @@ j_do: DO JVEC=1,NUM_SOLNS
          IF((SC_ELFE_OUTPUT > 0) .OR. (SC_ELFN_OUTPUT > 0) .OR. (SC_STRE_OUTPUT > 0) .OR. (SC_STRN_OUTPUT > 0) .OR.                &
             ! (ANY_U_P_OUTPUT > 0) .OR.
             (WRITE_NEU)) THEN
-            CALL OURTIM
-            MODNAM = 'PROCESS ELEM FORCE/STRESS REQUESTS,               "'
-            WRITE(SC1,9093) LINKNO,MODNAM,JVEC,HOUR,MINUTE,SEC,SFRAC
+            CALL LINK_MESSAGE_I('PROCESS ELEM FORCE/STRESS REQUESTS,               "',JVEC)
             IF ((DEBUG(176) == 0) .AND. (JVEC == 1)) THEN
                WRITE(ERR,98980)
                WRITE(ERR,98988) DEBUG(176)
@@ -1436,8 +1420,6 @@ j_do: DO JVEC=1,NUM_SOLNS
 
  9055 FORMAT('The heading "LOCATION" for stresses and strains only has significance for the elements that allow output of these',/,&
              'quantities at specific locations as specified on the Case Control STRESS, STRAIN entries (see MYSTRAN Users Manual)')
-
- 9093 FORMAT(1X,I2,'/',A54,I8,2X,I2,':',I2,':',I2,'.',I3)
 
  9095 FORMAT(1X,'********** Subcase No. ',I8,' **********')
 

@@ -418,17 +418,17 @@ j_do: DO J = 1,NUM_SOLNS
 
                                                            ! Read UL displs for the current subcase/vector from LINK3A 
          IF     ((SOL_NAME(1: 7) == 'STATICS') .OR. (SOL_NAME(1:8) == 'NLSTATIC')) THEN
-            CALL LINK_MESSAGE('READ  L-SET DISPLACEMENTS                      Subcase')
+            CALL LINK_MESSAGE_I('READ  L-SET DISPLACEMENTS                      Subcase', J)
          ELSE IF (SOL_NAME(1: 5) == 'MODES') THEN
-            CALL LINK_MESSAGE('READ  L-SET EIGENVECTORS                       Vector')
+            CALL LINK_MESSAGE_I('READ  L-SET EIGENVECTORS                       Vector', J)
          ELSE IF (SOL_NAME(1: 8) == 'BUCKLING') THEN
             IF (LOAD_ISTEP == 1) THEN
-               CALL LINK_MESSAGE('READ  L-SET DISPLACEMENTS                      Subcase')
+               CALL LINK_MESSAGE_I('READ  L-SET DISPLACEMENTS                      Subcase', J)
             ELSE IF (LOAD_ISTEP == 2) THEN
-               CALL LINK_MESSAGE('READ  L-SET EIGENVECTORS                       Vector')
+               CALL LINK_MESSAGE_I('READ  L-SET EIGENVECTORS                       Vector', J)
             ENDIF
          ELSE IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
-            CALL LINK_MESSAGE('READ  L-SET CB VECTORS (PHIZL)                 CB vec')
+            CALL LINK_MESSAGE_I('READ  L-SET CB VECTORS (PHIZL)                 CB vec', J)
          ENDIF
 
          REC_NO = 0
@@ -450,7 +450,7 @@ j_do: DO J = 1,NUM_SOLNS
                                                            ! Build UA from UL and UR
          CALL ALLOCATE_COL_VEC ( 'UA_COL', NDOFA, SUBR_NAME )
          CALL ALLOCATE_COL_VEC ( 'UR_COL', NDOFR, SUBR_NAME )
-         CALL LINK_MESSAGE('BUILD UA DISPLS FROM UL, UR:                      "')
+         CALL LINK_MESSAGE_I('BUILD UA DISPLS FROM UL, UR:                      "', J)
          COL_NUM = 0
          IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
             IF ((J > NDOFR+nvec) .AND. (J <= NUM_CB_DOFS)) THEN
@@ -465,11 +465,11 @@ j_do: DO J = 1,NUM_SOLNS
          CALL ALLOCATE_COL_VEC ( 'UF_COL' , NDOFF, SUBR_NAME )
          CALL ALLOCATE_COL_VEC ( 'UO_COL' , NDOFO, SUBR_NAME )
          CALL ALLOCATE_COL_VEC ( 'UO0_COL', NDOFO, SUBR_NAME )
-         CALL LINK_MESSAGE('BUILD UF DISPLS FROM UA, UO:                      "')
+         CALL LINK_MESSAGE_I('BUILD UF DISPLS FROM UA, UO:                      "', J)
          IF (READ_UO0 == 'Y') THEN
             IF (NDOFO > 0) THEN
                IF (NTERM_PO > 0) THEN      
-                  CALL LINK_MESSAGE('  READ UO0 DISPLS,                                "')
+                  CALL LINK_MESSAGE_I('  READ UO0 DISPLS,                                "', J)
     
                   IERROR = 0
                   DO I=1,NDOFO
@@ -499,7 +499,7 @@ j_do: DO J = 1,NUM_SOLNS
                                                            ! Build UN from UF and US
          CALL ALLOCATE_COL_VEC ( 'UN_COL', NDOFN , SUBR_NAME)
          CALL ALLOCATE_COL_VEC ( 'US_COL', NDOFS, SUBR_NAME )
-         CALL LINK_MESSAGE('BUILD UN DISPLS FROM UF, US:                      "')
+         CALL LINK_MESSAGE_I('BUILD UN DISPLS FROM UF, US:                      "', J)
          CALL BUILD_N_FS
          CALL DEALLOCATE_COL_VEC ( 'UF_COL' )
          CALL DEALLOCATE_COL_VEC ( 'US_COL' )
@@ -507,7 +507,7 @@ j_do: DO J = 1,NUM_SOLNS
          CALL DEALLOCATE_COL_VEC ( 'UG_COL' )
          CALL ALLOCATE_COL_VEC ( 'UG_COL', NDOFG, SUBR_NAME )
          CALL ALLOCATE_COL_VEC ( 'UM_COL', NDOFM, SUBR_NAME )
-         CALL LINK_MESSAGE('BUILD UG DISPLS FROM UN, UM:                      "')
+         CALL LINK_MESSAGE_I('BUILD UG DISPLS FROM UN, UM:                      "', J)
          CALL BUILD_G_NM
          CALL DEALLOCATE_COL_VEC ( 'UN_COL' )
          CALL DEALLOCATE_COL_VEC ( 'UM_COL' )
@@ -572,7 +572,7 @@ j_do: DO J = 1,NUM_SOLNS
          ENDIF
 
                                                            ! Write UG displs for this subcase to file LINK5A
-         CALL LINK_MESSAGE('WRITE UG DISPLS TO FILE,                          "')
+         CALL LINK_MESSAGE_I('WRITE UG DISPLS TO FILE,                          "', J)
          WRITE(SC1, * )                                    ! Separator between UG_COL calcs
          DO I=1,NDOFG
             WRITE(L5A) UG_COL(I)                           ! For CB this is a col of PHIZG (which is never processed as an array)
@@ -732,8 +732,6 @@ j_do: DO J = 1,NUM_SOLNS
 
  5002 FORMAT(' *ERROR  5002: PROGRAMMING ERROR IN SUBROUTINE ',A                                                                   &
                      ,/,14X,'VARIABLE LOAD_ISTEP MUST BE 1 OR 2 BUT VALUE IS = ',I8)
-
- 5093 FORMAT(1X,I2,'/',A54,I8,2X,I2,':',I2,':',I2,'.',I3)
 
  5094 FORMAT(/,' >> LINK',I2,' END',19X,I2,':',I2,':',I2,'.',I3,/)
 

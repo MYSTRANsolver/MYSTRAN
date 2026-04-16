@@ -230,7 +230,7 @@ Solve:DO ISUB = 1,NSUB
          CALL ALLOCATE_COL_VEC ( 'PL_COL', NDOFL, SUBR_NAME )
 
                                                            ! Get the loads for this subcase from I_PL, J_PL, PL and put into PL_COL
-         CALL LINK_MESSAGE('GET COL OF PL LOADS FOR                        Subcase')
+         CALL LINK_MESSAGE_I('GET COL OF PL LOADS FOR                        Subcase', ISUB)
          DO J=1,NDOFL
             PL_COL(J)  = ZERO
             DUM_COL(J) = ZERO
@@ -247,7 +247,7 @@ Solve:DO ISUB = 1,NSUB
          ENDIF
  
                                                            ! Call FBS to solve for displacements for this subcase
-         CALL LINK_MESSAGE('FBS - SOLVE FOR RHS ANSWERS FOR                   "')
+         CALL LINK_MESSAGE_I('FBS - SOLVE FOR RHS ANSWERS FOR                   "', ISUB)
    !xx   WRITE(SC1, * )                                    ! Advance 1 line for screen messages
 
          IF      (SOLLIB == 'BANDED  ') THEN
@@ -290,13 +290,13 @@ Solve:DO ISUB = 1,NSUB
          ENDIF
  
          IF (EPSERR == 'Y') THEN                           ! Calculate residual vector, R. Use RES to calculate EPSILON
-            CALL LINK_MESSAGE('CALC  EPSILON ERROR ESTIMATE                      "')
+            CALL LINK_MESSAGE_I('CALC  EPSILON ERROR ESTIMATE                      "', ISUB)
             CALL EPSCALC ( ISUB )
          ENDIF
                                                            ! Calculate the LAPACK error bounds
          IF ((RCONDK == 'Y') .AND. (SOLLIB == 'BANDED')) THEN 
             IF (DABS(RCOND) > MACH_SFMIN) THEN
-               CALL LINK_MESSAGE('CALC LAPACK ERROR ESTIMATE                        "')
+               CALL LINK_MESSAGE_I('CALC LAPACK ERROR ESTIMATE                        "', ISUB)
                CALL VECINORM ( UL_COL, NDOFL,  UL_INORM )
                CALL VECINORM ( PL_COL, NDOFL,  PL_INORM )
                CALL VECINORM ( RES   , NDOFL, RES_INORM )
