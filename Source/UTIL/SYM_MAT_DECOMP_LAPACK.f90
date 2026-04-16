@@ -35,7 +35,7 @@
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
       USE IOUNT1, ONLY                :  WRT_LOG, ERR, F04, F06
       USE SCONTR, ONLY                :  BLNK_SUB_NAM, FACTORED_MATRIX, FATAL_ERR, LINKNO
-      USE TIMDAT, ONLY                :  HOUR, MINUTE, SEC, SFRAC, STIME, TSEC       
+      USE TIMDAT, ONLY                :  TSEC       
       USE CONSTANTS_1, ONLY           :  ZERO, ONE, ONEPP6
       USE PARAMS, ONLY                :  BAILOUT, EPSIL, SUPINFO
       USE LAPACK_DPB_MATRICES, ONLY   :  ABAND, LAPACK_S
@@ -44,7 +44,8 @@
       USE SUBR_BEGEND_LEVELS, ONLY    :  SYM_MAT_DECOMP_LAPACK_BEGEND
 
       USE SYM_MAT_DECOMP_LAPACK_USE_IFs
-                      
+      USE LINK_MESSAGE_Interface
+                           
       IMPLICIT NONE
  
       CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: SUBR_NAME = 'SYM_MAT_DECOMP_LAPACK'
@@ -64,7 +65,6 @@
       CHARACTER(LEN=*) , INTENT(IN)   :: PRT_ERRS          ! If not 'N', print singularity errors
 
       CHARACTER( 1*BYTE), PARAMETER   :: INORM    = 'I'    ! Indicates to calculate the infinity norm via LAPACK function DLANSB
-      CHARACTER(54*BYTE)              :: MODNAM            ! Name to write to screen to describe module being run
       CHARACTER( 1*BYTE)              :: QUIT_ON_POS_INFO  ! Indicator of whether to quit if output value of INFO is found to be > 0
       CHARACTER( 1*BYTE), PARAMETER   :: UPLO     = 'U'    ! Indicates upper triang part of matrix is stored
  
@@ -132,9 +132,7 @@
 
 ! Determine bandwidth of matrix 
 
-      CALL OURTIM
-      MODNAM = 'CALC BANDWIDTH OF MATRIX ' // MATIN_NAME(1:)
-      WRITE(SC1,3092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+      CALL LINK_MESSAGE('CALC BANDWIDTH OF MATRIX ' // MATIN_NAME(1:))
       CALL BANDSIZ ( NROWS, NTERMS, I_MATIN, J_MATIN, MATIN_SDIA ) 
       MB_TO_ALLOCATE = (REAL(DOUBLE))*(REAL(MATIN_SDIA+1))*(REAL(NROWS))/ONEPP6
       WRITE(SC1,3094) MATIN_NAME, MATIN_SDIA+1, MB_TO_ALLOCATE
@@ -156,17 +154,13 @@
 
 ! Allocate array ABAND (matrix in band form for LAPACK)
 
-      CALL OURTIM
-      MODNAM = 'ALLOCATE ARRAYS FOR LAPACK BAND FORM OF ' // MATIN_NAME(1:)
-      WRITE(SC1,3092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+      CALL LINK_MESSAGE('ALLOCATE ARRAYS FOR LAPACK BAND FORM OF ' // MATIN_NAME(1:))
       CALL ALLOCATE_LAPACK_MAT ( 'ABAND', MATIN_SDIA+1, NROWS, SUBR_NAME )
       CALL ALLOCATE_LAPACK_MAT ( 'LAPACK_S', NROWS, 1, SUBR_NAME )
 
 ! Put MATIN matrix into ABAND form required by LAPACK band matrix.
 
-      CALL OURTIM
-      MODNAM = 'PUT INTO LAPACK BAND FORM: MATRIX ' // MATIN_NAME(1:)
-      WRITE(SC1,3092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+      CALL LINK_MESSAGE('PUT INTO LAPACK BAND FORM: MATRIX ' // MATIN_NAME(1:))
       CALL BANDGEN_LAPACK_DPB ( MATIN_NAME, NROWS, MATIN_SDIA, NTERMS, I_MATIN, J_MATIN, MATIN, ABAND, SUBR_NAME )
 
 ! Output ABAND, if requested
@@ -181,9 +175,7 @@
 ! of errors in the solution. Use array S for workspace in the calculation.
 
       IF (CALC_COND_NUM == 'Y') THEN
-         CALL OURTIM
-         MODNAM = 'CALC INFINITY NORM OF MATRIX ' // MATIN_NAME(1:)
-         WRITE(SC1,3092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+         CALL LINK_MESSAGE('CALC INFINITY NORM OF MATRIX ' // MATIN_NAME(1:))
    !xx   WRITE(SC1, * )
          K_INORM = DLANSB ( INORM, UPLO, NROWS, MATIN_SDIA, ABAND, MATIN_SDIA+1, LAPACK_S )
          WRITE(F06,3005) MATIN_NAME, K_INORM
@@ -192,9 +184,7 @@
 ! Get max & min diagonals from the original matrix. Code assumes all diag terms positive
  
       IF (MATIN_DIAG_RAT == 'Y') THEN
-         CALL OURTIM
-         MODNAM = 'GET MAX/MIN DIAGONALS OF MATRIX ' // MATIN_NAME(1:)
-         WRITE(SC1,3092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+         CALL LINK_MESSAGE('GET MAX/MIN DIAGONALS OF MATRIX ' // MATIN_NAME(1:))
 
          MAXKII = ZERO
          IIMAX  = 0
@@ -226,9 +216,7 @@
 ! Equilibrate matrix, if user requested it via input arg EQUIL_MATIN
 ! TEMPORARILY REMOVE THIS CODE. IT WAS CAUSING ERRORS - FAILURES DUE TO RATIO OF MATRIX DIAG TO FACTOR DIAG WHEN EQUILIBRATED
 !     IF (EQUIL_MATIN == 'Y') THEN
-!        CALL OURTIM
-!        MODNAM = 'EQUILIBRATING (IF NEEDED) MATRIX ' // MATIN_NAME(1:)
-!        WRITE(SC1,3092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+!        CALL LINK_MESSAGE('EQUILIBRATING (IF NEEDED) MATRIX ' // MATIN_NAME(1:))
 !        CALL EQUILIBRATE( MATIN_NAME, MATIN_SET, NROWS, MATIN_SDIA, ABAND, LAPACK_S, EQUED, SCOND )
 !     ENDIF
 
@@ -246,9 +234,7 @@
 ! Get max & min diagonals from the equilibrated matrix. Code assumes all diag terms positive 
  
       IF ((EQUED == 'Y') .AND. (MATIN_DIAG_RAT == 'Y')) THEN
-         CALL OURTIM
-         MODNAM = 'GET MAX/MIN DIAGONALS OF EQUILIBRATED MATRIX' // MATIN_NAME(1:)
-         WRITE(SC1,3092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+         CALL LINK_MESSAGE('GET MAX/MIN DIAGONALS OF EQUILIBRATED MATRIX' // MATIN_NAME(1:))
 
          MAXKII = ZERO
          IIMAX  = 0
@@ -287,9 +273,7 @@
 ! Perform factorization of matrix. ABAND is the original matrix going into the decomp routine and is the upper triangular factor on
 ! exit.
 
-      CALL OURTIM
-      MODNAM = 'LAPACK TRIANGULAR FACTORIZATION OF MATRIX ' // MATIN_NAME(1:)
-      WRITE(SC1,3092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+      CALL LINK_MESSAGE('LAPACK TRIANGULAR FACTORIZATION OF MATRIX ' // MATIN_NAME(1:))
       CALL DPBTRF ( UPLO, NROWS, MATIN_SDIA, ABAND, MATIN_SDIA+1, INFO )
 
       CALLED_SUBR = 'DPBTRF'      
@@ -357,9 +341,7 @@
 
       RCOND = ZERO
       IF (CALC_COND_NUM == 'Y') THEN
-         CALL OURTIM
-         MODNAM = 'CALC RECIP OF COND NUM OF MATRIX ' // MATIN_NAME(1:)
-         WRITE(SC1,3092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+         CALL LINK_MESSAGE('CALC RECIP OF COND NUM OF MATRIX ' // MATIN_NAME(1:))
          CALL COND_NUM ( MATIN_NAME, NROWS, MATIN_SDIA, K_INORM, ABAND, RCOND )
       ENDIF
 
@@ -400,8 +382,6 @@
                            ' Occurs in row/col no. ',I8)
 
  3011 FORMAT(' *INFORMATION: RATIO OF MAX TO MIN DIAGONALS IN THE EQUILIBRATED MATRIX ',A11,'   = ',1ES13.6,/)
-
- 3092 FORMAT(1X,I2,'/',A54,8X,2X,I2,':',I2,':',I2,'.',I3)
 
  3094 FORMAT(5X,' Bandwidth of ',A,'  = ',I8,' and requires ',F10.3,' MB of memory')
 

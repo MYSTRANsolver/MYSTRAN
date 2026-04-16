@@ -24,69 +24,67 @@
                                                                                                         
 ! End MIT license text.                                                                                      
  
-      SUBROUTINE WRITE_L1M
+      SUBROUTINE LINK_MESSAGE(MODNAM)
  
-! Writes data from file LINK1M of eigenvalue extraction data (actual eigenvalues/vectors are not in this file)
- 
-      USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
- 
-      USE SCONTR, ONLY                :  LINKNO, NUM_EIGENS
-      USE IOUNT1, ONLY                :  ERR, F06, L1M, L1M_MSG, L1MSTAT, LINK1M, SC1, WRT_ERR, WRT_LOG
-      USE DEBUG_PARAMETERS, ONLY      :  DEBUG
-      USE EIGEN_MATRICES_1 , ONLY     :  EIGEN_VAL, GEN_MASS, MODE_NUM
+      USE IOUNT1, ONLY                :  SC1
+      USE SCONTR, ONLY                :  LINKNO
+      USE TIMDAT, ONLY                :  HOUR, MINUTE, SEC, SFRAC
 
-      USE MODEL_STUF, ONLY            :  EIG_COMP, EIG_CRIT, EIG_FRQ1, EIG_FRQ2, EIG_GRID, EIG_METH, EIG_MSGLVL, EIG_LAP_MAT_TYPE, &
-                                         EIG_MODE, EIG_N1, EIG_N2, EIG_NCVFACL, EIG_NORM, EIG_SID, EIG_SIGMA, EIG_VECS, MAXMIJ,    &
-                                         MIJ_COL, MIJ_ROW, NUM_FAIL_CRIT
-
-      USE WRITE_L1M_USE_IFs
-      USE LINK_MESSAGE_Interface
+      USE OURTIM_Interface
       
       IMPLICIT NONE
 
-      INTEGER(LONG)                   :: I                 ! DO loop index
-      INTEGER(LONG)                   :: OUNT(2)           ! File units to write messages to
- 
+      CHARACTER(LEN=*), INTENT(IN)    :: MODNAM            ! Name to write to screen to describe module being run
+
 ! **********************************************************************************************************************************
-! Make units for writing errors the screen and output file
+
+      CALL OURTIM
+
+      WRITE(SC1,1096) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+
+      RETURN
+
+! **********************************************************************************************************************************
+
+ 1096 FORMAT(1X,I2,'/',A,T69,I2,':',I2,':',I2,'.',I3)
+
+
+      END SUBROUTINE LINK_MESSAGE
+
+
+
+
+
+
+
+
+
+      SUBROUTINE LINK_MESSAGE_I(MODNAM, I)
  
-      OUNT(1) = ERR
-      OUNT(2) = F06
+      USE PENTIUM_II_KIND, ONLY       :  LONG
+      USE IOUNT1, ONLY                :  SC1
+      USE SCONTR, ONLY                :  LINKNO
+      USE TIMDAT, ONLY                :  HOUR, MINUTE, SEC, SFRAC
 
-!xx   STATUS = 'OLD    '
-!xx   RW     = 'WRITE'
-      CALL FILE_OPEN ( L1M, LINK1M, OUNT, 'REPLACE', L1M_MSG, 'WRITE_STIME', 'UNFORMATTED', 'WRITE', 'REWIND', 'Y', 'N', 'Y' )
+      USE OURTIM_Interface
+      
+      IMPLICIT NONE
 
-      CALL LINK_MESSAGE('WRITE EIGENVALUE DATA FROM PRIOR LINK')
-
-      WRITE(L1M) EIG_SID
-      WRITE(L1M) EIG_METH
-      WRITE(L1M) EIG_FRQ1
-      WRITE(L1M) EIG_FRQ2
-      WRITE(L1M) EIG_N1
-      WRITE(L1M) EIG_N2
-      WRITE(L1M) EIG_VECS
-      WRITE(L1M) EIG_CRIT
-      WRITE(L1M) EIG_NORM
-      WRITE(L1M) EIG_GRID
-      WRITE(L1M) EIG_COMP
-      WRITE(L1M) EIG_MODE
-      WRITE(L1M) EIG_SIGMA
-      WRITE(L1M) EIG_LAP_MAT_TYPE
-      WRITE(L1M) EIG_MSGLVL
-      WRITE(L1M) EIG_NCVFACL
-      WRITE(L1M) NUM_FAIL_CRIT
-      WRITE(L1M) MAXMIJ
-      WRITE(L1M) MIJ_ROW
-      WRITE(L1M) MIJ_COL
-
-      DO I=1,NUM_EIGENS
-         WRITE(L1M) MODE_NUM(I), EIGEN_VAL(I), GEN_MASS(I)
-      ENDDO
-
-      CALL FILE_CLOSE ( L1M, LINK1M, 'KEEP', 'Y' )
+      CHARACTER(LEN=*), INTENT(IN)    :: MODNAM            ! Name to write to screen to describe module being run
+      INTEGER(LONG), INTENT(IN)       :: I                 ! A number displayed after the string
 
 
 ! **********************************************************************************************************************************
- 
-      END SUBROUTINE WRITE_L1M
+
+      CALL OURTIM
+
+      WRITE(SC1,1097) LINKNO,MODNAM,I,HOUR,MINUTE,SEC,SFRAC
+
+      RETURN
+
+! **********************************************************************************************************************************
+
+ 1097 FORMAT(1X,I2,'/',A,T59,I8,2X,I2,':',I2,':',I2,'.',I3)
+
+
+      END SUBROUTINE LINK_MESSAGE_I

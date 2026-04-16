@@ -33,7 +33,7 @@
       USE SCONTR, ONLY                :  BLNK_SUB_NAM, FATAL_ERR, KMSM_SDIA, LINKNO, NDOFL, NTERM_KLL, NTERM_KLLD, NTERM_KMSM,     &
                                          NTERM_KMSMn, NTERM_KMSMs, NTERM_MLL, NTERM_ULL, NUM_EIGENS, NUM_KLLD_DIAG_ZEROS,          &
                                          NUM_MLL_DIAG_ZEROS, NVEC, SOL_NAME, WARN_ERR
-      USE TIMDAT, ONLY                :  HOUR, MINUTE, SEC, SFRAC, TSEC
+      USE TIMDAT, ONLY                :  TSEC
       USE CONSTANTS_1, ONLY           :  ZERO, ONE, TWO, PI
       USE DEBUG_PARAMETERS, ONLY      :  DEBUG
       USE PARAMS, ONLY                :  ARP_TOL, BAILOUT, DARPACK, EIGESTL, EPSIL, MXITERL, SOLLIB, SPARSTOR, SUPINFO,            &
@@ -50,7 +50,8 @@
       USE ARPACK_LANCZOS_EIG
 
       USE EIG_LANCZOS_ARPACK_USE_IFs
-
+      USE LINK_MESSAGE_Interface
+      
       IMPLICIT NONE
 
       LOGICAL                         :: RVEC              ! = .TRUE. or .FALSE. Specifies whether eigenvectors are to be calculated
@@ -74,7 +75,6 @@
 !                                                                      If NEV is odd, compute 1 more from high end than from low end
 !                                                            When IPARAM(7) = 3, 4, or 5,  WHICH should be set to 'LM' only.
 
-      CHARACTER(44*BYTE)              :: MODNAM            ! Name to write to screen to describe module being run.
       CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: CALLED_SUBR = ' ' ! Name of a called subr (for output error purposes)
 
       INTEGER(LONG)                   :: COMPV             ! Component number (1-6) of a grid DOF
@@ -167,13 +167,11 @@
 
 ! Det bandwidth of KMSM so BANDGEN can put it in LAPACK band form. KMSM_SDIA is the number of super-diags in the band form of KMSM
 
-      CALL OURTIM
       IF (SOL_NAME(1:8) == 'BUCKLING') THEN
-         MODNAM = 'CALCULATE BANDWIDTH OF [KLL + sigma*KLLD]'
+         CALL LINK_MESSAGE('CALCULATE BANDWIDTH OF [KLL + sigma*KLLD]')
       ELSE
-         MODNAM = 'CALCULATE BANDWIDTH OF [KLL - sigma*MLL]'
+         CALL LINK_MESSAGE('CALCULATE BANDWIDTH OF [KLL - sigma*MLL]')
       ENDIF
-      WRITE(SC1,4092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
       CALL BANDSIZ ( NDOFL, NTERM_KMSM, I_KMSM, J_KMSM, KMSM_SDIA )
       WRITE(ERR,4905) KMSM_SDIA
       IF (SUPINFO == 'N') THEN
@@ -198,13 +196,11 @@
 
 ! Allocate array RFAC = (KLL - EIG_SIGMA*MLL, or KLL + EIG_SIGMA*KLLD) for ARACK
 
-      CALL OURTIM
       IF (SOL_NAME(1:8) == 'BUCKLING') THEN
-         MODNAM = 'ALLOCATE ARPACK BAND MAT: RFAC = KLL + sigma*KLLD'
+         CALL LINK_MESSAGE('ALLOCATE ARPACK BAND MAT: RFAC = KLL + sigma*KLLD')
       ELSE
-         MODNAM = 'ALLOCATE ARPACK BAND MAT: RFAC = KLL - sigma*MLL'
+         CALL LINK_MESSAGE('ALLOCATE ARPACK BAND MAT: RFAC = KLL - sigma*MLL')
       ENDIF
-      WRITE(SC1,4092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
       CALL ALLOCATE_LAPACK_MAT ( 'RFAC', LDRFAC, NDOFL, SUBR_NAME )
 
 
@@ -212,9 +208,7 @@
 
 ! Put KMSM in form required by LAPACK band matrix. Call result array RFAC
 
-         CALL OURTIM
-         MODNAM = 'PUT RFAC MATRIX IN ARPACK BAND FORM'
-         WRITE(SC1,4092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+         CALL LINK_MESSAGE('PUT RFAC MATRIX IN ARPACK BAND FORM')
          IF      (EIG_LAP_MAT_TYPE(1:3) == 'DPB') THEN
             CALL BANDGEN_LAPACK_DPB ( 'KMSM', NDOFL, KMSM_SDIA, NTERM_KMSM, I_KMSM, J_KMSM, KMSM, RFAC, SUBR_NAME )
          ELSE IF (EIG_LAP_MAT_TYPE(1:3) == 'DGB') THEN
@@ -236,9 +230,7 @@
 ! If this is not a CB or BUCKLING soln, dellocate arrays for KLL.      ! Keep arrays MLL, KLLD. Need them later to calc gen mass
 
       IF ((SOL_NAME(1:12) /= 'GEN CB MODEL' ) .AND. (SOL_NAME(1:8) /= 'BUCKLING')) THEN
-         CALL OURTIM
-         MODNAM = 'DEALLOCATE SPARSE KLL ARRAYS'
-         WRITE(SC1,4092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+         CALL LINK_MESSAGE('DEALLOCATE SPARSE KLL ARRAYS')
    !xx   WRITE(SC1, * )                                    ! Advance 1 line for screen messages
          WRITE(SC1,12345,ADVANCE='NO') '       Deallocate KLL', CR13
          CALL DEALLOCATE_SPARSE_MAT ( 'KLL' )
@@ -251,14 +243,10 @@
 
          CALL SPARSE_MAT_DIAG_ZEROS ( 'KMSM', NDOFL, NTERM_KMSM, I_KMSM, J_KMSM, NUM_KMSM_DIAG_0 )
          NTERM_KMSMn = 2*NTERM_KMSM  - (NDOFL - NUM_KMSM_DIAG_0)
-         CALL OURTIM
-         MODNAM = 'ALLOCATE SPARSE KMSMn ARRAYS'
-         WRITE(SC1,4092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+         CALL LINK_MESSAGE('ALLOCATE SPARSE KMSMn ARRAYS')
          CALL ALLOCATE_SPARSE_MAT ( 'KMSMn', NDOFL, NTERM_KMSMn, SUBR_NAME )
 
-         CALL OURTIM
-         MODNAM = 'CONVERT SYM CRS KMSM TO NONSYM CRS KMSMn'
-         WRITE(SC1,4092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+         CALL LINK_MESSAGE('CONVERT SYM CRS KMSM TO NONSYM CRS KMSMn')
          CALL CRS_SYM_TO_CRS_NONSYM ( 'KMSM', NDOFL, NTERM_KMSM, I_KMSM, J_KMSM, KMSM, 'KMSMn', NTERM_KMSMn, I_KMSMn, J_KMSMn,     &
                                        KMSMn, 'Y' )
 
@@ -426,9 +414,7 @@
          SELECT(I) = .FALSE.                               ! so all members of SELECT are .FALSE.
       ENDDO
 
-      CALL OURTIM
-      MODNAM = 'SOLVE FOR EIGENVALS/VECTORS - LANCZOS METH'
-      WRITE(SC1,4092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+      CALL LINK_MESSAGE('SOLVE FOR EIGENVALS/VECTORS - LANCZOS METH')
 !xx   WRITE(SC1, * )                                       ! Make new line for DTBSV pass messages that overwrite each other
 
       IF (DEBUG(50) == 1) CALL DEBUG_EIG_LANCZOS
@@ -539,8 +525,6 @@
 
  4003 FORMAT(' *ERROR  4003: PROGRAMMING ERROR IN SUBROUTINE ',A                                                                   &
                     ,/,14X,' EIG_LAP_MAT_TYPE MUST BE EITHER "DGB" OR "DPB" BUT IS = ',A)
-
- 4092 FORMAT(1X,I2,'/',A44,18X,2X,I2,':',I2,':',I2,'.',I3)
 
  4901 FORMAT(' *WARNING    : REQUEST FOR ',I8,' EIGENVALUES CANNOT BE HONORED. LANCZOS CAN BE USED TO FIND NO MORE THAN',          &
                            ' NEV = '                                                                                               &

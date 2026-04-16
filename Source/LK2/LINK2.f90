@@ -54,7 +54,6 @@
                                                      NTERM_PA  , NTERM_PL  ,                                                       &
                                          NTERM_RMG , SOL_NAME  , WARN_ERR
 
-      USE TIMDAT, ONLY                :  HOUR, MINUTE, SEC, SFRAC
       USE CONSTANTS_1, ONLY           :  ONE
       USE RIGID_BODY_DISP_MATS, ONLY  :  RBGLOBAL_GSET
       USE PARAMS, ONLY                :  CUSERIN, CUSERIN_XSET, EQCHK_OUTPUT, EQCHK_NORM, PRTSTIFF, PRTSTIFD, PRTMASS, PRTFOR,     &
@@ -69,6 +68,8 @@
       USE SPARSE_MATRICES, ONLY       :  SYM_KGG
       USE OUTPUT4_MATRICES, ONLY      :  NUM_OU4_REQUESTS
       USE LINK2_USE_IFs
+      USE LINK_MESSAGE_Interface
+
 
       IMPLICIT NONE
  
@@ -76,7 +77,6 @@
       CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: SUBR_NAME = 'LINK2'
       CHARACTER(  1*BYTE)             :: CLOSE_IT          ! Input to subr READ_MATRIX_i. 'Y'/'N' whether to close a file or not 
       CHARACTER( 8*BYTE)              :: CLOSE_STAT        ! What to do with file when it is closed
-      CHARACTER( 44*BYTE)             :: MODNAM            ! Name to write to screen to describe module being run
 
       INTEGER(LONG)                   :: NROWS             ! Value of DOF size to pass to subr WRITE_USERIN_BD_CARDS
       INTEGER(LONG)                   :: I,J               ! DO loop indices
@@ -152,9 +152,7 @@
       ELSE
          CALL GET_MATRIX_DIAG_STATS ( 'KGG ', 'G ', NDOFG, NTERM_KGG , I_KGG , J_KGG , KGG , PRTSTIFD(1), KGG_DIAG  , KGG_MAX_DIAG )
          IF (EQCHK_OUTPUT(1) > 0) THEN
-            CALL OURTIM
-            MODNAM = 'EQUILIBRIUM CHECK ON KGG                  '
-            WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+            CALL LINK_MESSAGE('EQUILIBRIUM CHECK ON KGG                  ')
             CALL STIFF_MAT_EQUIL_CHK ( EQCHK_OUTPUT(1), 'G ', SYM_KGG, NDOFG, NTERM_KGG, I_KGG, J_KGG, KGG, KGG_DIAG, KGG_MAX_DIAG,&
                                        RBGLOBAL_GSET )
          ENDIF
@@ -180,9 +178,7 @@
          NTERM_KNM  = 0
          NTERM_KMM  = 0
       ENDIF
-      CALL OURTIM
-      MODNAM = 'REDUCE G-SET TO N, M-SETS                   '
-      WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+      CALL LINK_MESSAGE('REDUCE G-SET TO N, M-SETS                   ')
       CALL REDUCE_G_NM
 
       WRITE(ERR,2001) NDOFM
@@ -203,9 +199,7 @@
          NTERM_KFS  = 0
          NTERM_KSS  = 0
       ENDIF
-      CALL OURTIM
-      MODNAM = 'REDUCE N-SET TO F, S-SETS                   '
-      WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+      CALL LINK_MESSAGE('REDUCE N-SET TO F, S-SETS                   ')
       CALL REDUCE_N_FS
       WRITE(ERR,2003) NDOFS
       WRITE(ERR,2013) NDOFSA
@@ -227,9 +221,7 @@
          NTERM_KAO  = 0
          NTERM_KOO  = 0
       ENDIF
-      CALL OURTIM
-      MODNAM = 'REDUCE F-SET TO A, O-SETS                   '
-      WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+      CALL LINK_MESSAGE('REDUCE F-SET TO A, O-SETS                   ')
       CALL REDUCE_F_AO
       WRITE(ERR,2005) NDOFO
       WRITE(ERR,2006) NDOFA
@@ -242,23 +234,17 @@
 
       IF (SOL_NAME == 'GEN CB MODEL') THEN
 
-         CALL OURTIM
-         MODNAM = 'WRITE KAA STIFFNESS ARRAYS TO FILE'
-         WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+         CALL LINK_MESSAGE('WRITE KAA STIFFNESS ARRAYS TO FILE')
          IF (NTERM_KAA > 0) THEN
             CALL WRITE_MATRIX_1 ( LINK2O, L2O, 'Y', 'KEEP', L2O_MSG, 'KAA', NTERM_KAA, NDOFA, I_KAA, J_KAA, KAA )
          ENDIF 
 
-         CALL OURTIM
-         MODNAM = 'WRITE MAA MASS ARRAYS TO FILE'
-         WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+         CALL LINK_MESSAGE('WRITE MAA MASS ARRAYS TO FILE')
          IF (NTERM_MAA > 0) THEN
             CALL WRITE_MATRIX_1 ( LINK2P, L2P, 'Y', 'KEEP', L2P_MSG, 'MAA', NTERM_MAA, NDOFA, I_MAA, J_MAA, MAA )
          ENDIF 
 
-         CALL OURTIM
-         MODNAM = 'WRITE PA  LOAD ARRAYS TO FILE'
-         WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+         CALL LINK_MESSAGE('WRITE PA  LOAD ARRAYS TO FILE')
          IF (NTERM_PA > 0) THEN
             CALL WRITE_MATRIX_1 ( LINK2Q, L2Q, 'Y', 'KEEP', L2Q_MSG, 'PA' , NTERM_PA , NDOFA, I_PA , J_PA , PA  ) 
          ENDIF 
@@ -276,9 +262,7 @@
          NTERM_KRL  = 0
          NTERM_KRR  = 0
       ENDIF
-      CALL OURTIM
-      MODNAM = 'REDUCE A-SET TO L, R-SETS                   '
-      WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+      CALL LINK_MESSAGE('REDUCE A-SET TO L, R-SETS                   ')
       CALL REDUCE_A_LR
       CALL DEALLOCATE_RBGLOBAL ( 'G ' )
       WRITE(ERR,2007) NDOFR
@@ -296,9 +280,8 @@
 
       ELSE
 
-         CALL OURTIM                                       ! Write L-set arrays to files
-         MODNAM = 'WRITE L SET ARRAYS TO FILE'
-         WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+                                                           ! Write L-set arrays to files
+         CALL LINK_MESSAGE('WRITE L SET ARRAYS TO FILE')
 
          IF (NTERM_KLL > 0) THEN
             CLOSE_IT   = 'Y'
@@ -327,9 +310,7 @@
 
          IF (NUM_OU4_REQUESTS > 0) THEN                    ! Call OUTPUT4 processor to process output requests for OUTPUT4 matrices
 
-            CALL OURTIM
-            MODNAM = 'WRITE OUTPUT4 NATRICES      '
-            WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+            CALL LINK_MESSAGE('WRITE OUTPUT4 NATRICES      ')
             WRITE(F06,*)
             CALL OUTPUT4_PROC ( SUBR_NAME )
 
@@ -449,8 +430,6 @@
  2007 FORMAT(' *INFORMATION: NUMBER OF  R SET DEGREES OF FREEDOM (NDOFR)                            = ',I12)
 
  2008 FORMAT(' *INFORMATION: NUMBER OF  L SET DEGREES OF FREEDOM (NDOFL)                            = ',I12,/)
-
- 1092 FORMAT(1X,I2,'/',A44,18X,2X,I2,':',I2,':',I2,'.',I3)
 
  2888 FORMAT(' *WARNING    : CANNOT OUTPUT CUSERIN BD CARDS SINCE THE DOF SET REQUESTED ("',A,'") IS NOT ONE PROGRAMMED')
 

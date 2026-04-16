@@ -66,7 +66,6 @@
                                          ELDT_BUG_BCHK_BIT, ELDT_BUG_U_P_BIT,  ELDT_F21_P_T_BIT , ELDT_F22_ME_BIT  ,               &
                                          ELDT_F23_KE_BIT  , ELDT_F24_SE_BIT  , ELDT_F25_U_P_BIT
       use scontr, only                :  ndofo
-      USE TIMDAT, ONLY                :  YEAR, MONTH, DAY, HOUR, MINUTE, SEC, SFRAC, STIME, TSEC
       USE DOF_TABLES, ONLY            :  TDOFI
       USE PARAMS, ONLY                :  CHKGRDS, EPSIL, EQCHK_OUTPUT, GRDPNT, GRDPNT_IN, GRIDSEQ, MEFMGRID, MEFMLOC, PRTCONN,     &
                                          PRTBASIC, PRTCORD, PRTDOF, PRTTSET, PRTSTIFD, PRTSTIFF, SETLKTK, SETLKTM, SUPINFO,        &
@@ -82,6 +81,7 @@
       USE OUTPUT4_MATRICES, ONLY      :  NUM_OU4_REQUESTS, OU4_FILE_UNITS
   
       USE LINK0_USE_IFs
+      USE LINK_MESSAGE_Interface
                        
       IMPLICIT NONE
 
@@ -89,7 +89,6 @@
 
       CHARACTER, PARAMETER            :: CR13 = CHAR(13)   ! This causes a carriage return simulating the "+" action in a FORMAT
       CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: SUBR_NAME = 'LINK0'
-      CHARACTER(44*BYTE)              :: MODNAM            ! Name to write to screen to describe module being run
 
       CHARACTER(1*BYTE)               :: OPEN_UNT(MOU4)    ! 'Y' if we need to open an OU4 file unit
 
@@ -160,17 +159,13 @@
       OUNT(2) = F06
 
       ! Read input data to count sizes of arrays (no. GRID's, elems, etc.)
-      CALL OURTIM
-      MODNAM = 'DETERMINE ARRAY SIZES - CASE CONTROL        '
-      WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+      CALL LINK_MESSAGE('DETERMINE ARRAY SIZES - CASE CONTROL        ')
       CALL LOADC0
   
 ! Initial pass on Bulk Data when this is not a restart
 
 res11:IF (RESTART == 'N') THEN
-         CALL OURTIM
-         MODNAM = 'DETERMINE ARRAY SIZES - BULK DATA           '
-         WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+         CALL LINK_MESSAGE('DETERMINE ARRAY SIZES - BULK DATA           ')
          CALL LOADB0
       ENDIF res11
 
@@ -179,9 +174,7 @@ res11:IF (RESTART == 'N') THEN
       REWIND (IN1)
   
       ! Processes the EXEC CONTROL DECK
-      CALL OURTIM
-      MODNAM = 'READ EXEC CONTROL DECK                      '
-      WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+      CALL LINK_MESSAGE('READ EXEC CONTROL DECK                      ')
       WRITE(F06,*)
       CALL ALLOCATE_IN4_FILES ( 'IN4FIL', 0, 0, SUBR_NAME )
       CALL LOADE
@@ -219,19 +212,15 @@ res11:IF (RESTART == 'N') THEN
       ! check-point data to L1Z if this is NOT a restart or
       ! verify that the check-pointed data
       ! agrees between the original run and this restart run
-      CALL OURTIM
-      MODNAM = 'ALLOCATE MEMORY FOR SOME MODEL DATA ARRAYS  '
-      WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+      CALL LINK_MESSAGE('ALLOCATE MEMORY FOR SOME MODEL DATA ARRAYS  ')
       CALL ALLOCATE_MODEL_STUF ( 'SETS ARRAYS', SUBR_NAME )
       CALL ALLOCATE_MODEL_STUF ( 'TITLES', SUBR_NAME )
       CALL ALLOCATE_MODEL_STUF ( 'SC_xxxx', SUBR_NAME )
       CALL ALLOCATE_MODEL_STUF ( 'SCNUM', SUBR_NAME )
       CALL ALLOCATE_MODEL_STUF ( 'SUBLOD', SUBR_NAME )
       CALL ALLOCATE_MODEL_STUF ( 'SPC_MPC_SET', SUBR_NAME )
-      CALL OURTIM
 
-      MODNAM = 'READ CASE CONTROL DECK                      '
-      WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+      CALL LINK_MESSAGE('READ CASE CONTROL DECK                      ')
       CALL LOADC
 
 ! If this is a restart, do the following:
@@ -323,9 +312,7 @@ res13:IF (RESTART == 'N') THEN
          ENDIF
 
          ! Processes the Bulk Data deck
-         CALL OURTIM
-         MODNAM = 'ALLOCATE MEMORY FOR SOME MODEL DATA ARRAYS  '
-!        WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+!         CALL LINK_MESSAGE('ALLOCATE MEMORY FOR SOME MODEL DATA ARRAYS  ')
          CALL ALLOCATE_MODEL_STUF ( 'SEQ1,2', SUBR_NAME )
          CALL ALLOCATE_MODEL_STUF ( 'FORMOM_SIDS', SUBR_NAME )
          CALL ALLOCATE_MODEL_STUF ( 'PRESS_SIDS', SUBR_NAME )
@@ -347,9 +334,7 @@ res13:IF (RESTART == 'N') THEN
          CALL ALLOCATE_MODEL_STUF ( 'SNORM, RSNORM', SUBR_NAME )
          CALL ALLOCATE_MODEL_STUF ( 'RIGID_ELEM_IDS', SUBR_NAME )
 
-         CALL OURTIM
-         MODNAM = 'READ BULK DATA DECK                         '
-         WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+         CALL LINK_MESSAGE('READ BULK DATA DECK                         ')
          CALL LOADB
 
          CALL DEALLOCATE_MODEL_STUF ( 'SPC_SIDS, SPC1_SIDS' )
@@ -517,16 +502,12 @@ res13:IF (RESTART == 'N') THEN
   
 res14:IF (RESTART == 'N') THEN
 
-         CALL OURTIM
-         MODNAM = 'ALLOCATE MEMORY FOR SOME MODEL DATA ARRAYS  '
-!        WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+!         CALL LINK_MESSAGE('ALLOCATE MEMORY FOR SOME MODEL DATA ARRAYS  ')
          CALL ALLOCATE_MODEL_STUF ( 'ESORT1', SUBR_NAME )
          CALL ALLOCATE_MODEL_STUF ( 'ESORT2', SUBR_NAME )
          CALL ALLOCATE_MODEL_STUF ( 'EOFF', SUBR_NAME )
 
-         CALL OURTIM
-         MODNAM = 'SORT AND CHECK ELEMENTS                     '
-         WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+         CALL LINK_MESSAGE('SORT AND CHECK ELEMENTS                     ')
          CALL ELESORT
          CALL DEALLOCATE_MODEL_STUF ( 'RIGID_ELEM_IDS' )
   
@@ -539,23 +520,17 @@ res14:IF (RESTART == 'N') THEN
          
 
          ! Element processing to convert external PID's to internal.
-         CALL OURTIM
-         MODNAM = 'ELEM PROCESSOR                              '
-         WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+         CALL LINK_MESSAGE('ELEM PROCESSOR                              ')
          CALL ELEM_PROP_MATL_IIDS
   
          ! Grid and coordinate system processing
-         CALL OURTIM
-         MODNAM = 'ALLOCATE MEMORY FOR SOME MODEL DATA ARRAYS  '
-!        WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+!         CALL LINK_MESSAGE('ALLOCATE MEMORY FOR SOME MODEL DATA ARRAYS  ')
          CALL ALLOCATE_MODEL_STUF ( 'SINGLE ELEMENT ARRAYS', SUBR_NAME )
          CALL ALLOCATE_MODEL_STUF ( 'GRID_ID', SUBR_NAME )
          CALL ALLOCATE_MODEL_STUF ( 'GRID_SEQ, INV_GRID_SEQ', SUBR_NAME )
          CALL ALLOCATE_MODEL_STUF ( 'TN', SUBR_NAME )
 
-         CALL OURTIM
-         MODNAM = 'GRID PROCESSOR                              '
-         WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+         CALL LINK_MESSAGE('GRID PROCESSOR                              ')
          CALL GRID_PROC
          CALL DEALLOCATE_MODEL_STUF ( 'TN' )
 
@@ -564,9 +539,7 @@ res14:IF (RESTART == 'N') THEN
 ! entries are defined
 
          IF (CHKGRDS == 'Y') THEN
-            CALL OURTIM
-            MODNAM = 'CHECK THAT ALL GRIDS FOR ELEMS EXIST        '
-            WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+            CALL LINK_MESSAGE('CHECK THAT ALL GRIDS FOR ELEMS EXIST        ')
             
             CALL COUNTER_INIT('       Process element', NELE)
             DO I=1,NELE
@@ -579,9 +552,7 @@ res14:IF (RESTART == 'N') THEN
          ! Run Bandit, if requested
          REWIND (IN1)
          IF (GRIDSEQ(1:6) == 'BANDIT') THEN
-            CALL OURTIM
-            MODNAM = 'BANDIT - RESEQUENCE GRIDS                   '
-            WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+            CALL LINK_MESSAGE('BANDIT - RESEQUENCE GRIDS                   ')
             CALL FILE_OPEN ( SEQ, SEQFIL, OUNT, 'REPLACE', SEQ_MSG, 'WRITE_STIME', 'FORMATTED', 'READWRITE', 'REWIND','Y','N','Y' )
             CALL BANDIT ( NGRID, BANDIT_BW, KMAT_DEN, BANDIT_ERR )
             INQUIRE ( FILE=SEQFIL, OPENED=FILE_OPND )
@@ -608,9 +579,7 @@ res14:IF (RESTART == 'N') THEN
          CALL FILE_CLOSE ( IN1, INFILE, 'KEEP', 'Y' )
 
          ! Grid point sequencing
-         CALL OURTIM
-         MODNAM = 'GRID SEQUENCE PROCESSOR                     '
-         WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+         CALL LINK_MESSAGE('GRID SEQUENCE PROCESSOR                     ')
          CALL SEQ_PROC
          CALL FILE_CLOSE ( L1B, LINK1B, 'KEEP', 'Y' )
          CALL DEALLOCATE_MODEL_STUF ( 'SEQ1,2' )
@@ -648,9 +617,7 @@ res14:IF (RESTART == 'N') THEN
       CALL ALLOCATE_MODEL_STUF ( 'GROUT, ELOUT', SUBR_NAME )
       CALL ALLOCATE_MODEL_STUF ( 'ELDT', SUBR_NAME )
       CALL FILE_OPEN ( L1D, LINK1D, OUNT, 'REPLACE', L1D_MSG, 'WRITE_STIME', 'UNFORMATTED', 'WRITE', 'REWIND', 'Y', 'N', 'Y' )
-      CALL OURTIM
-      MODNAM = 'SUBCASE PROCESSOR                           '
-      WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+      CALL LINK_MESSAGE('SUBCASE PROCESSOR                           ')
       CALL SUBCASE_PROC
       CALL DEALLOCATE_MODEL_STUF ( 'GROUT, ELOUT' )
       CALL DEALLOCATE_MODEL_STUF ( 'SETS ARRAYS' )
@@ -681,9 +648,7 @@ res14:IF (RESTART == 'N') THEN
       ! Print table showing the elements connected to each grid if requested
       IF (RESTART == 'N') THEN
          IF ((ANY_GPFO_OUTPUT > 0) .OR. (PRTCONN > 0)) THEN
-            CALL OURTIM
-            MODNAM = 'GRID/ELEMENT CONNECTION TABLE               '
-            WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+            CALL LINK_MESSAGE('GRID/ELEMENT CONNECTION TABLE               ')
             CALL GRID_ELEM_CONN_TABLE
             IF (ANY_GPFO_OUTPUT == 0) THEN
                CALL DEALLOCATE_MODEL_STUF ( 'GRID_ELEM_CONN_ARRAY' )
@@ -694,9 +659,7 @@ res14:IF (RESTART == 'N') THEN
 res15:IF (RESTART == 'Y') THEN
 
          IF (ANY_GPFO_OUTPUT > 0) THEN
-            CALL OURTIM
-            MODNAM = 'GRID/ELEMENT CONNECTION TABLE               '
-            WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+            CALL LINK_MESSAGE('GRID/ELEMENT CONNECTION TABLE               ')
             CALL GRID_ELEM_CONN_TABLE
          ENDIF
 
@@ -827,18 +790,14 @@ res16:IF (RESTART == 'N') THEN
 
          CALL FILE_OPEN ( L1H, LINK1H, OUNT, 'REPLACE', L1H_MSG, 'WRITE_STIME', 'UNFORMATTED', 'WRITE', 'REWIND', 'Y', 'N', 'Y' )
   
-         CALL OURTIM
-         MODNAM = 'ALLOCATE MEMORY FOR SOME MODEL DATA ARRAYS  '
-!        WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+!         CALL LINK_MESSAGE('ALLOCATE MEMORY FOR SOME MODEL DATA ARRAYS  ')
          CALL ALLOCATE_DOF_TABLES ( 'TSET', SUBR_NAME )
          CALL ALLOCATE_DOF_TABLES ( 'TDOF', SUBR_NAME )
          CALL ALLOCATE_DOF_TABLES ( 'TDOFI', SUBR_NAME )
          CALL ALLOCATE_DOF_TABLES ( 'TDOF_ROW_START' , SUBR_NAME )
          CALL ALLOCATE_MODEL_STUF ( 'MPC_IND_GRIDS', SUBR_NAME )
 
-         CALL OURTIM
-         MODNAM = 'DOF PROCESSOR                               '
-         WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+         CALL LINK_MESSAGE('DOF PROCESSOR                               ')
          TDOF_MSG(1:)  = ' '
          TDOF_MSG(56:) = '(Before any AUTOSPC)'
          CALL DOF_PROC ( TDOF_MSG )
@@ -875,24 +834,18 @@ res16:IF (RESTART == 'N') THEN
 
          ! CONM2 processing to get CONM2 data in basic coords at the mass
          CALL FILE_OPEN ( L1Y, LINK1Y, OUNT, 'REPLACE', L1Y_MSG, 'WRITE_STIME', 'UNFORMATTED', 'WRITE', 'REWIND', 'Y', 'N', 'Y' )
-         CALL OURTIM
-         MODNAM = 'CONM2 PROCESSOR #1                          '
-         WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+         CALL LINK_MESSAGE('CONM2 PROCESSOR #1                          ')
          CALL CONM2_PROC_1
          CALL FILE_CLOSE ( L1Y, LINK1Y, L1YSTAT, 'Y' )
   
          ! Grid point weight generator (model weight, c.g., etc.)
-         CALL OURTIM
-         MODNAM = 'ALLOCATE MEMORY FOR RBGLOBAL ARRAY          '
-         WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+         CALL LINK_MESSAGE('ALLOCATE MEMORY FOR RBGLOBAL ARRAY          ')
          CALL ALLOCATE_RBGLOBAL ( 'G ', SUBR_NAME )
          RBG_GSET_ALLOCATED = 'Y'
 
          IF ((GRDPNT_IN >= 0) .OR. (MEFFMASS_CALC == 'Y')) THEN
 
-            CALL OURTIM
-            MODNAM = 'GRID POINT WEIGHT GENERATOR              '
-            WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+            CALL LINK_MESSAGE('GRID POINT WEIGHT GENERATOR              ')
 
             IF (NCUSERIN > 0) THEN
                DO I=1,NELE
@@ -922,9 +875,7 @@ res17:IF (RESTART == 'Y') THEN
          CLOSE ( L1K, STATUS='KEEP')
          CLOSE ( L1Y, STATUS='KEEP')
 
-         CALL OURTIM
-         MODNAM = 'CHECKING FOR MATRICES TO PRINT ON RESTART'
-         WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+         CALL LINK_MESSAGE('CHECKING FOR MATRICES TO PRINT ON RESTART')
          IF ((PRTSTIFF(1) >= 1) .OR. (PRTSTIFD(1) >= 1) .OR. (EQCHK_OUTPUT(1) > 0)) THEN
             CALL ALLOCATE_SPARSE_MAT ( 'KGG', NDOFG, NTERM_KGG, SUBR_NAME )
             CALL READ_MATRIX_1 ( LINK1L, L1L, 'N', 'Y', L1LSTAT, L1L_MSG,'KGG', NTERM_KGG, 'Y', NDOFG, I_KGG, J_KGG, KGG)
@@ -947,9 +898,7 @@ res17:IF (RESTART == 'Y') THEN
             ENDIF
             CALL GET_MATRIX_DIAG_STATS ( 'KGG', 'G ', NDOFG, NTERM_KGG, I_KGG, J_KGG, KGG, PRINTIT, KGG_DIAG, KGG_MAX_DIAG  )
 
-            CALL OURTIM
-            MODNAM = 'EQUILIBRIUM CHECK ON KGG                  '
-            WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+            CALL LINK_MESSAGE('EQUILIBRIUM CHECK ON KGG                  ')
             CALL STIFF_MAT_EQUIL_CHK ( EQCHK_OUTPUT(1), 'G ', SYM_KGG, NDOFG, NTERM_KGG, I_KGG, J_KGG, KGG, KGG_DIAG, KGG_MAX_DIAG,&
                                        RBGLOBAL_GSET )
 
@@ -960,17 +909,13 @@ res17:IF (RESTART == 'Y') THEN
 res18:IF (RESTART == 'N') THEN
 
          ! CONM2 processing to get CONM2 data in global coords at the grid
-         CALL OURTIM
-         MODNAM = 'CONM2 PROCESSOR #2                          '
-         WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+         CALL LINK_MESSAGE('CONM2 PROCESSOR #2                          ')
          CALL CONM2_PROC_2
   
          ! Temperature data processing
          IF ((SOL_NAME(1:7) == 'STATICS') .OR. (SOL_NAME(1:8) == 'NLSTATIC') .OR.                                                  &
             ((SOL_NAME(1:8) == 'BUCKLING') .AND. (LOAD_ISTEP == 1))) THEN
-            CALL OURTIM
-            MODNAM = 'ALLOCATE MEM FOR ELEM AND GRID TEMP ARRAYS    '
-            WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+            CALL LINK_MESSAGE('ALLOCATE MEM FOR ELEM AND GRID TEMP ARRAYS    ')
             CALL ALLOCATE_MODEL_STUF ( 'GTEMP', SUBR_NAME )
             CALL ALLOCATE_MODEL_STUF ( 'CGTEMP', SUBR_NAME )
             CALL ALLOCATE_MODEL_STUF ( 'ETEMP', SUBR_NAME )
@@ -981,9 +926,7 @@ res18:IF (RESTART == 'N') THEN
                OUNT(1) = ERR
                OUNT(2) = F06
                CALL FILE_OPEN ( L1K, LINK1K, OUNT, 'OLD', L1K_MSG, 'READ_STIME', 'UNFORMATTED', 'READ', 'REWIND', 'Y', 'N', 'Y' )
-               CALL OURTIM
-               MODNAM = 'GRID & ELEM TEMPERATURE DATA PROCESSOR      '
-               WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+               CALL LINK_MESSAGE('GRID & ELEM TEMPERATURE DATA PROCESSOR      ')
                CALL TEMPERATURE_DATA_PROC
                CALL FILE_CLOSE ( L1K, LINK1K, 'KEEP', 'Y' )
             ELSE
@@ -998,9 +941,7 @@ res18:IF (RESTART == 'N') THEN
          ! Open L1Q which contains element pressure Bulk Data
          IF ((SOL_NAME(1:7) == 'STATICS') .OR. (SOL_NAME(1:8) == 'NLSTATIC') .OR.                                                  &
             ((SOL_NAME(1:8) == 'BUCKLING') .AND. (LOAD_ISTEP == 1))) THEN
-            CALL OURTIM
-            MODNAM = 'ALLOCATE MEMORY FOR ELEM PRESSURE DATA ARRAYS '
-            WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+            CALL LINK_MESSAGE('ALLOCATE MEMORY FOR ELEM PRESSURE DATA ARRAYS ')
             CALL ALLOCATE_MODEL_STUF ( 'PPNT, PDATA, PTYPE', SUBR_NAME )
             CALL ALLOCATE_MODEL_STUF ( 'PLOAD4_3D_DATA', SUBR_NAME )
 
@@ -1008,9 +949,7 @@ res18:IF (RESTART == 'N') THEN
   
                CALL FILE_OPEN ( L1Q, LINK1Q, OUNT, 'OLD', L1Q_MSG, 'READ_STIME', 'UNFORMATTED', 'READ', 'REWIND', 'Y', 'N', 'Y' )
   
-               CALL OURTIM
-               MODNAM = 'ELEMENT PRESSURE DATA PROCESSOR             '
-               WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+               CALL LINK_MESSAGE('ELEMENT PRESSURE DATA PROCESSOR             ')
                CALL PRESSURE_DATA_PROC
   
                CALL FILE_CLOSE ( L1Q, LINK1Q, 'KEEP', 'Y' )
@@ -1023,9 +962,7 @@ res18:IF (RESTART == 'N') THEN
 
          IF (NDOFR > 0) THEN
 
-            CALL OURTIM
-            MODNAM = 'GENERATE RIGID BODY DISPL MATRIX            '
-            WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+            CALL LINK_MESSAGE('GENERATE RIGID BODY DISPL MATRIX            ')
 
             CALL RB_DISP_MATRIX_PROC ( 'CG', 0 )
             CALL ALLOCATE_RBGLOBAL ( 'R ', SUBR_NAME )
@@ -1082,14 +1019,11 @@ res18:IF (RESTART == 'N') THEN
          IF((EQCHK_OUTPUT(1) > 0) .OR. (EQCHK_OUTPUT(2) > 0) .OR. (EQCHK_OUTPUT(3) > 0) .OR. (EQCHK_OUTPUT(4) > 0) .OR.            &
             (EQCHK_OUTPUT(5) > 0)) THEN
             IF (RBG_GSET_ALLOCATED == 'N') THEN
-               CALL OURTIM
-               MODNAM = 'ALLOCATE MEMORY FOR RBGLOBAL ARRAY          '
-               WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+               CALL LINK_MESSAGE('ALLOCATE MEMORY FOR RBGLOBAL ARRAY          ')
                CALL ALLOCATE_RBGLOBAL ( 'G ', SUBR_NAME )
             ENDIF
-            CALL OURTIM                                 ! already calculated above
-            MODNAM = 'GENERATE RIGID BODY DISPL MATRIX            '
-            WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+                                                        ! already calculated above
+            CALL LINK_MESSAGE('GENERATE RIGID BODY DISPL MATRIX            ')
             CALL RB_DISP_MATRIX_PROC ( 'EQCHK REF GRID', 0 )
          ENDIF
 
@@ -1098,18 +1032,14 @@ res18:IF (RESTART == 'N') THEN
             IF ((SOL_NAME(1:7) == 'STATICS') .OR. (SOL_NAME(1:8) == 'NLSTATIC') .OR.                                               &
                ((SOL_NAME(1:8) == 'BUCKLING') .AND. (LOAD_ISTEP == 1))) THEN
 
-               CALL OURTIM
-               MODNAM = 'ALLOCATE MEMORY FOR Yse ARRAY               '
-               WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+               CALL LINK_MESSAGE('ALLOCATE MEMORY FOR Yse ARRAY               ')
                CALL ALLOCATE_COL_VEC ( 'YSe', NDOFSE, SUBR_NAME )
 
                OUNT(1) = ERR
                OUNT(2) = F06
                CALL FILE_OPEN ( L1H, LINK1H, OUNT, 'OLD', L1H_MSG, 'READ_STIME', 'UNFORMATTED', 'READWRITE', 'REWIND',             &
                                'Y', 'N', 'Y' )
-               CALL OURTIM
-               MODNAM = 'CALCULATE YS ENFORCED DISPL ARRAY           '
-               WRITE(SC1,1092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+               CALL LINK_MESSAGE('CALCULATE YS ENFORCED DISPL ARRAY           ')
                CALL YS_ARRAY
                CALL DEALLOCATE_COL_VEC ( 'YSe' )
                CALL FILE_CLOSE ( L1H, LINK1H, 'KEEP', 'Y' )
@@ -1228,8 +1158,6 @@ res20:IF (RESTART == 'N') THEN
                            ' IT IS RESET TO DEFAULT VALUE = ',I2)
 
  1030 FORMAT(' *INFORMATION: BANDIT WAS CALLED TO RESEQUENCE THE GRIDS AND HAS RETURNED WITH ERROR  = ',I8,/)
-
- 1092 FORMAT(1X,I2,'/',A44,18X,2X,I2,':',I2,':',I2,'.',I3)
 
  1802 FORMAT(' *ERROR  1802: THERE MUST BE THE SAME NUMBER OF CUSERIN ELEM CONN ENTRIES, (NCUSERIN = ',I8,')'                      &
                     ,/,14X,'                    AND NUMBER OF PUSERIN PROPERTY  ENTRIES, (NPUSERIN = ',I8,')')

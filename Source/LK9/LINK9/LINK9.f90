@@ -61,7 +61,7 @@
                                          ELDT_F25_U_P_BIT
 
       USE CC_OUTPUT_DESCRIBERS, ONLY  :  DISP_OUT, ACCE_OUT, OLOA_OUT, SPCF_OUT, MPCF_OUT, FORC_OUT, GPFO_OUT, STRE_OUT, STRN_OUT
-      USE TIMDAT, ONLY                :  YEAR, MONTH, DAY, HOUR, MINUTE, SEC, SFRAC, STIME, TSEC
+      USE TIMDAT, ONLY                :  STIME
       USE SUBR_BEGEND_LEVELS, ONLY    :  LINK9_BEGEND
       USE CONSTANTS_1, ONLY           :  ZERO, ONE
       USE PARAMS, ONLY                :  EPSIL, MPFOUT, SUPINFO, SUPWARN, WTMASS, PRTF06, PRTOP2, PRTNEU
@@ -91,7 +91,8 @@
       USE DEBUG_PARAMETERS, ONLY      :  DEBUG
 
       USE LINK9_USE_IFs
-
+      USE LINK_MESSAGE_Interface
+      
       IMPLICIT NONE
 
       LOGICAL                         :: WRITE_F06, WRITE_OP2, WRITE_PCH, WRITE_NEU   ! flag
@@ -109,7 +110,6 @@
       CHARACTER( 1*BYTE)              :: ZERO_GEN_STIFF    ! Indicator of whether there are zero gen stiffs (can't calc MEFFMASS)
 
       CHARACTER(24*BYTE)              :: MESSAG            ! File description. Input to subr UNFORMATTED_OPEN
-      CHARACTER(54*BYTE)              :: MODNAM            ! Name to write to screen to describe module being run
       CHARACTER( 1*BYTE)              :: NULL_COL          ! An output from subr GET_SPARSE_CRS_COL
       CHARACTER( 1*BYTE)              :: PROC_PG_OUTPUT    ! 'Y' in general. However, for BUCKLING, set to 'N' for eigen subcase
       CHARACTER( 1*BYTE)              :: READ_SPCARRAYS    ! ='Y' if we need to read KSF, etc. See test below.
@@ -261,9 +261,7 @@
       ENDIF
 
       ! Before reading file data in subr LINK9S, deallocate all of those arrays and then allocate them fresh
-      CALL OURTIM
-      MODNAM = 'DEALLOCATE ARRAYS BEFORE READING LINK9S'
-      WRITE(SC1,9092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+      CALL LINK_MESSAGE('DEALLOCATE ARRAYS BEFORE READING LINK9S')
                                                            ! Deallocate data in file LINK1D
       CALL DEALLOCATE_MODEL_STUF ( 'SCNUM' )
       CALL DEALLOCATE_MODEL_STUF ( 'TITLES' )
@@ -284,9 +282,7 @@
       CALL DEALLOCATE_MODEL_STUF ( 'PPNT, PDATA, PTYPE' )
       CALL DEALLOCATE_MODEL_STUF ( 'PLOAD4_3D_DATA' )
 
-      CALL OURTIM
-      MODNAM = 'ALLOCATE ARRAYS FOR DATA READ IN LINK9S'
-      WRITE(SC1,9092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+      CALL LINK_MESSAGE('ALLOCATE ARRAYS FOR DATA READ IN LINK9S')
                                                            ! Allocate data to be read in LINK9S from file LINK1D
       CALL   ALLOCATE_MODEL_STUF ( 'SCNUM', SUBR_NAME )
       CALL   ALLOCATE_MODEL_STUF ( 'TITLES', SUBR_NAME )
@@ -308,9 +304,7 @@
       CALL   ALLOCATE_MODEL_STUF ( 'PLOAD4_3D_DATA', SUBR_NAME )
 
       ! Read LINK9S data
-      CALL OURTIM
-      MODNAM = 'READ MODEL DATA ARRAYS'
-      WRITE(SC1,9092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+      CALL LINK_MESSAGE('READ MODEL DATA ARRAYS')
       CALL LINK9S
 
       ! Determine MAXREQ (max number of output requests) so we can allocate memory to arrays below
@@ -329,13 +323,9 @@
 
             IF (NTERM_PG > 0) THEN
 
-               CALL OURTIM
-               MODNAM = 'ALLOCATING SPARSE ARRAYS FOR PG LOADS'
-               WRITE(SC1,9092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+               CALL LINK_MESSAGE('ALLOCATING SPARSE ARRAYS FOR PG LOADS')
 
-               CALL OURTIM
-               MODNAM = 'READ PG LOADS'
-               WRITE(SC1,9092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+               CALL LINK_MESSAGE('READ PG LOADS')
                CLOSE_IT   = 'N'
                CALL READ_MATRIX_1 ( LINK1E, L1E, 'N', CLOSE_IT, 'KEEP', L1E_MSG, 'PG', NTERM_PG, 'Y', NDOFG,                       &
                                     I_PG, J_PG, PG)
@@ -388,12 +378,8 @@
 
             IF (NTERM_KFSD > 0) THEN
 
-               CALL OURTIM
-               MODNAM = 'ALLOCATE ARRAYS FOR, AND READ, KSFD'
-               WRITE(SC1,9092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
-               CALL OURTIM
-               MODNAM = 'READ KSFD MATRIX'
-               WRITE(SC1,9092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+               CALL LINK_MESSAGE('ALLOCATE ARRAYS FOR, AND READ, KSFD')
+               CALL LINK_MESSAGE('READ KSFD MATRIX')
                CLOSE_IT   = 'Y'
                CLOSE_STAT = 'KEEP'
                CALL READ_MATRIX_1 (LINK2B,L2B,'N',CLOSE_IT,CLOSE_STAT,L2B_MSG,'KSFD',NTERM_KFSD,'Y',NDOFS,I_KSFD,J_KSFD,KSFD)
@@ -404,12 +390,8 @@
 
             IF (NTERM_KFS  > 0) THEN
 
-               CALL OURTIM
-               MODNAM = 'ALLOCATE ARRAYS FOR, AND READ, KSF'
-               WRITE(SC1,9092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
-               CALL OURTIM
-               MODNAM = 'READ KSF MATRIX'
-               WRITE(SC1,9092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+               CALL LINK_MESSAGE('ALLOCATE ARRAYS FOR, AND READ, KSF')
+               CALL LINK_MESSAGE('READ KSF MATRIX')
                CLOSE_IT   = 'Y'
                CLOSE_STAT = 'KEEP'
                CALL READ_MATRIX_1 (LINK2B,L2B,'N',CLOSE_IT,CLOSE_STAT,L2B_MSG,'KSF ',NTERM_KFS ,'Y',NDOFS,I_KSF ,J_KSF ,KSF )
@@ -420,12 +402,9 @@
 
                IF ((SOL_NAME(1:5) == 'MODES') .OR. (SOL_NAME(1:12) == 'GEN CB MODEL')) THEN
 
-                  CALL OURTIM                                 ! Allocate and read MSF
-                  MODNAM = 'ALLOCATE ARRAYS FOR, AND READ, MSF'
-                  WRITE(SC1,9092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
-                  CALL OURTIM
-                  MODNAM = 'READ MSF MATRIX'
-                  WRITE(SC1,9092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+                                                              ! Allocate and read MSF
+                  CALL LINK_MESSAGE('ALLOCATE ARRAYS FOR, AND READ, MSF')
+                  CALL LINK_MESSAGE('READ MSF MATRIX')
                   CLOSE_IT   = 'Y'
                   CALL READ_MATRIX_1 ( LINK2S, L2S, 'N', CLOSE_IT, L2SSTAT, L2S_MSG, 'MSF', NTERM_MFS , 'Y', NDOFS,                &
                                        I_MSF , J_MSF , MSF  )
@@ -435,12 +414,8 @@
 
             IF (NTERM_QSYS > 0) THEN                          ! Note this will be 0 unless this is STATICS
 
-               CALL OURTIM
-               MODNAM = 'ALLOCATE ARRAYS FOR, AND READ, QSYS'
-               WRITE(SC1,9092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
-               CALL OURTIM
-               MODNAM = 'READ QSYS MATRIX'
-               WRITE(SC1,9092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+               CALL LINK_MESSAGE('ALLOCATE ARRAYS FOR, AND READ, QSYS')
+               CALL LINK_MESSAGE('READ QSYS MATRIX')
                CLOSE_IT   = 'Y'
                CALL READ_MATRIX_1 ( LINK2C, L2C, 'N', CLOSE_IT, L2CSTAT, L2C_MSG, 'QSYS', NTERM_QSYS, 'Y', NDOFS,                  &
                                     I_QSYS, J_QSYS, QSYS )
@@ -455,12 +430,8 @@
 
             IF (NTERM_PS > 0) THEN
 
-               CALL OURTIM
-               MODNAM = 'ALLOCATE SPARSE ARRAYS FOR PS LOADS'
-               WRITE(SC1,9092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
-               CALL OURTIM
-               MODNAM = 'READ PS LOADS'
-               WRITE(SC1,9092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+               CALL LINK_MESSAGE('ALLOCATE SPARSE ARRAYS FOR PS LOADS')
+               CALL LINK_MESSAGE('READ PS LOADS')
                CLOSE_IT   = 'N'
                CALL READ_MATRIX_1 ( LINK2D, L2D, 'N', CLOSE_IT, 'KEEP', L2D_MSG, 'PS', NTERM_PS, 'Y', NDOFS,                       &
                                     I_PS, J_PS, PS)
@@ -477,9 +448,8 @@
 
             IF (NTERM_GMN > 0) THEN
 
-               CALL OURTIM                                 ! Allocate and read GMN and create GMNt
-               MODNAM = 'READ GMN MATRIX'
-               WRITE(SC1,9092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+                                                           ! Allocate and read GMN and create GMNt
+               CALL LINK_MESSAGE('READ GMN MATRIX')
                CLOSE_IT   = 'Y'
                CALL ALLOCATE_SPARSE_MAT ( 'GMN',  NDOFM, NTERM_GMN, SUBR_NAME )
                CALL READ_MATRIX_1 ( LINK2A, L2A, 'N', CLOSE_IT, 'KEEP', L2A_MSG, 'GMN', NTERM_GMN, 'Y', NDOFM                     &
@@ -491,9 +461,7 @@
 
             IF (NTERM_HMN > 0) THEN                     ! Allocate and read HMN if there are any terms in it.
 
-               CALL OURTIM
-               MODNAM = 'READ HMN MATRIX'
-               WRITE(SC1,9092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+               CALL LINK_MESSAGE('READ HMN MATRIX')
                CLOSE_IT   = 'Y'
                CALL ALLOCATE_SPARSE_MAT ( 'HMN',  NDOFM, NTERM_HMN, SUBR_NAME )
                CALL READ_MATRIX_1 ( LINK2J, L2J, 'N', CLOSE_IT, L2JSTAT, L2J_MSG, 'HMN', NTERM_HMN, 'Y', NDOFM                     &
@@ -502,9 +470,7 @@
 
             IF (NTERM_LMN > 0) THEN                     ! Allocate and read LMN if there are any terms in it.
 
-               CALL OURTIM
-               MODNAM = 'READ LMN MATRIX'
-               WRITE(SC1,9092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+               CALL LINK_MESSAGE('READ LMN MATRIX')
                CLOSE_IT   = 'Y'
                CALL ALLOCATE_SPARSE_MAT ( 'LMN',  NDOFM, NTERM_LMN, SUBR_NAME )
                CALL READ_MATRIX_1 ( LINK2R, L2R, 'N', CLOSE_IT, 'KEEP', L2R_MSG, 'LMN', NTERM_LMN, 'Y', NDOFM                     &
@@ -518,9 +484,7 @@
       ! Read MGG mass matrix if this is a dynamics solution and GP force balance is requested
       IF ((SOL_NAME(1:5) == 'MODES') .OR. (SOL_NAME(1:12) == 'GEN CB MODEL')) THEN
          IF (ANY_GPFO_OUTPUT > 0) THEN
-            CALL OURTIM
-            MODNAM = 'ALLOCATE SPARSE ARRAYS FOR MGG MASS ARRAYS'
-            WRITE(SC1,9092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+            CALL LINK_MESSAGE('ALLOCATE SPARSE ARRAYS FOR MGG MASS ARRAYS')
             CALL ALLOCATE_SPARSE_MAT ( 'MGG', NDOFG, NTERM_MGG, SUBR_NAME )
             IF (NTERM_MGG > 0) THEN
                CLOSE_IT   = 'Y'
@@ -534,9 +498,7 @@
       ! Read MLL mass matrix if this is a dynamics solution and GP force balance is requested.
       IF ((SOL_NAME(1:5) == 'MODES') .OR. (SOL_NAME(1:12) == 'GEN CB MODEL')) THEN
          IF (ANY_GPFO_OUTPUT > 0) THEN
-            CALL OURTIM
-            MODNAM = 'ALLOCATE SPARSE ARRAYS FOR MLL MASS ARRAYS'
-            WRITE(SC1,9092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+            CALL LINK_MESSAGE('ALLOCATE SPARSE ARRAYS FOR MLL MASS ARRAYS')
             CALL ALLOCATE_SPARSE_MAT ( 'MLL', NDOFL, NTERM_MLL, SUBR_NAME )
             IF (NTERM_MLL > 0) THEN
                CLOSE_IT   = 'Y'
@@ -772,20 +734,19 @@ j_do: DO JVEC=1,NUM_SOLNS
          SC_MPCF_OUTPUT = IAND(OGROUT(INT_SC_NUM),IBIT(GROUT_MPCF_BIT))
          SC_GPFO_OUTPUT = IAND(OGROUT(INT_SC_NUM),IBIT(GROUT_GPFO_BIT))
 
-         CALL OURTIM                                       ! Write message to screen
+                                                           ! Write message to screen
          IF      ((SOL_NAME(1: 7) == 'STATICS') .OR. (SOL_NAME(1:8) == 'NLSTATIC') .OR.                                            &
                  ((SOL_NAME(1:8) == 'BUCKLING') .AND. (LOAD_ISTEP == 1))) THEN
-            MODNAM = 'READ G-SET DISPLACEMENTS,                      Subcase'
+            CALL LINK_MESSAGE_I('READ G-SET DISPLACEMENTS,                      Subcase', JVEC)
 
          ELSE IF ((SOL_NAME(1: 5) == 'MODES') .OR. ((SOL_NAME(1:8) == 'BUCKLING') .AND. (LOAD_ISTEP == 2))) THEN
-            MODNAM = 'READ G-SET EIGENVECTORS,                      Eigenvec'
+            CALL LINK_MESSAGE_I('READ G-SET EIGENVECTORS,                      Eigenvec', JVEC)
 
          ELSE IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
-            MODNAM = 'READ G-SET CB VECTORS,                       CB vector'
+            CALL LINK_MESSAGE_I('READ G-SET CB VECTORS,                       CB vector', JVEC)
 
          ENDIF
 
-         WRITE(SC1,9093) LINKNO,MODNAM,JVEC,HOUR,MINUTE,SEC,SFRAC
                                                            ! Read the displ's for the DOF for this subcase/eigenvector
          CALL DEALLOCATE_COL_VEC ( 'UG_COL' )
          CALL ALLOCATE_COL_VEC ( 'UG_COL', NDOFG, SUBR_NAME )
@@ -827,9 +788,7 @@ j_do: DO JVEC=1,NUM_SOLNS
         ITABLE = -1
          IF ((SC_ACCE_OUTPUT > 0) .OR. (WRITE_NEU)) THEN
             IF (SOL_NAME(1:12) == 'GEN CB MODEL') THEN
-               CALL OURTIM
-               MODNAM = 'PROCESS ACCEL OUTPUT REQUESTS,                    "'
-               WRITE(SC1,9093) LINKNO,MODNAM,JVEC,HOUR,MINUTE,SEC,SFRAC
+               CALL LINK_MESSAGE_I('PROCESS ACCEL OUTPUT REQUESTS,                    "',JVEC)
                CALL OFP1 ( JVEC, 'ACCE', SC_ACCE_OUTPUT, FEMAP_SET_ID, ITG, OT4_GROW, ITABLE, NEW_RESULT )
 !              NEW_RESULT = .FALSE.
             ELSE
@@ -843,9 +802,7 @@ j_do: DO JVEC=1,NUM_SOLNS
 
          ! Process displacement output requests
          IF ((SC_DISP_OUTPUT > 0) .OR. (WRITE_NEU)) THEN
-            CALL OURTIM
-            MODNAM = 'PROCESS DISPL OUTPUT REQUESTS,                    "'
-            WRITE(SC1,9093) LINKNO,MODNAM,JVEC,HOUR,MINUTE,SEC,SFRAC
+            CALL LINK_MESSAGE_I('PROCESS DISPL OUTPUT REQUESTS,                    "',JVEC)
             CALL OFP1 ( JVEC, 'DISP', SC_DISP_OUTPUT, FEMAP_SET_ID, ITG, OT4_GROW, ITABLE, NEW_RESULT )
 !           NEW_RESULT = .FALSE.
          ENDIF
@@ -857,9 +814,7 @@ j_do: DO JVEC=1,NUM_SOLNS
          IF (PROC_PG_OUTPUT == 'Y') THEN
             IF ((SC_OLOA_OUTPUT > 0) .OR. (SC_GPFO_OUTPUT > 0) .OR. (WRITE_NEU)) THEN
                IF  ((SOL_NAME(1:7) == 'STATICS') .OR. (SOL_NAME(1:8) == 'BUCKLING') .OR. (SOL_NAME(1:8) == 'NLSTATIC')) THEN
-                  CALL OURTIM
-                  MODNAM = 'PROCESS APPLIED LOAD OUTPUT REQS,                 "'
-                  WRITE(SC1,9093) LINKNO,MODNAM,JVEC,HOUR,MINUTE,SEC,SFRAC
+                  CALL LINK_MESSAGE_I('PROCESS APPLIED LOAD OUTPUT REQS,                 "',JVEC)
                   CALL GET_SPARSE_CRS_COL ('PG_COL    ',JVEC      , NTERM_PG, NDOFG, NSUB, I_PG, J_PG, PG, ONE, PG_COL, NULL_COL)
                   CALL OFP1 ( JVEC, 'OLOAD', SC_OLOA_OUTPUT, FEMAP_SET_ID, ITG, OT4_GROW, ITABLE, NEW_RESULT )
 !                 NEW_RESULT = .FALSE.
@@ -902,9 +857,7 @@ j_do: DO JVEC=1,NUM_SOLNS
                ENDDO
             ENDIF
 
-            CALL OURTIM
-            MODNAM = 'PROCESS SPC FORCE OUTPUT REQUESTS,                "'
-            WRITE(SC1,9093) LINKNO,MODNAM,JVEC,HOUR,MINUTE,SEC,SFRAC
+            CALL LINK_MESSAGE_I('PROCESS SPC FORCE OUTPUT REQUESTS,                "',JVEC)
             CALL ALLOCATE_COL_VEC ( 'QGs_COL', NDOFG, SUBR_NAME )
            CALL OFP2 ( JVEC, 'SPCF', SC_SPCF_OUTPUT, ZERO_GEN_STIFF, FEMAP_SET_ID, ITG, OT4_GROW, ITABLE, NEW_RESULT )
 !           NEW_RESULT = .FALSE.
@@ -926,9 +879,7 @@ j_do: DO JVEC=1,NUM_SOLNS
                   ENDIF
                ENDIF
 
-               CALL OURTIM
-               MODNAM = 'PROCESS MPC FORCE OUTPUT REQUESTS,                "'
-               WRITE(SC1,9093) LINKNO,MODNAM,JVEC,HOUR,MINUTE,SEC,SFRAC
+               CALL LINK_MESSAGE_I('PROCESS MPC FORCE OUTPUT REQUESTS,                "',JVEC)
                CALL ALLOCATE_COL_VEC ( 'QGm_COL', NDOFG, SUBR_NAME )
                CALL OFP2 ( JVEC, 'MPCF', SC_MPCF_OUTPUT, ZERO_GEN_STIFF, FEMAP_SET_ID, ITG, OT4_GROW, ITABLE, NEW_RESULT )
 !              NEW_RESULT = .FALSE.
@@ -983,9 +934,7 @@ j_do: DO JVEC=1,NUM_SOLNS
 
             ENDIF
 
-            CALL OURTIM
-            MODNAM = 'PROCESS G.P. FORCE BALANCE REQUESTS,              "'
-            WRITE(SC1,9093) LINKNO,MODNAM,JVEC,HOUR,MINUTE,SEC,SFRAC
+            CALL LINK_MESSAGE_I('PROCESS G.P. FORCE BALANCE REQUESTS,              "',JVEC)
             CALL GP_FORCE_BALANCE_PROC ( JVEC, 'Y' )
             CALL DEALLOCATE_COL_VEC ( 'FG_COL' )
             CALL DEALLOCATE_COL_VEC ( 'QGr_COL' )
@@ -1006,9 +955,7 @@ j_do: DO JVEC=1,NUM_SOLNS
          IF((SC_ELFE_OUTPUT > 0) .OR. (SC_ELFN_OUTPUT > 0) .OR. (SC_STRE_OUTPUT > 0) .OR. (SC_STRN_OUTPUT > 0) .OR.                &
             ! (ANY_U_P_OUTPUT > 0) .OR.
             (WRITE_NEU)) THEN
-            CALL OURTIM
-            MODNAM = 'PROCESS ELEM FORCE/STRESS REQUESTS,               "'
-            WRITE(SC1,9093) LINKNO,MODNAM,JVEC,HOUR,MINUTE,SEC,SFRAC
+            CALL LINK_MESSAGE_I('PROCESS ELEM FORCE/STRESS REQUESTS,               "',JVEC)
             IF ((DEBUG(176) == 0) .AND. (JVEC == 1)) THEN
                WRITE(ERR,98980)
                WRITE(ERR,98988) DEBUG(176)
@@ -1220,9 +1167,7 @@ j_do: DO JVEC=1,NUM_SOLNS
 
       ! Call OUTPUT4 processor to process output requests for OUTPUT4 matrices generated in this link
       IF (NUM_OU4_REQUESTS > 0) THEN
-         CALL OURTIM
-         MODNAM = 'WRITE OUTPUT4 MATRICES      '
-         WRITE(SC1,9092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+         CALL LINK_MESSAGE('WRITE OUTPUT4 MATRICES      ')
          WRITE(F06,*)
          CALL OUTPUT4_PROC ( SUBR_NAME )
       ENDIF
@@ -1475,10 +1420,6 @@ j_do: DO JVEC=1,NUM_SOLNS
 
  9055 FORMAT('The heading "LOCATION" for stresses and strains only has significance for the elements that allow output of these',/,&
              'quantities at specific locations as specified on the Case Control STRESS, STRAIN entries (see MYSTRAN Users Manual)')
-
- 9092 FORMAT(1X,I2,'/',A54,8X,2X,I2,':',I2,':',I2,'.',I3)
-
- 9093 FORMAT(1X,I2,'/',A54,I8,2X,I2,':',I2,':',I2,'.',I3)
 
  9095 FORMAT(1X,'********** Subcase No. ',I8,' **********')
 
@@ -1834,8 +1775,6 @@ j_do: DO JVEC=1,NUM_SOLNS
 
       RETURN
 
-! **********************************************************************************************************************************
- 9092 FORMAT(1X,I2,'/',A54,8X,2X,I2,':',I2,':',I2,'.',I3)
 
 ! **********************************************************************************************************************************
 

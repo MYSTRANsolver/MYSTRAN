@@ -5,18 +5,16 @@
       USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
       USE IOUNT1, ONLY                :  ERR, F04, F06, SC1, WRT_LOG 
       USE SCONTR, ONLY                :  BLNK_SUB_NAM, FATAL_ERR, LINKNO
-      USE TIMDAT, ONLY                :  HOUR, MINUTE, SEC,
-     &                                   SFRAC, STIME, TSEC
+      USE TIMDAT, ONLY                :  TSEC
       USE SUBR_BEGEND_LEVELS, ONLY    :  LAPACK_BEGEND
       USE LAPACK_BLAS_AUX
       USE LAPACK_MISCEL                                    ! This contains DSTEQR, used in this module
 
       USE OURTIM_Interface
       USE OUTA_HERE_Interface
-
+      USE LINK_MESSAGE_Interface
+      
       character(1*byte), parameter      :: cr13_lge = char(13)
-
-      CHARACTER(44*BYTE), PRIVATE       :: MODNAM          ! Name to write to screen to describe module being run.
 
       INTEGER(LONG), PARAMETER, PRIVATE :: SUBR_BEGEND = LAPACK_BEGEND
 
@@ -333,17 +331,17 @@
 *
 *     Form a split Cholesky factorization of B.
 *
-      call ourtim
       if (method(1:3) == 'GIV') then
          if (sol_name(1:8) == 'BUCKLING') then
-            modnam = '  CHOLESKY FACTORIZATION OF DIFFER STIFF MATRIX'
+            CALL LINK_MESSAGE(                                       
+     $       '  CHOLESKY FACTORIZATION OF DIFFER STIFF MATRIX')
          else
-            modnam = '  CHOLESKY FACTORIZATION OF MASS MATRIX'
+            CALL LINK_MESSAGE(
+     $       '  CHOLESKY FACTORIZATION OF MASS MATRIX')
          endif
       else if (method(1:4) == 'MGIV') then
-         modnam = '  CHOLESKY FACTORIZATION OF STIFF MATRIX'
+         CALL LINK_MESSAGE('  CHOLESKY FACTORIZATION OF STIFF MATRIX')
       endif
-      WRITE(SC1,4092) linkno,modnam,hour,minute,sec,sfrac
       CALL DPBSTF( UPLO, N, KB, BB, LDBB, INFO )
       IF( INFO.NE.0 ) THEN
          INFO = N + INFO
@@ -352,17 +350,13 @@
 *
 *     Transform problem to standard eigenvalue problem.
 *
-      call ourtim
-      modnam = '  TRANSFORM TO STANDARD EIGENVALUE PROBLEM'
-      WRITE(SC1,4092) linkno,modnam,hour,minute,sec,sfrac
+      CALL LINK_MESSAGE('  TRANSFORM TO STANDARD EIGENVALUE PROBLEM')
       CALL DSBGST( JOBZ, UPLO, N, KA, KB, AB, LDAB, BB, LDBB, Q, LDQ,
      $             WORK, IINFO )
 *
 *     Reduce symmetric band matrix to tridiagonal form.
 *
-      call ourtim
-      modnam = '  REDUCE SYMM BAND MATRIX TO TRIDIAG FORM'
-      WRITE(SC1,4092) linkno,modnam,hour,minute,sec,sfrac
+      CALL LINK_MESSAGE('  REDUCE SYMM BAND MATRIX TO TRIDIAG FORM')
       INDD = 1
       INDE = INDD + N
       INDWRK = INDE + N
@@ -528,8 +522,6 @@
             END IF
    50    CONTINUE
       END IF
-
- 4092 FORMAT(1X,I2,'/',A44,18X,2X,I2,':',I2,':',I2,'.',I3)
 
 ! **********************************************************************************************************************************
       IF (WRT_LOG >= SUBR_BEGEND) THEN

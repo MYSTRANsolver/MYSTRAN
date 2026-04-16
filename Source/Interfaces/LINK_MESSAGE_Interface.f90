@@ -23,70 +23,33 @@
 ! _______________________________________________________________________________________________________
                                                                                                         
 ! End MIT license text.                                                                                      
- 
-      SUBROUTINE WRITE_L1M
- 
-! Writes data from file LINK1M of eigenvalue extraction data (actual eigenvalues/vectors are not in this file)
- 
-      USE PENTIUM_II_KIND, ONLY       :  BYTE, LONG, DOUBLE
- 
-      USE SCONTR, ONLY                :  LINKNO, NUM_EIGENS
-      USE IOUNT1, ONLY                :  ERR, F06, L1M, L1M_MSG, L1MSTAT, LINK1M, SC1, WRT_ERR, WRT_LOG
-      USE DEBUG_PARAMETERS, ONLY      :  DEBUG
-      USE EIGEN_MATRICES_1 , ONLY     :  EIGEN_VAL, GEN_MASS, MODE_NUM
+    
+MODULE LINK_MESSAGE_Interface
 
-      USE MODEL_STUF, ONLY            :  EIG_COMP, EIG_CRIT, EIG_FRQ1, EIG_FRQ2, EIG_GRID, EIG_METH, EIG_MSGLVL, EIG_LAP_MAT_TYPE, &
-                                         EIG_MODE, EIG_N1, EIG_N2, EIG_NCVFACL, EIG_NORM, EIG_SID, EIG_SIGMA, EIG_VECS, MAXMIJ,    &
-                                         MIJ_COL, MIJ_ROW, NUM_FAIL_CRIT
+   INTERFACE
+   
 
-      USE WRITE_L1M_USE_IFs
-      USE LINK_MESSAGE_Interface
+      SUBROUTINE LINK_MESSAGE(MODNAM)
       
       IMPLICIT NONE
 
-      INTEGER(LONG)                   :: I                 ! DO loop index
-      INTEGER(LONG)                   :: OUNT(2)           ! File units to write messages to
- 
-! **********************************************************************************************************************************
-! Make units for writing errors the screen and output file
- 
-      OUNT(1) = ERR
-      OUNT(2) = F06
+      CHARACTER(LEN=*), INTENT(IN)    :: MODNAM            ! Name to write to screen to describe module being run
 
-!xx   STATUS = 'OLD    '
-!xx   RW     = 'WRITE'
-      CALL FILE_OPEN ( L1M, LINK1M, OUNT, 'REPLACE', L1M_MSG, 'WRITE_STIME', 'UNFORMATTED', 'WRITE', 'REWIND', 'Y', 'N', 'Y' )
-
-      CALL LINK_MESSAGE('WRITE EIGENVALUE DATA FROM PRIOR LINK')
-
-      WRITE(L1M) EIG_SID
-      WRITE(L1M) EIG_METH
-      WRITE(L1M) EIG_FRQ1
-      WRITE(L1M) EIG_FRQ2
-      WRITE(L1M) EIG_N1
-      WRITE(L1M) EIG_N2
-      WRITE(L1M) EIG_VECS
-      WRITE(L1M) EIG_CRIT
-      WRITE(L1M) EIG_NORM
-      WRITE(L1M) EIG_GRID
-      WRITE(L1M) EIG_COMP
-      WRITE(L1M) EIG_MODE
-      WRITE(L1M) EIG_SIGMA
-      WRITE(L1M) EIG_LAP_MAT_TYPE
-      WRITE(L1M) EIG_MSGLVL
-      WRITE(L1M) EIG_NCVFACL
-      WRITE(L1M) NUM_FAIL_CRIT
-      WRITE(L1M) MAXMIJ
-      WRITE(L1M) MIJ_ROW
-      WRITE(L1M) MIJ_COL
-
-      DO I=1,NUM_EIGENS
-         WRITE(L1M) MODE_NUM(I), EIGEN_VAL(I), GEN_MASS(I)
-      ENDDO
-
-      CALL FILE_CLOSE ( L1M, LINK1M, 'KEEP', 'Y' )
+      END SUBROUTINE LINK_MESSAGE
 
 
-! **********************************************************************************************************************************
- 
-      END SUBROUTINE WRITE_L1M
+      SUBROUTINE LINK_MESSAGE_I(MODNAM, I)
+
+      USE PENTIUM_II_KIND, ONLY       :  LONG
+      
+      IMPLICIT NONE
+
+      CHARACTER(LEN=*), INTENT(IN)    :: MODNAM            ! Name to write to screen to describe module being run
+      INTEGER(LONG), INTENT(IN)       :: I                 ! A number displayed after the string
+
+      END SUBROUTINE LINK_MESSAGE_I
+
+
+   END INTERFACE
+
+END MODULE LINK_MESSAGE_Interface

@@ -326,8 +326,6 @@ i_do:          DO
   999 FORMAT('               THERE WERE ',I3,' ATTEMPTS TO ALLOCATE MEMORY TO ARRAY ',A                                            &
                     ,/,14X,' THE MAX ALLOWABLE ATTEMPTS CAN BE INCREASED VIA BULK DATA PARAM ',A)
 
- 1092 FORMAT(1X,I2,'/',A44,18X,2X,I2,':',I2,':',I2,'.',I3)
-
  1699 FORMAT('               THE SUBR IN WHICH THESE ERRORS WERE FOUND (',A,') WAS CALLED BY SUBR ',A)
 
  1702 FORMAT('               ALLOCATED   ',1ES9.2,' MB MEMORY TO   ARRAY ',A)

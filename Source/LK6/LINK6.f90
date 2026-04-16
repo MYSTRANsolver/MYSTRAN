@@ -49,7 +49,6 @@
       USE CONSTANTS_1, ONLY           :  ONE
       USE DEBUG_PARAMETERS, ONLY      :  DEBUG
       USE PARAMS, ONLY                :  CUSERIN, CUSERIN_XSET, PRTPHIXA, SUPWARN
-      USE TIMDAT, ONLY                :  HOUR, MINUTE, SEC, SFRAC
       USE MODEL_STUF, ONLY            :  MEFFMASS_CALC, MPFACTOR_CALC
       USE EIGEN_MATRICES_1, ONLY      :  GEN_MASS, EIGEN_VAL, EIGEN_VEC
       USE OUTPUT4_MATRICES
@@ -63,13 +62,13 @@
                                          I_PHIXA , J_PHIXA , PHIXA
 
       USE LINK6_USE_IFs                                      ! Added 2019/07/14
-
+      USE LINK_MESSAGE_Interface
+      
       IMPLICIT NONE
  
       CHARACTER, PARAMETER            :: CR13 = CHAR(13)   ! This causes a carriage return simulating the "+" action in a FORMAT
       CHARACTER(LEN=LEN(BLNK_SUB_NAM)):: SUBR_NAME = 'LINK6'
       CHARACTER(  1*BYTE)             :: CLOSE_IT            ! Input to subr READ_MATRIX_i. 'Y'/'N' whether to close a file or not 
-      CHARACTER( 44*BYTE)             :: MODNAM              ! Name to write to screen to describe module being run
       CHARACTER(  1*BYTE)             :: READ_NTERM          ! 'Y' or 'N' Input to subr READ_MATRIX_1 
       CHARACTER(  1*BYTE)             :: NULL_COL            ! = 'Y' if col returned from subr GET_SPARSE_CRS_COL is null
       CHARACTER(  1*BYTE)             :: OPND                ! Input to subr READ_MATRIX_i. 'Y'/'N' whether to open  a file or not 
@@ -155,9 +154,7 @@
 !xx      READ_NTERM = 'Y'
 !xx      OPND       = 'N'
 !xx      CLOSE_IT   = 'Y'
-!xx      CALL OURTIM
-!xx      MODNAM = 'READ KLL STIFFNESS MATRIX                 '
-!xx      WRITE(SC1,6092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+!xx      CALL LINK_MESSAGE('READ KLL STIFFNESS MATRIX                 ')
 !xx      CALL READ_MATRIX_1 ( LINK2G, L2G, OPND, CLOSE_IT, L2GSTAT, L2G_MSG, 'KLL', NTERM_KLL, READ_NTERM, NDOFL                   &
 !xx                         , I_KLL, J_KLL, KLL)
 !xx   ENDIF
@@ -171,9 +168,7 @@
          READ_NTERM = 'Y'
          OPND       = 'N'
          CLOSE_IT   = 'Y'
-         CALL OURTIM
-         MODNAM = 'READ KRL STIFFNESS MATRIX                 '
-         WRITE(SC1,6092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+         CALL LINK_MESSAGE('READ KRL STIFFNESS MATRIX                 ')
          CALL READ_MATRIX_1 ( LINK2K, L2K, OPND, CLOSE_IT, L2KSTAT, L2K_MSG, 'KRL', NTERM_KRL, READ_NTERM, NDOFR                   &
                             , I_KRL, J_KRL, KRL)
       ENDIF
@@ -187,9 +182,7 @@
          READ_NTERM = 'Y'
          OPND       = 'N'
          CLOSE_IT   = 'Y'
-         CALL OURTIM
-         MODNAM = 'READ KRR STIFFNESS MATRIX                 '
-         WRITE(SC1,6092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+         CALL LINK_MESSAGE('READ KRR STIFFNESS MATRIX                 ')
          CALL READ_MATRIX_1 ( LINK2L, L2L, OPND, CLOSE_IT, L2LSTAT, L2L_MSG, 'KRR', NTERM_KRR, READ_NTERM, NDOFR                   &
                             , I_KRR, J_KRR, KRR)
       ENDIF
@@ -203,9 +196,7 @@
 !xx      READ_NTERM = 'Y'
 !xx      OPND       = 'N'
 !xx      CLOSE_IT   = 'Y'
-!xx      CALL OURTIM
-!xx      MODNAM = 'READ MLL MASS MATRIX                 '
-!xx      WRITE(SC1,6092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+!xx      CALL LINK_MESSAGE('READ MLL MASS MATRIX                 ')
 !xx      CALL READ_MATRIX_1 ( LINK2I, L2I, OPND, CLOSE_IT, 'KEEP', L2I_MSG, 'MLL', NTERM_MLL, READ_NTERM, NDOFL                   &
 !xx                         , I_MLL, J_MLL, MLL)
 !xx   ENDIF
@@ -219,9 +210,7 @@
          READ_NTERM = 'Y'
          OPND       = 'N'
          CLOSE_IT   = 'Y'
-         CALL OURTIM
-         MODNAM = 'READ MRL MASS MATRIX                 '
-         WRITE(SC1,6092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+         CALL LINK_MESSAGE('READ MRL MASS MATRIX                 ')
          CALL READ_MATRIX_1 ( LINK2M, L2M, OPND, CLOSE_IT, L2MSTAT, L2M_MSG, 'MRL', NTERM_MRL, READ_NTERM, NDOFR                   &
                             , I_MRL, J_MRL, MRL)
       ENDIF
@@ -235,19 +224,15 @@
          READ_NTERM = 'Y'
          OPND       = 'N'
          CLOSE_IT   = 'Y'
-         CALL OURTIM
-         MODNAM = 'READ MRR MASS MATRIX                 '
-         WRITE(SC1,6092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+         CALL LINK_MESSAGE('READ MRR MASS MATRIX                 ')
          CALL READ_MATRIX_1 ( LINK2N, L2N, OPND, CLOSE_IT, L2NSTAT, L2N_MSG, 'MRR', NTERM_MRR, READ_NTERM, NDOFR                   &
                             , I_MRR, J_MRR, MRR)
       ENDIF
 
 ! Open file that has L-set eigenvectors and read them
 
-      CALL OURTIM
       CALL FILE_OPEN ( L3A, LINK3A, OUNT, 'OLD', L3A_MSG, 'READ_STIME', 'UNFORMATTED', 'READ', 'REWIND', 'Y', 'N', 'Y' )
-      MODNAM = 'READ EIGENVECTORS FROM FILE'
-      WRITE(SC1,6092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+      CALL LINK_MESSAGE('READ EIGENVECTORS FROM FILE')
       CALL ALLOCATE_EIGEN1_MAT ( 'EIGEN_VEC', NDOFL, NVEC, SUBR_NAME )
       DO J=1,NVEC
          DO I=1,NDOFL
@@ -266,9 +251,7 @@
 
 ! Solve for DLR
 
-      CALL OURTIM
-      MODNAM = 'SOLVE FOR DLR              '
-      WRITE(SC1,6092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+      CALL LINK_MESSAGE('SOLVE FOR DLR              ')
       IF ((NTERM_KLL > 0) .AND. (NTERM_KRL > 0)) THEN
          CALL SOLVE_DLR
       ELSE
@@ -296,9 +279,7 @@
       CALL PARTITION_VEC ( NDOFA, 'A ', 'L ', 'R ', PART_VEC_A_LR )
       NTERM_PHIXA = NDOFR + NTERM_DLR + NDOFL*NVEC
       CALL ALLOCATE_SPARSE_MAT ( 'PHIXA', NDOFA, NTERM_PHIXA, 'LINK6' )
-      CALL OURTIM
-      MODNAM = 'MERGE MATRICES INTO PHIXA  '
-      WRITE(SC1,6092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+      CALL LINK_MESSAGE('MERGE MATRICES INTO PHIXA  ')
       CALL MERGE_PHIXA ( PART_VEC_A_LR )
       IF (PRTPHIXA > 0) THEN
          CALL WRITE_SPARSE_CRS ( 'PHIXA','A ','  ', NTERM_PHIXA, NDOFA, I_PHIXA, J_PHIXA, PHIXA )
@@ -309,56 +290,40 @@
 
 ! Calculate L-set PHIZL (cols are L-set CB vecs that will be written to L3A for LINK5 processing to G-set size)
 
-      CALL OURTIM
-      MODNAM = 'CALC DISPLACEMENT PHIZL    '
-      WRITE(SC1,6092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+      CALL LINK_MESSAGE('CALC DISPLACEMENT PHIZL    ')
       CALL CALC_PHIZL
 
 ! Calc KXX, the CB stiffness matrix (with DOF's: R-set displs and modal DOF's)
 
-      CALL OURTIM
-      MODNAM = 'CALC KRRcb                 '
-      WRITE(SC1,6092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+      CALL LINK_MESSAGE('CALC KRRcb                 ')
       CALL CALC_KRRcb
 
-      CALL OURTIM
-      MODNAM = 'MERGE MATRICES INTO KXX    '
-      WRITE(SC1,6092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+      CALL LINK_MESSAGE('MERGE MATRICES INTO KXX    ')
       CALL MERGE_KXX  
 
 ! Calc MXX, the CB mass matrix (with DOF's: R-set displs and modal DOF's)
 
-      CALL OURTIM
-      MODNAM = 'CALC MRRcb                 '
-      WRITE(SC1,6092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+      CALL LINK_MESSAGE('CALC MRRcb                 ')
       CALL CALC_MRRcb
 
-      CALL OURTIM
-      MODNAM = 'CALC MRN                   '
-      WRITE(SC1,6092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+      CALL LINK_MESSAGE('CALC MRN                   ')
       CALL CALC_MRN  
 
 !xx   WRITE(SC1, * )
       WRITE(SC1,12345,ADVANCE='NO') '       Deallocate DLRt     ', CR13
       CALL DEALLOCATE_SPARSE_MAT ( 'DLRt' )
 
-      CALL OURTIM
-      MODNAM = 'MERGE MATRICES INTO MXX    '
-      WRITE(SC1,6092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+      CALL LINK_MESSAGE('MERGE MATRICES INTO MXX    ')
       CALL MERGE_MXX  
 
 ! Calculate LTM for interface forces
 
-      CALL OURTIM
-      MODNAM = 'CALC INTERFACE FORCES      '
-      WRITE(SC1,6092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+      CALL LINK_MESSAGE('CALC INTERFACE FORCES      ')
       CALL INTERFACE_FORCE_LTM
 
 ! Calculate LTM for net CG accels
 
-      CALL OURTIM
-      MODNAM = 'CALC NET CG LOADS          '
-      WRITE(SC1,6092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+      CALL LINK_MESSAGE('CALC NET CG LOADS          ')
       CALL NET_CG_LOADS_LTM
 
 !xx   WRITE(SC1, * )
@@ -367,16 +332,12 @@
 
 ! Merge CG_LTM and IF_LTM into overall LTM
 
-      CALL OURTIM
-      MODNAM = 'MERGE LTM                  '
-      WRITE(SC1,6092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+      CALL LINK_MESSAGE('MERGE LTM                  ')
       CALL MERGE_LTM
 
 ! Rewind L3A and write PHIZL to it and then close L3A
 
-      CALL OURTIM
-      MODNAM = 'WRITE L-set PHIZL to FILE'
-      WRITE(SC1,6092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+      CALL LINK_MESSAGE('WRITE L-set PHIZL to FILE')
       CALL FILE_OPEN ( L3A, LINK3A, OUNT, 'OLD', L3A_MSG, 'WRITE_STIME', 'UNFORMATTED', 'WRITE', 'REWIND', 'Y', 'N', 'Y' )
       NUM_SOLNS = NUM_CB_DOFS
       DO I=1,NUM_SOLNS
@@ -390,18 +351,14 @@
 ! Calc modal participation factors and modal mass
 
       IF ((MEFFMASS_CALC == 'Y') .OR. (MPFACTOR_CALC == 'Y')) THEN
-         CALL OURTIM
-         MODNAM = 'CALC MPF AND MEFFMASS'
-         WRITE(SC1,6092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+         CALL LINK_MESSAGE('CALC MPF AND MEFFMASS')
          CALL CALC_CB_MEFM_MPF
       ENDIF
 
 ! Call OUTPUT4 processor to process output requests for OUTPUT4 matrices generated in this link
 
       IF (NUM_OU4_REQUESTS > 0) THEN
-         CALL OURTIM
-         MODNAM = 'WRITE OUTPUT4 NATRICES      '
-         WRITE(SC1,6092) LINKNO,MODNAM,HOUR,MINUTE,SEC,SFRAC
+         CALL LINK_MESSAGE('WRITE OUTPUT4 NATRICES      ')
          WRITE(F06,*)
          CALL OUTPUT4_PROC ( SUBR_NAME )
       ENDIF
@@ -491,8 +448,6 @@
   153 FORMAT(  ' >> LINK',I3,' END')
 
   290 FORMAT(23X,5A)
-
- 6092 FORMAT(1X,I2,'/',A44,18X,2X,I2,':',I2,':',I2,'.',I3)
 
  6888 FORMAT(' *WARNING    : PARAMETER CUSERIN_XSET WAS READ FROM THE B.D. PARAM CUSERIN ENTRY AS "',A,'". IT HAS BEEN RESET TO'   &
                     ,/,14X,'"R " FOR THIS CB MODEL GENERATION RUN')
