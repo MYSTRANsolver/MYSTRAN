@@ -179,10 +179,8 @@
             ENDDO
          ENDIF
 
-         DO I=1,NDOFS
-            QSK_COL = ZERO
-            QSM_COL = ZERO
-         ENDDO
+         QSK_COL = ZERO
+         QSM_COL = ZERO
 
          IF ((SOL_NAME(1:8) == 'BUCKLING') .AND. (LOAD_ISTEP == 2)) THEN
             IF (NTERM_KFSD > 0) THEN                          ! Calc QSK = KSFD*UF 
